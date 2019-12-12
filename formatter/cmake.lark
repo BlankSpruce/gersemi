@@ -1,0 +1,48 @@
+start: file
+
+file         : file_element*
+file_element : command_invocation line_ending
+             | (bracket_comment | SPACE)* line_ending
+line_ending  : [line_comment] newline
+SPACE        : /[ \t]+/
+newline      : NEWLINE
+
+command_invocation  : SPACE* identifier SPACE* "(" arguments ")"
+identifier          : /[A-Za-z_][A-Za-z0-9_]*/
+arguments           : argument? separated_arguments*
+separated_arguments : separation+ argument?
+                    | separation* "(" arguments ")"
+separation          : SPACE
+                    | line_ending
+
+argument : bracket_argument
+         | quoted_argument
+         | unquoted_argument
+
+bracket_argument : bracket_open bracket_content bracket_close
+bracket_open     : "[" "="* "["
+bracket_content  : /.+/
+bracket_close    : "]" "="* "]"
+
+quoted_argument     : "\"" quoted_element* "\""
+quoted_element      : /[^\\\"]/
+                    | escape_sequence
+                    | quoted_continuation
+quoted_continuation : "\\" newline
+
+unquoted_argument : unquoted_element+ // TODO: unsupported_legacy
+unquoted_element  : /[^\s\(\)#\"\\]/
+                  | escape_sequence
+
+escape_sequence   : escape_identity | escape_encoded | escape_semicolon
+escape_identity   : "\\" /[^A-Za-z0-9;]/
+escape_encoded   : "\\t"
+                 | "\\r"
+                 | "\\n"
+escape_semicolon : "\\;"
+
+bracket_comment : "#" bracket_argument
+line_comment    : "#" /[^\n]+/
+
+%import common.WS_INLINE
+%import common.NEWLINE
