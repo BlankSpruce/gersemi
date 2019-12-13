@@ -7,11 +7,11 @@ line_ending  : [line_comment] newline
 SPACE        : /[ \t]+/
 newline      : NEWLINE
 
-command_invocation  : SPACE* identifier SPACE* "(" arguments ")"
+command_invocation  : SPACE* identifier SPACE* LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 identifier          : /[A-Za-z_][A-Za-z0-9_]*/
 arguments           : argument? separated_arguments*
 separated_arguments : separation+ argument?
-                    | separation* "(" arguments ")"
+                    | separation* LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 separation          : SPACE
                     | line_ending
 
@@ -24,7 +24,7 @@ bracket_open     : "[" "="* "["
 bracket_content  : /.+/
 bracket_close    : "]" "="* "]"
 
-quoted_argument     : "\"" quoted_element* "\""
+quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
 quoted_element      : /[^\\\"]/
                     | escape_sequence
                     | quoted_continuation
@@ -34,15 +34,25 @@ unquoted_argument : unquoted_element+ // TODO: unsupported_legacy
 unquoted_element  : /[^\s\(\)#\"\\]/
                   | escape_sequence
 
-escape_sequence   : escape_identity | escape_encoded | escape_semicolon
-escape_identity   : "\\" /[^A-Za-z0-9;]/
-escape_encoded   : "\\t"
-                 | "\\r"
-                 | "\\n"
-escape_semicolon : "\\;"
+escape_sequence  : escape_identity | escape_encoded | ESCAPE_SEMICOLON
+escape_identity  : BACKSLASH /[^A-Za-z0-9;]/
+escape_encoded   : ESCAPE_HORIZONTAL_TAB
+                 | ESCAPE_CARRIAGE_RETURN
+                 | ESCAPE_NEWLINE
+ESCAPE_SEMICOLON : "\\;"
 
-bracket_comment : "#" bracket_argument
-line_comment    : "#" /[^\n]+/
+bracket_comment : POUND_SIGN bracket_argument
+line_comment    : POUND_SIGN /[^\n]+/
+
+BACKSLASH              : "\\"
+ESCAPE_CARRIAGE_RETURN : "\\r"
+ESCAPE_HORIZONTAL_TAB  : "\\t"
+ESCAPE_NEWLINE         : "\\n"
+LEFT_PARENTHESIS       : "("
+POUND_SIGN             : "#"
+QUOTATION_MARK         : "\""
+RIGHT_PARENTHESIS      : ")"
+
 
 %import common.WS_INLINE
 %import common.NEWLINE
