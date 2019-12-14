@@ -1,37 +1,38 @@
 start: file
 
 file         : file_element*
-file_element : command_invocation line_ending
+file_element : command_invocation [SPACE] line_ending
              | (bracket_comment | SPACE)* line_ending
-line_ending  : [line_comment] newline
+line_ending  : [line_comment] NEWLINE
 SPACE        : /[ \t]+/
-newline      : NEWLINE
+NEWLINE      : "\n"
 
-command_invocation  : SPACE* identifier SPACE* LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
-identifier          : /[A-Za-z_][A-Za-z0-9_]*/
-arguments           : argument? separated_arguments*
-separated_arguments : separation+ argument?
+command_invocation  : [SPACE] IDENTIFIER [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
+IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
+arguments           : [argument] separated_arguments*
+separated_arguments : separation+ [argument]
                     | separation* LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 separation          : SPACE
+                    | bracket_comment
                     | line_ending
 
 argument : bracket_argument
          | quoted_argument
          | unquoted_argument
 
-bracket_argument : bracket_open bracket_content bracket_close
-bracket_open     : "[" "="* "["
-bracket_content  : /.+/
-bracket_close    : "]" "="* "]"
+bracket_argument : LEFT_BRACKET inside_outer_brackets RIGHT_BRACKET
+inside_outer_brackets : BRACKET_CONTENT
+                      | EQUAL_SIGN inside_outer_brackets EQUAL_SIGN
+BRACKET_CONTENT : /\[(.|\n|\r)+?\]/
 
 quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
 quoted_element      : /[^\\\"]/
                     | escape_sequence
                     | quoted_continuation
-quoted_continuation : "\\" newline
+quoted_continuation : BACKSLASH NEWLINE
 
-unquoted_argument : unquoted_element+ // TODO: unsupported_legacy
-unquoted_element  : /[^\s\(\)#\"\\]/
+unquoted_argument : unquoted_element+ // TODO: unquoted_legacy
+unquoted_element  : /[^\s\(\)#\"\\\']/
                   | escape_sequence
 
 escape_sequence  : escape_identity | escape_encoded | ESCAPE_SEMICOLON
@@ -42,17 +43,17 @@ escape_encoded   : ESCAPE_HORIZONTAL_TAB
 ESCAPE_SEMICOLON : "\\;"
 
 bracket_comment : POUND_SIGN bracket_argument
-line_comment    : POUND_SIGN /[^\n]+/
+line_comment    : POUND_SIGN LINE_COMMENT_CONTENT
+LINE_COMMENT_CONTENT : /(?!\[=*\[).+/
 
 BACKSLASH              : "\\"
+EQUAL_SIGN             : "="
 ESCAPE_CARRIAGE_RETURN : "\\r"
 ESCAPE_HORIZONTAL_TAB  : "\\t"
 ESCAPE_NEWLINE         : "\\n"
-LEFT_PARENTHESIS       : "("
+LEFT_BRACKET           : /\[/
+LEFT_PARENTHESIS       : /\(/
 POUND_SIGN             : "#"
 QUOTATION_MARK         : "\""
-RIGHT_PARENTHESIS      : ")"
-
-
-%import common.WS_INLINE
-%import common.NEWLINE
+RIGHT_BRACKET          : /\]/
+RIGHT_PARENTHESIS      : /\)/
