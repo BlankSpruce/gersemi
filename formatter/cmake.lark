@@ -4,8 +4,6 @@ file         : file_element*
 file_element : command_invocation [SPACE] line_ending
              | (bracket_comment | SPACE)* line_ending
 line_ending  : [line_comment] NEWLINE
-SPACE        : /[ \t]+/
-NEWLINE      : "\n"
 
 command_invocation  : [SPACE] IDENTIFIER [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
@@ -20,10 +18,10 @@ argument : bracket_argument
          | quoted_argument
          | unquoted_argument
 
-bracket_argument : LEFT_BRACKET inside_outer_brackets RIGHT_BRACKET
+bracket_argument      : LEFT_BRACKET inside_outer_brackets RIGHT_BRACKET
 inside_outer_brackets : BRACKET_CONTENT
                       | EQUAL_SIGN inside_outer_brackets EQUAL_SIGN
-BRACKET_CONTENT : /\[(.|\n|\r)+?\]/
+BRACKET_CONTENT       : /\[(.|\n|\r)+?\]/
 
 quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
 quoted_element      : /[^\\\"]/
@@ -35,12 +33,13 @@ unquoted_argument : unquoted_element+ // TODO: unquoted_legacy
 unquoted_element  : /[^\s\(\)#\"\\\']/
                   | escape_sequence
 
-escape_sequence  : escape_identity | escape_encoded | ESCAPE_SEMICOLON
-escape_identity  : BACKSLASH /[^A-Za-z0-9;]/
-escape_encoded   : ESCAPE_HORIZONTAL_TAB
+escape_sequence  : escape_identity
+                 | ESCAPE_HORIZONTAL_TAB
                  | ESCAPE_CARRIAGE_RETURN
                  | ESCAPE_NEWLINE
-ESCAPE_SEMICOLON : "\\;"
+                 | ESCAPE_SEMICOLON
+escape_identity  : BACKSLASH /[^A-Za-z0-9;]/
+
 
 bracket_comment : POUND_SIGN bracket_argument
 line_comment    : POUND_SIGN LINE_COMMENT_CONTENT
@@ -48,12 +47,15 @@ LINE_COMMENT_CONTENT : /(?!\[=*\[).+/
 
 BACKSLASH              : "\\"
 EQUAL_SIGN             : "="
+ESCAPE_SEMICOLON       : "\\;"
 ESCAPE_CARRIAGE_RETURN : "\\r"
 ESCAPE_HORIZONTAL_TAB  : "\\t"
 ESCAPE_NEWLINE         : "\\n"
 LEFT_BRACKET           : /\[/
 LEFT_PARENTHESIS       : /\(/
+NEWLINE                : "\n"
 POUND_SIGN             : "#"
 QUOTATION_MARK         : "\""
 RIGHT_BRACKET          : /\]/
 RIGHT_PARENTHESIS      : /\)/
+SPACE                  : /[ \t]+/
