@@ -25,21 +25,16 @@ BRACKET_CONTENT       : /\[(.|\n|\r)+?\]/
                       | /=\[(.|\n|\r)+?\]=/
 
 quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
-quoted_element      : /[^\\\"]/
-                    | escape_sequence
+quoted_element      : /([^\\\"]|\n)/
+                    | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
                     | quoted_continuation
 quoted_continuation : BACKSLASH NEWLINE
 
 unquoted_argument : unquoted_element+ // TODO: unquoted_legacy
-unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\\']/
-                  | escape_sequence
+unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
+                  | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
 
-escape_sequence  : escape_identity
-                 | ESCAPE_HORIZONTAL_TAB
-                 | ESCAPE_CARRIAGE_RETURN
-                 | ESCAPE_NEWLINE
-                 | ESCAPE_SEMICOLON
-escape_identity  : BACKSLASH /[^A-Za-z0-9;]/
+ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
 
 
 bracket_comment : POUND_SIGN bracket_argument
