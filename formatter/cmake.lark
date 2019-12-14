@@ -36,17 +36,12 @@ unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
 
 ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
 
-
 bracket_comment : POUND_SIGN bracket_argument
 line_comment    : POUND_SIGN LINE_COMMENT_CONTENT
 LINE_COMMENT_CONTENT : /(?!\[=*\[).+/
 
 BACKSLASH              : "\\"
 EQUAL_SIGN             : "="
-ESCAPE_SEMICOLON       : "\\;"
-ESCAPE_CARRIAGE_RETURN : "\\r"
-ESCAPE_HORIZONTAL_TAB  : "\\t"
-ESCAPE_NEWLINE         : "\\n"
 LEFT_BRACKET           : /\[/
 LEFT_PARENTHESIS       : /\(/
 NEWLINE                : "\n"
