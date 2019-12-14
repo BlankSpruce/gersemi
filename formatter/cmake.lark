@@ -22,6 +22,7 @@ bracket_argument      : LEFT_BRACKET inside_outer_brackets RIGHT_BRACKET
 inside_outer_brackets : BRACKET_CONTENT
                       | EQUAL_SIGN inside_outer_brackets EQUAL_SIGN
 BRACKET_CONTENT       : /\[(.|\n|\r)+?\]/
+                      | /=\[(.|\n|\r)+?\]=/
 
 quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
 quoted_element      : /[^\\\"]/
@@ -30,7 +31,7 @@ quoted_element      : /[^\\\"]/
 quoted_continuation : BACKSLASH NEWLINE
 
 unquoted_argument : unquoted_element+ // TODO: unquoted_legacy
-unquoted_element  : /[^\s\(\)#\"\\\']/
+unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\\']/
                   | escape_sequence
 
 escape_sequence  : escape_identity
