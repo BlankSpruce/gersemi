@@ -1,0 +1,1 @@
+../inputs/cmake_2_doc_example.cmake

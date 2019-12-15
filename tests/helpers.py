@@ -15,7 +15,7 @@ def get_directory_path(directory):
     )
 
 
-def get_files_with_extension(directory, extension):
+def get_files_with_extension(directory, extension=".cmake"):
     files = os.listdir(get_directory_path(directory))
     return list(filter(has_extension(extension), files))
 
@@ -25,7 +25,7 @@ def remove_extension(filename):
     return result
 
 
-def get_content(directory, filename):
+def get_content(filename, directory):
     with open(os.path.join(get_directory_path(directory), filename), 'r') as f:
         return f.read()
 

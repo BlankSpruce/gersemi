@@ -17,9 +17,8 @@ def test_parser(parser, case):
 
 
 def get_list_of_cases():
-    dirname = 'parser'
-    files = get_files_with_extension(dirname, '.cmake')
-    return [Case(remove_extension(f), get_content(dirname, f)) for f in files]
+    files = get_files_with_extension(directory="inputs")
+    return [Case(remove_extension(f), get_content(f, directory="inputs")) for f in files]
 
 
 def pytest_generate_tests(metafunc):
