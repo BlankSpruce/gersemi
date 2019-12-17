@@ -30,9 +30,10 @@ quoted_element      : /([^\\\"]|\n)/
                     | quoted_continuation
 quoted_continuation : BACKSLASH NEWLINE
 
-unquoted_argument : unquoted_element+ // TODO: unquoted_legacy
+unquoted_argument : unquoted_element+ | unquoted_legacy
 unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
                   | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
+unquoted_legacy   : /[^\"\(\[\n\s#][^\)\n\s]+/
 
 ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
 
