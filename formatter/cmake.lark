@@ -12,7 +12,7 @@ separated_arguments : separation+ [argument]
                     | separation* LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 separation          : SPACE
                     | bracket_comment
-                    | line_ending
+                    | [line_comment] NEWLINE -> line_ending
 
 argument : bracket_argument
          | quoted_argument
@@ -30,7 +30,8 @@ quoted_element      : /([^\\\"]|\n)/
                     | quoted_continuation
 quoted_continuation : BACKSLASH NEWLINE
 
-unquoted_argument : unquoted_element+ | unquoted_legacy
+unquoted_argument : unquoted_element+
+                  | unquoted_legacy
 unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
                   | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
 unquoted_legacy   : /[^\"\(\[\n\s#][^\)\n\s]+/

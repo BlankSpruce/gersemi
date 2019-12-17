@@ -1,0 +1,1 @@
+../inputs/unquoted_argument_of_command_invocation_starting_new_line.cmake
