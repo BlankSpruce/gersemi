@@ -1,0 +1,1 @@
+../inputs/end_of_file_without_newline.cmake
