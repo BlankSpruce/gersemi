@@ -18,11 +18,7 @@ argument : bracket_argument
          | quoted_argument
          | unquoted_argument
 
-bracket_argument      : LEFT_BRACKET inside_outer_brackets RIGHT_BRACKET
-inside_outer_brackets : BRACKET_CONTENT
-                      | EQUAL_SIGN inside_outer_brackets EQUAL_SIGN
-BRACKET_CONTENT       : /\[(.|\n|\r)+?\]/
-                      | /=\[(.|\n|\r)+?\]=/
+bracket_argument : /\[(?P<equal_signs>(=*))\[(.|\n|\r)+?\](?P=equal_signs)\]/
 
 quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
 quoted_element      : /([^\\\"]|\n)/
@@ -47,12 +43,9 @@ line_comment    : POUND_SIGN [LINE_COMMENT_CONTENT]
 LINE_COMMENT_CONTENT : /(?!\[=*\[).+/
 
 BACKSLASH              : "\\"
-EQUAL_SIGN             : "="
-LEFT_BRACKET           : /\[/
 LEFT_PARENTHESIS       : /\(/
 NEWLINE                : "\n"
 POUND_SIGN             : "#"
 QUOTATION_MARK         : "\""
-RIGHT_BRACKET          : /\]/
 RIGHT_PARENTHESIS      : /\)/
 SPACE                  : /[ \t]+/
