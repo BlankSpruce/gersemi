@@ -30,11 +30,16 @@ quoted_element      : /([^\\\"]|\n)/
                     | quoted_continuation
 quoted_continuation : BACKSLASH NEWLINE
 
-unquoted_argument : unquoted_element+
+unquoted_argument : unquoted_element+ [unquoted_legacy]
                   | unquoted_legacy
 unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
                   | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
-unquoted_legacy   : /[^\"\(\[\n\s#][^\)\n\s]+/
+
+unquoted_legacy      : make_style_reference
+                     | quoted_part
+make_style_reference : /\$\([^\)\n\"#]+?\)/
+quoted_part          : /(?<=[^\"])\"[^\n#]*?\"/
+
 
 ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
 
