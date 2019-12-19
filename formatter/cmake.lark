@@ -1,9 +1,8 @@
 start: file
 
-file         : file_element*
-file_element : command_invocation [SPACE] line_ending
-             | (bracket_comment | SPACE)* line_ending
-line_ending  : [line_comment] NEWLINE
+file         : (file_element NEWLINE)* file_element
+file_element : command_invocation [SPACE] [line_comment]
+             | (bracket_comment | SPACE)* [line_comment]
 
 command_invocation  : [SPACE] IDENTIFIER [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
