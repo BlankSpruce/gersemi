@@ -26,7 +26,7 @@ quoted_element      : /([^\\\"]|\n)/
 quoted_continuation : BACKSLASH NEWLINE
 
 unquoted_argument : unquoted_element+
-unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
+unquoted_element  : /[^\s\(\)#\"\\]/
                   | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
                   | make_style_reference
                   | unquoted_element double_quoted_string
@@ -34,12 +34,11 @@ unquoted_element  : /(?!\[=*\[)[^\s\(\)#\"\\]/
 make_style_reference : /\$\([^\)\n\"#]+?\)/
 double_quoted_string : /\"[^\n#]*?\"/
 
-
 ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
 
 bracket_comment : POUND_SIGN bracket_argument
 line_comment    : POUND_SIGN [LINE_COMMENT_CONTENT]
-LINE_COMMENT_CONTENT : /(?!\[=*\[).+/
+LINE_COMMENT_CONTENT : /.+/
 
 BACKSLASH              : "\\"
 LEFT_PARENTHESIS       : /\(/
