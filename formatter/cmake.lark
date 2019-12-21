@@ -4,18 +4,18 @@ file         : (file_element NEWLINE)* file_element
 file_element : command_invocation [SPACE] [line_comment]
              | (bracket_comment | SPACE)* [line_comment]
 
-command_invocation  : [SPACE] IDENTIFIER [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
-IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
-arguments           : [argument] separated_arguments*
-separated_arguments : separation+ [argument]
-                    | separation* LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
-separation          : SPACE
+command_invocation  : [SPACE] identifier [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
+identifier          : /[A-Za-z_][A-Za-z0-9_]*/
+arguments           : [argument] (_separation [argument])*
+_separation         : _separation_atom+
+_separation_atom    : SPACE
                     | bracket_comment
-                    | [line_comment] NEWLINE -> line_ending
+                    | [line_comment] NEWLINE
 
 argument : bracket_argument
          | quoted_argument
          | unquoted_argument
+         | complex_argument
 
 bracket_argument : /\[(?P<equal_signs>(=*))\[(.|\n|\r)+?\](?P=equal_signs)\]/
 
@@ -33,6 +33,8 @@ unquoted_element  : /[^\s\(\)#\"\\]/
 
 make_style_reference : /\$\([^\)\n\"#]+?\)/
 double_quoted_string : /\"[^\n#]*?\"/
+
+complex_argument : LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 
 ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
 

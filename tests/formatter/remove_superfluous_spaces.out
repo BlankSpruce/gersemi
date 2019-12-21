@@ -1,0 +1,39 @@
+# Already formatted
+
+foo()
+
+foo(bar)
+
+foo(bar "baz")
+
+#[=[    spaces     in     bracket    comments     untouched    ]=]
+
+#     space      in     line    comments     untouched    
+
+# To format
+
+foo()
+
+foo()
+
+foo(bar)
+
+foo(bar)
+
+foo(bar)
+
+
+
+foo(bar)
+
+foo(bar "baz")
+
+foo(#[=[some bracket comment]=] bar "baz")
+
+#[=[some bracket comment]=] # followed by superfluous spaces and line comment
+
+foo(bar
+baz
+)
+
+foo()

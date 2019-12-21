@@ -1,27 +1,25 @@
 import collections
-from formatter.converter import convert_to_string
 from helpers import get_files_with_extension, remove_extension, get_content
 
 
 Case = collections.namedtuple("Case", ["filename", "given", "expected"])
 
 
-def test_converter(parser, case):
-    tree = parser.parse(case.given)
-    assert convert_to_string(tree) == case.expected
+def test_formatter(formatter, case):
+    assert formatter.format(case.given) == case.expected
 
 
 def get_list_of_cases():
-    input_files = get_files_with_extension(directory="inputs")
-    output_files = get_files_with_extension(directory="converter")
+    input_files = get_files_with_extension(directory="formatter", extension=".in")
+    output_files = get_files_with_extension(directory="formatter", extension=".out")
     for inp, outp in zip(input_files, output_files):
         assert remove_extension(inp) == remove_extension(outp), "Incomplete input-output pair"
 
     return [
         Case(
             remove_extension(inp),
-            get_content(inp, directory="inputs"),
-            get_content(inp, directory="converter")
+            get_content(inp, directory="formatter"),
+            get_content(outp, directory="formatter")
         ) for inp, outp in zip(input_files, output_files)
     ]
 

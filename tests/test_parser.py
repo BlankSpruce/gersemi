@@ -17,8 +17,8 @@ def test_parser(parser, case):
 
 
 def get_list_of_cases():
-    files = get_files_with_extension(directory="inputs")
-    return [Case(remove_extension(f), get_content(f, directory="inputs")) for f in files]
+    files = get_files_with_extension(directory="parser")
+    return [Case(remove_extension(f), get_content(f, directory="parser")) for f in files]
 
 
 def pytest_generate_tests(metafunc):

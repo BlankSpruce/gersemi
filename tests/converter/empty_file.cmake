@@ -1,1 +1,0 @@
-../inputs/empty_file.cmake
