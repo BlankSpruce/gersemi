@@ -1,0 +1,16 @@
+if(TRUE)
+    message(STATUS "bar")
+endif()
+
+# nested if statement
+if(TRUE)
+    message(STATUS "foo")
+    # empty lines don't introduce superfluous spaces
+
+    # comment also gets indented
+    if(TRUE)
+        # and here
+        message(STATUS "bar")
+        # and there
+    endif()
+endif()

@@ -1,10 +1,14 @@
 start: file
 
-file         : (file_element NEWLINE)* file_element
-file_element : command_invocation [SPACE] [line_comment]
-             | (bracket_comment | SPACE)* [line_comment]
+file          : (_file_element NEWLINE)* _file_element
+_file_element : command_element
+              | non_command_element
 
-command_invocation  : [SPACE] identifier [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
+command_element     : leading_space command_invocation [SPACE] [line_comment]
+leading_space       : [SPACE]
+non_command_element : (bracket_comment | SPACE)* [line_comment]
+
+command_invocation  : identifier [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 identifier          : /[A-Za-z_][A-Za-z0-9_]*/
 arguments           : [argument] (_separation [argument])*
 _separation         : _separation_atom+
