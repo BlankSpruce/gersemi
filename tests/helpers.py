@@ -26,6 +26,5 @@ def remove_extension(filename):
 
 
 def get_content(filename, directory):
-    with open(os.path.join(get_directory_path(directory), filename), 'r') as f:
-        return f.read()
-
+    with open(os.path.join(get_directory_path(directory), filename), 'r') as opened_file:
+        return opened_file.read()

@@ -1,6 +1,6 @@
-import pytest
 from formatter.parser import create_parser
 from formatter.formatter import create_formatter
+import pytest
 
 
 @pytest.fixture

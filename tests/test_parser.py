@@ -1,6 +1,5 @@
 import collections
 import lark
-import os
 import pytest
 from helpers import get_files_with_extension, remove_extension, get_content
 

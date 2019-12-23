@@ -12,8 +12,7 @@ def indent_child(child):
 
 
 class DumpToString(Transformer_InPlace):
-    def __default__(self, *args):
-        _, children, _ = args
+    def __default__(self, data, children, meta):
         return "".join(children)
 
     def block_body(self, children):

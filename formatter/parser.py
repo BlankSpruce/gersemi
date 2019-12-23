@@ -1,5 +1,5 @@
-import lark
 import os
+import lark
 
 
 def create_parser():

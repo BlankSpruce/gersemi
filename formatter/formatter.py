@@ -1,13 +1,12 @@
-from functools import reduce
 from itertools import filterfalse
-from lark import Tree, Token
-from lark.visitors import Transformer_InPlace, Interpreter
-
 from formatter.dumper import DumpToString
+from lark import Tree, Token
+from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
+
 
 
 def is_space(element):
-    return type(element) is Token and element.type == 'SPACE'
+    return isinstance(element, Token) and element.type == 'SPACE'
 
 
 def remove_if_space(children, index):
@@ -48,7 +47,7 @@ class RemoveSuperfluousSpaces(Transformer_InPlace):
 
 
 class ReduceSpacesToOneCharacter(Transformer_InPlace):
-    def SPACE(self, ignored):
+    def SPACE(self, _):
         return Token('SPACE', ' ')
 
 
@@ -66,21 +65,24 @@ def is_command(command_name):
             name, *_ = tree.children
             return name == command_name
 
-        def __default__(self, *args):
+        def __default__(self, tree):
             return False
 
-    return lambda node: type(node) == Tree and IsCommandImpl().visit(node)
+    return lambda node: isinstance(node, Tree) and IsCommandImpl().visit(node)
 
 
 class IsolateSingleBlockType(Transformer_InPlace):
     def __init__(self, begin_name, end_name):
+        super().__init__()
         self.begin_name = begin_name
         self.end_name = end_name
         self.is_block_begin = is_command(begin_name)
         self.is_block_end = is_command(end_name)
 
-    def raise_exception(self):
-        raise RuntimeError("Unbalanced {}(), missing opening {}() command".format(self.end_name, self.begin_name))
+    def unbalanced_end_message(self):
+        return "Unbalanced {}(), missing opening {}() command".format(
+            self.end_name, self.begin_name
+        )
 
     def _restructure(self, node_stream, begin=None):
         children = []
@@ -89,7 +91,7 @@ class IsolateSingleBlockType(Transformer_InPlace):
                 children.append(self._restructure(node_stream, begin=node))
             elif self.is_block_end(node):
                 if begin is None:
-                    self.raise_exception()
+                    raise RuntimeError(self.unbalanced_end_message())
                 return Tree('block', [
                     Tree('block_begin', begin.children),
                     Tree('block_body', children),
@@ -110,12 +112,8 @@ class IsolateSingleBlockType(Transformer_InPlace):
         return Tree('block_body', self.restructure(children))
 
 
-def compose_transformers(*transformers):
-    return reduce(lambda a, b: a * b, transformers)
-
-
 def IsolateBlocks():
-    return compose_transformers(
+    return TransformerChain(
         IsolateSingleBlockType('foreach', 'endforeach'),
         IsolateSingleBlockType('function', 'endfunction'),
         IsolateSingleBlockType('if', 'endif'),
@@ -128,7 +126,7 @@ class Formatter:
         self.parser = parser
 
     def format(self, code):
-        transformer = compose_transformers(
+        transformer = TransformerChain(
             IsolateBlocks(),
             RemoveSuperfluousSpaces(),
             ReduceSpacesToOneCharacter(visit_tokens=True),
