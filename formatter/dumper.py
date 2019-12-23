@@ -1,20 +1,14 @@
 from lark.visitors import Transformer_InPlace
 
 
-def indent_body(body):
-    if body[-1] == '\n':
-        return indent_body(body[:-1]) + "\n"
+def indent_line(line):
+    if line == "":
+        return ""
+    return "    " + line
 
-    if body[0] == '\n':
-        return "\n" + indent_body(body[1:])
 
-    indented_body = []
-    for line in body.split('\n'):
-        if line == "":
-            indented_body.append("")
-        else:
-            indented_body.append("    " + line)
-    return "\n".join(indented_body)
+def indent_child(child):
+    return "\n".join(map(indent_line, child.split('\n')))
 
 
 class DumpToString(Transformer_InPlace):
@@ -22,6 +16,5 @@ class DumpToString(Transformer_InPlace):
         _, children, _ = args
         return "".join(children)
 
-    def block(self, children):
-        begin, body, end = children
-        return "{}{}{}".format(begin, indent_body(body), end)
+    def block_body(self, children):
+        return "".join(map(indent_child, children))
