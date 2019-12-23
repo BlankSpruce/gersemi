@@ -72,17 +72,24 @@ def is_command(command_name):
     return lambda node: type(node) == Tree and IsCommandImpl().visit(node)
 
 
-is_if = is_command('if')
-is_endif = is_command('endif')
+class IsolateSingleBlockType(Transformer_InPlace):
+    def __init__(self, begin_name, end_name):
+        self.begin_name = begin_name
+        self.end_name = end_name
+        self.is_block_begin = is_command(begin_name)
+        self.is_block_end = is_command(end_name)
 
+    def raise_exception(self):
+        raise RuntimeError("Unbalanced {}(), missing opening {}() command".format(self.end_name, self.begin_name))
 
-class IsolateIfBlocks(Transformer_InPlace):
     def _restructure(self, node_stream, begin=None):
         children = []
         for node in node_stream:
-            if is_if(node):
+            if self.is_block_begin(node):
                 children.append(self._restructure(node_stream, begin=node))
-            elif is_endif(node):
+            elif self.is_block_end(node):
+                if begin is None:
+                    self.raise_exception()
                 return Tree('block', [
                     Tree('block_begin', begin.children),
                     Tree('block_body', children),
@@ -92,14 +99,29 @@ class IsolateIfBlocks(Transformer_InPlace):
                 children.append(node)
         return children
 
-    def file(self, children):
+    def restructure(self, children):
         children_as_stream = (child for child in children)
-        return Tree('file', self._restructure(children_as_stream))
+        return self._restructure(children_as_stream)
+
+    def file(self, children):
+        return Tree('file', self.restructure(children))
+
+    def block_body(self, children):
+        return Tree('block_body', self.restructure(children))
 
 
 def compose_transformers(*transformers):
     return reduce(lambda a, b: a * b, transformers)
 
+
+def IsolateBlocks():
+    return compose_transformers(
+        IsolateSingleBlockType('foreach', 'endforeach'),
+        IsolateSingleBlockType('function', 'endfunction'),
+        IsolateSingleBlockType('if', 'endif'),
+        IsolateSingleBlockType('macro', 'endmacro'),
+        IsolateSingleBlockType('while', 'endwhile'),
+    )
 
 class Formatter:
     def __init__(self, parser):
@@ -107,7 +129,7 @@ class Formatter:
 
     def format(self, code):
         transformer = compose_transformers(
-            IsolateIfBlocks(),
+            IsolateBlocks(),
             RemoveSuperfluousSpaces(),
             ReduceSpacesToOneCharacter(visit_tokens=True),
             DumpToString()
