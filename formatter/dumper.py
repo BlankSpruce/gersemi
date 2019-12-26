@@ -8,7 +8,7 @@ def indent_line(line):
 
 
 def indent_child(child):
-    return "\n".join(map(indent_line, child.split('\n')))
+    return "\n".join(map(indent_line, child.split("\n")))
 
 
 class DumpToString(Transformer_InPlace):

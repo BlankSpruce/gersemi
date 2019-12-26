@@ -4,9 +4,8 @@ from lark import Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
 
 
-
 def is_space(element):
-    return isinstance(element, Token) and element.type == 'SPACE'
+    return isinstance(element, Token) and element.type == "SPACE"
 
 
 def remove_if_space(children, index):
@@ -22,33 +21,33 @@ class RemoveSuperfluousSpaces(Transformer_InPlace):
     def file_element(self, children):
         remove_if_space(children, index=0)
         remove_if_space(children, index=-1)
-        return Tree('file_element', children)
+        return Tree("file_element", children)
 
     def command_element(self, children):
         if len(children) > 2:
             remove_if_space(children, index=2)
         children.pop(0)
-        return Tree('command_element', children)
+        return Tree("command_element", children)
 
     def non_command_element(self, children):
         remove_if_space(children, index=0)
-        return Tree('non_command_element', children)
+        return Tree("non_command_element", children)
 
     def command_invocation(self, children):
         remove_if_space(children, index=1)
-        return Tree('command_invocation', children)
+        return Tree("command_invocation", children)
 
     def arguments(self, children):
         remove_if_space(children, index=0)
         remove_if_space(children, index=-1)
         children = [*filterfalse(is_space_at_line_beginning, children)]
 
-        return Tree('arguments', children)
+        return Tree("arguments", children)
 
 
 class ReduceSpacesToOneCharacter(Transformer_InPlace):
     def SPACE(self, _):
-        return Token('SPACE', ' ')
+        return Token("SPACE", " ")
 
 
 def is_command(command_name):
@@ -92,11 +91,14 @@ class IsolateSingleBlockType(Transformer_InPlace):
             elif self.is_block_end(node):
                 if begin is None:
                     raise RuntimeError(self.unbalanced_end_message())
-                return Tree('block', [
-                    Tree('block_begin', begin.children),
-                    Tree('block_body', children),
-                    Tree('block_end', node.children),
-                ])
+                return Tree(
+                    "block",
+                    [
+                        Tree("block_begin", begin.children),
+                        Tree("block_body", children),
+                        Tree("block_end", node.children),
+                    ],
+                )
             else:
                 children.append(node)
         return children
@@ -106,10 +108,10 @@ class IsolateSingleBlockType(Transformer_InPlace):
         return self._restructure(children_as_stream)
 
     def file(self, children):
-        return Tree('file', self.restructure(children))
+        return Tree("file", self.restructure(children))
 
     def block_body(self, children):
-        return Tree('block_body', self.restructure(children))
+        return Tree("block_body", self.restructure(children))
 
 
 class RestructureIfBlock(Transformer_InPlace):
@@ -117,8 +119,8 @@ class RestructureIfBlock(Transformer_InPlace):
         super().__init__()
 
     def is_alternative_clause(self, node):
-        is_elseif = is_command('elseif')
-        is_else = is_command('else')
+        is_elseif = is_command("elseif")
+        is_else = is_command("else")
         return is_elseif(node) or is_else(node)
 
     def _restructure(self, node_stream):
@@ -126,12 +128,12 @@ class RestructureIfBlock(Transformer_InPlace):
         for node in node_stream:
             if self.is_alternative_clause(node):
                 return [
-                    Tree('block_body', children),
-                    Tree('alternative_clause', [node]),
+                    Tree("block_body", children),
+                    Tree("alternative_clause", [node]),
                     *self._restructure(node_stream),
                 ]
             children.append(node)
-        return [Tree('block_body', children)]
+        return [Tree("block_body", children)]
 
     def restructure(self, block_body):
         children_as_stream = (child for child in block_body.children)
@@ -139,28 +141,24 @@ class RestructureIfBlock(Transformer_InPlace):
 
     def block(self, children):
         if_, body, endif_ = children
-        return Tree('block', [
-            if_,
-            *self.restructure(body),
-            endif_,
-        ])
+        return Tree("block", [if_, *self.restructure(body), endif_,])
 
 
 def IsolateIfBlock():
     return TransformerChain(
-        IsolateSingleBlockType('if', 'endif'),
-        RestructureIfBlock(),
+        IsolateSingleBlockType("if", "endif"), RestructureIfBlock(),
     )
 
 
 def IsolateBlocks():
     return TransformerChain(
-        IsolateSingleBlockType('foreach', 'endforeach'),
-        IsolateSingleBlockType('function', 'endfunction'),
+        IsolateSingleBlockType("foreach", "endforeach"),
+        IsolateSingleBlockType("function", "endfunction"),
         IsolateIfBlock(),
-        IsolateSingleBlockType('macro', 'endmacro'),
-        IsolateSingleBlockType('while', 'endwhile'),
+        IsolateSingleBlockType("macro", "endmacro"),
+        IsolateSingleBlockType("while", "endwhile"),
     )
+
 
 class Formatter:
     def __init__(self, parser):
@@ -171,7 +169,7 @@ class Formatter:
             IsolateBlocks(),
             RemoveSuperfluousSpaces(),
             ReduceSpacesToOneCharacter(visit_tokens=True),
-            DumpToString()
+            DumpToString(),
         )
         return transformer.transform(self.parser.parse(code))
 

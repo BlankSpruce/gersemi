@@ -17,14 +17,14 @@ def test_parser(parser, case):
 
 def get_list_of_cases():
     files = get_files_with_extension(directory="parser")
-    return [Case(remove_extension(f), get_content(f, directory="parser")) for f in files]
+    return [
+        Case(remove_extension(f), get_content(f, directory="parser")) for f in files
+    ]
 
 
 def pytest_generate_tests(metafunc):
-    if 'case' in metafunc.fixturenames:
+    if "case" in metafunc.fixturenames:
         cases = get_list_of_cases()
         metafunc.parametrize(
-            argnames='case',
-            argvalues=cases,
-            ids=[c.filename for c in cases]
+            argnames="case", argvalues=cases, ids=[c.filename for c in cases]
         )

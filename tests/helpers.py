@@ -5,14 +5,12 @@ def has_extension(expected_extension):
     def verify(filename):
         _, extension = os.path.splitext(filename)
         return extension == expected_extension
+
     return verify
 
 
 def get_directory_path(directory):
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        directory
-    )
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), directory)
 
 
 def get_files_with_extension(directory, extension=".cmake"):
@@ -26,5 +24,6 @@ def remove_extension(filename):
 
 
 def get_content(filename, directory):
-    with open(os.path.join(get_directory_path(directory), filename), 'r') as opened_file:
+    filepath = os.path.join(get_directory_path(directory), filename)
+    with open(filepath, "r") as opened_file:
         return opened_file.read()
