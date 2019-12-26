@@ -112,11 +112,52 @@ class IsolateSingleBlockType(Transformer_InPlace):
         return Tree('block_body', self.restructure(children))
 
 
+class RestructureIfBlock(Transformer_InPlace):
+    def __init__(self):
+        super().__init__()
+
+    def is_alternative_clause(self, node):
+        is_elseif = is_command('elseif')
+        is_else = is_command('else')
+        return is_elseif(node) or is_else(node)
+
+    def _restructure(self, node_stream):
+        children = []
+        for node in node_stream:
+            if self.is_alternative_clause(node):
+                return [
+                    Tree('block_body', children),
+                    Tree('alternative_clause', [node]),
+                    *self._restructure(node_stream),
+                ]
+            children.append(node)
+        return [Tree('block_body', children)]
+
+    def restructure(self, block_body):
+        children_as_stream = (child for child in block_body.children)
+        return self._restructure(children_as_stream)
+
+    def block(self, children):
+        if_, body, endif_ = children
+        return Tree('block', [
+            if_,
+            *self.restructure(body),
+            endif_,
+        ])
+
+
+def IsolateIfBlock():
+    return TransformerChain(
+        IsolateSingleBlockType('if', 'endif'),
+        RestructureIfBlock(),
+    )
+
+
 def IsolateBlocks():
     return TransformerChain(
         IsolateSingleBlockType('foreach', 'endforeach'),
         IsolateSingleBlockType('function', 'endfunction'),
-        IsolateSingleBlockType('if', 'endif'),
+        IsolateIfBlock(),
         IsolateSingleBlockType('macro', 'endmacro'),
         IsolateSingleBlockType('while', 'endwhile'),
     )
