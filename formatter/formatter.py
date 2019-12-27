@@ -160,7 +160,7 @@ def IsolateBlocks():
     )
 
 
-class Formatter:
+class Formatter:  # pylint: disable=too-few-public-methods
     def __init__(self, parser):
         self.parser = parser
 
