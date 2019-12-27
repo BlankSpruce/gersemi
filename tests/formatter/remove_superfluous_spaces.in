@@ -36,4 +36,8 @@ foo(  bar
    baz
    )       
 
-foo()     
+foo()
+
+if()    
+    message(STATUS "foo")   
+endif()   

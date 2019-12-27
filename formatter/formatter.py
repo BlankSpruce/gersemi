@@ -24,10 +24,19 @@ class RemoveSuperfluousSpaces(Transformer_InPlace):
         return Tree("file_element", children)
 
     def command_element(self, children):
-        if len(children) > 2:
-            remove_if_space(children, index=2)
+        children.pop(2)
         children.pop(0)
         return Tree("command_element", children)
+
+    def block_begin(self, children):
+        children.pop(2)
+        children.pop(0)
+        return Tree("block_begin", children)
+
+    def block_end(self, children):
+        children.pop(2)
+        children.pop(0)
+        return Tree("block_end", children)
 
     def non_command_element(self, children):
         remove_if_space(children, index=0)

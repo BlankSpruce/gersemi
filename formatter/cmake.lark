@@ -4,8 +4,9 @@ file          : (_file_element NEWLINE)* _file_element
 _file_element : command_element
               | non_command_element
 
-command_element     : leading_space command_invocation [SPACE] [line_comment]
+command_element     : leading_space command_invocation trailing_space [line_comment]
 leading_space       : [SPACE]
+trailing_space      : [SPACE]
 non_command_element : (bracket_comment | SPACE)* [line_comment]
 
 command_invocation  : identifier [SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS

@@ -37,3 +37,7 @@ baz
 )
 
 foo()
+
+if()
+    message(STATUS "foo")
+endif()
