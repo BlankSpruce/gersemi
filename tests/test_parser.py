@@ -1,10 +1,6 @@
-import collections
 import lark
 import pytest
-from helpers import get_files_with_extension, remove_extension, get_content
-
-
-Case = collections.namedtuple("Case", ["filename", "content"])
+from .tests_generator import generate_input_only_tests
 
 
 def test_parser(parser, case):
@@ -15,16 +11,6 @@ def test_parser(parser, case):
         raise
 
 
-def get_list_of_cases():
-    files = get_files_with_extension(directory="parser")
-    return [
-        Case(remove_extension(f), get_content(f, directory="parser")) for f in files
-    ]
-
-
-def pytest_generate_tests(metafunc):
-    if "case" in metafunc.fixturenames:
-        cases = get_list_of_cases()
-        metafunc.parametrize(
-            argnames="case", argvalues=cases, ids=[c.filename for c in cases]
-        )
+pytest_generate_tests = generate_input_only_tests(
+    where="parser", input_extension=".cmake",
+)
