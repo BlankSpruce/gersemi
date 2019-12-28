@@ -1,0 +1,14 @@
+message(long_argument very_long_argument very_very_long_argument very_very_long_argument argument yet_another_argument very_very_long_argument line_limit_long_________________________________________________________argument argument)
+
+message(line_limit_long_________________________________________________________argument argument_longer_than___________________________________________________line_limit argument)
+
+# Line limits inside indented blocks
+if(TRUE)
+    message(line_limit_long_____________________________________________argument ab argument_longer_than_______________________________________________line_limit a)
+endif()
+
+if(TRUE)
+    if(TRUE)
+        message(line_limit_long_________________________________________argument abcdef argument_longer_than___________________________________________line_limit abcde)
+    endif()
+endif()
