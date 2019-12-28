@@ -19,32 +19,55 @@ class Indenter:
         return "\n".join(map(self.indent_line, text.split("\n")))
 
 
+class WidthLimitingBuffer:
+    def __init__(self, width):
+        self.width = width
+        self.lines = [""]
+
+    def __iadd__(self, text):
+        if self.lines[-1] == "":
+            self.lines[-1] += text
+        elif len(self.lines[-1]) + len(text) > self.width:
+            self.lines.append(text)
+        else:
+            self.lines[-1] += text
+        return self
+
+    def __str__(self):
+        return "\n".join(filter(lambda line: len(line) > 0, map(str.strip, self.lines)))
+
+    @property
+    def height(self):
+        if len(self.lines) == 1 and self.lines[0] == "":
+            return 0
+        return len(self.lines)
+
+
 class DumpToString(Interpreter):
-    def __init__(self, line_limit=80):
+    def __init__(self, width=80):
         super().__init__()
-        self.line_limit = line_limit
+        self.width = width
         self.indenter = Indenter()
 
     def __default__(self, tree):
         return "".join(self.visit_children(tree))
 
     def block_body(self, tree):
-        dumper = DumpToString(self.line_limit - self.indenter.indent_size)
+        dumper = DumpToString(self.width - self.indenter.indent_size)
         dumped = "".join(dumper.visit_children(tree))
         return self.indenter.indent_text(dumped)
 
     def command_invocation(self, tree):
-        lines = []
-        current_line = ""
-        children = self.visit_children(tree)
-        for child in chain.from_iterable(children):
-            if len(current_line) + len(child) > self.line_limit:
-                lines.append(current_line.strip())
-                current_line = child
-            else:
-                current_line += child
-        lines.append(current_line.strip())
-        return "\n".join(filter(lambda line: len(line) > 0, lines))
+        buffer = WidthLimitingBuffer(self.width)
+        right_parenthesis = tree.children.pop()
+        for child in chain.from_iterable(self.visit_children(tree)):
+            buffer += child
+
+        if buffer.height > 1:
+            buffer += "\n"
+        buffer += right_parenthesis
+
+        return str(buffer)
 
     def arguments(self, tree):
         return self.visit_children(tree)
