@@ -26,9 +26,9 @@ class WidthLimitingBuffer:
 
     def __iadd__(self, text):
         if self.lines[-1] == "":
-            self.lines[-1] += text
+            self.lines[-1] += text.lstrip()
         elif len(self.lines[-1]) + len(text) > self.width:
-            self.lines.append(text)
+            self.lines.append(text.lstrip())
         else:
             self.lines[-1] += text
         return self
@@ -41,6 +41,14 @@ class WidthLimitingBuffer:
         if len(self.lines) == 1 and self.lines[0] == "":
             return 0
         return len(self.lines)
+
+    @property
+    def last_line_used_space(self):
+        return len(self.lines[-1])
+
+
+def prefix_each_line(text, prefix):
+    return prefix + ("\n" + prefix).join(text.split("\n"))
 
 
 class DumpToString(Interpreter):
@@ -57,6 +65,24 @@ class DumpToString(Interpreter):
         dumped = "".join(dumper.visit_children(tree))
         return self.indenter.indent_text(dumped)
 
+    def command_element(self, tree):
+        command_invocation, trailing_space, line_comment = tree.children
+        buffer = WidthLimitingBuffer(self.width)
+        buffer += self.visit(command_invocation)
+        buffer += self.visit(trailing_space)
+
+        alignment = buffer.last_line_used_space
+        dumper = DumpToString(self.width - alignment)
+        reflowed_line_comment = dumper.visit(line_comment)
+
+        first_line, *rest = reflowed_line_comment.split("\n", maxsplit=1)
+        buffer += first_line
+        result = str(buffer)
+        if len(rest) > 0:
+            result += "\n"
+            result += prefix_each_line(rest[0], prefix=" " * alignment)
+        return result
+
     def command_invocation(self, tree):
         buffer = WidthLimitingBuffer(self.width)
         right_parenthesis = tree.children.pop()
@@ -71,3 +97,14 @@ class DumpToString(Interpreter):
 
     def arguments(self, tree):
         return self.visit_children(tree)
+
+    def line_comment(self, tree):
+        pound_sign, content = tree.children
+        prefix = f"{pound_sign} "
+        buffer = WidthLimitingBuffer(self.width - len(prefix))
+        first_item, *rest = content.split(" ")
+        buffer += first_item
+        for item in rest:
+            buffer += " "
+            buffer += item
+        return prefix_each_line(str(buffer), prefix)

@@ -23,9 +23,10 @@ class RemoveSuperfluousSpaces(Transformer_InPlace):
         return Tree("file_element", children)
 
     def command_element(self, children):
-        children.pop(2)
-        children.pop(0)
-        return Tree("command_element", children)
+        _, command_invocation, trailing_space, *rest = children
+        if len(rest) == 0:
+            return Tree("command_invocation", command_invocation.children)
+        return Tree("command_element", [command_invocation, trailing_space, *rest])
 
     def non_command_element(self, children):
         remove_if_space(children, index=0)

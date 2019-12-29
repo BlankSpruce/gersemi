@@ -18,6 +18,15 @@ long_unquoted__________________________________argument unquoted_argument
 [[long bracket                  argument]] [[bracket argument]]
 )
 
+# Too long comments________________________________________________ are reflowed
+# into multiple_________________________________________________________________
+# lines
+
+message(some_very_long_______________________________argument) # Long comment
+                                                               # next to command
+                                                               # invocation is
+                                                               # also reflowed
+
 # Line limits inside indented blocks
 if(TRUE)
     message(long_argument very_long_argument very_very_long_argument
@@ -41,6 +50,15 @@ if(TRUE)
     "quoted argument" [[bracket argument]]
     [[long bracket                  argument]] [[bracket argument]]
     )
+
+    # Too long comments____________________________________________ are reflowed
+    # into multiple_____________________________________________________________
+    # lines
+
+    message(some_very_long___________________________argument) # Long comment
+                                                               # next to command
+                                                               # invocation is
+                                                               # also reflowed
 endif()
 
 if(TRUE)
@@ -66,5 +84,14 @@ if(TRUE)
         "quoted argument" [[bracket argument]]
         [[long bracket                  argument]] [[bracket argument]]
         )
+
+        # Too long comments________________________________________ are reflowed
+        # into multiple_________________________________________________________
+        # lines
+
+        message(some_very_long_______________________argument) # Long comment
+                                                               # next to command
+                                                               # invocation is
+                                                               # also reflowed
     endif()
 endif()

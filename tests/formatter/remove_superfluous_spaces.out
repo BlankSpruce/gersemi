@@ -8,7 +8,7 @@ foo(bar "baz")
 
 #[=[    spaces     in     bracket    comments     untouched    ]=]
 
-#     space      in     line    comments     untouched    
+# spaces      in     line    comments     untouched    except the beginning
 
 # To format
 
@@ -31,6 +31,8 @@ foo(bar "baz")
 foo(#[=[some bracket comment]=] bar "baz")
 
 #[=[some bracket comment]=] # followed by superfluous spaces and line comment
+
+foo(bar) # some comment following command invocation
 
 foo(bar
 baz

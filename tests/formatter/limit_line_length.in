@@ -4,6 +4,10 @@ message(line_limit_long_________________________________________________________
 
 message(unquoted_argument long_unquoted__________________________________argument unquoted_argument "quoted_argument" "long unquoted                                        argument" "quoted argument" [[bracket argument]] [[long bracket                  argument]] [[bracket argument]])
 
+# Too long comments________________________________________________ are reflowed into multiple_________________________________________________________________ lines
+
+message(some_very_long_______________________________argument) # Long comment next to command invocation is also reflowed
+
 # Line limits inside indented blocks
 if(TRUE)
     message(long_argument very_long_argument very_very_long_argument very_very_long_argument argument yet_another_argument very_very_long_argument line_limit_long_________________________________________________________argument argument)
@@ -11,6 +15,10 @@ if(TRUE)
     message(line_limit_long_____________________________________________________argument ab argument_longer_than_______________________________________________line_limit a)
 
     message(unquoted_argument long_unquoted__________________________________argument unquoted_argument "quoted_argument" "long unquoted                                        argument" "quoted argument" [[bracket argument]] [[long bracket                  argument]] [[bracket argument]])
+
+    # Too long comments____________________________________________ are reflowed into multiple_____________________________________________________________ lines
+
+    message(some_very_long___________________________argument) # Long comment next to command invocation is also reflowed
 endif()
 
 if(TRUE)
@@ -20,5 +28,9 @@ if(TRUE)
         message(line_limit_long_________________________________________________argument abcdef argument_longer_than___________________________________________line_limit abcde)
 
         message(unquoted_argument long_unquoted__________________________argument unquoted_argument "quoted_argument" "long unquoted                                        argument" "quoted argument" [[bracket argument]] [[long bracket                  argument]] [[bracket argument]])
+
+        # Too long comments________________________________________ are reflowed into multiple_________________________________________________________ lines
+
+        message(some_very_long_______________________argument) # Long comment next to command invocation is also reflowed
     endif()
 endif()
