@@ -27,6 +27,8 @@ class WidthLimitingBuffer:
     def __iadd__(self, text):
         if self.lines[-1] == "":
             self.lines[-1] += text.lstrip()
+        elif text == "\n":
+            self.lines.append("")
         elif len(self.lines[-1]) + len(text) > self.width:
             self.lines.append(text.lstrip())
         else:
