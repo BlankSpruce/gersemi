@@ -13,5 +13,4 @@ foreach(j item4 item5)
 message(STATUS j)
 # and there
 endforeach()
-
 endforeach()

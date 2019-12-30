@@ -1,10 +1,14 @@
 from itertools import filterfalse
-from lark import Tree, Token
+from lark import Discard, Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
 
 
 def is_space(element):
     return isinstance(element, Token) and element.type == "SPACE"
+
+
+def is_newline(element):
+    return isinstance(element, Token) and element.type == "NEWLINE"
 
 
 def remove_if_space(children, index):
@@ -30,6 +34,8 @@ class RemoveSuperfluousSpaces(Transformer_InPlace):
 
     def non_command_element(self, children):
         remove_if_space(children, index=0)
+        if len(children) == 0:
+            raise Discard()
         return Tree("non_command_element", children)
 
     def command_invocation(self, children):
@@ -143,14 +149,92 @@ class RestructureIfBlock(Transformer_InPlace):
         return Tree("block", [if_, *self.restructure(body), endif_,])
 
 
+class NodeWrapper:  # pylint: disable=too-few-public-methods
+    def __init__(self, node):
+        self.node = node
+
+    def __getattr__(self, name):
+        return getattr(self.node, name)
+
+
+class MergeConsecutiveLineComments(Transformer_InPlace):
+    def __init__(self):
+        super().__init__()
+        self.expected_line = 0
+        self.expected_column = 0
+
+    def _should_be_merged(self, comment_node):
+        line, column = comment_node.meta.line, comment_node.meta.column
+        return (line, column) == (self.expected_line, self.expected_column)
+
+    def _merge(self, last_comment, new_comment):
+        last_comment.children[1] += " " + new_comment.children[1].lstrip()
+        new_comment.data = "node_to_discard"
+
+    def start(self, children):
+        file, *_ = children
+
+        last_comment = None
+        for node in file.find_data("line_comment"):
+            if last_comment is None or not self._should_be_merged(node):
+                last_comment = NodeWrapper(node)
+                self.expected_line = node.meta.line + 1
+                self.expected_column = node.meta.column
+                continue
+
+            self._merge(last_comment, node)
+            self.expected_line += 1
+
+        return Tree("start", [file])
+
+
+class RemoveNodesToDiscard(Transformer_InPlace):
+    def node_to_discard(self, _):
+        raise Discard()
+
+
+class RemoveSuperfluousEmptyLines(Transformer_InPlace):
+    def _filter_superfluous_empty_lines(self, children):
+        consecutive_newlines = 0
+        for child in children:
+            if is_newline(child):
+                if consecutive_newlines >= 2:
+                    continue
+                consecutive_newlines += 1
+            else:
+                consecutive_newlines = 0
+            yield child
+
+    def _remove_edge_empty_lines(self, children):
+        if is_newline(children[0]) and is_newline(children[1]):
+            children.pop(0)
+        if is_newline(children[-1]) and is_newline(children[-2]):
+            children.pop()
+        return children
+
+    def _remove_superfluous_empty_lines(self, children):
+        return self._remove_edge_empty_lines(
+            list(self._filter_superfluous_empty_lines(children))
+        )
+
+    def file(self, children):
+        return Tree("file", self._remove_superfluous_empty_lines(children))
+
+    def block_body(self, children):
+        return Tree("block_body", self._remove_superfluous_empty_lines(children))
+
+
 def PostProcessor():
     return TransformerChain(
+        MergeConsecutiveLineComments(),
         IsolateSingleBlockType("if", "endif"),
         RestructureIfBlock(),
         IsolateSingleBlockType("foreach", "endforeach"),
         IsolateSingleBlockType("function", "endfunction"),
         IsolateSingleBlockType("macro", "endmacro"),
         IsolateSingleBlockType("while", "endwhile"),
+        RemoveNodesToDiscard(),
         RemoveSuperfluousSpaces(),
+        RemoveSuperfluousEmptyLines(),
         ReduceSpacesToOneCharacter(visit_tokens=True),
     )
