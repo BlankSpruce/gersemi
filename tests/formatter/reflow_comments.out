@@ -26,3 +26,9 @@ some_command(some_argument) # Lorem ipsum dolor sit amet, consectetur adipiscing
 
 some_command(some_argument) # Lorem ipsum dolot sit amet
 other_command(other_argument) # consectetur adipiscing
+
+# These also aren't considered as consecutive line comments since they are next
+# to different commands despite starting in the same column in consecutive lines
+
+some_command(some_argument) # This is a comment
+other_command(argument____) # Don't touch this comment

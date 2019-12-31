@@ -149,23 +149,26 @@ class RestructureIfBlock(Transformer_InPlace):
         return Tree("block", [if_, *self.restructure(body), endif_,])
 
 
-class NodeWrapper:  # pylint: disable=too-few-public-methods
-    def __init__(self, node):
-        self.node = node
-
-    def __getattr__(self, name):
-        return getattr(self.node, name)
-
-
 class MergeConsecutiveLineComments(Transformer_InPlace):
-    def __init__(self):
+    def __init__(self, code):
         super().__init__()
+        self.code_lines = code.split("\n")
         self.expected_line = 0
         self.expected_column = 0
 
+    def _is_nothing_but_space_before_comment(self, line, column):
+        return set(self.code_lines[line - 1][: column - 1]).issubset(set(" \t"))
+
+    def _is_expected_location(self, line, column):
+        return (line, column) == (self.expected_line, self.expected_column)
+
     def _should_be_merged(self, comment_node):
         line, column = comment_node.meta.line, comment_node.meta.column
-        return (line, column) == (self.expected_line, self.expected_column)
+        conditions = [
+            self._is_expected_location(line, column),
+            self._is_nothing_but_space_before_comment(line, column),
+        ]
+        return all(conditions)
 
     def _merge(self, last_comment, new_comment):
         last_comment.children[1] += " " + new_comment.children[1].lstrip()
@@ -177,7 +180,7 @@ class MergeConsecutiveLineComments(Transformer_InPlace):
         last_comment = None
         for node in file.find_data("line_comment"):
             if last_comment is None or not self._should_be_merged(node):
-                last_comment = NodeWrapper(node)
+                last_comment = node
                 self.expected_line = node.meta.line + 1
                 self.expected_column = node.meta.column
                 continue
@@ -224,9 +227,9 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
         return Tree("block_body", self._remove_superfluous_empty_lines(children))
 
 
-def PostProcessor():
+def PostProcessor(code):
     return TransformerChain(
-        MergeConsecutiveLineComments(),
+        MergeConsecutiveLineComments(code),
         IsolateSingleBlockType("if", "endif"),
         RestructureIfBlock(),
         IsolateSingleBlockType("foreach", "endforeach"),
