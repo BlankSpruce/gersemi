@@ -1,22 +1,23 @@
-from itertools import chain
+from itertools import chain, repeat
 from lark.visitors import Interpreter
 
 
-class Indenter:
-    @property
-    def indent_size(self):
-        return 4
-
-    def _indent(self):
-        return " " * self.indent_size
-
-    def indent_line(self, line):
+def prefix(text, prefixes):
+    lines = []
+    for p, line in zip(prefixes, text.split("\n")):
         if line == "":
-            return ""
-        return self._indent() + line
+            lines.append("")
+        else:
+            lines.append(p + line)
+    return "\n".join(lines)
 
-    def indent_text(self, text):
-        return "\n".join(map(self.indent_line, text.split("\n")))
+
+def indent(text, width):
+    return prefix(text, prefixes=repeat(" " * width))
+
+
+def indent_except_first_line(text, width):
+    return prefix(text, prefixes=chain([""], repeat(" " * width)))
 
 
 class WidthLimitingBuffer:
@@ -25,18 +26,23 @@ class WidthLimitingBuffer:
         self.lines = [""]
 
     def __iadd__(self, text):
-        if self.lines[-1] == "":
-            self.lines[-1] += text.lstrip()
-        elif text == "\n":
+        if text == "\n":
             self.lines.append("")
+        elif text == " " and len(self.lines[-1]) == self.width:
+            return self
+        elif "\n" in text:
+            for item in text.split("\n"):
+                self += item
         elif len(self.lines[-1]) + len(text) > self.width:
-            self.lines.append(text.lstrip())
+            self.lines.append(text)
         else:
             self.lines[-1] += text
         return self
 
     def __str__(self):
-        return "\n".join(filter(lambda line: len(line) > 0, map(str.strip, self.lines)))
+        return "\n".join(
+            filter(lambda line: len(line) > 0, map(str.rstrip, self.lines))
+        )
 
     @property
     def height(self):
@@ -48,24 +54,24 @@ class WidthLimitingBuffer:
     def last_line_used_space(self):
         return len(self.lines[-1])
 
-
-def prefix_each_line(text, prefix):
-    return prefix + ("\n" + prefix).join(text.split("\n"))
+    def lstrip(self):
+        self.lines = [*map(str.lstrip, self.lines)]
+        return self
 
 
 class DumpToString(Interpreter):
     def __init__(self, width=80):
         super().__init__()
         self.width = width
-        self.indenter = Indenter()
+        self.indent_size = 4
 
     def __default__(self, tree):
         return "".join(self.visit_children(tree))
 
     def block_body(self, tree):
-        dumper = DumpToString(self.width - self.indenter.indent_size)
+        dumper = DumpToString(self.width - self.indent_size)
         dumped = "".join(dumper.visit_children(tree))
-        return self.indenter.indent_text(dumped)
+        return indent(dumped, self.indent_size)
 
     def command_element(self, tree):
         command_invocation, trailing_space, line_comment = tree.children
@@ -77,13 +83,8 @@ class DumpToString(Interpreter):
         dumper = DumpToString(self.width - alignment)
         reflowed_line_comment = dumper.visit(line_comment)
 
-        first_line, *rest = reflowed_line_comment.split("\n", maxsplit=1)
-        buffer += first_line
-        result = str(buffer)
-        if len(rest) > 0:
-            result += "\n"
-            result += prefix_each_line(rest[0], prefix=" " * alignment)
-        return result
+        buffer += indent_except_first_line(reflowed_line_comment, width=alignment)
+        return str(buffer)
 
     def command_invocation(self, tree):
         buffer = WidthLimitingBuffer(self.width)
@@ -95,18 +96,18 @@ class DumpToString(Interpreter):
             buffer += "\n"
         buffer += right_parenthesis
 
-        return str(buffer)
+        return str(buffer.lstrip())
 
     def arguments(self, tree):
         return self.visit_children(tree)
 
     def line_comment(self, tree):
         pound_sign, content = tree.children
-        prefix = f"{pound_sign} "
-        buffer = WidthLimitingBuffer(self.width - len(prefix))
-        first_item, *rest = content.split(" ")
+        comment_start = f"{pound_sign} "
+        buffer = WidthLimitingBuffer(self.width - len(comment_start))
+        first_item, *rest = content.lstrip().split(" ")
         buffer += first_item
         for item in rest:
             buffer += " "
             buffer += item
-        return prefix_each_line(str(buffer), prefix)
+        return prefix(str(buffer), repeat(comment_start))
