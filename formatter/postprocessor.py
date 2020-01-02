@@ -1,14 +1,7 @@
 from itertools import filterfalse
+from formatter.ast_helpers import is_space, is_newline
 from lark import Discard, Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
-
-
-def is_space(element):
-    return isinstance(element, Token) and element.type == "SPACE"
-
-
-def is_newline(element):
-    return isinstance(element, Token) and element.type == "NEWLINE"
 
 
 def remove_if_space(children, index):

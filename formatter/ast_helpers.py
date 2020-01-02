@@ -1,0 +1,15 @@
+from lark import Tree, Token
+
+
+def is_tree(tree_type):
+    return lambda element: isinstance(element, Tree) and element.data == tree_type
+
+
+def is_token(token_type):
+    return lambda element: isinstance(element, Token) and element.type == token_type
+
+
+is_argument = is_tree("argument")
+
+is_space = is_token("SPACE")
+is_newline = is_token("NEWLINE")

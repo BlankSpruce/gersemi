@@ -1,4 +1,5 @@
 from itertools import chain, repeat
+from formatter.ast_helpers import is_argument, is_space, is_newline
 from lark.visitors import Interpreter
 
 
@@ -33,6 +34,7 @@ class WidthLimitingBuffer:
         elif "\n" in text:
             for item in text.split("\n"):
                 self += item
+                self += "\n"
         elif len(self.lines[-1]) + len(text) > self.width:
             self.lines.append(text)
         else:
@@ -87,19 +89,33 @@ class DumpToString(Interpreter):
         return str(buffer)
 
     def command_invocation(self, tree):
+        identifier, left_parenthesis, arguments, right_parenthesis = tree.children
+
+        begin = self.visit(identifier) + left_parenthesis
+        alignment = len(begin)
+        dumper = DumpToString(self.width - alignment)
+        formatted_arguments = dumper.visit(arguments)
+
         buffer = WidthLimitingBuffer(self.width)
-        right_parenthesis = tree.children.pop()
-        for child in chain.from_iterable(self.visit_children(tree)):
-            buffer += child
+        buffer += begin + indent_except_first_line(formatted_arguments, width=alignment)
 
         if buffer.height > 1:
             buffer += "\n"
         buffer += right_parenthesis
 
-        return str(buffer.lstrip())
+        return str(buffer)
 
     def arguments(self, tree):
-        return self.visit_children(tree)
+        only_arguments = [child for child in tree.children if is_argument(child)]
+        if len(only_arguments) <= 4:
+            result = "".join(self.visit_children(tree))
+            if len(result) <= self.width:
+                return result
+
+        is_whitespace = lambda node: is_space(node) or is_newline(node)
+        return "\n".join(
+            self.visit(child) for child in tree.children if not is_whitespace(child)
+        )
 
     def line_comment(self, tree):
         pound_sign, content = tree.children

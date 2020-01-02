@@ -1,0 +1,16 @@
+# This is short list of arguments
+foo(arg1 arg2 arg3 arg4)
+
+# This is long list of arguments
+foo(arg1
+    arg2
+    arg3
+    arg4
+    arg5
+)
+
+# This is list of arguments which should be split into separate lines
+foo(arg1
+    "arg2                                                             "
+    arg3
+)

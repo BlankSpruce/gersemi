@@ -33,7 +33,7 @@ foo(#[=[some bracket comment]=] bar "baz")
 foo(bar) # some comment following command invocation
 
 foo(bar
-baz
+    baz
 )
 
 foo()
