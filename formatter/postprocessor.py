@@ -1,4 +1,4 @@
-from itertools import filterfalse
+from itertools import dropwhile, filterfalse
 from formatter.ast_helpers import is_space, is_newline, is_argument, is_line_comment
 from lark import Discard, Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
@@ -201,23 +201,22 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
                 consecutive_newlines = 0
             yield child
 
-    def _remove_edge_empty_lines(self, children):
-        if is_newline(children[0]) and is_newline(children[1]):
-            children.pop(0)
-        if is_newline(children[-1]) and is_newline(children[-2]):
+    def _drop_edge_empty_lines(self, children):
+        while is_newline(children[-1]):
             children.pop()
-        return children
+        return dropwhile(is_newline, children)
 
-    def _remove_superfluous_empty_lines(self, children):
-        return self._remove_edge_empty_lines(
-            list(self._filter_superfluous_empty_lines(children))
+    def _make_node(self, node_type, children):
+        new_children = self._filter_superfluous_empty_lines(
+            self._drop_edge_empty_lines(children)
         )
+        return Tree(node_type, list(new_children))
 
     def file(self, children):
-        return Tree("file", self._remove_superfluous_empty_lines(children))
+        return self._make_node("file", children)
 
     def block_body(self, children):
-        return Tree("block_body", self._remove_superfluous_empty_lines(children))
+        return self._make_node("block_body", children)
 
 
 def pop_all(in_list):

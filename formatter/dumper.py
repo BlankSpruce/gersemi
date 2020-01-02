@@ -70,6 +70,14 @@ class DumpToString(Interpreter):
     def __default__(self, tree):
         return "".join(self.visit_children(tree))
 
+    def file(self, tree):
+        return "{}\n".format(self.__default__(tree))
+
+    def block(self, tree):
+        begin, *middle, end = tree.children
+        formatted_middle = "\n".join(map(self.visit, middle))
+        return "{}\n{}\n{}".format(self.visit(begin), formatted_middle, self.visit(end))
+
     def block_body(self, tree):
         dumper = DumpToString(self.width - self.indent_size)
         dumped = "".join(dumper.visit_children(tree))
