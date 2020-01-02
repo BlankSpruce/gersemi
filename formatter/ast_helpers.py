@@ -10,6 +10,7 @@ def is_token(token_type):
 
 
 is_argument = is_tree("argument")
+is_line_comment = is_tree("line_comment")
 
 is_space = is_token("SPACE")
 is_newline = is_token("NEWLINE")

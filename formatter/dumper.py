@@ -1,5 +1,5 @@
 from itertools import chain, repeat
-from formatter.ast_helpers import is_argument, is_space, is_newline
+from formatter.ast_helpers import is_space, is_newline
 from lark.visitors import Interpreter
 
 
@@ -106,16 +106,30 @@ class DumpToString(Interpreter):
         return str(buffer)
 
     def arguments(self, tree):
-        only_arguments = [child for child in tree.children if is_argument(child)]
+        is_whitespace = lambda node: is_space(node) or is_newline(node)
+        only_arguments = [child for child in tree.children if not is_whitespace(child)]
         if len(only_arguments) <= 4:
             result = "".join(self.visit_children(tree))
             if len(result) <= self.width:
                 return result
 
-        is_whitespace = lambda node: is_space(node) or is_newline(node)
-        return "\n".join(
-            self.visit(child) for child in tree.children if not is_whitespace(child)
-        )
+        return "\n".join(self.visit(child) for child in only_arguments)
+
+    def commented_argument(self, tree):
+        argument, *space, comment = tree.children
+        buffer = WidthLimitingBuffer(self.width)
+        buffer += "".join(self.visit_children(argument))
+        if len(space) == 0:
+            buffer += " "
+        else:
+            buffer += "".join(space)
+
+        alignment = buffer.last_line_used_space
+        dumper = DumpToString(self.width - alignment)
+        formatted_comment = dumper.visit(comment)
+        buffer += indent_except_first_line(formatted_comment, width=alignment)
+
+        return str(buffer)
 
     def line_comment(self, tree):
         pound_sign, content = tree.children

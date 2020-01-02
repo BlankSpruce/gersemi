@@ -1,5 +1,5 @@
 from itertools import filterfalse
-from formatter.ast_helpers import is_space, is_newline
+from formatter.ast_helpers import is_space, is_newline, is_argument, is_line_comment
 from lark import Discard, Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
 
@@ -220,6 +220,28 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
         return Tree("block_body", self._remove_superfluous_empty_lines(children))
 
 
+def pop_all(in_list):
+    popped, in_list[:] = in_list[:], []
+    return popped
+
+
+class IsolateCommentedArguments(Transformer_InPlace):
+    def arguments(self, children):
+        new_children = []
+        accumulator = []
+        for child in children:
+            if is_argument(child):
+                new_children += pop_all(accumulator)
+
+            accumulator += [child]
+            if is_line_comment(child) and is_argument(accumulator[0]):
+                new_children += [Tree("commented_argument", pop_all(accumulator))]
+            if is_newline(child):
+                new_children += pop_all(accumulator)
+        new_children += accumulator
+        return Tree("arguments", new_children)
+
+
 def PostProcessor(code):
     return TransformerChain(
         MergeConsecutiveLineComments(code),
@@ -229,6 +251,7 @@ def PostProcessor(code):
         IsolateSingleBlockType("function", "endfunction"),
         IsolateSingleBlockType("macro", "endmacro"),
         IsolateSingleBlockType("while", "endwhile"),
+        IsolateCommentedArguments(),
         RemoveNodesToDiscard(),
         RemoveSuperfluousSpaces(),
         RemoveSuperfluousEmptyLines(),
