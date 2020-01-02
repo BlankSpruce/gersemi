@@ -14,11 +14,6 @@ def is_space_at_line_beginning(element):
 
 
 class RemoveSuperfluousSpaces(Transformer_InPlace):
-    def file_element(self, children):
-        remove_if_space(children, index=0)
-        remove_if_space(children, index=-1)
-        return Tree("file_element", children)
-
     def command_element(self, children):
         _, command_invocation, trailing_space, *rest = children
         if len(rest) == 0:

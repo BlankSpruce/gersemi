@@ -56,10 +56,6 @@ class WidthLimitingBuffer:
     def last_line_used_space(self):
         return len(self.lines[-1])
 
-    def lstrip(self):
-        self.lines = [*map(str.lstrip, self.lines)]
-        return self
-
 
 class DumpToString(Interpreter):
     def __init__(self, width=80):
