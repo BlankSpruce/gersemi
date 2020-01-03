@@ -51,23 +51,29 @@ def discover_input_only_cases(where, input_extension):
     ]
 
 
+def get_matching_output_filename(input_filename, output_extension):
+    return "{}{}".format(remove_extension(input_filename), output_extension)
+
+
+def make_input_output_case(input_filename, output_extension, where):
+    output_filename = get_matching_output_filename(input_filename, output_extension)
+    return InputOutputCase(
+        remove_extension(input_filename),
+        get_content(input_filename, directory=where),
+        get_content(output_filename, directory=where),
+    )
+
+
 def discover_input_output_cases(where, input_extension, output_extension):
     input_files = get_files_with_extension(where, input_extension)
     output_files = get_files_with_extension(where, output_extension)
     for inp in input_files:
-        matching_output_file = "{}{}".format(remove_extension(inp), output_extension)
+        matching_output_file = get_matching_output_filename(inp, output_extension)
         assert (
             matching_output_file in output_files
         ), "Incomplete input-output pair, missing {}".format(matching_output_file)
 
-    return [
-        InputOutputCase(
-            remove_extension(inp),
-            get_content(inp, directory=where),
-            get_content(outp, directory=where),
-        )
-        for inp, outp in zip(input_files, output_files)
-    ]
+    return [make_input_output_case(inp, output_extension, where) for inp in input_files]
 
 
 def generate_input_only_tests(where, input_extension):
