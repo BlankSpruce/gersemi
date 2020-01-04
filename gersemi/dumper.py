@@ -46,16 +46,6 @@ class WidthLimitingBuffer:
             filter(lambda line: len(line) > 0, map(str.rstrip, self.lines))
         )
 
-    @property
-    def height(self):
-        if len(self.lines) == 1 and self.lines[0] == "":
-            return 0
-        return len(self.lines)
-
-    @property
-    def last_line_used_space(self):
-        return len(self.lines[-1])
-
 
 def format_comment_content(content, width):
     buffer = WidthLimitingBuffer(width)
@@ -77,6 +67,14 @@ class DumpToString(Interpreter):
     def __default__(self, tree):
         return "".join(self.visit_children(tree))
 
+    def _format_listable_content(self, anchor, content):
+        alignment = len(anchor)
+        dumper = DumpToString(self.width - alignment)
+        formatted_content = dumper.visit(content)
+        buffer = WidthLimitingBuffer(self.width)
+        buffer += anchor + indent_except_first_line(formatted_content, alignment)
+        return str(buffer)
+
     def file(self, tree):
         return "{}\n".format(self.__default__(tree))
 
@@ -92,33 +90,19 @@ class DumpToString(Interpreter):
 
     def command_element(self, tree):
         command_invocation, trailing_space, line_comment = tree.children
-        buffer = WidthLimitingBuffer(self.width)
-        buffer += self.visit(command_invocation)
-        buffer += self.visit(trailing_space)
-
-        alignment = buffer.last_line_used_space
-        dumper = DumpToString(self.width - alignment)
-        reflowed_line_comment = dumper.visit(line_comment)
-
-        buffer += indent_except_first_line(reflowed_line_comment, width=alignment)
-        return str(buffer)
+        begin = self.visit(command_invocation) + self.visit(trailing_space)
+        return self._format_listable_content(begin, line_comment)
 
     def command_invocation(self, tree):
         identifier, left_parenthesis, arguments, right_parenthesis = tree.children
 
         begin = self.visit(identifier) + left_parenthesis
-        alignment = len(begin)
-        dumper = DumpToString(self.width - alignment)
-        formatted_arguments = dumper.visit(arguments)
+        result = self._format_listable_content(begin, arguments)
 
-        buffer = WidthLimitingBuffer(self.width)
-        buffer += begin + indent_except_first_line(formatted_arguments, width=alignment)
-
-        if buffer.height > 1:
-            buffer += "\n"
-        buffer += right_parenthesis
-
-        return str(buffer)
+        if "\n" in result:
+            result += "\n"
+        result += right_parenthesis
+        return result
 
     def arguments(self, tree):
         is_whitespace = lambda node: is_space(node) or is_newline(node)
@@ -131,20 +115,9 @@ class DumpToString(Interpreter):
         return "\n".join(self.visit(child) for child in only_arguments)
 
     def commented_argument(self, tree):
-        argument, *space, comment = tree.children
-        buffer = WidthLimitingBuffer(self.width)
-        buffer += "".join(self.visit_children(argument))
-        if len(space) == 0:
-            buffer += " "
-        else:
-            buffer += "".join(space)
-
-        alignment = buffer.last_line_used_space
-        dumper = DumpToString(self.width - alignment)
-        formatted_comment = dumper.visit(comment)
-        buffer += indent_except_first_line(formatted_comment, width=alignment)
-
-        return str(buffer)
+        argument, *_, comment = tree.children
+        begin = "".join(self.visit_children(argument)) + " "
+        return self._format_listable_content(begin, comment)
 
     def line_comment(self, tree):
         _, content = tree.children
