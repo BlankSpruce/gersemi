@@ -68,7 +68,8 @@ class DumpToString(Interpreter):
         return "".join(self.visit_children(tree))
 
     def _format_listable_content(self, anchor, content):
-        alignment = len(anchor)
+        *_, last_line = anchor.split("\n")
+        alignment = len(last_line)
         dumper = DumpToString(self.width - alignment)
         formatted_content = dumper.visit(content)
         buffer = WidthLimitingBuffer(self.width)
