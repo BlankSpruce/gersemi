@@ -22,7 +22,8 @@ argument : bracket_argument
          | unquoted_argument
          | complex_argument
 
-bracket_argument : /\[(?P<equal_signs>(=*))\[(.|\n|\r)+?\](?P=equal_signs)\]/
+bracket_argument : BRACKET_ARGUMENT
+BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
 quoted_argument     : QUOTATION_MARK quoted_element* QUOTATION_MARK
 quoted_element      : /([^\\\"]|\n)/

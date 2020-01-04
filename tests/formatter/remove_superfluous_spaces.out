@@ -6,7 +6,7 @@ foo(bar)
 
 foo(bar "baz")
 
-#[=[    spaces     in     bracket    comments     untouched    ]=]
+#[=[spaces     in     bracket    comments   untouched except the edges]=]
 
 # spaces      in     line    comments     untouched    except the beginning
 

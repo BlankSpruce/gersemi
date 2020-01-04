@@ -1,5 +1,6 @@
 from itertools import dropwhile, filterfalse
-from formatter.ast_helpers import is_space, is_newline, is_argument, is_line_comment
+import re
+from formatter.ast_helpers import is_space, is_newline, is_argument, is_comment
 from lark import Discard, Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
 
@@ -228,7 +229,7 @@ class IsolateCommentedArguments(Transformer_InPlace):
                 new_children += pop_all(accumulator)
 
             accumulator += [child]
-            if is_line_comment(child) and is_argument(accumulator[0]):
+            if is_comment(child) and is_argument(accumulator[0]):
                 new_children += [Tree("commented_argument", pop_all(accumulator))]
             if is_newline(child):
                 new_children += pop_all(accumulator)
@@ -236,7 +237,25 @@ class IsolateCommentedArguments(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-def PostProcessor(code):
+class RestructureBracketArgument(Transformer_InPlace):
+    def __init__(self, pattern):
+        super().__init__()
+        self.pattern = pattern
+
+    def bracket_argument(self, children):
+        token, *_ = children
+        equal_signs, _, content = re.match(self.pattern, token).groups()
+        return Tree(
+            "bracket_argument",
+            [
+                Tree("bracket_argument_begin", ["[{}[".format(equal_signs)]),
+                Tree("bracket_argument_body", [content]),
+                Tree("bracket_argument_end", ["]{}]".format(equal_signs)]),
+            ],
+        )
+
+
+def PostProcessor(code, terminal_patterns):
     return TransformerChain(
         MergeConsecutiveLineComments(code),
         IsolateSingleBlockType("if", "endif"),
@@ -246,6 +265,7 @@ def PostProcessor(code):
         IsolateSingleBlockType("macro", "endmacro"),
         IsolateSingleBlockType("while", "endwhile"),
         IsolateCommentedArguments(),
+        RestructureBracketArgument(terminal_patterns["BRACKET_ARGUMENT"]),
         RemoveNodesToDiscard(),
         RemoveSuperfluousSpaces(),
         RemoveSuperfluousEmptyLines(),

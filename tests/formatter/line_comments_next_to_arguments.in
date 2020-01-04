@@ -12,4 +12,9 @@ foo(arg1 arg2 arg3 # some comment next to arg3
     arg11
     # long standalone comments are also aligned__________________________ as other arguments
     arg12
+    arg13 # some comment
+          #     next to arg13
+          # with   some
+          #formatting
+    arg14
 )

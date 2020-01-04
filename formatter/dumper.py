@@ -57,6 +57,17 @@ class WidthLimitingBuffer:
         return len(self.lines[-1])
 
 
+def format_comment_content(content, width):
+    buffer = WidthLimitingBuffer(width)
+    content = " ".join(map(str.lstrip, content.split("\n")))
+    first_item, *rest = content.lstrip().split(" ")
+    buffer += first_item
+    for item in rest:
+        buffer += " "
+        buffer += item
+    return str(buffer)
+
+
 class DumpToString(Interpreter):
     def __init__(self, width=80):
         super().__init__()
@@ -136,12 +147,19 @@ class DumpToString(Interpreter):
         return str(buffer)
 
     def line_comment(self, tree):
-        pound_sign, content = tree.children
-        comment_start = f"{pound_sign} "
-        buffer = WidthLimitingBuffer(self.width - len(comment_start))
-        first_item, *rest = content.lstrip().split(" ")
-        buffer += first_item
-        for item in rest:
-            buffer += " "
-            buffer += item
-        return prefix(str(buffer), repeat(comment_start))
+        _, content = tree.children
+        comment_start = "# "
+        formatted_content = format_comment_content(
+            content, self.width - len(comment_start)
+        )
+        return prefix(formatted_content, repeat(comment_start))
+
+    def bracket_argument(self, tree):
+        result = "".join(self.visit_children(tree))
+        if len(result) <= self.width:
+            return result
+        return "\n".join(self.visit_children(tree))
+
+    def bracket_argument_body(self, tree):
+        content, *_ = tree.children
+        return format_comment_content(content, self.width)
