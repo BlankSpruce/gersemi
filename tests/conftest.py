@@ -1,6 +1,6 @@
-from formatter.parser import create_parser
-from formatter.formatter import create_formatter
 import pytest
+from gersemi.parser import create_parser
+from gersemi.formatter import create_formatter
 
 
 @pytest.fixture

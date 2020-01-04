@@ -1,6 +1,6 @@
 from itertools import chain, repeat
-from formatter.ast_helpers import is_space, is_newline
 from lark.visitors import Interpreter
+from gersemi.ast_helpers import is_space, is_newline
 
 
 def prefix(text, prefixes):

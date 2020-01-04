@@ -1,9 +1,9 @@
-from formatter.parser import create_parser
-from formatter.formatter import create_formatter
 import argparse
 import pathlib
 import sys
 import lark
+from gersemi.parser import create_parser
+from gersemi.formatter import create_formatter
 
 
 def create_argparser():
@@ -60,7 +60,8 @@ def main():
         else:
             format_code(formatter, code, sys.stdout)
 
+    sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
-    sys.exit(0)

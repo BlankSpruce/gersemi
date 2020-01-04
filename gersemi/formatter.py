@@ -1,5 +1,5 @@
-from formatter.dumper import DumpToString
-from formatter.postprocessor import PostProcessor
+from gersemi.dumper import DumpToString
+from gersemi.postprocessor import PostProcessor
 
 
 def get_terminal_patterns(parser):

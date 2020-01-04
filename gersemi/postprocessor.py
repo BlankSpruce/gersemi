@@ -1,8 +1,8 @@
 from itertools import dropwhile, filterfalse
 import re
-from formatter.ast_helpers import is_space, is_newline, is_argument, is_comment
 from lark import Discard, Tree, Token
 from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
+from gersemi.ast_helpers import is_space, is_newline, is_argument, is_comment
 
 
 def remove_if_space(children, index):
