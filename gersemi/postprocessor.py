@@ -255,6 +255,20 @@ class RestructureBracketArgument(Transformer_InPlace):
         )
 
 
+class RestructureBracketComment(Transformer_InPlace):
+    def bracket_comment(self, children):
+        pound_sign, bracket_argument = children
+        begin, body, end = bracket_argument.children
+        return Tree(
+            "bracket_comment",
+            [
+                Tree("bracket_comment_begin", [pound_sign + begin.children[0]]),
+                Tree("bracket_comment_body", body.children),
+                Tree("bracket_comment_end", end.children),
+            ],
+        )
+
+
 def PostProcessor(code, terminal_patterns):
     return TransformerChain(
         MergeConsecutiveLineComments(code),
@@ -266,6 +280,7 @@ def PostProcessor(code, terminal_patterns):
         IsolateSingleBlockType("while", "endwhile"),
         IsolateCommentedArguments(),
         RestructureBracketArgument(terminal_patterns["BRACKET_ARGUMENT"]),
+        RestructureBracketComment(),
         RemoveNodesToDiscard(),
         RemoveSuperfluousSpaces(),
         RemoveSuperfluousEmptyLines(),

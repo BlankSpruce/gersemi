@@ -1,4 +1,4 @@
-from itertools import chain, repeat
+from itertools import repeat
 from lark.visitors import Interpreter
 from gersemi.ast_helpers import is_space, is_newline
 
@@ -15,10 +15,6 @@ def prefix(text, prefixes):
 
 def indent(text, width):
     return prefix(text, prefixes=repeat(" " * width))
-
-
-def indent_except_first_line(text, width):
-    return prefix(text, prefixes=chain([""], repeat(" " * width)))
 
 
 class WidthLimitingBuffer:
@@ -59,22 +55,33 @@ def format_comment_content(content, width):
 
 
 class DumpToString(Interpreter):
-    def __init__(self, width=80):
+    def __init__(self, alignment=0):
         super().__init__()
-        self.width = width
+        self.width = 80
         self.indent_size = 4
+        self.alignment = alignment
 
     def __default__(self, tree):
         return "".join(self.visit_children(tree))
 
+    def _indent(self, text):
+        return indent(text, self.alignment)
+
     def _format_listable_content(self, anchor, content):
         *_, last_line = anchor.split("\n")
         alignment = len(last_line)
-        dumper = DumpToString(self.width - alignment)
+        dumper = DumpToString(alignment)
         formatted_content = dumper.visit(content)
         buffer = WidthLimitingBuffer(self.width)
-        buffer += anchor + indent_except_first_line(formatted_content, alignment)
+        buffer += anchor + formatted_content.lstrip()
         return str(buffer)
+
+    def _try_to_format_into_single_line(self, tree):
+        dumper = DumpToString(alignment=0)
+        result = self._indent("".join(dumper.visit_children(tree)))
+        if len(result) <= self.width:
+            return result
+        return None
 
     def file(self, tree):
         return "{}\n".format(self.__default__(tree))
@@ -85,9 +92,8 @@ class DumpToString(Interpreter):
         return "{}\n{}\n{}".format(self.visit(begin), formatted_middle, self.visit(end))
 
     def block_body(self, tree):
-        dumper = DumpToString(self.width - self.indent_size)
-        dumped = "".join(dumper.visit_children(tree))
-        return indent(dumped, self.indent_size)
+        dumper = DumpToString(alignment=self.alignment + self.indent_size)
+        return "".join(dumper.visit_children(tree))
 
     def command_element(self, tree):
         command_invocation, trailing_space, line_comment = tree.children
@@ -96,21 +102,21 @@ class DumpToString(Interpreter):
 
     def command_invocation(self, tree):
         identifier, left_parenthesis, arguments, right_parenthesis = tree.children
-
-        begin = self.visit(identifier) + left_parenthesis
+        begin = self._indent(self.visit(identifier) + left_parenthesis)
         result = self._format_listable_content(begin, arguments)
 
         if "\n" in result:
-            result += "\n"
-        result += right_parenthesis
+            result += "\n" + self._indent(right_parenthesis)
+        else:
+            result += right_parenthesis
         return result
 
     def arguments(self, tree):
         is_whitespace = lambda node: is_space(node) or is_newline(node)
         only_arguments = [child for child in tree.children if not is_whitespace(child)]
         if len(only_arguments) <= 4:
-            result = "".join(self.visit_children(tree))
-            if len(result) <= self.width:
+            result = self._try_to_format_into_single_line(tree)
+            if result is not None:
                 return result
 
         return "\n".join(self.visit(child) for child in only_arguments)
@@ -124,16 +130,25 @@ class DumpToString(Interpreter):
         _, content = tree.children
         comment_start = "# "
         formatted_content = format_comment_content(
-            content, self.width - len(comment_start)
+            content, self.width - self.alignment - len(comment_start)
         )
-        return prefix(formatted_content, repeat(comment_start))
+        return self._indent(prefix(formatted_content, repeat(comment_start)))
+
+    def bracket_comment(self, tree):
+        result = self._try_to_format_into_single_line(tree)
+        if result is not None:
+            return result
+        return self._indent("\n".join(self.visit_children(tree)))
+
+    def bracket_comment_body(self, tree):
+        content, *_ = tree.children
+        return format_comment_content(content, self.width - self.alignment)
 
     def bracket_argument(self, tree):
-        result = "".join(self.visit_children(tree))
-        if len(result) <= self.width:
-            return result
-        return "\n".join(self.visit_children(tree))
+        return " " * self.alignment + self.__default__(tree)
 
-    def bracket_argument_body(self, tree):
-        content, *_ = tree.children
-        return format_comment_content(content, self.width)
+    def quoted_argument(self, tree):
+        return " " * self.alignment + self.__default__(tree)
+
+    def unquoted_argument(self, tree):
+        return self._indent(self.__default__(tree))
