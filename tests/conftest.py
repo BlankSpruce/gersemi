@@ -3,11 +3,11 @@ from gersemi.parser import create_parser
 from gersemi.formatter import create_formatter
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def parser():
     return create_parser()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def formatter(parser):  # pylint: disable=redefined-outer-name
     return create_formatter(parser)
