@@ -10,4 +10,4 @@ def parser():
 
 @pytest.fixture(scope="session")
 def formatter(parser):  # pylint: disable=redefined-outer-name
-    return create_formatter(parser)
+    return create_formatter(parser, do_sanity_check=False)

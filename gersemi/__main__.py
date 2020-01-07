@@ -9,6 +9,13 @@ from gersemi.formatter import create_formatter
 def create_argparser():
     parser = argparse.ArgumentParser(description="Tool to format CMake code")
     parser.add_argument(
+        "--no-sanity-check",
+        dest="do_sanity_check",
+        default=True,
+        action="store_false",
+        help="skip default sanity check",
+    )
+    parser.add_argument(
         "-i",
         "--in-place",
         dest="in_place",
@@ -44,7 +51,7 @@ def main():
     argparser = create_argparser()
     args = argparser.parse_args()
 
-    formatter = create_formatter(create_parser())
+    formatter = create_formatter(create_parser(), args.do_sanity_check)
 
     if len(args.files) == 0:
         format_code_from_stdin(formatter)
