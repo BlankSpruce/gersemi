@@ -1,7 +1,7 @@
 from itertools import dropwhile, filterfalse
 import re
 from lark import Discard, Tree, Token
-from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
+from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter, v_args
 from gersemi.ast_helpers import is_space, is_newline, is_argument, is_comment
 
 
@@ -159,8 +159,12 @@ class MergeConsecutiveLineComments(Transformer_InPlace):
         ]
         return all(conditions)
 
+    def _is_line_comment_empty(self, comment):
+        return comment.children[1] != ""
+
     def _merge(self, last_comment, new_comment):
-        last_comment.children[1] += " " + new_comment.children[1].lstrip()
+        if self._is_line_comment_empty(new_comment):
+            last_comment.children[1] += " " + new_comment.children[1].lstrip()
         new_comment.data = "node_to_discard"
 
     def start(self, children):
@@ -269,8 +273,34 @@ class RestructureBracketComment(Transformer_InPlace):
         )
 
 
+class NormalizeEmptyLineComments(Transformer_InPlace):
+    @v_args(meta=True)
+    def line_comment(self, children, meta):
+        if len(children) == 1:
+            pound_sign, *_ = children
+            line_comment_content = Token(
+                type_="LINE_COMMENT_CONTENT",
+                value="",
+                line=pound_sign.line,
+                column=pound_sign.end_column,
+                end_line=pound_sign.line,
+                end_column=pound_sign.end_column,
+            )
+            return Tree("line_comment", [pound_sign, line_comment_content], meta)
+        return Tree("line_comment", children, meta)
+
+
+class RemoveSuperfluousEmptyComments(Transformer_InPlace):
+    def line_comment(self, children):
+        _, content = children
+        if content == "":
+            raise Discard()
+        return Tree("line_comment", children)
+
+
 def PostProcessor(code, terminal_patterns):
     return TransformerChain(
+        NormalizeEmptyLineComments(),
         MergeConsecutiveLineComments(code),
         IsolateSingleBlockType("if", "endif"),
         RestructureIfBlock(),
@@ -282,6 +312,7 @@ def PostProcessor(code, terminal_patterns):
         RestructureBracketArgument(terminal_patterns["BRACKET_ARGUMENT"]),
         RestructureBracketComment(),
         RemoveNodesToDiscard(),
+        RemoveSuperfluousEmptyComments(),
         RemoveSuperfluousSpaces(),
         RemoveSuperfluousEmptyLines(),
         ReduceSpacesToOneCharacter(visit_tokens=True),
