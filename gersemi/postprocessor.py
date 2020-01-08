@@ -298,9 +298,20 @@ class RemoveSuperfluousEmptyComments(Transformer_InPlace):
         return Tree("line_comment", children)
 
 
+class RstripLineComments(Transformer_InPlace):
+    def _strip(self, comment):
+        comment.children[1] = comment.children[1].rstrip()
+
+    @v_args(meta=True)
+    def line_comment(self, children, meta):
+        pound_sign, content = children
+        return Tree("line_comment", [pound_sign, content.strip()], meta)
+
+
 def PostProcessor(code, terminal_patterns):
     return TransformerChain(
         NormalizeEmptyLineComments(),
+        RstripLineComments(),
         MergeConsecutiveLineComments(code),
         IsolateSingleBlockType("if", "endif"),
         RestructureIfBlock(),
