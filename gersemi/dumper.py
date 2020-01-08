@@ -108,12 +108,15 @@ class DumpToString(Interpreter):
 
     def block(self, tree):
         begin, *middle, end = tree.children
-        formatted_middle = "\n".join(map(self.visit, middle))
-        return "{}\n{}\n{}".format(self.visit(begin), formatted_middle, self.visit(end))
+        formatted_middle = "".join(map(self.visit, middle))
+        return "{}{}{}".format(self.visit(begin), formatted_middle, self.visit(end))
 
     def block_body(self, tree):
         dumper = DumpToString(alignment=self.alignment + self.indent_size)
-        return "".join(dumper.visit_children(tree))
+        result = "".join(dumper.visit_children(tree))
+        if len(result) == 0:
+            return "\n"
+        return "\n" + result + "\n"
 
     def command_element(self, tree):
         command_invocation, trailing_space, line_comment = tree.children

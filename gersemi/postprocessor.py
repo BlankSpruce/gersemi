@@ -202,7 +202,7 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
             yield child
 
     def _drop_edge_empty_lines(self, children):
-        while is_newline(children[-1]):
+        while len(children) > 0 and is_newline(children[-1]):
             children.pop()
         return dropwhile(is_newline, children)
 
@@ -213,9 +213,13 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
         return Tree(node_type, list(new_children))
 
     def file(self, children):
+        if children is None or children == []:
+            return Tree("block_body", children)
         return self._make_node("file", children)
 
     def block_body(self, children):
+        if children is None or children == []:
+            return Tree("block_body", children)
         return self._make_node("block_body", children)
 
 
