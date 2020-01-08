@@ -1,0 +1,42 @@
+foo(arg1 # some comment next to arg1
+)
+
+foo(arg1 # some comment next to arg1
+    arg2 # some comment next to arg2
+)
+
+foo(arg1 # some comment next to arg1
+    arg2 # some comment
+         # next to arg2
+    arg3 # some
+         # comment
+         # next
+         # to
+         # arg3
+)
+
+foo(arg1 # some comment next to arg1
+    arg2 # some comment
+         # next to arg2
+    arg3 # some
+         # comment
+         # next
+         # to
+         # arg3
+    arg4 #
+         # some
+         #
+         # comment
+         #
+         #
+         # next
+         #
+         #
+         #
+         # to arg4
+         #
+         #
+)
+
+foo(arg1 # some comment next to arg1 but no comment next to arg2
+    arg2)

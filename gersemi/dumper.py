@@ -1,4 +1,5 @@
 from itertools import repeat
+from lark import Tree
 from lark.visitors import Interpreter
 from gersemi.ast_helpers import is_space, is_newline
 
@@ -54,6 +55,25 @@ def format_comment_content(content, width):
     return str(buffer)
 
 
+def has_line_comments(node):
+    class Impl(Interpreter):
+        def __default__(self, _):
+            return False
+
+        def line_comment(self, _):
+            return True
+
+        def _visit(self, tree):
+            is_subtree = lambda node: isinstance(node, Tree)
+            subtrees = filter(is_subtree, tree.children)
+            return any(map(self.visit, subtrees))
+
+        arguments = _visit
+        commented_argument = _visit
+
+    return isinstance(node, Tree) and Impl().visit(node)
+
+
 class DumpToString(Interpreter):
     def __init__(self, alignment=0):
         super().__init__()
@@ -105,7 +125,7 @@ class DumpToString(Interpreter):
         begin = self._indent(self.visit(identifier) + left_parenthesis)
         result = self._format_listable_content(begin, arguments)
 
-        if "\n" in result:
+        if "\n" in result or has_line_comments(arguments):
             result += "\n" + self._indent(right_parenthesis)
         else:
             result += right_parenthesis
