@@ -1,4 +1,6 @@
 from gersemi.dumper import DumpToString
+from gersemi.experimental.line_comment_reflower import LineCommentReflower
+from gersemi.experimental.dumper import DumpToString as ExperimentalDumpToString
 from gersemi.postprocessor import PostProcessor
 from gersemi.sanity_checker import check_code_equivalence
 
@@ -12,20 +14,33 @@ def noop(*_):
 
 
 class Formatter:  # pylint: disable=too-few-public-methods
-    def __init__(self, parser, sanity_checker):
+    def __init__(self, parser, sanity_checker, enable_experimental_features):
         self.parser = parser
         self.sanity_checker = sanity_checker
+        self.enable_experimental_features = enable_experimental_features
+
+    def _get_line_comment_reflower(self, code):
+        if self.enable_experimental_features:
+            return LineCommentReflower(code)
+        return None
 
     def _parse(self, code):
-        postprocessor = PostProcessor(code, get_terminal_patterns(self.parser))
+        postprocessor = PostProcessor(
+            get_terminal_patterns(self.parser), self._get_line_comment_reflower(code)
+        )
         return postprocessor.transform(self.parser.parse(code))
 
     def format(self, code):
-        result = DumpToString().visit(self._parse(code))
+        dumper = (
+            ExperimentalDumpToString()
+            if self.enable_experimental_features
+            else DumpToString()
+        )
+        result = dumper.visit(self._parse(code))
         self.sanity_checker(self.parser, code, result)
         return result
 
 
-def create_formatter(parser, do_sanity_check):
+def create_formatter(parser, do_sanity_check, enable_experimental_features=False):
     sanity_checker = check_code_equivalence if do_sanity_check else noop
-    return Formatter(parser, sanity_checker)
+    return Formatter(parser, sanity_checker, enable_experimental_features)

@@ -8,6 +8,15 @@ def parser():
     return create_parser()
 
 
-@pytest.fixture(scope="session")
-def formatter(parser):  # pylint: disable=redefined-outer-name
-    return create_formatter(parser, do_sanity_check=False)
+@pytest.fixture(scope="module")
+def experimental_enabled():
+    return False
+
+
+@pytest.fixture(scope="module")
+def formatter(parser, experimental_enabled):  # pylint: disable=redefined-outer-name
+    return create_formatter(
+        parser,
+        do_sanity_check=False,
+        enable_experimental_features=experimental_enabled,
+    )

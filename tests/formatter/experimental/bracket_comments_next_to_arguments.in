@@ -1,10 +1,6 @@
-foo(arg1
-    arg2
-    arg3 #[[single line bracket comment next to arg3]]
-    arg4
-    arg5 #[==[some quite longer__________________________________________ bracket comment next to arg5 that requires splitting into multiple lines]==]
-    arg6
-    arg7 #[====[bracket
+foo(arg1 arg2 arg3 #[[single line bracket comment next to arg3]]
+    arg4 arg5 #[==[some quite longer__________________________________________ bracket comment next to arg5 that requires splitting into multiple lines]==]
+    arg6 arg7 #[====[bracket
 comment next to arg7
       with     some
     formatting

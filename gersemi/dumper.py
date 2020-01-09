@@ -44,17 +44,6 @@ class WidthLimitingBuffer:
         )
 
 
-def format_comment_content(content, width):
-    buffer = WidthLimitingBuffer(width)
-    content = " ".join(map(str.lstrip, content.split("\n")))
-    first_item, *rest = content.lstrip().split(" ")
-    buffer += first_item
-    for item in rest:
-        buffer += " "
-        buffer += item
-    return str(buffer)
-
-
 def has_line_comments(node):
     class Impl(Interpreter):
         def __default__(self, _):
@@ -90,14 +79,14 @@ class DumpToString(Interpreter):
     def _format_listable_content(self, anchor, content):
         *_, last_line = anchor.split("\n")
         alignment = len(last_line)
-        dumper = DumpToString(alignment)
+        dumper = type(self)(alignment)
         formatted_content = dumper.visit(content)
         buffer = WidthLimitingBuffer(self.width)
         buffer += anchor + formatted_content.lstrip()
         return str(buffer)
 
     def _try_to_format_into_single_line(self, tree):
-        dumper = DumpToString(alignment=0)
+        dumper = type(self)(alignment=0)
         result = self._indent("".join(dumper.visit_children(tree)))
         if len(result) <= self.width:
             return result
@@ -112,7 +101,7 @@ class DumpToString(Interpreter):
         return "{}{}{}".format(self.visit(begin), formatted_middle, self.visit(end))
 
     def block_body(self, tree):
-        dumper = DumpToString(alignment=self.alignment + self.indent_size)
+        dumper = type(self)(alignment=self.alignment + self.indent_size)
         result = "".join(dumper.visit_children(tree))
         if len(result) == 0:
             return "\n"
@@ -122,6 +111,9 @@ class DumpToString(Interpreter):
         command_invocation, trailing_space, line_comment = tree.children
         begin = self.visit(command_invocation) + self.visit(trailing_space)
         return self._format_listable_content(begin, line_comment)
+
+    def non_command_element(self, tree):
+        return self._indent(self.__default__(tree))
 
     def command_invocation(self, tree):
         identifier, left_parenthesis, arguments, right_parenthesis = tree.children
@@ -149,23 +141,8 @@ class DumpToString(Interpreter):
         begin = "".join(self.visit_children(argument)) + " "
         return self._format_listable_content(begin, comment)
 
-    def line_comment(self, tree):
-        _, content = tree.children
-        comment_start = "# "
-        formatted_content = format_comment_content(
-            content, self.width - self.alignment - len(comment_start)
-        )
-        return self._indent(prefix(formatted_content, repeat(comment_start)))
-
     def bracket_comment(self, tree):
-        result = self._try_to_format_into_single_line(tree)
-        if result is not None:
-            return result
-        return self._indent("\n".join(self.visit_children(tree)))
-
-    def bracket_comment_body(self, tree):
-        content, *_ = tree.children
-        return format_comment_content(content, self.width - self.alignment)
+        return " " * self.alignment + self.__default__(tree)
 
     def bracket_argument(self, tree):
         return " " * self.alignment + self.__default__(tree)
