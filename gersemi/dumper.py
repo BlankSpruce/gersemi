@@ -32,16 +32,19 @@ class WidthLimitingBuffer:
             for item in text.split("\n"):
                 self += item
                 self += "\n"
-        elif len(self.lines[-1]) + len(text) > self.width:
+        elif len(self.lines[-1]) + len(text) > self.width and self.lines[-1] != "":
             self.lines.append(text)
         else:
             self.lines[-1] += text
         return self
 
+    def _remove_ending_newlines(self):
+        while len(self.lines) > 0 and self.lines[-1] == "":
+            self.lines.pop()
+
     def __str__(self):
-        return "\n".join(
-            filter(lambda line: len(line) > 0, map(str.rstrip, self.lines))
-        )
+        self._remove_ending_newlines()
+        return "\n".join(map(str.rstrip, self.lines))
 
 
 def has_line_comments(node):
