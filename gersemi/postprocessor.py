@@ -162,13 +162,9 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
         return Tree(node_type, list(new_children))
 
     def file(self, children):
-        if children is None or children == []:
-            return Tree("block_body", children)
         return self._make_node("file", children)
 
     def block_body(self, children):
-        if children is None or children == []:
-            return Tree("block_body", children)
         return self._make_node("block_body", children)
 
 

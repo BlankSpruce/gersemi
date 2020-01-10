@@ -20,9 +20,6 @@ class NormalizeEmptyLineComments(Transformer_InPlace):
 
 
 class RstripLineComments(Transformer_InPlace):
-    def _strip(self, comment):
-        comment.children[1] = comment.children[1].rstrip()
-
     @v_args(meta=True)
     def line_comment(self, children, meta):
         pound_sign, content = children
