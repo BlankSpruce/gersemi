@@ -1,37 +1,44 @@
 from itertools import dropwhile, filterfalse
 import re
+from typing import Callable, Dict, Iterator, List, Optional
 from lark import Discard, Tree, Token
-from lark.visitors import TransformerChain, Transformer_InPlace, Interpreter
+from lark.visitors import (
+    Transformer,
+    TransformerChain,
+    Transformer_InPlace,
+    Interpreter,
+)
 from gersemi.ast_helpers import is_space, is_newline, is_argument, is_comment
+from gersemi.types import Node, Nodes
 
 
-def remove_if_space(children, index):
+def remove_if_space(children: Nodes, index) -> None:
     if len(children) > 0 and is_space(children[index]):
         children.pop(index)
 
 
-def is_space_at_line_beginning(element):
+def is_space_at_line_beginning(element: Node) -> bool:
     return is_space(element) and element.column == 1
 
 
 class RemoveSuperfluousSpaces(Transformer_InPlace):
-    def command_element(self, children):
+    def command_element(self, children) -> Tree:
         _, command_invocation, trailing_space, *rest = children
         if len(rest) == 0:
-            return Tree("command_invocation", command_invocation.children)
+            return command_invocation
         return Tree("command_element", [command_invocation, trailing_space, *rest])
 
-    def non_command_element(self, children):
+    def non_command_element(self, children: Nodes) -> Tree:
         remove_if_space(children, index=0)
         if len(children) == 0:
-            raise Discard()
+            raise Discard
         return Tree("non_command_element", children)
 
-    def command_invocation(self, children):
+    def command_invocation(self, children: Nodes) -> Tree:
         remove_if_space(children, index=1)
         return Tree("command_invocation", children)
 
-    def arguments(self, children):
+    def arguments(self, children: Nodes) -> Tree:
         remove_if_space(children, index=0)
         remove_if_space(children, index=-1)
         children = [*filterfalse(is_space_at_line_beginning, children)]
@@ -44,7 +51,7 @@ class ReduceSpacesToOneCharacter(Transformer_InPlace):
         return Token("SPACE", " ")
 
 
-def is_command(command_name):
+def is_command(command_name: str) -> Callable[[Node], bool]:
     class IsCommandImpl(Interpreter):
         def command_element(self, tree):
             _, command_invocation, *_ = tree.children
@@ -65,26 +72,24 @@ def is_command(command_name):
 
 
 class IsolateSingleBlockType(Transformer_InPlace):
-    def __init__(self, begin_name, end_name):
+    def __init__(self, begin_name: str, end_name: str):
         super().__init__()
         self.begin_name = begin_name
         self.end_name = end_name
         self.is_block_begin = is_command(begin_name)
         self.is_block_end = is_command(end_name)
 
-    def unbalanced_end_message(self):
-        return "Unbalanced {}(), missing opening {}() command".format(
-            self.end_name, self.begin_name
+    def unbalanced_end_message(self) -> str:
+        return "Unbalanced {}(), missing ending {}() command".format(
+            self.begin_name, self.end_name
         )
 
-    def _restructure(self, node_stream, begin=None):
-        children = []
+    def _build_block(self, node_stream: Iterator[Node], begin: Node) -> Tree:
+        children: Nodes = []
         for node in node_stream:
             if self.is_block_begin(node):
-                children.append(self._restructure(node_stream, begin=node))
+                children.append(self._build_block(node_stream, node))
             elif self.is_block_end(node):
-                if begin is None:
-                    raise RuntimeError(self.unbalanced_end_message())
                 return Tree(
                     "block",
                     [
@@ -95,30 +100,36 @@ class IsolateSingleBlockType(Transformer_InPlace):
                 )
             else:
                 children.append(node)
-        return children
+        raise RuntimeError(self.unbalanced_end_message())
 
-    def restructure(self, children):
+    def _restructure(self, children: Nodes) -> Nodes:
         children_as_stream = (child for child in children)
-        return self._restructure(children_as_stream)
+        new_children: Nodes = []
+        for node in children_as_stream:
+            if self.is_block_begin(node):
+                new_children.append(self._build_block(children_as_stream, begin=node))
+            else:
+                new_children.append(node)
+        return new_children
 
-    def file(self, children):
-        return Tree("file", self.restructure(children))
+    def file(self, children: Nodes) -> Tree:
+        return Tree("file", self._restructure(children))
 
-    def block_body(self, children):
-        return Tree("block_body", self.restructure(children))
+    def block_body(self, children: Nodes) -> Tree:
+        return Tree("block_body", self._restructure(children))
 
 
 class RestructureIfBlock(Transformer_InPlace):
     def __init__(self):
         super().__init__()
 
-    def is_alternative_clause(self, node):
+    def is_alternative_clause(self, node: Node) -> bool:
         is_elseif = is_command("elseif")
         is_else = is_command("else")
         return is_elseif(node) or is_else(node)
 
-    def _restructure(self, node_stream):
-        children = []
+    def _restructure(self, node_stream: Iterator) -> Nodes:
+        children: Nodes = []
         for node in node_stream:
             if self.is_alternative_clause(node):
                 return [
@@ -129,17 +140,17 @@ class RestructureIfBlock(Transformer_InPlace):
             children.append(node)
         return [Tree("block_body", children)]
 
-    def restructure(self, block_body):
+    def restructure(self, block_body: Tree) -> Nodes:
         children_as_stream = (child for child in block_body.children)
         return self._restructure(children_as_stream)
 
-    def block(self, children):
+    def block(self, children) -> Tree:
         if_, body, endif_ = children
         return Tree("block", [if_, *self.restructure(body), endif_,])
 
 
 class RemoveSuperfluousEmptyLines(Transformer_InPlace):
-    def _filter_superfluous_empty_lines(self, children):
+    def _filter_superfluous_empty_lines(self, children) -> Iterator:
         consecutive_newlines = 0
         for child in children:
             if is_newline(child):
@@ -150,33 +161,33 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
                 consecutive_newlines = 0
             yield child
 
-    def _drop_edge_empty_lines(self, children):
+    def _drop_edge_empty_lines(self, children) -> Iterator:
         while len(children) > 0 and is_newline(children[-1]):
             children.pop()
         return dropwhile(is_newline, children)
 
-    def _make_node(self, node_type, children):
+    def _make_node(self, node_type, children) -> Tree:
         new_children = self._filter_superfluous_empty_lines(
             self._drop_edge_empty_lines(children)
         )
         return Tree(node_type, list(new_children))
 
-    def file(self, children):
+    def file(self, children) -> Tree:
         return self._make_node("file", children)
 
-    def block_body(self, children):
+    def block_body(self, children) -> Tree:
         return self._make_node("block_body", children)
 
 
-def pop_all(in_list):
+def pop_all(in_list: List) -> List:
     popped, in_list[:] = in_list[:], []
     return popped
 
 
 class IsolateCommentedArguments(Transformer_InPlace):
-    def arguments(self, children):
-        new_children = []
-        accumulator = []
+    def arguments(self, children) -> Tree:
+        new_children: Nodes = []
+        accumulator: Nodes = []
         for child in children:
             if is_argument(child):
                 new_children += pop_all(accumulator)
@@ -209,7 +220,7 @@ class RestructureBracketArgument(Transformer_InPlace):
 
 
 class RestructureBracketComment(Transformer_InPlace):
-    def bracket_comment(self, children):
+    def bracket_comment(self, children) -> Tree:
         pound_sign, bracket_argument = children
         begin, body, end = bracket_argument.children
         return Tree(
@@ -222,7 +233,10 @@ class RestructureBracketComment(Transformer_InPlace):
         )
 
 
-def PostProcessor(terminal_patterns, line_comment_reflower=None):
+def PostProcessor(
+    terminal_patterns: Dict[str, str],
+    line_comment_reflower: Optional[Transformer] = None,
+) -> Transformer:
     chain = TransformerChain(
         IsolateSingleBlockType("if", "endif"),
         RestructureIfBlock(),

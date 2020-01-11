@@ -1,10 +1,11 @@
 from itertools import repeat
-from lark import Tree
+from typing import Iterator
+from lark import Tree, Token
 from lark.visitors import Interpreter
 from gersemi.ast_helpers import is_space, is_newline
 
 
-def prefix(text, prefixes):
+def prefix(text: str, prefixes: Iterator[str]) -> str:
     lines = []
     for p, line in zip(prefixes, text.split("\n")):
         if line == "":
@@ -14,16 +15,16 @@ def prefix(text, prefixes):
     return "\n".join(lines)
 
 
-def indent(text, width):
+def indent(text: str, width: int) -> str:
     return prefix(text, prefixes=repeat(" " * width))
 
 
 class WidthLimitingBuffer:
-    def __init__(self, width):
+    def __init__(self, width: int):
         self.width = width
         self.lines = [""]
 
-    def __iadd__(self, text):
+    def __iadd__(self, text: str):
         if text == "\n":
             self.lines.append("")
         elif text == " " and len(self.lines[-1]) == self.width:
@@ -38,24 +39,24 @@ class WidthLimitingBuffer:
             self.lines[-1] += text
         return self
 
-    def _remove_ending_newlines(self):
+    def _remove_ending_newlines(self) -> None:
         while len(self.lines) > 0 and self.lines[-1] == "":
             self.lines.pop()
 
-    def __str__(self):
+    def __str__(self) -> str:
         self._remove_ending_newlines()
         return "\n".join(map(str.rstrip, self.lines))
 
 
-def has_line_comments(node):
+def has_line_comments(node: Token) -> bool:
     class Impl(Interpreter):
-        def __default__(self, _):
+        def __default__(self, _) -> bool:
             return False
 
-        def line_comment(self, _):
+        def line_comment(self, _) -> bool:
             return True
 
-        def _visit(self, tree):
+        def _visit(self, tree: Tree) -> bool:
             is_subtree = lambda node: isinstance(node, Tree)
             subtrees = filter(is_subtree, tree.children)
             return any(map(self.visit, subtrees))
@@ -73,13 +74,13 @@ class DumpToString(Interpreter):
         self.indent_size = 4
         self.alignment = alignment
 
-    def __default__(self, tree):
+    def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))
 
-    def _indent(self, text):
+    def _indent(self, text: str):
         return indent(text, self.alignment)
 
-    def _format_listable_content(self, anchor, content):
+    def _format_listable_content(self, anchor: str, content: str) -> str:
         *_, last_line = anchor.split("\n")
         alignment = len(last_line)
         dumper = type(self)(alignment)
@@ -88,7 +89,7 @@ class DumpToString(Interpreter):
         buffer += anchor + formatted_content.lstrip()
         return str(buffer)
 
-    def _try_to_format_into_single_line(self, tree):
+    def _try_to_format_into_single_line(self, tree: Tree):
         dumper = type(self)(alignment=0)
         result = self._indent("".join(dumper.visit_children(tree)))
         if len(result) <= self.width:

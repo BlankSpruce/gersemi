@@ -1,5 +1,7 @@
 [MESSAGES CONTROL]
 disable=
+    bad-continuation,
+
     duplicate-code,
 
     fixme,

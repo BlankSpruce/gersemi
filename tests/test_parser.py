@@ -1,5 +1,5 @@
-import lark
 import pytest
+import lark
 from .tests_generator import generate_input_only_tests
 
 
