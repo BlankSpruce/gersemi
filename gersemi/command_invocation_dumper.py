@@ -1,10 +1,10 @@
-from lark import Tree, Token
+from lark import Tree
 from lark.visitors import Interpreter
-from gersemi.ast_helpers import is_space, is_newline
+from gersemi.ast_helpers import is_whitespace
 from gersemi.base_dumper import BaseDumper
 
 
-def has_line_comments(node: Token) -> bool:
+def has_line_comments(node) -> bool:
     class Impl(Interpreter):
         def __default__(self, _) -> bool:
             return False
@@ -36,14 +36,16 @@ class CommandInvocationDumper(BaseDumper):
         return result
 
     def arguments(self, tree):
-        is_whitespace = lambda node: is_space(node) or is_newline(node)
-        only_arguments = [child for child in tree.children if not is_whitespace(child)]
-        if len(only_arguments) <= 4:
-            result = self._try_to_format_into_single_line(tree)
+        non_whitespace_elements = [
+            child for child in tree.children if not is_whitespace(child)
+        ]
+        if not has_line_comments(tree) and len(non_whitespace_elements) <= 4:
+            helper_tree = Tree("arguments", non_whitespace_elements)
+            result = self._try_to_format_into_single_line(helper_tree)
             if result is not None:
                 return result
 
-        return "\n".join(self.visit(child) for child in only_arguments)
+        return "\n".join(self.visit(child) for child in non_whitespace_elements)
 
     def commented_argument(self, tree):
         argument, *_, comment = tree.children

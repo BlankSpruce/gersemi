@@ -1,3 +1,4 @@
+from gersemi.ast_helpers import is_whitespace
 from gersemi.base_dumper import BaseDumper
 from gersemi.command_invocation_dumper import CommandInvocationDumper
 
@@ -19,9 +20,12 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         return "\n" + result + "\n"
 
     def command_element(self, tree):
-        command_invocation, trailing_space, line_comment = tree.children
-        begin = self.visit(command_invocation) + self.visit(trailing_space)
+        command_invocation, _, line_comment = tree.children
+        begin = self.visit(command_invocation) + " "
         return self._format_listable_content(begin, line_comment)
 
     def non_command_element(self, tree):
-        return self._indent(self.__default__(tree))
+        non_whitespace_elements = [
+            child for child in tree.children if not is_whitespace(child)
+        ]
+        return self._indent(" ".join(map(self.visit, non_whitespace_elements)))

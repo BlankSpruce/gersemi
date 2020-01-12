@@ -28,7 +28,7 @@ class BaseDumper(Interpreter):
 
     def _try_to_format_into_single_line(self, tree: Tree) -> Optional[str]:
         dumper = type(self)(alignment=0)
-        result = self._indent("".join(dumper.visit_children(tree)))
+        result = self._indent(" ".join(dumper.visit_children(tree)))
         if len(result) <= self.width:
             return result
         return None

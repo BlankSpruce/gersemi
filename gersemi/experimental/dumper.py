@@ -28,8 +28,8 @@ class Dumper(gersemi.dumper.Dumper):
         return self._indent(prefix(formatted_content, repeat(comment_start)))
 
     def bracket_comment(self, tree):
-        result = self._try_to_format_into_single_line(tree)
-        if result is not None:
+        result = self._indent("".join(self.visit_children(tree)))
+        if len(result) <= self.width:
             return result
         return self._indent("\n".join(self.visit_children(tree)))
 

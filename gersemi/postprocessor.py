@@ -1,7 +1,7 @@
 from itertools import dropwhile, filterfalse
 import re
 from typing import Callable, Dict, Iterator, List, Optional
-from lark import Discard, Tree, Token
+from lark import Discard, Tree
 from lark.visitors import (
     Transformer,
     TransformerChain,
@@ -44,11 +44,6 @@ class RemoveSuperfluousSpaces(Transformer_InPlace):
         children = [*filterfalse(is_space_at_line_beginning, children)]
 
         return Tree("arguments", children)
-
-
-class ReduceSpacesToOneCharacter(Transformer_InPlace):
-    def SPACE(self, _):
-        return Token("SPACE", " ")
 
 
 def is_command(command_name: str) -> Callable[[Node], bool]:
@@ -249,7 +244,6 @@ def PostProcessor(
         RestructureBracketComment(),
         RemoveSuperfluousSpaces(),
         RemoveSuperfluousEmptyLines(),
-        ReduceSpacesToOneCharacter(visit_tokens=True),
     )
     if line_comment_reflower is not None:
         return line_comment_reflower * chain
