@@ -1,4 +1,4 @@
-from gersemi.sanity_checker import drop_comments_and_whitespaces
+from gersemi.sanity_checker import drop_whitespaces
 from .tests_generator import generate_input_output_tests
 
 
@@ -13,10 +13,8 @@ def test_formatter_idempotence(formatter, case):
 
 
 def test_abstract_syntax_tree_equivalence(parser, formatter, case):
-    before_formatting = drop_comments_and_whitespaces(parser.parse(case.given))
-    after_formatting = drop_comments_and_whitespaces(
-        parser.parse(formatter.format(case.given))
-    )
+    before_formatting = drop_whitespaces(parser.parse(case.given))
+    after_formatting = drop_whitespaces(parser.parse(formatter.format(case.given)))
 
     assert before_formatting.pretty() == after_formatting.pretty()
     assert before_formatting == after_formatting

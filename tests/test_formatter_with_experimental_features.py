@@ -1,11 +1,29 @@
 import pytest
-from gersemi.sanity_checker import drop_comments_and_whitespaces
+from lark import Discard
+from lark.visitors import Transformer
+from gersemi.sanity_checker import drop_whitespaces
 from .tests_generator import generate_input_output_tests
 
 
 @pytest.fixture(scope="module")
 def experimental_enabled():
     return True
+
+
+def drop_comments(tree):
+    class Impl(Transformer):  # pylint: disable=too-few-public-methods
+        def _drop_node(self, _):
+            raise Discard()
+
+        non_command_element = _drop_node
+        line_comment = _drop_node
+        bracket_comment = _drop_node
+
+    return Impl().transform(tree)
+
+
+def drop_comments_and_whitespaces(tree):
+    return drop_comments(drop_whitespaces(tree))
 
 
 def test_formatter(formatter, case):
