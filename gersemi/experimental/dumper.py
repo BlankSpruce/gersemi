@@ -1,9 +1,11 @@
 from itertools import repeat
 import gersemi.dumper
+from gersemi.indenter import prefix
+from gersemi.width_limiting_buffer import WidthLimitingBuffer
 
 
 def format_comment_content(content, width):
-    buffer = gersemi.dumper.WidthLimitingBuffer(width)
+    buffer = WidthLimitingBuffer(width)
     content = " ".join(map(str.lstrip, content.split("\n")))
     first_item, *rest = content.lstrip().split(" ")
     buffer += first_item
@@ -13,7 +15,7 @@ def format_comment_content(content, width):
     return str(buffer)
 
 
-class DumpToString(gersemi.dumper.DumpToString):
+class Dumper(gersemi.dumper.Dumper):
     def non_command_element(self, tree):
         return self.__default__(tree)
 
@@ -23,9 +25,7 @@ class DumpToString(gersemi.dumper.DumpToString):
         formatted_content = format_comment_content(
             content, self.width - self.alignment - len(comment_start)
         )
-        return self._indent(
-            gersemi.dumper.prefix(formatted_content, repeat(comment_start))
-        )
+        return self._indent(prefix(formatted_content, repeat(comment_start)))
 
     def bracket_comment(self, tree):
         result = self._try_to_format_into_single_line(tree)

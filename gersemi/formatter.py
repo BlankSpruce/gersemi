@@ -1,6 +1,6 @@
-from gersemi.dumper import DumpToString
+from gersemi.dumper import Dumper
 from gersemi.experimental.line_comment_reflower import LineCommentReflower
-from gersemi.experimental.dumper import DumpToString as ExperimentalDumpToString
+from gersemi.experimental.dumper import Dumper as ExperimentalDumper
 from gersemi.postprocessor import PostProcessor
 from gersemi.sanity_checker import check_code_equivalence
 
@@ -31,11 +31,7 @@ class Formatter:  # pylint: disable=too-few-public-methods
         return postprocessor.transform(self.parser.parse(code))
 
     def format(self, code):
-        dumper = (
-            ExperimentalDumpToString()
-            if self.enable_experimental_features
-            else DumpToString()
-        )
+        dumper = ExperimentalDumper() if self.enable_experimental_features else Dumper()
         result = dumper.visit(self._parse(code))
         self.sanity_checker(self.parser, code, result)
         return result
