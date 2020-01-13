@@ -52,6 +52,16 @@ class CommandInvocationDumper(BaseDumper):
         begin = "".join(self.visit_children(argument)) + " "
         return self._format_listable_content(begin, comment)
 
+    def complex_argument(self, tree):
+        left_parenthesis, arguments, right_parenthesis = tree.children
+        begin = self._indent(left_parenthesis)
+        result = self._format_listable_content(begin, arguments)
+        if "\n" in result or has_line_comments(arguments):
+            result += "\n" + self._indent(right_parenthesis)
+        else:
+            result += right_parenthesis
+        return result
+
     def bracket_comment(self, tree):
         return " " * self.alignment + self.__default__(tree)
 
