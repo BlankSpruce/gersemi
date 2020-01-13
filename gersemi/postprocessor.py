@@ -1,4 +1,4 @@
-from itertools import dropwhile, filterfalse
+from itertools import dropwhile
 import re
 from typing import Callable, Dict, Iterator, List, Optional
 from lark import Discard, Tree, Token
@@ -8,55 +8,17 @@ from lark.visitors import (
     Transformer_InPlace,
     Interpreter,
 )
-from gersemi.ast_helpers import is_space, is_newline, is_argument, is_comment
+from gersemi.ast_helpers import is_newline, is_argument, is_comment
 from gersemi.types import Node, Nodes
-
-
-def remove_if_space(children: Nodes, index) -> None:
-    if len(children) > 0 and is_space(children[index]):
-        children.pop(index)
-
-
-def is_space_at_line_beginning(element: Node) -> bool:
-    return is_space(element) and element.column == 1
-
-
-class RemoveSuperfluousSpaces(Transformer_InPlace):
-    def command_element(self, children) -> Tree:
-        _, command_invocation, trailing_space, *rest = children
-        if len(rest) == 0:
-            return command_invocation
-        return Tree("command_element", [command_invocation, trailing_space, *rest])
-
-    def non_command_element(self, children: Nodes) -> Tree:
-        remove_if_space(children, index=0)
-        if len(children) == 0:
-            raise Discard
-        return Tree("non_command_element", children)
-
-    def command_invocation(self, children: Nodes) -> Tree:
-        remove_if_space(children, index=1)
-        return Tree("command_invocation", children)
-
-    def arguments(self, children: Nodes) -> Tree:
-        remove_if_space(children, index=0)
-        remove_if_space(children, index=-1)
-        children = [*filterfalse(is_space_at_line_beginning, children)]
-
-        return Tree("arguments", children)
 
 
 def is_command(command_name: str) -> Callable[[Node], bool]:
     class IsCommandImpl(Interpreter):
         def command_element(self, tree):
-            _, command_invocation, *_ = tree.children
+            command_invocation, *_ = tree.children
             return self.visit(command_invocation)
 
         def command_invocation(self, tree):
-            identifier, *_ = tree.children
-            return self.visit(identifier)
-
-        def identifier(self, tree):
             name, *_ = tree.children
             return name == command_name
 
@@ -231,6 +193,19 @@ class RestructureBracketComment(Transformer_InPlace):
         )
 
 
+class SimplifyParseTree(Transformer_InPlace):
+    def command_element(self, children) -> Tree:
+        command_invocation, *rest = children
+        if len(rest) == 0:
+            return command_invocation
+        return Tree("command_element", children)
+
+    def non_command_element(self, children: Nodes) -> Tree:
+        if len(children) == 0:
+            raise Discard
+        return Tree("non_command_element", children)
+
+
 def PostProcessor(
     terminal_patterns: Dict[str, str],
     line_comment_reflower: Optional[Transformer] = None,
@@ -245,7 +220,7 @@ def PostProcessor(
         IsolateCommentedArguments(),
         RestructureBracketArgument(terminal_patterns["BRACKET_ARGUMENT"]),
         RestructureBracketComment(),
-        RemoveSuperfluousSpaces(),
+        SimplifyParseTree(),
         RemoveSuperfluousEmptyLines(),
     )
     if line_comment_reflower is not None:

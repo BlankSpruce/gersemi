@@ -1,6 +1,6 @@
 from lark import Tree
 from lark.visitors import Interpreter
-from gersemi.ast_helpers import is_whitespace
+from gersemi.ast_helpers import is_newline
 from gersemi.base_dumper import BaseDumper
 
 
@@ -26,7 +26,7 @@ def has_line_comments(node) -> bool:
 class CommandInvocationDumper(BaseDumper):
     def command_invocation(self, tree):
         identifier, arguments = tree.children
-        begin = self._indent(f"{self.visit(identifier)}(")
+        begin = self._indent(f"{identifier}(")
         result = self._format_listable_content(begin, arguments)
 
         if "\n" in result or has_line_comments(arguments):
@@ -36,16 +36,16 @@ class CommandInvocationDumper(BaseDumper):
         return result
 
     def arguments(self, tree):
-        non_whitespace_elements = [
-            child for child in tree.children if not is_whitespace(child)
+        non_newline_elements = [
+            child for child in tree.children if not is_newline(child)
         ]
-        if not has_line_comments(tree) and len(non_whitespace_elements) <= 4:
-            helper_tree = Tree("arguments", non_whitespace_elements)
+        if not has_line_comments(tree) and len(non_newline_elements) <= 4:
+            helper_tree = Tree("arguments", non_newline_elements)
             result = self._try_to_format_into_single_line(helper_tree)
             if result is not None:
                 return result
 
-        return "\n".join(self.visit(child) for child in non_whitespace_elements)
+        return "\n".join(self.visit(child) for child in non_newline_elements)
 
     def commented_argument(self, tree):
         argument, *_, comment = tree.children

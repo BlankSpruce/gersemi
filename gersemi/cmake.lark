@@ -4,16 +4,14 @@ file          : (_file_element NEWLINE)* _file_element
 _file_element : command_element
               | non_command_element
 
-command_element     : leading_space command_invocation trailing_space [line_comment]
-leading_space       : [SPACE]
-trailing_space      : [SPACE]
-non_command_element : (bracket_comment | SPACE)* [line_comment]
+command_element     : [_SPACE] command_invocation [_SPACE] [line_comment]
+non_command_element : (bracket_comment | _SPACE)* [line_comment]
 
-command_invocation  : identifier [SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
-identifier          : /[A-Za-z_][A-Za-z0-9_]*/
+command_invocation  : IDENTIFIER [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
+IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
 arguments           : [argument] (_separation [argument])*
 _separation         : _separation_atom+
-_separation_atom    : SPACE
+_separation_atom    : _SPACE
                     | bracket_comment
                     | [line_comment] NEWLINE
 
@@ -54,4 +52,4 @@ NEWLINE                : "\n"
 _POUND_SIGN            : "#"
 _QUOTATION_MARK        : "\""
 _RIGHT_PARENTHESIS     : /\)/
-SPACE                  : /[ \t]+/
+_SPACE                 : /[ \t]+/
