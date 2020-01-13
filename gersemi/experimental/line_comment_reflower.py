@@ -6,25 +6,17 @@ from lark.visitors import Transformer, TransformerChain, Transformer_InPlace, v_
 class NormalizeEmptyLineComments(Transformer_InPlace):
     @v_args(meta=True)
     def line_comment(self, children, meta: Meta) -> Tree:
-        if len(children) == 1:
-            pound_sign, *_ = children
-            line_comment_content = Token(
-                type_="LINE_COMMENT_CONTENT",
-                value="",
-                line=pound_sign.line,
-                column=pound_sign.end_column,
-                end_line=pound_sign.line,
-                end_column=pound_sign.end_column,
-            )
-            return Tree("line_comment", [pound_sign, line_comment_content], meta)
+        if len(children) == 0:
+            line_comment_content = Token(type_="LINE_COMMENT_CONTENT", value="")
+            return Tree("line_comment", [line_comment_content], meta)
         return Tree("line_comment", children, meta)
 
 
 class RstripLineComments(Transformer_InPlace):
     @v_args(meta=True)
     def line_comment(self, children, meta: Meta) -> Tree:
-        pound_sign, content = children
-        return Tree("line_comment", [pound_sign, content.strip()], meta)
+        *_, content = children
+        return Tree("line_comment", [content.strip()], meta)
 
 
 class MergeConsecutiveLineComments(Transformer_InPlace):
@@ -49,11 +41,11 @@ class MergeConsecutiveLineComments(Transformer_InPlace):
         return all(conditions)
 
     def _is_line_comment_empty(self, comment: Tree) -> bool:
-        return comment.children[1] != ""
+        return comment.children[0] != ""
 
     def _merge(self, last_comment, new_comment):
         if self._is_line_comment_empty(new_comment):
-            last_comment.children[1] += " " + new_comment.children[1].lstrip()
+            last_comment.children[0] += " " + new_comment.children[0].lstrip()
         new_comment.data = "node_to_discard"
 
     def start(self, children) -> Tree:
@@ -80,7 +72,7 @@ class RemoveNodesToDiscard(Transformer_InPlace):
 
 class RemoveSuperfluousEmptyComments(Transformer_InPlace):
     def line_comment(self, children):
-        _, content = children
+        *_, content = children
         if content == "":
             raise Discard()
         return Tree("line_comment", children)

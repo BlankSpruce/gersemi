@@ -1,7 +1,7 @@
 from itertools import dropwhile, filterfalse
 import re
 from typing import Callable, Dict, Iterator, List, Optional
-from lark import Discard, Tree
+from lark import Discard, Tree, Token
 from lark.visitors import (
     Transformer,
     TransformerChain,
@@ -216,12 +216,15 @@ class RestructureBracketArgument(Transformer_InPlace):
 
 class RestructureBracketComment(Transformer_InPlace):
     def bracket_comment(self, children) -> Tree:
-        pound_sign, bracket_argument = children
+        *_, bracket_argument = children
         begin, body, end = bracket_argument.children
         return Tree(
             "bracket_comment",
             [
-                Tree("bracket_comment_begin", [pound_sign + begin.children[0]]),
+                Tree(
+                    "bracket_comment_begin",
+                    [Token("bracket_open", f"#{begin.children[0]}")],
+                ),
                 Tree("bracket_comment_body", body.children),
                 Tree("bracket_comment_end", end.children),
             ],

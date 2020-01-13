@@ -13,10 +13,10 @@ class Token(str):
         self,
         type_: str,
         value: str,
-        line: int,
-        column: int,
-        end_line: int,
-        end_column: int,
+        line: int = ...,
+        column: int = ...,
+        end_line: int = ...,
+        end_column: int = ...,
     ): ...
 
 class Tree:

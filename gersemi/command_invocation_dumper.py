@@ -25,14 +25,14 @@ def has_line_comments(node) -> bool:
 
 class CommandInvocationDumper(BaseDumper):
     def command_invocation(self, tree):
-        identifier, left_parenthesis, arguments, right_parenthesis = tree.children
-        begin = self._indent(self.visit(identifier) + left_parenthesis)
+        identifier, arguments = tree.children
+        begin = self._indent(f"{self.visit(identifier)}(")
         result = self._format_listable_content(begin, arguments)
 
         if "\n" in result or has_line_comments(arguments):
-            result += "\n" + self._indent(right_parenthesis)
+            result += f"\n{self._indent(')')}"
         else:
-            result += right_parenthesis
+            result += ")"
         return result
 
     def arguments(self, tree):
@@ -53,13 +53,13 @@ class CommandInvocationDumper(BaseDumper):
         return self._format_listable_content(begin, comment)
 
     def complex_argument(self, tree):
-        left_parenthesis, arguments, right_parenthesis = tree.children
-        begin = self._indent(left_parenthesis)
+        arguments, *_ = tree.children
+        begin = self._indent("(")
         result = self._format_listable_content(begin, arguments)
         if "\n" in result or has_line_comments(arguments):
-            result += "\n" + self._indent(right_parenthesis)
+            result += f"\n{self._indent(')')}"
         else:
-            result += right_parenthesis
+            result += ")"
         return result
 
     def bracket_comment(self, tree):
@@ -69,7 +69,7 @@ class CommandInvocationDumper(BaseDumper):
         return " " * self.alignment + self.__default__(tree)
 
     def quoted_argument(self, tree):
-        return " " * self.alignment + self.__default__(tree)
+        return " " * self.alignment + f'"{self.__default__(tree)}"'
 
     def unquoted_argument(self, tree):
         return self._indent(self.__default__(tree))

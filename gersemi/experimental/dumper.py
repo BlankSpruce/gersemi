@@ -20,7 +20,7 @@ class Dumper(gersemi.dumper.Dumper):
         return self.__default__(tree)
 
     def line_comment(self, tree):
-        _, content = tree.children
+        *_, content = tree.children
         comment_start = "# "
         formatted_content = format_comment_content(
             content, self.width - self.alignment - len(comment_start)

@@ -29,3 +29,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
             child for child in tree.children if not is_whitespace(child)
         ]
         return self._indent(" ".join(map(self.visit, non_whitespace_elements)))
+
+    def line_comment(self, tree):
+        *_, content = tree.children
+        return f"#{content}"
