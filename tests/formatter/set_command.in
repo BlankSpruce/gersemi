@@ -1,0 +1,46 @@
+# Set normal variable
+set(FOO item1)
+set(FOO item1 item2)
+set(FOO item1 item2 item3)
+set(FOO item1 item2 item3 item4)
+set(FOO item1 item2 item3 item4 item5)
+
+set(FOO "item1")
+set(FOO "item1" "item2")
+set(FOO "item1" "item2" "item3")
+set(FOO "item1" "item2" "item3" "item4")
+set(FOO "item1" "item2" "item3" "item4" "item5")
+
+set(FOO [[item1]])
+set(FOO [[item1]] [[item2]])
+set(FOO [[item1]] [[item2]] [[item3]])
+set(FOO [[item1]] [[item2]] [[item3]] [[item4]])
+set(FOO [[item1]] [[item2]] [[item3]] [[item4]] [[item5]])
+
+# Set empty variable
+set(FOO)
+
+# Set normal variable in parent scope
+set(FOO item1 PARENT_SCOPE)
+set(FOO item1 item2 PARENT_SCOPE)
+set(FOO item1 item2 item3 PARENT_SCOPE)
+set(FOO item1 item2 item3 item4 PARENT_SCOPE)
+set(FOO item1 item2 item3 item4 item5 PARENT_SCOPE)
+
+set(FOO "item1" PARENT_SCOPE)
+set(FOO "item1" "item2" PARENT_SCOPE)
+set(FOO "item1" "item2" "item3" PARENT_SCOPE)
+set(FOO "item1" "item2" "item3" "item4" PARENT_SCOPE)
+set(FOO "item1" "item2" "item3" "item4" "item5" PARENT_SCOPE)
+
+set(FOO [[item1]] PARENT_SCOPE)
+set(FOO [[item1]] [[item2]] PARENT_SCOPE)
+set(FOO [[item1]] [[item2]] [[item3]] PARENT_SCOPE)
+set(FOO [[item1]] [[item2]] [[item3]] [[item4]] PARENT_SCOPE)
+set(FOO [[item1]] [[item2]] [[item3]] [[item4]] [[item5]] PARENT_SCOPE)
+
+# Set empty variable in parent scope
+set(FOO PARENT_SCOPE)
+
+# Too big command to fit in one line
+set(FOO "item1                                                                  ")

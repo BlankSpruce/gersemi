@@ -1,6 +1,6 @@
 from lark import Tree
 from lark.visitors import Interpreter
-from gersemi.ast_helpers import is_newline
+from gersemi.ast_helpers import is_unquoted_argument
 from gersemi.base_dumper import BaseDumper
 
 
@@ -23,8 +23,8 @@ def has_line_comments(node) -> bool:
     return isinstance(node, Tree) and Impl().visit(node)
 
 
-class CommandInvocationDumper(BaseDumper):
-    def command_invocation(self, tree):
+class BaseCommandInvocationDumper(BaseDumper):
+    def format_command(self, tree):
         identifier, arguments = tree.children
         begin = self._indent(f"{identifier}(")
         result = self._format_listable_content(begin, arguments)
@@ -36,20 +36,16 @@ class CommandInvocationDumper(BaseDumper):
         return result
 
     def arguments(self, tree):
-        non_newline_elements = [
-            child for child in tree.children if not is_newline(child)
-        ]
-        if not has_line_comments(tree) and len(non_newline_elements) <= 4:
-            helper_tree = Tree("arguments", non_newline_elements)
-            result = self._try_to_format_into_single_line(helper_tree)
+        if not has_line_comments(tree) and len(tree.children) <= 4:
+            result = self._try_to_format_into_single_line(tree)
             if result is not None:
                 return result
 
-        return "\n".join(self.visit(child) for child in non_newline_elements)
+        return "\n".join(self.visit_children(tree))
 
     def commented_argument(self, tree):
         argument, *_, comment = tree.children
-        begin = "".join(self.visit_children(argument)) + " "
+        begin = "".join(self.visit(argument)) + " "
         return self._format_listable_content(begin, comment)
 
     def complex_argument(self, tree):
@@ -73,3 +69,45 @@ class CommandInvocationDumper(BaseDumper):
 
     def unquoted_argument(self, tree):
         return self._indent(self.__default__(tree))
+
+
+def is_parent_scope_flag(node):
+    return is_unquoted_argument(node) and node.children[0] == "PARENT_SCOPE"
+
+
+class SetCommandDumper(BaseCommandInvocationDumper):
+    @staticmethod
+    def _just_values(children):
+        if children and is_parent_scope_flag(children[-1]):
+            return children[1:-1]
+        return children[1:]
+
+    def arguments(self, tree):
+        if not has_line_comments(tree) and len(self._just_values(tree.children)) <= 4:
+            result = self._try_to_format_into_single_line(tree)
+            if result is not None:
+                return result
+
+        return "\n".join(self.visit_children(tree))
+
+
+class CommandInvocationDumper(BaseCommandInvocationDumper):
+    known_command_mapping = {
+        "set": SetCommandDumper,
+    }
+
+    def _patch_dumper(self, patch):
+        dumper = type(self)
+        return type(f"{dumper.__name__} with {patch.__name__}", (patch, dumper), {})(
+            self.alignment
+        )
+
+    def _get_patch(self, command_name):
+        return self.known_command_mapping.get(command_name, None)
+
+    def command_invocation(self, tree):
+        command_name, _ = tree.children
+        patch = self._get_patch(command_name)
+        if patch is None:
+            return super().format_command(tree)
+        return self._patch_dumper(patch).format_command(tree)

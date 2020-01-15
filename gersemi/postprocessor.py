@@ -205,6 +205,20 @@ class SimplifyParseTree(Transformer_InPlace):
             raise Discard
         return Tree("non_command_element", children)
 
+    def arguments(self, children: Nodes) -> Tree:
+        return Tree("arguments", [child for child in children if not is_newline(child)])
+
+    def argument(self, children: Nodes) -> Node:
+        return children[0]
+
+    def unquoted_argument(self, children) -> Tree:
+        return Tree(
+            "unquoted_argument", [Token("unquoted_argument_content", "".join(children))]
+        )
+
+    def unquoted_element(self, children) -> str:
+        return "".join(children)
+
 
 def PostProcessor(
     terminal_patterns: Dict[str, str],
