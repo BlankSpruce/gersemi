@@ -2,6 +2,7 @@ from typing import Optional
 from lark import Tree
 from lark.visitors import Interpreter
 from gersemi.indenter import indent
+from gersemi.types import Nodes
 from gersemi.width_limiting_buffer import WidthLimitingBuffer
 
 
@@ -26,9 +27,9 @@ class BaseDumper(Interpreter):
     def _indent(self, text: str):
         return indent(text, self.alignment)
 
-    def _try_to_format_into_single_line(self, tree: Tree) -> Optional[str]:
+    def _try_to_format_into_single_line(self, children: Nodes) -> Optional[str]:
         dumper = type(self)(alignment=0)
-        result = self._indent(" ".join(dumper.visit_children(tree)))
+        result = self._indent(" ".join(map(dumper.visit, children)))
         if len(result) <= self.width:
             return result
         return None

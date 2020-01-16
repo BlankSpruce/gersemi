@@ -1,10 +1,11 @@
+from itertools import dropwhile, takewhile
 from lark import Tree
 from lark.visitors import Interpreter
 from gersemi.ast_helpers import is_unquoted_argument
 from gersemi.base_dumper import BaseDumper
 
 
-def has_line_comments(node) -> bool:
+def contains_line_comment(nodes) -> bool:
     class Impl(Interpreter):
         def __default__(self, _) -> bool:
             return False
@@ -20,7 +21,8 @@ def has_line_comments(node) -> bool:
         arguments = _visit
         commented_argument = _visit
 
-    return isinstance(node, Tree) and Impl().visit(node)
+    check_node = lambda node: isinstance(node, Tree) and Impl().visit(node)
+    return any(map(check_node, nodes))
 
 
 class BaseCommandInvocationDumper(BaseDumper):
@@ -29,15 +31,15 @@ class BaseCommandInvocationDumper(BaseDumper):
         begin = self._indent(f"{identifier}(")
         result = self._format_listable_content(begin, arguments)
 
-        if "\n" in result or has_line_comments(arguments):
+        if "\n" in result or contains_line_comment(arguments.children):
             result += f"\n{self._indent(')')}"
         else:
             result += ")"
         return result
 
     def arguments(self, tree):
-        if not has_line_comments(tree) and len(tree.children) <= 4:
-            result = self._try_to_format_into_single_line(tree)
+        if not contains_line_comment(tree.children) and len(tree.children) <= 4:
+            result = self._try_to_format_into_single_line(tree.children)
             if result is not None:
                 return result
 
@@ -52,7 +54,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         arguments, *_ = tree.children
         begin = self._indent("(")
         result = self._format_listable_content(begin, arguments)
-        if "\n" in result or has_line_comments(arguments):
+        if "\n" in result or contains_line_comment(arguments.children):
             result += f"\n{self._indent(')')}"
         else:
             result += ")"
@@ -71,22 +73,70 @@ class BaseCommandInvocationDumper(BaseDumper):
         return self._indent(self.__default__(tree))
 
 
-def is_parent_scope_flag(node):
-    return is_unquoted_argument(node) and node.children[0] == "PARENT_SCOPE"
+def just_values(children):
+    is_not_keyword = lambda child: not is_cache(child) and not is_parent_scope(child)
+    return list(takewhile(is_not_keyword, children[1:]))
+
+
+def is_unquoted(argument):
+    def impl(node):
+        return is_unquoted_argument(node) and node.children[0] == argument
+
+    return impl
+
+
+is_parent_scope = is_unquoted("PARENT_SCOPE")
+is_cache = is_unquoted("CACHE")
+is_force = is_unquoted("FORCE")
 
 
 class SetCommandDumper(BaseCommandInvocationDumper):
     @staticmethod
-    def _just_values(children):
-        if children and is_parent_scope_flag(children[-1]):
-            return children[1:-1]
-        return children[1:]
+    def _can_be_formatted_into_single_line(children):
+        return not contains_line_comment(children) and len(just_values(children)) <= 4
 
-    def arguments(self, tree):
-        if not has_line_comments(tree) and len(self._just_values(tree.children)) <= 4:
-            result = self._try_to_format_into_single_line(tree)
+    @staticmethod
+    def _is_cache_type(children):
+        return any(map(is_cache, children))
+
+    def _format_cache_part(self, children):
+        result = self._try_to_format_into_single_line(children)
+        if result is not None:
+            return result
+
+        cache, cache_type, docstring = map(self.visit, children)
+        return f"{cache} {cache_type.lstrip()}\n{docstring}"
+
+    def _format_name_and_values(self, children):
+        if self._can_be_formatted_into_single_line(children):
+            result = self._try_to_format_into_single_line(children)
             if result is not None:
                 return result
+
+        return "\n".join(map(self.visit, children))
+
+    def _cache_arguments(self, tree):
+        if is_force(tree.children[-1]):
+            *begin, force = tree.children
+        else:
+            begin, force = tree.children, None
+        is_not_cache = lambda child: not is_cache(child)
+        name_and_values = [*takewhile(is_not_cache, begin)]
+        cache_part = [*dropwhile(is_not_cache, begin)]
+
+        formatted_begin = self._format_name_and_values(name_and_values)
+        formatted_cache_part = self._format_cache_part(cache_part)
+        formatted_force = "" if force is None else "\n" + self.visit(force)
+        return f"{formatted_begin}\n{formatted_cache_part}{formatted_force}"
+
+    def arguments(self, tree):
+        if self._can_be_formatted_into_single_line(tree.children):
+            result = self._try_to_format_into_single_line(tree.children)
+            if result is not None:
+                return result
+
+        if self._is_cache_type(tree.children):
+            return self._cache_arguments(tree)
 
         return "\n".join(self.visit_children(tree))
 
@@ -97,10 +147,12 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
     }
 
     def _patch_dumper(self, patch):
-        dumper = type(self)
-        return type(f"{dumper.__name__} with {patch.__name__}", (patch, dumper), {})(
-            self.alignment
-        )
+        original_dumper = type(self)
+
+        class Impl(patch, original_dumper):
+            pass
+
+        return Impl(self.alignment)
 
     def _get_patch(self, command_name):
         return self.known_command_mapping.get(command_name, None)
