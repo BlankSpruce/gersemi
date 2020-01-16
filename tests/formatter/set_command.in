@@ -74,3 +74,10 @@ set(FOO item1 item2 item3 item4 item5 CACHE INTERNAL "long                      
 
 # with long content, long docstring and FORCE
 set(FOO item1 item2 item3 item4 item5 CACHE INTERNAL "long                                                                                 docstring" FORCE)
+
+# Set environment variable
+# clear variable
+set(ENV{FOO})
+
+# set to something
+set(ENV{FOO} bar)

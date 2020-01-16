@@ -151,3 +151,10 @@ set(FOO
     "long                                                                                 docstring"
     FORCE
 )
+
+# Set environment variable
+# clear variable
+set(ENV{FOO})
+
+# set to something
+set(ENV{FOO} bar)
