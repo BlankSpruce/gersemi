@@ -1,5 +1,6 @@
 from typing import Callable
 from lark import Tree, Token
+from lark.visitors import Interpreter
 from gersemi.types import Node
 
 
@@ -19,3 +20,23 @@ is_unquoted_argument = is_tree("unquoted_argument")
 is_newline = is_token("NEWLINE")
 
 is_comment = lambda element: is_bracket_comment(element) or is_line_comment(element)
+
+
+def contains_line_comment(nodes) -> bool:
+    class Impl(Interpreter):
+        def __default__(self, _) -> bool:
+            return False
+
+        def line_comment(self, _) -> bool:
+            return True
+
+        def _visit(self, tree: Tree) -> bool:
+            is_subtree = lambda node: isinstance(node, Tree)
+            subtrees = filter(is_subtree, tree.children)
+            return any(map(self.visit, subtrees))
+
+        arguments = _visit
+        commented_argument = _visit
+
+    check_node = lambda node: isinstance(node, Tree) and Impl().visit(node)
+    return any(map(check_node, nodes))
