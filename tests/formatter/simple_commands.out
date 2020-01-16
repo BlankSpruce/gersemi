@@ -1,0 +1,31 @@
+include_guard()
+
+include_guard(DIRECTORY)
+
+include_guard(GLOBAL)
+
+# without default
+option(FOO "help text")
+
+# with default
+option(FOO "help text" OFF)
+
+return()
+
+site_name(FOO)
+
+# Unset normal variable
+unset(FOO)
+
+# in parent scope
+unset(FOO PARENT_SCOPE)
+
+# in cache
+unset(FOO CACHE)
+
+# in environment
+unset(ENV{FOO})
+
+variable_watch(FOO)
+
+variable_watch(FOO some_command)
