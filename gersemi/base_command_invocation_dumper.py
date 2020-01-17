@@ -16,7 +16,7 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def arguments(self, tree):
         if not contains_line_comment(tree.children) and len(tree.children) <= 4:
-            result = self._try_to_format_into_single_line(tree.children)
+            result = self._try_to_format_into_single_line(tree.children, separator=" ")
             if result is not None:
                 return result
 

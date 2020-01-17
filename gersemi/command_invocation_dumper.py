@@ -1,9 +1,13 @@
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.command_invocation_dumpers import SetCommandDumper
+from gersemi.command_invocation_dumpers import (
+    CMakeHostSysteInformationCommandDumper,
+    SetCommandDumper,
+)
 
 
 class CommandInvocationDumper(BaseCommandInvocationDumper):
     known_command_mapping = {
+        "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
         "set": SetCommandDumper,
     }
 

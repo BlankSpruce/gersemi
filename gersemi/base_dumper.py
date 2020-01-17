@@ -27,9 +27,16 @@ class BaseDumper(Interpreter):
     def _indent(self, text: str):
         return indent(text, self.alignment)
 
-    def _try_to_format_into_single_line(self, children: Nodes) -> Optional[str]:
+    def _try_to_format_into_single_line(
+        self, children: Nodes, separator=""
+    ) -> Optional[str]:
         dumper = type(self)(alignment=0)
-        result = self._indent(" ".join(map(dumper.visit, children)))
+        result = self._indent(separator.join(map(dumper.visit, children)))
         if len(result) <= self.width:
             return result
         return None
+
+    def visit(self, tree):
+        if isinstance(tree, str):
+            return tree
+        return super().visit(tree)

@@ -40,3 +40,10 @@ def contains_line_comment(nodes) -> bool:
 
     check_node = lambda node: isinstance(node, Tree) and Impl().visit(node)
     return any(map(check_node, nodes))
+
+
+def is_keyword(keyword):
+    def impl(node):
+        return is_unquoted_argument(node) and node.children[0] == keyword
+
+    return impl

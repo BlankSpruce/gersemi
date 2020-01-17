@@ -1,5 +1,5 @@
 from itertools import dropwhile, takewhile
-from gersemi.ast_helpers import contains_line_comment, is_unquoted_argument
+from gersemi.ast_helpers import contains_line_comment, is_keyword
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 
 
@@ -12,16 +12,9 @@ def just_values(children):
     return list(takewhile(is_not_keyword, children[1:]))
 
 
-def is_unquoted(argument):
-    def impl(node):
-        return is_unquoted_argument(node) and node.children[0] == argument
-
-    return impl
-
-
-is_parent_scope = is_unquoted("PARENT_SCOPE")
-is_cache = is_unquoted("CACHE")
-is_force = is_unquoted("FORCE")
+is_parent_scope = is_keyword("PARENT_SCOPE")
+is_cache = is_keyword("CACHE")
+is_force = is_keyword("FORCE")
 
 
 def is_cache_type(children):
@@ -30,7 +23,7 @@ def is_cache_type(children):
 
 class SetCommandDumper(BaseCommandInvocationDumper):
     def _format_cache_part(self, children):
-        result = self._try_to_format_into_single_line(children)
+        result = self._try_to_format_into_single_line(children, separator=" ")
         if result is not None:
             return result
 
@@ -39,7 +32,7 @@ class SetCommandDumper(BaseCommandInvocationDumper):
 
     def _format_name_and_values(self, children):
         if can_be_formatted_into_single_line(children):
-            result = self._try_to_format_into_single_line(children)
+            result = self._try_to_format_into_single_line(children, separator=" ")
             if result is not None:
                 return result
 
@@ -61,7 +54,7 @@ class SetCommandDumper(BaseCommandInvocationDumper):
 
     def arguments(self, tree):
         if can_be_formatted_into_single_line(tree.children):
-            result = self._try_to_format_into_single_line(tree.children)
+            result = self._try_to_format_into_single_line(tree.children, separator=" ")
             if result is not None:
                 return result
 
