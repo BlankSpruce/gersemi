@@ -1,6 +1,7 @@
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.command_invocation_dumpers import (
     CMakeHostSysteInformationCommandDumper,
+    GetDirectoryPropertyCommandDumper,
     SetCommandDumper,
 )
 
@@ -8,6 +9,7 @@ from gersemi.command_invocation_dumpers import (
 class CommandInvocationDumper(BaseCommandInvocationDumper):
     known_command_mapping = {
         "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
+        "get_directory_property": GetDirectoryPropertyCommandDumper,
         "set": SetCommandDumper,
     }
 
