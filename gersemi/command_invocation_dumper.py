@@ -4,6 +4,11 @@ from gersemi.command_invocation_dumpers import (
     ConfigureFileCommandDumper,
     ExecuteProcessCommandDumper,
     GetDirectoryPropertyCommandDumper,
+    GetFilenameComponentCommandDumper,
+    GetPropertyCommandDumper,
+    IncludeCommandDumper,
+    MarkAsAdvancedCommandDumper,
+    MathCommandDumper,
     SetCommandDumper,
 )
 
@@ -14,6 +19,11 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "configure_file": ConfigureFileCommandDumper,
         "execute_process": ExecuteProcessCommandDumper,
         "get_directory_property": GetDirectoryPropertyCommandDumper,
+        "get_filename_component": GetFilenameComponentCommandDumper,
+        "get_property": GetPropertyCommandDumper,
+        "include": IncludeCommandDumper,
+        "mark_as_advanced": MarkAsAdvancedCommandDumper,
+        "math": MathCommandDumper,
         "set": SetCommandDumper,
     }
 
