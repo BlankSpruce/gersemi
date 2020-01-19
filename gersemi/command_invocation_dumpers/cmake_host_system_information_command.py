@@ -1,10 +1,8 @@
-from .keyword_aware_command_invocation_dumper import (
-    KeywordAwareCommandInvocationDumper,
-    split_by_keywords,
+from .argument_aware_command_invocation_dumper import (
+    ArgumentAwareCommandInvocationDumper,
 )
 
 
-class CMakeHostSysteInformationCommandDumper(KeywordAwareCommandInvocationDumper):
-    def arguments(self, tree):
-        groups = split_by_keywords(tree.children, ["RESULT", "QUERY"])
-        return "\n".join(map(self._format_group, groups))
+class CMakeHostSysteInformationCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["RESULT"]
+    multi_value_keywords = ["QUERY"]

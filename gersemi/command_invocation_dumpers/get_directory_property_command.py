@@ -1,19 +1,9 @@
-from gersemi.ast_helpers import is_keyword
-from .keyword_aware_command_invocation_dumper import (
-    KeywordAwareCommandInvocationDumper,
-    split_by_keywords,
+from .argument_aware_command_invocation_dumper import (
+    ArgumentAwareCommandInvocationDumper,
 )
 
 
-def is_definition_type(children):
-    return any(map(is_keyword("DEFINITION"), children))
-
-
-class GetDirectoryPropertyCommandDumper(KeywordAwareCommandInvocationDumper):
-    def arguments(self, tree):
-        if is_definition_type(tree.children):
-            groups = split_by_keywords(tree.children, ["DIRECTORY", "DEFINITION"])
-        else:
-            *rest, property_name = tree.children
-            groups = [*split_by_keywords(rest, ["DIRECTORY"]), [property_name]]
-        return "\n".join(map(self._format_group, groups))
+class GetDirectoryPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
+    front_positional_args = 1
+    one_value_keywords = ["DIRECTORY", "DEFINITION"]
+    back_optional_args = 1

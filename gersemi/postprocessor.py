@@ -1,6 +1,6 @@
 from itertools import dropwhile
 import re
-from typing import Callable, Dict, Iterator, List, Optional
+from typing import Callable, Dict, Iterator, Optional
 from lark import Discard, Tree, Token
 from lark.visitors import (
     Transformer,
@@ -10,6 +10,7 @@ from lark.visitors import (
 )
 from gersemi.ast_helpers import is_newline, is_argument, is_comment
 from gersemi.types import Node, Nodes
+from gersemi.utils import pop_all
 
 
 def is_command(command_name: str) -> Callable[[Node], bool]:
@@ -134,11 +135,6 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
 
     def block_body(self, children) -> Tree:
         return self._make_node("block_body", children)
-
-
-def pop_all(in_list: List) -> List:
-    popped, in_list[:] = in_list[:], []
-    return popped
 
 
 class IsolateCommentedArguments(Transformer_InPlace):
