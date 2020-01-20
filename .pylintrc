@@ -1,3 +1,9 @@
+[MASTER]
+load-plugins=pylint.extensions.mccabe
+
+[DESIGN]
+max-complexity=10
+
 [MESSAGES CONTROL]
 disable=
     bad-continuation,
