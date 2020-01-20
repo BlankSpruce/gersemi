@@ -76,3 +76,12 @@ execute_process(
     ERROR_STRIP_TRAILING_WHITESPACE
     ENCODING UTF-8
 )
+
+if(TRUE)
+    execute_process(COMMAND ${PYTHON_CMD} -c "import this")
+
+    execute_process(
+        COMMAND ${PYTHON} -c "import this"
+        COMMAND ${PYTHON} -c "import this"
+    )
+endif()

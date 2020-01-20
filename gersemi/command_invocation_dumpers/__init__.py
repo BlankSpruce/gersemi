@@ -9,4 +9,5 @@ from .get_property_command import GetPropertyCommandDumper
 from .include_command import IncludeCommandDumper
 from .mark_as_advanced_command import MarkAsAdvancedCommandDumper
 from .math_command import MathCommandDumper
+from .message_command import MessageCommandDumper
 from .set_command import SetCommandDumper

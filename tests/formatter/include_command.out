@@ -48,3 +48,11 @@ include(
         longer_result_variable___________________________________________________
     NO_POLICY_SCOPE
 )
+
+if(TRUE)
+    include(FOO)
+
+    include(
+        long_file_or_module_name_______________________________________________________
+    )
+endif()

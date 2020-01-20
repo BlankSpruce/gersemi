@@ -17,3 +17,9 @@ math(EXPR long_variable_name____________________________________________________
 math(EXPR long_variable_name________________________________________________________ "long expression                                                         ")
 
 math(EXPR long_variable_name________________________________________________________ "long expression                                                         " OUTPUT_FORMAT DECIMAL)
+
+if(TRUE)
+math(EXPR FOO "2 + 2" OUTPUT_FORMAT HEXADECIMAL)
+
+math(EXPR FOO "longer expression                                                         " OUTPUT_FORMAT DECIMAL)
+endif()

@@ -109,3 +109,13 @@ get_property(
         LONGER_PROPERTY_NAME_____________________________________________________
     DEFINED
 )
+
+if(TRUE)
+    get_property(FOO GLOBAL PROPERTY BAR)
+
+    get_property(
+        FOO
+        GLOBAL
+        PROPERTY LONG_PROPERTY_NAME_______________________________
+    )
+endif()

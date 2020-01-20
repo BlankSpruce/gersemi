@@ -38,7 +38,8 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         if len(values) == 0:
             return begin
 
-        formatted_keys = self._indent("\n".join(self.visit(value) for value in values))
+        dumper = type(self)(self.alignment + self.indent_size)
+        formatted_keys = "\n".join(dumper.visit(value) for value in values)
         return f"{begin}\n{formatted_keys}"
 
     def _split_by_keywords(self, arguments: Nodes) -> Tuple[Iterator[Nodes], Nodes]:
@@ -74,14 +75,17 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         keyworded_arguments, tail = self._split_by_keywords(tail)
         back, tail = split_by_positional_arguments(tail, self.back_optional_args)
         if is_non_empty(tail):
-            return [*front, *keyworded_arguments, *back, tail]
+            return [*front, *keyworded_arguments, *back, *[[item] for item in tail]]
         return [*front, *keyworded_arguments, *back]
 
     def format_command(self, tree):
         identifier, arguments = tree.children
         if not contains_line_comment(tree.children):
+            formatted_arguments = " ".join(
+                type(self)(alignment=0).visit_children(arguments)
+            )
             result = self._try_to_format_into_single_line(
-                [identifier, "(", " ".join(self.visit_children(arguments)), ")"]
+                [identifier, "(", formatted_arguments, ")"]
             )
             if result is not None:
                 return result

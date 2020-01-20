@@ -71,3 +71,14 @@ get_filename_component(
         long_arg_var______________________________________________________
     CACHE
 )
+
+if(TRUE)
+    get_filename_component(FOO bar/filename.ext NAME)
+
+    get_filename_component(
+        FOO
+        bar/long_filename_______________________.ext
+        PATH
+        CACHE
+    )
+endif()

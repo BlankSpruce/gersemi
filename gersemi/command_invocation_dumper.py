@@ -9,6 +9,7 @@ from gersemi.command_invocation_dumpers import (
     IncludeCommandDumper,
     MarkAsAdvancedCommandDumper,
     MathCommandDumper,
+    MessageCommandDumper,
     SetCommandDumper,
 )
 
@@ -24,6 +25,7 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "include": IncludeCommandDumper,
         "mark_as_advanced": MarkAsAdvancedCommandDumper,
         "math": MathCommandDumper,
+        "message": MessageCommandDumper,
         "set": SetCommandDumper,
     }
 

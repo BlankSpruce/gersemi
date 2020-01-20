@@ -38,5 +38,8 @@ get_filename_component(FOO bar/long_filename_______________________.ext PROGRAM 
 
 get_filename_component(FOO bar/long_filename_______________________.ext PROGRAM PROGRAM_ARGS long_arg_var______________________________________________________ CACHE)
 
+if(TRUE)
+get_filename_component(FOO bar/filename.ext NAME)
 
-
+get_filename_component(FOO bar/long_filename_______________________.ext PATH CACHE)
+endif()
