@@ -10,4 +10,7 @@ from .include_command import IncludeCommandDumper
 from .mark_as_advanced_command import MarkAsAdvancedCommandDumper
 from .math_command import MathCommandDumper
 from .message_command import MessageCommandDumper
+from .separate_arguments_command import SeparateArgumentsCommandDumper
+from .set_directory_properties_command import SetDirectoryPropertiesCommandDumper
 from .set_command import SetCommandDumper
+from .set_property_command import SetPropertyCommandDumper

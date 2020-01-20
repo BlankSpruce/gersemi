@@ -10,7 +10,10 @@ from gersemi.command_invocation_dumpers import (
     MarkAsAdvancedCommandDumper,
     MathCommandDumper,
     MessageCommandDumper,
+    SeparateArgumentsCommandDumper,
+    SetDirectoryPropertiesCommandDumper,
     SetCommandDumper,
+    SetPropertyCommandDumper,
 )
 
 
@@ -26,6 +29,9 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "mark_as_advanced": MarkAsAdvancedCommandDumper,
         "math": MathCommandDumper,
         "message": MessageCommandDumper,
+        "separate_arguments": SeparateArgumentsCommandDumper,
+        "set_directory_properties": SetDirectoryPropertiesCommandDumper,
+        "set_property": SetPropertyCommandDumper,
         "set": SetCommandDumper,
     }
 
