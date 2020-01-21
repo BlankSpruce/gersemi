@@ -1,6 +1,9 @@
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
+from .multiple_signature_command_invocation_dumper import (
+    MultipleSignatureCommandInvocationDumper,
+)
 
 
 class CMakeHostSysteInformationCommandDumper(ArgumentAwareCommandInvocationDumper):
@@ -51,6 +54,138 @@ class ExecuteProcessCommandDumper(ArgumentAwareCommandInvocationDumper):
         "ENCODING",
     ]
     multi_value_keywords = ["COMMAND"]
+
+
+class FileCommandDumper(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        # Reading
+        "READ": dict(
+            options=["HEX"],
+            one_value_keywords=["OFFSET", "LIMIT"],
+            multi_value_keywords=["READ"],
+        ),
+        "STRINGS": dict(
+            options=["NEWLINE_CONSUME", "NO_HEX_CONVERSION"],
+            one_value_keywords=[
+                "LENGTH_MAXIMUM",
+                "LENGTH_MINIMUM",
+                "LIMIT_COUNT",
+                "LIMIT_INPUT",
+                "LIMIT_OUTPUT",
+                "REGEX",
+                "ENCODING",
+            ],
+            multi_value_keywords=["STRINGS"],
+        ),
+        "GET_RUNTIME_DEPENDENCIES": dict(
+            front_positional_args=1,
+            one_value_keywords=[
+                "RESOLVED_DEPENDENCIES_VAR",
+                "UNRESOLVED_DEPENDENCIES_VAR",
+                "CONFLICTING_DEPENDENCIES_PREFIX",
+                "BUNDLE_EXECUTABLE",
+            ],
+            multi_value_keywords=[
+                "EXECUTABLES",
+                "LIBRARIES",
+                "MODULES",
+                "DIRECTORIES",
+                "PRE_INCLUDE_REGEXES",
+                "PRE_EXCLUDE_REGEXES",
+                "POST_INCLUDE_REGEXES",
+                "POST_EXCLUDE_REGEXES",
+            ],
+        ),
+        # Writing
+        "GENERATE": dict(
+            one_value_keywords=["INPUT", "CONTENT", "CONDITION"],
+            multi_value_keywords=["GENERATE"],
+        ),
+        # Filesystem
+        "GLOB": dict(
+            options=["CONFIGURE_DEPENDS"],
+            one_value_keywords=["GLOB", "LIST_DIRECTORIES", "RELATIVE"],
+        ),
+        "GLOB_RECURSE": dict(
+            options=["CONFIGURE_DEPENDS"],
+            one_value_keywords=["GLOB_RECURSE", "LIST_DIRECTORIES", "RELATIVE"],
+        ),
+        "COPY": dict(
+            options=[
+                "NO_SOURCE_PERMISSIONS",
+                "USE_SOURCE_PERMISSIONS",
+                "FOLLOW_SYMLINK_CHAIN",
+                "FILES_MATCHING",
+                "EXCLUDE",
+            ],
+            one_value_keywords=["DESTINATION", "PATTERN", "REGEX"],
+            multi_value_keywords=[
+                "COPY",
+                "FILE_PERMISSIONS",
+                "DIRECTORY_PERMISSIONS",
+                "PERMISSIONS",
+            ],
+        ),
+        "INSTALL": dict(
+            options=[
+                "NO_SOURCE_PERMISSIONS",
+                "USE_SOURCE_PERMISSIONS",
+                "FOLLOW_SYMLINK_CHAIN",
+                "FILES_MATCHING",
+                "EXCLUDE",
+            ],
+            one_value_keywords=["DESTINATION", "PATTERN", "REGEX"],
+            multi_value_keywords=[
+                "INSTALL",
+                "FILE_PERMISSIONS",
+                "DIRECTORY_PERMISSIONS",
+                "PERMISSIONS",
+            ],
+        ),
+        "CREATE_LINK": dict(
+            options=["COPY_ON_ERROR", "SYMBOLIC"],
+            one_value_keywords=["RESULT"],
+            multi_value_keywords=["CREATE_LINK"],
+        ),
+        # Transfer
+        "DOWNLOAD": dict(
+            options=["SHOW_PROGRESS"],
+            one_value_keywords=[
+                "INACTIVITY_TIMEOUT",
+                "LOG",
+                "STATUS",
+                "TIMEOUT",
+                "USERPWD",
+                "HTTPHEADER",
+                "NETRC",
+                "NETRC_FILE",
+                "EXPECTED_HASH",
+                "EXPECTED_MD5",
+                "TLS_VERIFY",
+                "TLS_CAINFO",
+            ],
+            multi_value_keywords=["DOWNLOAD"],
+        ),
+        "UPLOAD": dict(
+            options=["SHOW_PROGRESS"],
+            one_value_keywords=[
+                "INACTIVITY_TIMEOUT",
+                "LOG",
+                "STATUS",
+                "TIMEOUT",
+                "USERPWD",
+                "HTTPHEADER",
+                "NETRC",
+                "NETRC_FILE",
+            ],
+            multi_value_keywords=["UPLOAD"],
+        ),
+        # Locking
+        "LOCK": dict(
+            options=["DIRECTORY", "RELEASE"],
+            one_value_keywords=["LOCK", "GUARD", "RESULT_VARIABLE", "TIMEOUT"],
+        ),
+    }
 
 
 class ForeachCommandDumper(ArgumentAwareCommandInvocationDumper):
