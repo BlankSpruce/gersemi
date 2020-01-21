@@ -7,7 +7,6 @@ class GetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
     front_positional_args = 1
     options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
     one_value_keywords = [
-        "DIRECTORY",
         "TARGET",
         "SOURCE",
         "INSTALL",
@@ -15,3 +14,4 @@ class GetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
         "CACHE",
         "PROPERTY",
     ]
+    multi_value_keywords = ["DIRECTORY"]

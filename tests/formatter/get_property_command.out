@@ -1,5 +1,7 @@
 get_property(FOO GLOBAL PROPERTY BAR)
 
+get_property(FOO DIRECTORY PROPERTY BAZ)
+
 get_property(FOO DIRECTORY bar PROPERTY BAZ)
 
 get_property(FOO TARGET bar PROPERTY BAZ)
@@ -25,6 +27,12 @@ get_property(FOO VARIABLE PROPERTY BAZ FULL_DOCS)
 get_property(
     FOO
     GLOBAL
+    PROPERTY LONG_PROPERTY_NAME_______________________________
+)
+
+get_property(
+    FOO
+    DIRECTORY
     PROPERTY LONG_PROPERTY_NAME_______________________________
 )
 
