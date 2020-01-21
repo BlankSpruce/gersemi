@@ -1,5 +1,9 @@
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.command_invocation_dumpers import (
+from gersemi.command_invocation_dumpers.set_directory_properties_command import (
+    SetDirectoryPropertiesCommandDumper,
+)
+from gersemi.command_invocation_dumpers.set_command import SetCommandDumper
+from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
     CMakeHostSysteInformationCommandDumper,
     ConfigureFileCommandDumper,
     EndMacroCommandDumper,
@@ -13,8 +17,6 @@ from gersemi.command_invocation_dumpers import (
     MathCommandDumper,
     MessageCommandDumper,
     SeparateArgumentsCommandDumper,
-    SetDirectoryPropertiesCommandDumper,
-    SetCommandDumper,
     SetPropertyCommandDumper,
 )
 
