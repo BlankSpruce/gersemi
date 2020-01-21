@@ -5,9 +5,14 @@ from gersemi.command_invocation_dumpers.set_directory_properties_command import 
 from gersemi.command_invocation_dumpers.set_command import SetCommandDumper
 from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
     CMakeHostSysteInformationCommandDumper,
+    CMakeParseArgumentsCommandDumper,
     ConfigureFileCommandDumper,
+    EndForeachCommandDumper,
+    EndFunctionCommandDumper,
     EndMacroCommandDumper,
     ExecuteProcessCommandDumper,
+    ForeachCommandDumper,
+    FunctionCommandDumper,
     GetDirectoryPropertyCommandDumper,
     GetFilenameComponentCommandDumper,
     GetPropertyCommandDumper,
@@ -24,9 +29,14 @@ from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
 class CommandInvocationDumper(BaseCommandInvocationDumper):
     known_command_mapping = {
         "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
+        "cmake_parse_arguments": CMakeParseArgumentsCommandDumper,
         "configure_file": ConfigureFileCommandDumper,
+        "endforeach": EndForeachCommandDumper,
+        "endfunction": EndFunctionCommandDumper,
         "endmacro": EndMacroCommandDumper,
         "execute_process": ExecuteProcessCommandDumper,
+        "foreach": ForeachCommandDumper,
+        "function": FunctionCommandDumper,
         "get_directory_property": GetDirectoryPropertyCommandDumper,
         "get_filename_component": GetFilenameComponentCommandDumper,
         "get_property": GetPropertyCommandDumper,

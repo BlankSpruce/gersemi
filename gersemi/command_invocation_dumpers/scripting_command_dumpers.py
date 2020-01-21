@@ -8,10 +8,22 @@ class CMakeHostSysteInformationCommandDumper(ArgumentAwareCommandInvocationDumpe
     multi_value_keywords = ["QUERY"]
 
 
+class CMakeParseArgumentsCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["PARSE_ARGV"]
+
+
 class ConfigureFileCommandDumper(ArgumentAwareCommandInvocationDumper):
     front_positional_args = 2
     options = ["COPYONLY", "ESCAPE_QUOTES", "@ONLY"]
     one_value_keywords = ["NEWLINE_STYLE"]
+
+
+class EndForeachCommandDumper(ArgumentAwareCommandInvocationDumper):
+    pass
+
+
+class EndFunctionCommandDumper(ArgumentAwareCommandInvocationDumper):
+    pass
 
 
 class EndMacroCommandDumper(ArgumentAwareCommandInvocationDumper):
@@ -39,6 +51,16 @@ class ExecuteProcessCommandDumper(ArgumentAwareCommandInvocationDumper):
         "ENCODING",
     ]
     multi_value_keywords = ["COMMAND"]
+
+
+class ForeachCommandDumper(ArgumentAwareCommandInvocationDumper):
+    front_positional_args = 1
+    options = ["IN"]
+    multi_value_keywords = ["RANGE", "LISTS", "ITEMS"]
+
+
+class FunctionCommandDumper(ArgumentAwareCommandInvocationDumper):
+    pass
 
 
 class GetDirectoryPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
