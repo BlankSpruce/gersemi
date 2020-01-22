@@ -25,13 +25,13 @@ BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
 quoted_argument     : _QUOTATION_MARK quoted_element* _QUOTATION_MARK
 quoted_element      : /([^\\\"]|\n)/
-                    | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
+                    | ESCAPE_SEQUENCE
                     | quoted_continuation
 quoted_continuation : BACKSLASH NEWLINE
 
 unquoted_argument : unquoted_element+
 unquoted_element  : /[^\s\(\)#\"\\]/
-                  | BACKSLASH ESCAPE_SEQUENCE_CHARACTER -> escape_sequence
+                  | ESCAPE_SEQUENCE
                   | make_style_reference
                   | unquoted_element double_quoted_string
 
@@ -40,7 +40,7 @@ double_quoted_string : /\"[^\n#]*?\"/
 
 complex_argument : _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
 
-ESCAPE_SEQUENCE_CHARACTER : /[^A-Za-z0-9]|[nrt]/
+ESCAPE_SEQUENCE: /\\([^A-Za-z0-9]|[nrt])/
 
 bracket_comment : _POUND_SIGN bracket_argument
 line_comment    : _POUND_SIGN [LINE_COMMENT_CONTENT]
