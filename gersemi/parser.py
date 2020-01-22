@@ -8,4 +8,5 @@ def create_parser():
         grammar_filename=os.path.join(this_file_dir, "cmake.lark"),
         parser="lalr",
         propagate_positions=True,
+        maybe_placeholders=False,
     )

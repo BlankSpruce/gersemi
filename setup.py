@@ -6,7 +6,7 @@ setup(
     packages=["gersemi"],
     package_data={"gersemi": ["cmake.lark"]},
     entry_points={"console_scripts": ["gersemi = gersemi.__main__:main"],},
-    install_requires=["lark-parser>=0.7.8"],
+    install_requires=["lark-parser==0.8"],
     python_requires=">=3.7",
     author="Blank Spruce",
     description="Tool to format CMake code",

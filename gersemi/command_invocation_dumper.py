@@ -18,12 +18,14 @@ from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
     GetFilenameComponentCommandDumper,
     GetPropertyCommandDumper,
     IncludeCommandDumper,
+    ListCommandDumper,
     MacroCommandDumper,
     MarkAsAdvancedCommandDumper,
     MathCommandDumper,
     MessageCommandDumper,
     SeparateArgumentsCommandDumper,
     SetPropertyCommandDumper,
+    StringCommandDumper,
 )
 
 
@@ -43,6 +45,7 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "get_filename_component": GetFilenameComponentCommandDumper,
         "get_property": GetPropertyCommandDumper,
         "include": IncludeCommandDumper,
+        "list": ListCommandDumper,
         "macro": MacroCommandDumper,
         "mark_as_advanced": MarkAsAdvancedCommandDumper,
         "math": MathCommandDumper,
@@ -51,6 +54,7 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "set_directory_properties": SetDirectoryPropertiesCommandDumper,
         "set_property": SetPropertyCommandDumper,
         "set": SetCommandDumper,
+        "string": StringCommandDumper,
     }
 
     def _patch_dumper(self, patch):

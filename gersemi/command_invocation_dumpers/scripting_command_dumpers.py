@@ -240,6 +240,31 @@ class IncludeCommandDumper(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["RESULT_VARIABLE"]
 
 
+class ListCommandDumper(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        # Modification
+        "FILTER": dict(
+            options=["INCLUDE", "EXCLUDE"], one_value_keywords=["FILTER", "REGEX"],
+        ),
+        "REMOVE_DUPLICATES": dict(one_value_keywords=["REMOVE_DUPLICATES"],),
+        "TRANSFORM": dict(
+            one_value_keywords=["OUTPUT_VARIABLE"],
+            multi_value_keywords=[
+                "TRANSFORM",
+                "APPEND",
+                "PREPEND",
+                "TOLOWER",
+                "TOUPPER",
+                "STRIP",
+                "GENEX_STRIP",
+                "REPLACE",
+            ],
+        ),
+        # Ordering
+        "SORT": dict(one_value_keywords=["SORT", "COMPARE", "CASE", "ORDER"],),
+    }
+
+
 class MacroCommandDumper(ArgumentAwareCommandInvocationDumper):
     pass
 
@@ -276,3 +301,26 @@ class SetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "APPEND", "APPEND_STRING"]
     one_value_keywords = ["DIRECTORY"]
     multi_value_keywords = ["TARGET", "SOURCE", "INSTALL", "TEST", "CACHE", "PROPERTY"]
+
+
+class StringCommandDumper(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        # Search and Replace
+        "FIND": dict(options=["REVERSE"], multi_value_keywords=["FIND"],),
+        # Regular Expressions
+        "REGEX": dict(one_value_keywords=["REGEX"],),
+        # Comparison
+        "COMPARE": dict(one_value_keywords=["COMPARE"],),
+        # Generation
+        "CONFIGURE": dict(
+            options=["@ONLY", "ESCAPE_QUOTES"], multi_value_keywords=["CONFIGURE"],
+        ),
+        "RANDOM": dict(
+            front_positional_args=1,
+            one_value_keywords=["LENGTH", "ALPHABET", "RANDOM_SEED"],
+            back_optional_args=1,
+        ),
+        "UUID": dict(
+            options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"],
+        ),
+    }
