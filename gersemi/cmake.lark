@@ -24,13 +24,14 @@ bracket_argument : BRACKET_ARGUMENT
 BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
 quoted_argument     : _QUOTATION_MARK quoted_element* _QUOTATION_MARK
-quoted_element      : /([^\\\"]|\n)/
+quoted_element      : /([^\\\"]|\n)+/
                     | ESCAPE_SEQUENCE
-                    | quoted_continuation
-quoted_continuation : BACKSLASH NEWLINE
+                    | QUOTED_CONTINUATION
+QUOTED_CONTINUATION : BACKSLASH NEWLINE
 
 unquoted_argument : unquoted_element+
-unquoted_element  : /[^\s\(\)#\"\\]/
+unquoted_element  : /[^\$\s\(\)#\"\\]+/
+                  | /[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
                   | make_style_reference
                   | unquoted_element double_quoted_string
