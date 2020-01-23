@@ -31,11 +31,9 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
     customized_signatures: Dict[str, Dict[str, Union[List, int]]] = {}
 
     def _update_signature_characteristics(self, signature):
-        self.front_positional_args = signature.get("front_positional_args", 0)
         self.options = signature.get("options", [])
         self.one_value_keywords = signature.get("one_value_keywords", [])
         self.multi_value_keywords = signature.get("multi_value_keywords", [])
-        self.back_optional_args = signature.get("back_optional_args", 0)
 
     def arguments(self, tree):
         first_argument, *_ = tree.children

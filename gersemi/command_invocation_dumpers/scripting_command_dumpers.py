@@ -16,7 +16,6 @@ class CMakeParseArgumentsCommandDumper(ArgumentAwareCommandInvocationDumper):
 
 
 class ConfigureFileCommandDumper(ArgumentAwareCommandInvocationDumper):
-    front_positional_args = 2
     options = ["COPYONLY", "ESCAPE_QUOTES", "@ONLY"]
     one_value_keywords = ["NEWLINE_STYLE"]
 
@@ -78,7 +77,6 @@ class FileCommandDumper(MultipleSignatureCommandInvocationDumper):
             multi_value_keywords=["STRINGS"],
         ),
         "GET_RUNTIME_DEPENDENCIES": dict(
-            front_positional_args=1,
             one_value_keywords=[
                 "RESOLVED_DEPENDENCIES_VAR",
                 "UNRESOLVED_DEPENDENCIES_VAR",
@@ -188,8 +186,73 @@ class FileCommandDumper(MultipleSignatureCommandInvocationDumper):
     }
 
 
+class FindFileCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "NO_DEFAULT_PATH",
+        "NO_PACKAGE_ROOT_PATH",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "NO_SYSTEM_ENVIRONMENT_PATH",
+        "NO_CMAKE_SYSTEM_PATH",
+        "CMAKE_FIND_ROOT_PATH_BOTH",
+        "ONLY_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_FIND_ROOT_PATH",
+    ]
+    one_value_keywords = ["DOC", "ENV"]
+    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
+
+
+class FindLibraryCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "NAMES_PER_DIR",
+        "NO_DEFAULT_PATH",
+        "NO_PACKAGE_ROOT_PATH",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "NO_SYSTEM_ENVIRONMENT_PATH",
+        "NO_CMAKE_SYSTEM_PATH",
+        "CMAKE_FIND_ROOT_PATH_BOTH",
+        "ONLY_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_FIND_ROOT_PATH",
+    ]
+    one_value_keywords = ["DOC", "ENV"]
+    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
+
+
+class FindPathCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "NO_DEFAULT_PATH",
+        "NO_PACKAGE_ROOT_PATH",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "NO_SYSTEM_ENVIRONMENT_PATH",
+        "NO_CMAKE_SYSTEM_PATH",
+        "CMAKE_FIND_ROOT_PATH_BOTH",
+        "ONLY_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_FIND_ROOT_PATH",
+    ]
+    one_value_keywords = ["DOC", "ENV"]
+    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
+
+
+class FindProgramCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "NAMES_PER_DIR",
+        "NO_DEFAULT_PATH",
+        "NO_PACKAGE_ROOT_PATH",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "NO_SYSTEM_ENVIRONMENT_PATH",
+        "NO_CMAKE_SYSTEM_PATH",
+        "CMAKE_FIND_ROOT_PATH_BOTH",
+        "ONLY_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_FIND_ROOT_PATH",
+    ]
+    one_value_keywords = ["DOC", "ENV"]
+    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
+
+
 class ForeachCommandDumper(ArgumentAwareCommandInvocationDumper):
-    front_positional_args = 1
     options = ["IN"]
     multi_value_keywords = ["RANGE", "LISTS", "ITEMS"]
 
@@ -199,13 +262,10 @@ class FunctionCommandDumper(ArgumentAwareCommandInvocationDumper):
 
 
 class GetDirectoryPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
-    front_positional_args = 1
     one_value_keywords = ["DIRECTORY", "DEFINITION"]
-    back_optional_args = 1
 
 
 class GetFilenameComponentCommandDumper(ArgumentAwareCommandInvocationDumper):
-    front_positional_args = 2
     options = [
         "DIRECTORY",
         "NAME",
@@ -221,7 +281,6 @@ class GetFilenameComponentCommandDumper(ArgumentAwareCommandInvocationDumper):
 
 
 class GetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
-    front_positional_args = 1
     options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
     one_value_keywords = [
         "TARGET",
@@ -235,7 +294,6 @@ class GetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
 
 
 class IncludeCommandDumper(ArgumentAwareCommandInvocationDumper):
-    front_positional_args = 1
     options = ["OPTIONAL", "NO_POLICY_SCOPE"]
     one_value_keywords = ["RESULT_VARIABLE"]
 
@@ -315,11 +373,7 @@ class StringCommandDumper(MultipleSignatureCommandInvocationDumper):
         "CONFIGURE": dict(
             options=["@ONLY", "ESCAPE_QUOTES"], multi_value_keywords=["CONFIGURE"],
         ),
-        "RANDOM": dict(
-            front_positional_args=1,
-            one_value_keywords=["LENGTH", "ALPHABET", "RANDOM_SEED"],
-            back_optional_args=1,
-        ),
+        "RANDOM": dict(one_value_keywords=["LENGTH", "ALPHABET", "RANDOM_SEED"],),
         "UUID": dict(
             options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"],
         ),

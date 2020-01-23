@@ -11,10 +11,8 @@ def is_one_of_keywords(argument: Node, keywords: List[str]) -> bool:
     return any(map(invoke, predicates))
 
 
-def split_by_positional_arguments(
-    arguments: Nodes, N: int
-) -> Tuple[List[Nodes], Nodes]:
-    return [[argument] for argument in arguments[:N]], arguments[N:]
+def to_list_of_single_item_lists(l):
+    return [*map(lambda item: [item], l)]
 
 
 def is_non_empty(l: Sized) -> bool:
@@ -22,11 +20,9 @@ def is_non_empty(l: Sized) -> bool:
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
-    front_positional_args: int = 0
     options: List[str] = []
     one_value_keywords: List[str] = []
     multi_value_keywords: List[str] = []
-    back_optional_args: int = 0
 
     def _format_group(self, group: Nodes) -> str:
         result = self._try_to_format_into_single_line(group, separator=" ")
@@ -41,6 +37,19 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         dumper = type(self)(self.alignment + self.indent_size)
         formatted_keys = "\n".join(dumper.visit(value) for value in values)
         return f"{begin}\n{formatted_keys}"
+
+    @property
+    def _keywords(self):
+        return self.one_value_keywords + self.multi_value_keywords
+
+    def _separate_front(self, arguments: Nodes) -> Tuple[List[Nodes], Nodes]:
+        for index, argument in enumerate(arguments):
+            if is_one_of_keywords(argument, self._keywords):
+                pivot = index
+                break
+        else:
+            return to_list_of_single_item_lists(arguments), []
+        return to_list_of_single_item_lists(arguments[:pivot]), arguments[pivot:]
 
     def _split_by_keywords(self, arguments: Nodes) -> Tuple[Iterator[Nodes], Nodes]:
         groups: List[Nodes] = []
@@ -69,13 +78,9 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return filter(is_non_empty, groups), tail
 
     def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
-        front, tail = split_by_positional_arguments(
-            arguments, self.front_positional_args
-        )
+        front, tail = self._separate_front(arguments)
         keyworded_arguments, tail = self._split_by_keywords(tail)
-        back, tail = split_by_positional_arguments(tail, self.back_optional_args)
-        if is_non_empty(tail):
-            return [*front, *keyworded_arguments, *back, *[[item] for item in tail]]
+        back = to_list_of_single_item_lists(tail)
         return [*front, *keyworded_arguments, *back]
 
     def format_command(self, tree):
