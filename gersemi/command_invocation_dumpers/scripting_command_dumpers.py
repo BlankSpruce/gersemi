@@ -219,6 +219,39 @@ class FindLibraryCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
+class FindPackageCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "EXACT",
+        "QUIET",
+        "MODULE",
+        "CONFIG",
+        "NO_MODULE",
+        "NO_POLICY_SCOPE",
+        "NO_DEFAULT_PATH",
+        "NO_PACKAGE_ROOT_PATH",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "NO_SYSTEM_ENVIRONMENT_PATH",
+        "NO_CMAKE_PACKAGE_REGISTRY",
+        "NO_CMAKE_BUILDS_PATH",
+        "NO_CMAKE_SYSTEM_PATH",
+        "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY",
+        "CMAKE_FIND_ROOT_PATH_BOTH",
+        "ONLY_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_FIND_ROOT_PATH",
+    ]
+    multi_value_keywords = [
+        "REQUIRED",
+        "COMPONENTS",
+        "OPTIONAL_COMPONENTS",
+        "NAMES",
+        "CONFIGS",
+        "HINTS",
+        "PATHS",
+        "PATH_SUFFIXES",
+    ]
+
+
 class FindPathCommandDumper(ArgumentAwareCommandInvocationDumper):
     options = [
         "NO_DEFAULT_PATH",
