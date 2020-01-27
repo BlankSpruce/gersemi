@@ -1,4 +1,7 @@
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.command_invocation_dumpers.condition_syntax_command_invocation_dumper import (
+    ConditionSyntaxCommandInvocationDumper,
+)
 from gersemi.command_invocation_dumpers.set_directory_properties_command import (
     SetDirectoryPropertiesCommandDumper,
 )
@@ -39,9 +42,13 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
         "cmake_parse_arguments": CMakeParseArgumentsCommandDumper,
         "configure_file": ConfigureFileCommandDumper,
+        "elseif": ConditionSyntaxCommandInvocationDumper,
+        "else": ConditionSyntaxCommandInvocationDumper,
+        "endif": ConditionSyntaxCommandInvocationDumper,
         "endforeach": EndForeachCommandDumper,
         "endfunction": EndFunctionCommandDumper,
         "endmacro": EndMacroCommandDumper,
+        "endwhile": ConditionSyntaxCommandInvocationDumper,
         "execute_process": ExecuteProcessCommandDumper,
         "file": FileCommandDumper,
         "find_file": FindFileCommandDumper,
@@ -54,6 +61,7 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "get_directory_property": GetDirectoryPropertyCommandDumper,
         "get_filename_component": GetFilenameComponentCommandDumper,
         "get_property": GetPropertyCommandDumper,
+        "if": ConditionSyntaxCommandInvocationDumper,
         "include": IncludeCommandDumper,
         "list": ListCommandDumper,
         "macro": MacroCommandDumper,
@@ -65,6 +73,7 @@ class CommandInvocationDumper(BaseCommandInvocationDumper):
         "set_property": SetPropertyCommandDumper,
         "set": SetCommandDumper,
         "string": StringCommandDumper,
+        "while": ConditionSyntaxCommandInvocationDumper,
     }
 
     def _patch_dumper(self, patch):
