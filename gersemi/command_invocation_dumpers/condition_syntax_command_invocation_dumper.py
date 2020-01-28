@@ -133,9 +133,11 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children
-        result = self._try_to_format_into_single_line(arguments.children, separator=" ")
+        result = self._try_to_format_into_single_line(
+            arguments.children, separator=" ", prefix="(", postfix=")"
+        )
         if result is not None:
-            return "(" + result.lstrip() + ")"
+            return result
 
         begin = "(\n"
         dumper = type(self)(self.alignment + self.indent_size)

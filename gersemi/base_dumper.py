@@ -28,11 +28,13 @@ class BaseDumper(Interpreter):
         return indent(text, self.alignment)
 
     def _try_to_format_into_single_line(
-        self, children: Nodes, separator=""
+        self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
         dumper = type(self)(alignment=0)
-        result = self._indent(separator.join(map(dumper.visit, children)))
-        if len(result) <= self.width:
+        result = self._indent(
+            prefix + separator.join(map(dumper.visit, children)) + postfix
+        )
+        if len(result) <= self.width and "\n" not in result:
             return result
         return None
 

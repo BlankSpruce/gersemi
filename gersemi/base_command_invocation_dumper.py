@@ -3,23 +3,43 @@ from gersemi.base_dumper import BaseDumper
 
 
 class BaseCommandInvocationDumper(BaseDumper):
+    def format_command_with_short_name(self, begin, arguments, end):
+        dumper = type(self)(self.alignment + self.indent_size)
+        formatted_arguments = dumper.visit(arguments).lstrip()
+        if (
+            not contains_line_comment(arguments.children)
+            and not "\n" in formatted_arguments
+        ):
+            return "".join([self._indent(begin), formatted_arguments, end])
+
+        return "{}{}\n{}".format(
+            self._indent(begin), formatted_arguments, self._indent(end)
+        )
+
+    def _format_command_with_long_name(self, begin, arguments, end):
+        dumper = type(self)(self.alignment + self.indent_size)
+        formatted_arguments = dumper.visit(arguments)
+        return "\n".join([self._indent(begin), formatted_arguments, self._indent(end)])
+
     def format_command(self, tree):
         identifier, arguments = tree.children
-        begin = self._indent(f"{identifier}(")
-        result = self._format_listable_content(begin, arguments)
-
-        if "\n" in result or contains_line_comment(arguments.children):
-            result += f"\n{self._indent(')')}"
-        else:
-            result += ")"
-        return result
-
-    def arguments(self, tree):
-        if not contains_line_comment(tree.children) and len(tree.children) <= 4:
-            result = self._try_to_format_into_single_line(tree.children, separator=" ")
+        begin = f"{identifier}("
+        end = ")"
+        if (
+            not contains_line_comment(arguments.children)
+            and len(arguments.children) <= 4
+        ):
+            result = self._try_to_format_into_single_line(
+                arguments.children, separator=" ", prefix=begin, postfix=end
+            )
             if result is not None:
                 return result
 
+        if len(begin) <= 4:
+            return self.format_command_with_short_name(begin, arguments, end)
+        return self._format_command_with_long_name(begin, arguments, end)
+
+    def arguments(self, tree):
         return "\n".join(self.visit_children(tree))
 
     def commented_argument(self, tree):
@@ -30,6 +50,16 @@ class BaseCommandInvocationDumper(BaseDumper):
     def complex_argument(self, tree):
         arguments, *_ = tree.children
         begin = self._indent("(")
+        if (
+            not contains_line_comment(arguments.children)
+            and len(arguments.children) <= 4
+        ):
+            result = self._try_to_format_into_single_line(
+                arguments.children, separator=" ", prefix="(", postfix=")"
+            )
+            if result is not None:
+                return result
+
         result = self._format_listable_content(begin, arguments)
         if "\n" in result or contains_line_comment(arguments.children):
             result += f"\n{self._indent(')')}"

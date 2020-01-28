@@ -86,11 +86,8 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def format_command(self, tree):
         identifier, arguments = tree.children
         if not contains_line_comment(tree.children):
-            formatted_arguments = " ".join(
-                type(self)(alignment=0).visit_children(arguments)
-            )
             result = self._try_to_format_into_single_line(
-                [identifier, "(", formatted_arguments, ")"]
+                arguments.children, separator=" ", prefix=f"{identifier}(", postfix=")"
             )
             if result is not None:
                 return result
