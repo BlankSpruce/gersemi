@@ -1,80 +1,11 @@
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.command_invocation_dumpers.condition_syntax_command_invocation_dumper import (
-    ConditionSyntaxCommandInvocationDumper,
-)
-from gersemi.command_invocation_dumpers.set_directory_properties_command import (
-    SetDirectoryPropertiesCommandDumper,
-)
-from gersemi.command_invocation_dumpers.set_command import SetCommandDumper
 from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
-    CMakeHostSysteInformationCommandDumper,
-    CMakeParseArgumentsCommandDumper,
-    ConfigureFileCommandDumper,
-    EndForeachCommandDumper,
-    EndFunctionCommandDumper,
-    EndMacroCommandDumper,
-    ExecuteProcessCommandDumper,
-    FileCommandDumper,
-    FindFileCommandDumper,
-    FindLibraryCommandDumper,
-    FindPackageCommandDumper,
-    FindPathCommandDumper,
-    FindProgramCommandDumper,
-    ForeachCommandDumper,
-    FunctionCommandDumper,
-    GetDirectoryPropertyCommandDumper,
-    GetFilenameComponentCommandDumper,
-    GetPropertyCommandDumper,
-    IncludeCommandDumper,
-    ListCommandDumper,
-    MacroCommandDumper,
-    MarkAsAdvancedCommandDumper,
-    MathCommandDumper,
-    MessageCommandDumper,
-    SeparateArgumentsCommandDumper,
-    SetPropertyCommandDumper,
-    StringCommandDumper,
+    scripting_command_mapping,
 )
 
 
 class CommandInvocationDumper(BaseCommandInvocationDumper):
-    known_command_mapping = {
-        "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
-        "cmake_parse_arguments": CMakeParseArgumentsCommandDumper,
-        "configure_file": ConfigureFileCommandDumper,
-        "elseif": ConditionSyntaxCommandInvocationDumper,
-        "else": ConditionSyntaxCommandInvocationDumper,
-        "endif": ConditionSyntaxCommandInvocationDumper,
-        "endforeach": EndForeachCommandDumper,
-        "endfunction": EndFunctionCommandDumper,
-        "endmacro": EndMacroCommandDumper,
-        "endwhile": ConditionSyntaxCommandInvocationDumper,
-        "execute_process": ExecuteProcessCommandDumper,
-        "file": FileCommandDumper,
-        "find_file": FindFileCommandDumper,
-        "find_library": FindLibraryCommandDumper,
-        "find_package": FindPackageCommandDumper,
-        "find_path": FindPathCommandDumper,
-        "find_program": FindProgramCommandDumper,
-        "foreach": ForeachCommandDumper,
-        "function": FunctionCommandDumper,
-        "get_directory_property": GetDirectoryPropertyCommandDumper,
-        "get_filename_component": GetFilenameComponentCommandDumper,
-        "get_property": GetPropertyCommandDumper,
-        "if": ConditionSyntaxCommandInvocationDumper,
-        "include": IncludeCommandDumper,
-        "list": ListCommandDumper,
-        "macro": MacroCommandDumper,
-        "mark_as_advanced": MarkAsAdvancedCommandDumper,
-        "math": MathCommandDumper,
-        "message": MessageCommandDumper,
-        "separate_arguments": SeparateArgumentsCommandDumper,
-        "set_directory_properties": SetDirectoryPropertiesCommandDumper,
-        "set_property": SetPropertyCommandDumper,
-        "set": SetCommandDumper,
-        "string": StringCommandDumper,
-        "while": ConditionSyntaxCommandInvocationDumper,
-    }
+    known_command_mapping = {**scripting_command_mapping}
 
     def _patch_dumper(self, patch):
         original_dumper = type(self)

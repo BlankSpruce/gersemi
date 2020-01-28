@@ -1,9 +1,14 @@
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
+from .condition_syntax_command_invocation_dumper import (
+    ConditionSyntaxCommandInvocationDumper,
+)
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
+from .set_command import SetCommandDumper
+from .set_directory_properties_command import SetDirectoryPropertiesCommandDumper
 
 
 class CMakeHostSysteInformationCommandDumper(ArgumentAwareCommandInvocationDumper):
@@ -411,3 +416,42 @@ class StringCommandDumper(MultipleSignatureCommandInvocationDumper):
             options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"],
         ),
     }
+
+
+scripting_command_mapping = {
+    "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
+    "cmake_parse_arguments": CMakeParseArgumentsCommandDumper,
+    "configure_file": ConfigureFileCommandDumper,
+    "elseif": ConditionSyntaxCommandInvocationDumper,
+    "else": ConditionSyntaxCommandInvocationDumper,
+    "endif": ConditionSyntaxCommandInvocationDumper,
+    "endforeach": EndForeachCommandDumper,
+    "endfunction": EndFunctionCommandDumper,
+    "endmacro": EndMacroCommandDumper,
+    "endwhile": ConditionSyntaxCommandInvocationDumper,
+    "execute_process": ExecuteProcessCommandDumper,
+    "file": FileCommandDumper,
+    "find_file": FindFileCommandDumper,
+    "find_library": FindLibraryCommandDumper,
+    "find_package": FindPackageCommandDumper,
+    "find_path": FindPathCommandDumper,
+    "find_program": FindProgramCommandDumper,
+    "foreach": ForeachCommandDumper,
+    "function": FunctionCommandDumper,
+    "get_directory_property": GetDirectoryPropertyCommandDumper,
+    "get_filename_component": GetFilenameComponentCommandDumper,
+    "get_property": GetPropertyCommandDumper,
+    "if": ConditionSyntaxCommandInvocationDumper,
+    "include": IncludeCommandDumper,
+    "list": ListCommandDumper,
+    "macro": MacroCommandDumper,
+    "mark_as_advanced": MarkAsAdvancedCommandDumper,
+    "math": MathCommandDumper,
+    "message": MessageCommandDumper,
+    "separate_arguments": SeparateArgumentsCommandDumper,
+    "set_directory_properties": SetDirectoryPropertiesCommandDumper,
+    "set_property": SetPropertyCommandDumper,
+    "set": SetCommandDumper,
+    "string": StringCommandDumper,
+    "while": ConditionSyntaxCommandInvocationDumper,
+}

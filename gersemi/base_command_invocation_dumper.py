@@ -35,7 +35,7 @@ class BaseCommandInvocationDumper(BaseDumper):
             if result is not None:
                 return result
 
-        if len(begin) <= 4:
+        if len(begin) <= self.indent_size:
             return self.format_command_with_short_name(begin, arguments, end)
         return self._format_command_with_long_name(begin, arguments, end)
 
