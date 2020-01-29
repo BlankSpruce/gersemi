@@ -51,8 +51,43 @@ class BuildCommandCommandDumper(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME"]
 
 
+class ExportCommandDumper(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        "EXPORT": dict(one_value_keywords=["EXPORT", "NAMESPACE", "FILE"]),
+        "TARGETS": dict(
+            options=["APPEND", "EXPORT_LINK_INTERFACE_LIBRARIES"],
+            one_value_keywords=["NAMESPACE", "FILE", "ANDROID_MK"],
+            multi_value_keywords=["TARGETS"],
+        ),
+        "PACKAGE": dict(one_value_keywords=["PACKAGE"]),
+    }
+
+
+class IncludeExternalMsProjectCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
+
+
+class LinkLibrariesCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["debug", "optimized", "general"]
+
+
+class LoadCacheCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["READ_WITH_PREFIX"]
+    multi_value_keywords = ["EXCLUDE", "INCLUDE_INTERNALS"]
+
+
+class ProjectCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["VERSION", "DESCRIPTION", "HOMEPAGE_URL"]
+    multi_value_keywords = ["LANGUAGES"]
+
+
 project_command_mapping = {
     "add_custom_command": AddCustomCommandCommandDumper,
     "add_test": AddTestCommandDumper,
     "build_command": BuildCommandCommandDumper,
+    "export": ExportCommandDumper,
+    "include_external_msproject": IncludeExternalMsProjectCommandDumper,
+    "link_libraries": LinkLibrariesCommandDumper,
+    "load_cache": LoadCacheCommandDumper,
+    "project": ProjectCommandDumper,
 }
