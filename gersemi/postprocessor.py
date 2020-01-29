@@ -104,7 +104,7 @@ class RestructureIfBlock(Transformer_InPlace):
 
     def block(self, children) -> Tree:
         if_, body, endif_ = children
-        return Tree("block", [if_, *self.restructure(body), endif_,])
+        return Tree("block", [if_, *self.restructure(body), endif_])
 
 
 class RemoveSuperfluousEmptyLines(Transformer_InPlace):

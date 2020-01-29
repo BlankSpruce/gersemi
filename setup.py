@@ -5,7 +5,7 @@ setup(
     version="0.1.0",
     packages=["gersemi"],
     package_data={"gersemi": ["cmake.lark"]},
-    entry_points={"console_scripts": ["gersemi = gersemi.__main__:main"],},
+    entry_points={"console_scripts": ["gersemi = gersemi.__main__:main"]},
     install_requires=["lark-parser==0.8"],
     python_requires=">=3.7",
     author="Blank Spruce",

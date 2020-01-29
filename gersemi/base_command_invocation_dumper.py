@@ -8,7 +8,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         formatted_arguments = dumper.visit(arguments).lstrip()
         if (
             not contains_line_comment(arguments.children)
-            and not "\n" in formatted_arguments
+            and "\n" not in formatted_arguments
         ):
             return "".join([self._indent(begin), formatted_arguments, end])
 

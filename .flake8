@@ -1,0 +1,12 @@
+[flake8]
+ignore =
+    # black formatting related
+    E203,
+    E501,
+    W503,
+
+    # project specific
+    E731
+
+max-line-length = 88
+select = C,E,F,W,B
