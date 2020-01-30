@@ -210,9 +210,6 @@ class SimplifyParseTree(Transformer_InPlace):
             "unquoted_argument", [Token("unquoted_argument_content", "".join(children))]
         )
 
-    def unquoted_element(self, children) -> str:
-        return "".join(children)
-
 
 def PostProcessor(
     terminal_patterns: Dict[str, str],

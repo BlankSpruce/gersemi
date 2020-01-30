@@ -29,15 +29,15 @@ quoted_element      : /([^\\\"]|\n)+/
                     | QUOTED_CONTINUATION
 QUOTED_CONTINUATION : BACKSLASH NEWLINE
 
-unquoted_argument : unquoted_element+
-unquoted_element  : /[^\$\s\(\)#\"\\]+/
+unquoted_argument : _unquoted_element+
+_unquoted_element : /[^\$\s\(\)#\"\\]+/
                   | /[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
-                  | make_style_reference
-                  | unquoted_element double_quoted_string
+                  | MAKE_STYLE_REFERENCE
+                  | _unquoted_element DOUBLE_QUOTED_STRING
 
-make_style_reference : /\$\([^\)\n\"#]+?\)/
-double_quoted_string : /\"[^\n#]*?\"/
+MAKE_STYLE_REFERENCE : /\$\([^\)\n\"#]+?\)/
+DOUBLE_QUOTED_STRING : /\"[^\n#]*?\"/
 
 complex_argument : _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
 
