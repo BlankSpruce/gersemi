@@ -154,7 +154,7 @@ class IsolateCommentedArguments(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-class RestructureBracketArgument(Transformer_InPlace):
+class RestructureBracketTypeRules(Transformer_InPlace):
     def __init__(self, pattern):
         super().__init__()
         self.pattern = pattern
@@ -171,8 +171,6 @@ class RestructureBracketArgument(Transformer_InPlace):
             ],
         )
 
-
-class RestructureBracketComment(Transformer_InPlace):
     def bracket_comment(self, children) -> Tree:
         *_, bracket_argument = children
         begin, body, end = bracket_argument.children
@@ -221,16 +219,15 @@ def PostProcessor(
     line_comment_reflower: Optional[Transformer] = None,
 ) -> Transformer:
     chain = TransformerChain(
+        RestructureBracketTypeRules(terminal_patterns["BRACKET_ARGUMENT"]),
+        IsolateCommentedArguments(),
+        SimplifyParseTree(),
         IsolateSingleBlockType("if", "endif"),
         RestructureIfBlock(),
         IsolateSingleBlockType("foreach", "endforeach"),
         IsolateSingleBlockType("function", "endfunction"),
         IsolateSingleBlockType("macro", "endmacro"),
         IsolateSingleBlockType("while", "endwhile"),
-        IsolateCommentedArguments(),
-        RestructureBracketArgument(terminal_patterns["BRACKET_ARGUMENT"]),
-        RestructureBracketComment(),
-        SimplifyParseTree(),
         RemoveSuperfluousEmptyLines(),
     )
     if line_comment_reflower is not None:
