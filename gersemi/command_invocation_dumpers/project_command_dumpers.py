@@ -81,6 +81,63 @@ class ProjectCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["LANGUAGES"]
 
 
+class SourceGroupCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["REGULAR_EXPRESSION", "TREE", "PREFIX"]
+    multi_value_keywords = ["FILES"]
+
+
+class TargetCompileDefinitionsCommandDumper(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetCompileFeaturesCommandDumper(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetCompileOptionsCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = ["BEFORE"]
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetIncludeDirectoriesCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = ["BEFORE", "SYSTEM"]
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetLinkDirectoriesCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = ["BEFORE"]
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetLinkOptionsCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = ["BEFORE"]
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetPrecompileHeadersCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["REUSE_FROM"]
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TargetSourcesCommandDumper(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+class TryRunCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = [
+        "COMPILE_OUTPUT_VARIABLE",
+        "RUN_OUTPUT_VARIABLE",
+        "OUTPUT_VARIABLE",
+    ]
+    multi_value_keywords = [
+        "CMAKE_FLAGS",
+        "COMPILE_DEFINITIONS",
+        "LINK_OPTIONS",
+        "LINK_LIBRARIES",
+        "ARGS",
+    ]
+
+
 project_command_mapping = {
     "add_custom_command": AddCustomCommandCommandDumper,
     "add_test": AddTestCommandDumper,
@@ -90,4 +147,14 @@ project_command_mapping = {
     "link_libraries": LinkLibrariesCommandDumper,
     "load_cache": LoadCacheCommandDumper,
     "project": ProjectCommandDumper,
+    "source_group": SourceGroupCommandDumper,
+    "target_compile_definitions": TargetCompileDefinitionsCommandDumper,
+    "target_compile_features": TargetCompileFeaturesCommandDumper,
+    "target_compile_options": TargetCompileOptionsCommandDumper,
+    "target_include_directories": TargetIncludeDirectoriesCommandDumper,
+    "target_link_directories": TargetLinkDirectoriesCommandDumper,
+    "target_link_options": TargetLinkOptionsCommandDumper,
+    "target_precompile_headers": TargetPrecompileHeadersCommandDumper,
+    "target_sources": TargetSourcesCommandDumper,
+    "try_run": TryRunCommandDumper,
 }

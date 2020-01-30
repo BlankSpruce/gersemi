@@ -1,0 +1,113 @@
+target_compile_definitions(TGT PUBLIC)
+
+target_compile_definitions(TGT PRIVATE BAR)
+
+target_compile_definitions(TGT INTERFACE BAR BAZ QUX)
+
+target_compile_definitions(TGT PUBLIC BAR PRIVATE BAZ INTERFACE QUX)
+
+target_compile_definitions(TGT PUBLIC BAR BAZ PRIVATE BAZ QUX INTERFACE QUX FOO)
+
+target_compile_definitions(TGT PUBLIC)
+
+target_compile_definitions(
+    TGT
+    PRIVATE long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    TGT
+    INTERFACE
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    TGT
+    PUBLIC long_arg____________________________________________________________
+    PRIVATE long_arg____________________________________________________________
+    INTERFACE
+        long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    TGT
+    PUBLIC
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+    PRIVATE
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+    INTERFACE
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PUBLIC
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PRIVATE BAR
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    INTERFACE BAR BAZ QUX
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PUBLIC BAR
+    PRIVATE BAZ
+    INTERFACE QUX
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PUBLIC BAR BAZ
+    PRIVATE BAZ QUX
+    INTERFACE QUX FOO
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PUBLIC
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PRIVATE long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    INTERFACE
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PUBLIC long_arg____________________________________________________________
+    PRIVATE long_arg____________________________________________________________
+    INTERFACE
+        long_arg____________________________________________________________
+)
+
+target_compile_definitions(
+    long_arg____________________________________________________________
+    PUBLIC
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+    PRIVATE
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+    INTERFACE
+        long_arg____________________________________________________________
+        long_arg____________________________________________________________
+)
