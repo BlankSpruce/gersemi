@@ -151,6 +151,36 @@ class TargetSourcesCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
+class TryCompileCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = [
+        "OUTPUT_VARIABLE",
+        "COPY_FILE",
+        "COPY_FILE_ERROR",
+        "C_STANDARD",
+        "C_STANDARD_REQUIRED",
+        "C_EXTENSIONS",
+        "CXX_STANDARD",
+        "CXX_STANDARD_REQUIRED",
+        "CXX_EXTENSIONS",
+        "OBJC_STANDARD",
+        "OBJC_STANDARD_REQUIRED",
+        "OBJC_EXTENSIONS",
+        "OBJCXX_STANDARD",
+        "OBJCXX_STANDARD_REQUIRED",
+        "OBJCXX_EXTENSIONS",
+        "CUDA_STANDARD",
+        "CUDA_STANDARD_REQUIRED",
+        "CUDA_EXTENSIONS",
+    ]
+    multi_value_keywords = [
+        "SOURCES",
+        "CMAKE_FLAGS",
+        "COMPILE_DEFINITIONS",
+        "LINK_OPTIONS",
+        "LINK_LIBRARIES",
+    ]
+
+
 class TryRunCommandDumper(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = [
         "COMPILE_OUTPUT_VARIABLE",
@@ -190,5 +220,6 @@ project_command_mapping = {
     "target_link_options": TargetLinkOptionsCommandDumper,
     "target_precompile_headers": TargetPrecompileHeadersCommandDumper,
     "target_sources": TargetSourcesCommandDumper,
+    "try_compile": TryCompileCommandDumper,
     "try_run": TryRunCommandDumper,
 }
