@@ -1,6 +1,9 @@
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
+from .command_with_property_value_pairs_dumper import (
+    CommandWithPropertyValuePairsDumper,
+)
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
@@ -41,6 +44,12 @@ class AddCustomCommandCommandDumper(MultipleSignatureCommandInvocationDumper):
     }
 
 
+class AddCustomTargetCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = ["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
+    one_value_keywords = ["WORKING_DIRECTORY", "COMMENT", "JOB_POOL"]
+    multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
+
+
 class AddTestCommandDumper(ArgumentAwareCommandInvocationDumper):
     options = ["COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["NAME", "WORKING_DIRECTORY"]
@@ -49,6 +58,25 @@ class AddTestCommandDumper(ArgumentAwareCommandInvocationDumper):
 
 class BuildCommandCommandDumper(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME"]
+
+
+class CreateTestSourcelistCommandDumper(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["EXTRA_INCLUDE", "FUNCTION"]
+
+
+class DefinePropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "GLOBAL",
+        "DIRECTORY",
+        "TARGET",
+        "SOURCE",
+        "TEST",
+        "VARIABLE",
+        "CACHED_VARIABLE",
+        "INHERITED",
+    ]
+    one_value_keywords = ["PROPERTY"]
+    multi_value_keywords = ["BRIEF_DOCS", "FULL_DOCS"]
 
 
 class ExportCommandDumper(MultipleSignatureCommandInvocationDumper):
@@ -140,14 +168,20 @@ class TryRunCommandDumper(ArgumentAwareCommandInvocationDumper):
 
 project_command_mapping = {
     "add_custom_command": AddCustomCommandCommandDumper,
+    "add_custom_target": AddCustomTargetCommandDumper,
     "add_test": AddTestCommandDumper,
     "build_command": BuildCommandCommandDumper,
+    "create_test_sourcelist": CreateTestSourcelistCommandDumper,
+    "define_property": DefinePropertyCommandDumper,
     "export": ExportCommandDumper,
     "include_external_msproject": IncludeExternalMsProjectCommandDumper,
     "link_libraries": LinkLibrariesCommandDumper,
     "load_cache": LoadCacheCommandDumper,
     "project": ProjectCommandDumper,
     "source_group": SourceGroupCommandDumper,
+    "set_source_files_properties": CommandWithPropertyValuePairsDumper,
+    "set_target_properties": CommandWithPropertyValuePairsDumper,
+    "set_tests_properties": CommandWithPropertyValuePairsDumper,
     "target_compile_definitions": TargetCompileDefinitionsCommandDumper,
     "target_compile_features": TargetCompileFeaturesCommandDumper,
     "target_compile_options": TargetCompileOptionsCommandDumper,

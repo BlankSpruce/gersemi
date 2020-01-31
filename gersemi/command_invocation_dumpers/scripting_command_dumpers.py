@@ -1,6 +1,9 @@
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
+from .command_with_property_value_pairs_dumper import (
+    CommandWithPropertyValuePairsDumper,
+)
 from .condition_syntax_command_invocation_dumper import (
     ConditionSyntaxCommandInvocationDumper,
 )
@@ -8,7 +11,6 @@ from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
 from .set_command import SetCommandDumper
-from .set_directory_properties_command import SetDirectoryPropertiesCommandDumper
 
 
 class CMakeHostSysteInformationCommandDumper(ArgumentAwareCommandInvocationDumper):
@@ -449,7 +451,7 @@ scripting_command_mapping = {
     "math": MathCommandDumper,
     "message": MessageCommandDumper,
     "separate_arguments": SeparateArgumentsCommandDumper,
-    "set_directory_properties": SetDirectoryPropertiesCommandDumper,
+    "set_directory_properties": CommandWithPropertyValuePairsDumper,
     "set_property": SetPropertyCommandDumper,
     "set": SetCommandDumper,
     "string": StringCommandDumper,
