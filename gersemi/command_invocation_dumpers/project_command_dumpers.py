@@ -8,6 +8,7 @@ from .install_command_dumper import InstallCommandDumper
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
+from .target_link_libraries_command_dumper import TargetLinkLibrariesCommandDumper
 
 
 class AddCustomCommandCommandDumper(MultipleSignatureCommandInvocationDumper):
@@ -219,6 +220,7 @@ project_command_mapping = {
     "target_compile_options": TargetCompileOptionsCommandDumper,
     "target_include_directories": TargetIncludeDirectoriesCommandDumper,
     "target_link_directories": TargetLinkDirectoriesCommandDumper,
+    "target_link_libraries": TargetLinkLibrariesCommandDumper,
     "target_link_options": TargetLinkOptionsCommandDumper,
     "target_precompile_headers": TargetPrecompileHeadersCommandDumper,
     "target_sources": TargetSourcesCommandDumper,
