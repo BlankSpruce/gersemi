@@ -1,21 +1,12 @@
-from typing import Any, Iterator, List
+from typing import List
 from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
 from gersemi.types import Node, Nodes
+from gersemi.utils import advance
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
     is_one_of_keywords,
 )
-
-
-def advance(iterator: Iterator, times: int, default: Any) -> Any:
-    result = default
-    for _ in range(times):
-        new_result = next(iterator, default)
-        if new_result == default:
-            break
-        result = new_result
-    return result
 
 
 class IsolateUnaryOperators(Transformer_InPlace):

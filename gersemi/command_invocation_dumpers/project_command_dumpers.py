@@ -4,6 +4,7 @@ from .argument_aware_command_invocation_dumper import (
 from .command_with_property_value_pairs_dumper import (
     CommandWithPropertyValuePairsDumper,
 )
+from .install_command_dumper import InstallCommandDumper
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
@@ -205,6 +206,7 @@ project_command_mapping = {
     "define_property": DefinePropertyCommandDumper,
     "export": ExportCommandDumper,
     "include_external_msproject": IncludeExternalMsProjectCommandDumper,
+    "install": InstallCommandDumper,
     "link_libraries": LinkLibrariesCommandDumper,
     "load_cache": LoadCacheCommandDumper,
     "project": ProjectCommandDumper,
