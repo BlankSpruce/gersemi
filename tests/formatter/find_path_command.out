@@ -48,7 +48,7 @@ find_path(
     NO_PACKAGE_ROOT_PATH
     NO_CMAKE_PATH
     NO_CMAKE_ENVIRONMENT_PATH
-    NO_CMAKE_SYSTEM_ENVIRONMENT_PATH
+    NO_SYSTEM_ENVIRONMENT_PATH
     CMAKE_FIND_ROOT_PATH_BOTH
 )
 
@@ -63,7 +63,7 @@ find_path(
     NO_PACKAGE_ROOT_PATH
     NO_CMAKE_PATH
     NO_CMAKE_ENVIRONMENT_PATH
-    NO_CMAKE_SYSTEM_ENVIRONMENT_PATH
+    NO_SYSTEM_ENVIRONMENT_PATH
     CMAKE_FIND_ROOT_PATH_BOTH
 )
 
@@ -91,6 +91,42 @@ find_path(
     NO_PACKAGE_ROOT_PATH
     NO_CMAKE_PATH
     NO_CMAKE_ENVIRONMENT_PATH
-    NO_CMAKE_SYSTEM_ENVIRONMENT_PATH
+    NO_SYSTEM_ENVIRONMENT_PATH
     ONLY_CMAKE_FIND_ROOT_PATH
+)
+
+# line comments inside keyword-list of values pair
+
+find_path(
+    FOO
+    NAMES #line comment
+        BAR
+    HINTS #multiple
+        #line
+        #comments
+        BAZ
+    PATHS
+        FOO #line comment at the end
+    NO_CMAKE_FIND_ROOT_PATH #line comment at the end of an option
+)
+
+find_path(
+    FOO
+    NAMES #line comment
+        BAR
+        # line comment
+        BAZ
+    HINTS #multiple
+        #line
+        #comments
+        BAZ
+        #in-between
+        #arguments
+        QUX
+        #and after list
+        #of arguments
+    PATHS
+        FOO #line comment at the end
+        BAR #line comment at the end
+    NO_CMAKE_FIND_ROOT_PATH #line comment at the end of an option
 )

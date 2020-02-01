@@ -17,6 +17,26 @@ set_tests_properties(
 )
 
 set_tests_properties(
+    FOO
+    PROPERTIES
+    BAR BAZ
+    BAR BAZ
+    # line comments in between property-value pairs
+    BAR BAZ
+    BAR BAZ
+    #[[or bracket comments]]
+    BAR BAZ
+    BAR BAZ
+    #[[or
+    multiline
+    bracket
+    comments
+    ]]
+    BAR BAZ
+    BAR BAZ
+)
+
+set_tests_properties(
     long_arg____________________________________________________________
     PROPERTIES
     long_arg____________________________________________________________

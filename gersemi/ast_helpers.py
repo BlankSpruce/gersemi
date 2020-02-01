@@ -16,6 +16,7 @@ is_argument = is_tree("argument")
 is_line_comment = is_tree("line_comment")
 is_bracket_comment = is_tree("bracket_comment")
 is_unquoted_argument = is_tree("unquoted_argument")
+is_commented_argument = is_tree("commented_argument")
 
 is_newline = is_token("NEWLINE")
 
@@ -42,8 +43,15 @@ def contains_line_comment(nodes) -> bool:
     return any(map(check_node, nodes))
 
 
+def is_commented_unquoted_argument(node):
+    return is_commented_argument(node) and is_unquoted_argument(node.children[0])
+
+
 def is_keyword(keyword):
     def impl(node):
-        return is_unquoted_argument(node) and node.children[0] == keyword
+        return (is_unquoted_argument(node) and node.children[0] == keyword) or (
+            is_commented_unquoted_argument(node)
+            and node.children[0].children[0] == keyword
+        )
 
     return impl

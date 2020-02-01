@@ -28,8 +28,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         non_newline_elements = [
             child for child in tree.children if not is_newline(child)
         ]
-        return self._indent(" ".join(map(self.visit, non_newline_elements)))
+        return " ".join(map(self.visit, non_newline_elements))
 
     def line_comment(self, tree):
-        *_, content = tree.children
-        return f"#{content}"
+        return self._indent("#{}".format("".join(tree.children)))

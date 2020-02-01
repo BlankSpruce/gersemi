@@ -21,7 +21,7 @@ def is_command(command_name: str) -> Callable[[Node], bool]:
 
         def command_invocation(self, tree):
             name, *_ = tree.children
-            return name == command_name
+            return name.lower() == command_name
 
         def __default__(self, tree):
             return False

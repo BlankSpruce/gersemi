@@ -9,7 +9,7 @@ non_command_element : (bracket_comment | _SPACE)* [line_comment]
 
 command_invocation  : IDENTIFIER [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
 IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
-arguments           : [argument] (_separation [argument])*
+arguments           : [_separation] (argument [_separation])*
 _separation         : _separation_atom+
 _separation_atom    : _SPACE
                     | bracket_comment

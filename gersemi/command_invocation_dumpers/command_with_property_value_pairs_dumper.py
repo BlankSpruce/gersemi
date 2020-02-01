@@ -1,6 +1,5 @@
-from itertools import zip_longest
 from typing import Iterable, List, Tuple
-from gersemi.ast_helpers import is_keyword
+from gersemi.ast_helpers import is_keyword, is_comment
 from gersemi.types import Nodes
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
@@ -9,9 +8,16 @@ from .argument_aware_command_invocation_dumper import (
 
 
 def split_into_chunks(iterable: Iterable) -> Iterable:
-    chunk_size = 2
-    args = [iter(iterable)] * chunk_size
-    return zip_longest(*args, fillvalue="")
+    iterator = iter(iterable)
+    for item in iterator:
+        if is_comment(item):
+            yield [item]
+        else:
+            following_item = next(iterator, None)
+            if following_item is None:
+                yield [item]
+            else:
+                yield [item, following_item]
 
 
 is_properties_keyword = is_keyword("PROPERTIES")

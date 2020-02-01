@@ -25,9 +25,10 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     multi_value_keywords: List[str] = []
 
     def _format_group(self, group: Nodes) -> str:
-        result = self._try_to_format_into_single_line(group, separator=" ")
-        if result is not None:
-            return result
+        if not contains_line_comment(group):
+            result = self._try_to_format_into_single_line(group, separator=" ")
+            if result is not None:
+                return result
 
         keyword, *values = group
         begin = self.visit(keyword)

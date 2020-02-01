@@ -12,9 +12,6 @@ def drop_whitespaces(tree):
                 raise Discard()
             return Tree("non_command_element", children)
 
-        leading_space = _drop_node
-        trailing_space = _drop_node
-        SPACE = _drop_node
         NEWLINE = _drop_node
 
     return Impl(visit_tokens=True).transform(tree)
