@@ -26,7 +26,9 @@ class Formatter:  # pylint: disable=too-few-public-methods
 
     def _parse(self, code):
         postprocessor = PostProcessor(
-            get_terminal_patterns(self.parser), self._get_line_comment_reflower(code)
+            code,
+            get_terminal_patterns(self.parser),
+            self._get_line_comment_reflower(code),
         )
         return postprocessor.transform(self.parser.parse(code))
 

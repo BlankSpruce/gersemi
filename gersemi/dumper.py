@@ -32,3 +32,9 @@ class Dumper(CommandInvocationDumper, BaseDumper):
 
     def line_comment(self, tree):
         return self._indent("#{}".format("".join(tree.children)))
+
+    def disabled_formatting(self, tree):
+        return "\n".join(self.visit_children(tree))
+
+    def disabled_formatting_body(self, tree):
+        return "\n".join(tree.children)

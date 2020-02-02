@@ -2,11 +2,13 @@ from itertools import dropwhile
 import re
 from typing import Callable, Dict, Iterator, Optional
 from lark import Discard, Tree, Token
+from lark.tree import Meta
 from lark.visitors import (
     Transformer,
     TransformerChain,
     Transformer_InPlace,
     Interpreter,
+    v_args,
 )
 from gersemi.ast_helpers import is_newline, is_argument, is_comment
 from gersemi.types import Node, Nodes
@@ -30,16 +32,18 @@ def is_command(command_name: str) -> Callable[[Node], bool]:
 
 
 class IsolateSingleBlockType(Transformer_InPlace):
-    def __init__(self, begin_name: str, end_name: str):
-        super().__init__()
-        self.begin_name = begin_name
-        self.end_name = end_name
-        self.is_block_begin = is_command(begin_name)
-        self.is_block_end = is_command(end_name)
+    is_block_begin = staticmethod(lambda _: False)
+    is_block_end = staticmethod(lambda _: False)
+    error_message = ""
 
-    def unbalanced_end_message(self) -> str:
-        return "Unbalanced {}(), missing ending {}() command".format(
-            self.begin_name, self.end_name
+    def _create_block_node(self, begin, body, end):
+        return Tree(
+            "block",
+            [
+                Tree("block_begin", [begin]),
+                Tree("block_body", body),
+                Tree("block_end", [end]),
+            ],
         )
 
     def _build_block(self, node_stream: Iterator[Node], begin: Node) -> Tree:
@@ -48,17 +52,10 @@ class IsolateSingleBlockType(Transformer_InPlace):
             if self.is_block_begin(node):
                 children.append(self._build_block(node_stream, node))
             elif self.is_block_end(node):
-                return Tree(
-                    "block",
-                    [
-                        Tree("block_begin", [begin]),
-                        Tree("block_body", children),
-                        Tree("block_end", [node]),
-                    ],
-                )
+                return self._create_block_node(begin, children, node)
             else:
                 children.append(node)
-        raise RuntimeError(self.unbalanced_end_message())
+        raise RuntimeError(self.error_message)
 
     def _restructure(self, children: Nodes) -> Nodes:
         children_as_stream = (child for child in children)
@@ -194,10 +191,11 @@ class SimplifyParseTree(Transformer_InPlace):
             return command_invocation
         return Tree("command_element", children)
 
-    def non_command_element(self, children: Nodes) -> Tree:
+    @v_args(meta=True)
+    def non_command_element(self, children: Nodes, meta: Meta) -> Tree:
         if len(children) == 0:
             raise Discard
-        return Tree("non_command_element", children)
+        return Tree("non_command_element", children, meta)
 
     def arguments(self, children: Nodes) -> Tree:
         return Tree("arguments", [child for child in children if not is_newline(child)])
@@ -211,7 +209,84 @@ class SimplifyParseTree(Transformer_InPlace):
         )
 
 
+class IsolateIfBlock(IsolateSingleBlockType):
+    is_block_begin = staticmethod(is_command("if"))
+    is_block_end = staticmethod(is_command("endif"))
+    error_message = "Unbalanced if(), missing ending end() command"
+
+
+class IsolateForeachBlock(IsolateSingleBlockType):
+    is_block_begin = staticmethod(is_command("foreach"))
+    is_block_end = staticmethod(is_command("endforeach"))
+    error_message = "Unbalanced foreach(), missing ending endforeach() command"
+
+
+class IsolateFunctionBlock(IsolateSingleBlockType):
+    is_block_begin = staticmethod(is_command("function"))
+    is_block_end = staticmethod(is_command("endfunction"))
+    error_message = "Unbalanced function(), missing ending endfunction() command"
+
+
+class IsolateMacroBlock(IsolateSingleBlockType):
+    is_block_begin = staticmethod(is_command("macro"))
+    is_block_end = staticmethod(is_command("endmacro"))
+    error_message = "Unbalanced macro(), missing ending endmacro() command"
+
+
+class IsolateWhileBlock(IsolateSingleBlockType):
+    is_block_begin = staticmethod(is_command("while"))
+    is_block_end = staticmethod(is_command("endwhile"))
+    error_message = "Unbalanced while(), missing ending endwhile() command"
+
+
+def has_line_comment_with_given_content(node, expected_content):
+    class Impl(Interpreter):
+        def __default__(self, tree):
+            return False
+
+        def non_command_element(self, tree):
+            return any(self.visit_children(tree))
+
+        def line_comment(self, tree):
+            if len(tree.children) == 0:
+                return False
+            return tree.children[0].strip() == expected_content
+
+    return isinstance(node, Tree) and Impl().visit(node)
+
+
+class IsolateDisabledFormattingBlock(IsolateSingleBlockType):
+    error_message = "Unbalanced # gersemi: off, missing ending # gersemi: on comment"
+
+    def __init__(self, code):
+        super().__init__()
+        self.lines_of_code = code.splitlines()
+
+    def _create_block_node(self, begin, _, end):
+        range_start, range_end = begin.meta.line, end.meta.line - 1
+        return Tree(
+            "disabled_formatting",
+            [
+                begin,
+                Tree(
+                    "disabled_formatting_body",
+                    self.lines_of_code[range_start:range_end],
+                ),
+                end,
+            ],
+        )
+
+    @staticmethod
+    def is_block_begin(node):
+        return has_line_comment_with_given_content(node, "gersemi: off")
+
+    @staticmethod
+    def is_block_end(node):
+        return has_line_comment_with_given_content(node, "gersemi: on")
+
+
 def PostProcessor(
+    code: str,
     terminal_patterns: Dict[str, str],
     line_comment_reflower: Optional[Transformer] = None,
 ) -> Transformer:
@@ -219,12 +294,13 @@ def PostProcessor(
         RestructureBracketTypeRules(terminal_patterns["BRACKET_ARGUMENT"]),
         IsolateCommentedArguments(),
         SimplifyParseTree(),
-        IsolateSingleBlockType("if", "endif"),
+        IsolateIfBlock(),
         RestructureIfBlock(),
-        IsolateSingleBlockType("foreach", "endforeach"),
-        IsolateSingleBlockType("function", "endfunction"),
-        IsolateSingleBlockType("macro", "endmacro"),
-        IsolateSingleBlockType("while", "endwhile"),
+        IsolateForeachBlock(),
+        IsolateFunctionBlock(),
+        IsolateMacroBlock(),
+        IsolateWhileBlock(),
+        IsolateDisabledFormattingBlock(code),
         RemoveSuperfluousEmptyLines(),
     )
     if line_comment_reflower is not None:

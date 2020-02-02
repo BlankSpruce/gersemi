@@ -4,8 +4,8 @@ from gersemi.formatter import create_formatter
 
 
 @pytest.fixture(scope="module")
-def parser(experimental_enabled):  # pylint: disable=redefined-outer-name
-    return create_parser(propagate_positions=experimental_enabled)
+def parser():
+    return create_parser()
 
 
 @pytest.fixture(scope="module")
