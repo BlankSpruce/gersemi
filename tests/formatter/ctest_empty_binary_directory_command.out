@@ -1,0 +1,5 @@
+ctest_empty_binary_directory(FOO)
+
+ctest_empty_binary_directory(
+    long_arg____________________________________________________________
+)

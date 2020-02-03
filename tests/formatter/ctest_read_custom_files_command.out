@@ -1,0 +1,5 @@
+ctest_read_custom_files(FOO)
+
+ctest_read_custom_files(
+    long_arg____________________________________________________________
+)

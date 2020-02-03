@@ -1,4 +1,7 @@
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.command_invocation_dumpers.ctest_command_dumpers import (
+    ctest_command_mapping,
+)
 from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
     scripting_command_mapping,
 )
@@ -8,7 +11,11 @@ from gersemi.command_invocation_dumpers.project_command_dumpers import (
 
 
 class CommandInvocationDumper(BaseCommandInvocationDumper):
-    known_command_mapping = {**scripting_command_mapping, **project_command_mapping}
+    known_command_mapping = {
+        **scripting_command_mapping,
+        **project_command_mapping,
+        **ctest_command_mapping,
+    }
 
     def _patch_dumper(self, patch):
         original_dumper = type(self)
