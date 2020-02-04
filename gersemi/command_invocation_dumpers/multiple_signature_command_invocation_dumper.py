@@ -1,30 +1,9 @@
-from typing import Dict, List, Optional, Union
-from lark import Tree
-from lark.visitors import Interpreter
+from itertools import filterfalse
+from typing import Dict, List, Union
+from gersemi.ast_helpers import is_comment, is_unquoted_argument
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-
-
-def unquoted_argument_to_value(argument) -> Optional[str]:
-    class Impl(Interpreter):
-        def __default__(self, tree: Tree):
-            return None
-
-        def argument(self, tree: Tree):
-            return self.visit(tree.children[0])
-
-        def _join_children(self, tree):
-            return "".join(self.visit_children(tree))
-
-        unquoted_argument = _join_children
-        unquoted_element = _join_children
-        make_style_reference = _join_children
-        double_quoted_string = _join_children
-
-    if isinstance(argument, Tree):
-        return Impl().visit(argument)
-    return None
 
 
 class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
@@ -36,8 +15,11 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
         self.multi_value_keywords = signature.get("multi_value_keywords", [])
 
     def arguments(self, tree):
-        first_argument, *_ = tree.children
-        first_argument_as_value = unquoted_argument_to_value(first_argument)
+        arguments_only = filterfalse(is_comment, tree.children)
+        first_argument = next(arguments_only, None)
+        if first_argument is None or not is_unquoted_argument(first_argument):
+            return super().arguments(tree)
+        first_argument_as_value = first_argument.children[0]
         signature = self.customized_signatures.get(first_argument_as_value, None)
         if signature is not None:
             self._update_signature_characteristics(signature)

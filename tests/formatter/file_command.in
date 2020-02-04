@@ -115,3 +115,8 @@ file(LOCK foo)
 file(LOCK foo DIRECTORY RELEASE GUARD FUNCTION RESULT_VARIABLE bar TIMEOUT 100)
 
 file(LOCK long_filename__________________________ DIRECTORY RELEASE GUARD FUNCTION RESULT_VARIABLE long_variable_name__________________________ TIMEOUT 100)
+
+file(#[[some bracket comment]] LOCK foo DIRECTORY RELEASE GUARD FUNCTION RESULT_VARIABLE bar TIMEOUT 100)
+
+file(# some line comment
+LOCK foo DIRECTORY RELEASE GUARD FUNCTION RESULT_VARIABLE bar TIMEOUT 100)
