@@ -1,5 +1,6 @@
 from lark import Discard, Tree
 from lark.visitors import Transformer
+from gersemi.exceptions import ASTMismatch
 
 
 def drop_whitespaces(tree):
@@ -19,7 +20,8 @@ def drop_whitespaces(tree):
 
 def check_abstract_syntax_trees_equivalence(lhs, rhs):
     preprocess = drop_whitespaces
-    assert preprocess(lhs) == preprocess(rhs), "ASTs mismatch"
+    if preprocess(lhs) != preprocess(rhs):
+        raise ASTMismatch
 
 
 def check_code_equivalence(parser, lhs, rhs):

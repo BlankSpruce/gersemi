@@ -1,0 +1,2 @@
+class ASTMismatch(Exception):
+    pass
