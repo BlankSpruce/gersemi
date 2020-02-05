@@ -1,4 +1,6 @@
-from gersemi.sanity_checker import drop_whitespaces
+import pytest
+from gersemi.exceptions import ASTMismatch
+from gersemi.sanity_checker import check_code_equivalence
 from .tests_generator import generate_input_output_tests
 
 
@@ -13,11 +15,11 @@ def test_formatter_idempotence(formatter, case):
 
 
 def test_abstract_syntax_tree_equivalence(parser, formatter, case):
-    before_formatting = drop_whitespaces(parser.parse(case.given))
-    after_formatting = drop_whitespaces(parser.parse(formatter.format(case.given)))
-
-    assert before_formatting.pretty() == after_formatting.pretty()
-    assert before_formatting == after_formatting
+    try:
+        check_code_equivalence(parser, case.given, case.expected)
+    except ASTMismatch:
+        pytest.fail("ASTs mismatch")
+        raise
 
 
 pytest_generate_tests = generate_input_output_tests(

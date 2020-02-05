@@ -128,9 +128,6 @@ class InstallCommandDumper(MultipleSignatureCommandInvocationDumper):
         ),
     }
 
-    def two_element_keyword(self, tree):
-        return " ".join(self.visit_children(tree))
-
     def arguments(self, tree):
         preprocessed = IsolateIncludeDestinationsKeyword().transform(tree)
         return super().arguments(preprocessed)
