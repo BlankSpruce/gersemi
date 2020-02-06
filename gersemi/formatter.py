@@ -5,10 +5,6 @@ from gersemi.postprocessor import PostProcessor
 from gersemi.sanity_checker import check_code_equivalence
 
 
-def get_terminal_patterns(parser):
-    return {terminal.name: terminal.pattern.value for terminal in parser.terminals}
-
-
 def noop(*_):
     pass
 
@@ -25,11 +21,7 @@ class Formatter:  # pylint: disable=too-few-public-methods
         return None
 
     def _parse(self, code):
-        postprocessor = PostProcessor(
-            code,
-            get_terminal_patterns(self.parser),
-            self._get_line_comment_reflower(code),
-        )
+        postprocessor = PostProcessor(code, self._get_line_comment_reflower(code))
         return postprocessor.transform(self.parser.parse(code))
 
     def format(self, code):

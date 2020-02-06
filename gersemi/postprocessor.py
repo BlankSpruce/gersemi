@@ -1,6 +1,5 @@
 from itertools import dropwhile
-import re
-from typing import Callable, Dict, Iterator, Optional
+from typing import Callable, Iterator, Optional
 from lark import Discard, Tree, Token
 from lark.tree import Meta
 from lark.visitors import (
@@ -152,34 +151,35 @@ class IsolateCommentedArguments(Transformer_InPlace):
 
 
 class RestructureBracketTypeRules(Transformer_InPlace):
-    def __init__(self, pattern):
-        super().__init__()
-        self.pattern = pattern
+    def _split_bracket_argument(self, arg):
+        bracket_length = arg.index("[", 1) + 1
+        return (
+            arg[:bracket_length],
+            arg[bracket_length:-bracket_length],
+            arg[-bracket_length:],
+        )
 
     def bracket_argument(self, children):
         token, *_ = children
-        equal_signs, _, content = re.match(self.pattern, token).groups()
+        bracket_open, content, bracket_close = self._split_bracket_argument(token)
         return Tree(
             "bracket_argument",
             [
-                Tree("bracket_argument_begin", ["[{}[".format(equal_signs)]),
-                Tree("bracket_argument_body", [content]),
-                Tree("bracket_argument_end", ["]{}]".format(equal_signs)]),
+                Token("bracket_argument_begin", bracket_open),
+                Token("bracket_argument_body", content),
+                Token("bracket_argument_end", bracket_close),
             ],
         )
 
     def bracket_comment(self, children) -> Tree:
         *_, bracket_argument = children
-        begin, body, end = bracket_argument.children
+        bracket_open, content, bracket_close = bracket_argument.children
         return Tree(
             "bracket_comment",
             [
-                Tree(
-                    "bracket_comment_begin",
-                    [Token("bracket_open", f"#{begin.children[0]}")],
-                ),
-                Tree("bracket_comment_body", body.children),
-                Tree("bracket_comment_end", end.children),
+                Token("bracket_comment_begin", f"#{bracket_open}"),
+                Token("bracket_comment_body", content),
+                Token("bracket_comment_end", bracket_close),
             ],
         )
 
@@ -286,12 +286,10 @@ class IsolateDisabledFormattingBlock(IsolateSingleBlockType):
 
 
 def PostProcessor(
-    code: str,
-    terminal_patterns: Dict[str, str],
-    line_comment_reflower: Optional[Transformer] = None,
+    code: str, line_comment_reflower: Optional[Transformer] = None,
 ) -> Transformer:
     chain = TransformerChain(
-        RestructureBracketTypeRules(terminal_patterns["BRACKET_ARGUMENT"]),
+        RestructureBracketTypeRules(),
         IsolateCommentedArguments(),
         SimplifyParseTree(),
         IsolateIfBlock(),

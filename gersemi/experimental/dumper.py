@@ -28,11 +28,9 @@ class Dumper(gersemi.dumper.Dumper):
         return self._indent(prefix(formatted_content, repeat(comment_start)))
 
     def bracket_comment(self, tree):
-        result = self._indent("".join(self.visit_children(tree)))
+        begin, content, end = tree.children
+        formatted_content = format_comment_content(content, self.width - self.alignment)
+        result = self._indent(f"{begin}{formatted_content}{end}")
         if len(result) <= self.width:
             return result
-        return self._indent("\n".join(self.visit_children(tree)))
-
-    def bracket_comment_body(self, tree):
-        content, *_ = tree.children
-        return format_comment_content(content, self.width - self.alignment)
+        return self._indent(f"{begin}\n{formatted_content}\n{end}")
