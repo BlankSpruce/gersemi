@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from functools import partial
+from itertools import chain
 from pathlib import Path
 import sys
 import lark
@@ -57,10 +58,13 @@ class Runner:  # pylint: disable=too-few-public-methods
             formatted_code = self.formatter.format(code_to_format)
         except lark.UnexpectedInput as exception:
             # TODO detailed error description with match_examples
-            error("Failed to parse: ", exception)
+            error(f"Failed to parse {file_to_format}: ", exception)
             return INTERNAL_ERROR
         except ASTMismatch:
-            error("Failed to format: AST mismatch after formatting")
+            error(f"Failed to format {file_to_format}: AST mismatch after formatting")
+            return INTERNAL_ERROR
+        except lark.exceptions.VisitError as exception:
+            error(f"Runtime error when formatting {file_to_format}: ", exception)
             return INTERNAL_ERROR
 
         if self.args.check_formatting:
@@ -76,5 +80,14 @@ class Runner:  # pylint: disable=too-few-public-methods
 
         return SUCCESS
 
+    def _run_on_single_path(self, path):
+        if path.is_dir():
+            files_to_format = chain(
+                path.rglob("CMakeLists.txt"), path.rglob("*.cmake"),
+            )
+        else:
+            files_to_format = [path]
+        return max(map(self._run_on_single_file, files_to_format))
+
     def run(self):
-        return max(map(self._run_on_single_file, self.args.files))
+        return max(map(self._run_on_single_path, self.args.sources))

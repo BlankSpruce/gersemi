@@ -212,7 +212,7 @@ class SimplifyParseTree(Transformer_InPlace):
 class IsolateIfBlock(IsolateSingleBlockType):
     is_block_begin = staticmethod(is_command("if"))
     is_block_end = staticmethod(is_command("endif"))
-    error_message = "Unbalanced if(), missing ending end() command"
+    error_message = "Unbalanced if(), missing ending endif() command"
 
 
 class IsolateForeachBlock(IsolateSingleBlockType):

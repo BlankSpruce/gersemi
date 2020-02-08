@@ -34,11 +34,12 @@ def create_argparser():
         help="Skip default sanity checks",
     )
     parser.add_argument(
-        dest="files",
-        metavar="file",
+        dest="sources",
+        metavar="src",
         nargs="*",
         type=pathlib.Path,
-        help="File to format. If - is provided input is taken from stdin instead",
+        help="File or directory to format. "
+        "If only - is provided input is taken from stdin instead",
     )
     return parser
 
@@ -49,10 +50,10 @@ def main():
 
     formatter = create_formatter(create_parser(), args.format_safely)
 
-    if len(args.files) == 0:
+    if len(args.sources) == 0:
         sys.exit(SUCCESS)
 
-    if pathlib.Path("-") in args.files and len(args.files) != 1:
+    if pathlib.Path("-") in args.sources and len(args.sources) != 1:
         error("Don't mix stdin with file input")
         sys.exit(FAIL)
 
