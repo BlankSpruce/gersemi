@@ -2,11 +2,16 @@ from contextlib import contextmanager
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 
 def gersemi(*gersemi_args, **subprocess_kwargs):
-    return subprocess.run(["gersemi", *gersemi_args], check=False, **subprocess_kwargs)
+    return subprocess.run(
+        [sys.executable, "-m", "gersemi", *gersemi_args],
+        check=False,
+        **subprocess_kwargs,
+    )
 
 
 THIS_FILE_DIR = os.path.dirname(os.path.realpath(__file__))
