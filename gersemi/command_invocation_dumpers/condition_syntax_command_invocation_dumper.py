@@ -118,9 +118,7 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
             return begin
 
         formatted_keys = "\n".join(self.visit(value) for value in values)
-        if is_boolean_operator(keyword):
-            return f"{begin} {formatted_keys.lstrip()}"
-        return f"{begin} {formatted_keys}"
+        return f"{begin} {formatted_keys.lstrip()}"
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children
@@ -141,16 +139,23 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
         if result is not None:
             return result
 
-        operation, arg = self.visit_children(tree)
-        return f"{operation}\n{self._indent(arg)}"
+        operation, arg = tree.children
+        formatted_operation = self.visit(operation)
+        dumper = type(self)(self.alignment + self.indent_size)
+        formatted_arg = dumper.visit(arg)
+        return f"{formatted_operation}\n{formatted_arg}"
 
     def binary_operation(self, tree):
         result = self._try_to_format_into_single_line(tree.children, separator=" ")
         if result is not None:
             return result
 
-        lhs, operation, rhs = self.visit_children(tree)
-        return f"{lhs}\n{self._indent(operation)}\n{self._indent(rhs)}"
+        lhs, operation, rhs = tree.children
+        formatted_lhs = self.visit(lhs)
+        dumper = type(self)(self.alignment + self.indent_size)
+        formatted_operation = dumper.visit(operation)
+        formatted_rhs = dumper.visit(rhs)
+        return f"{formatted_lhs}\n{formatted_operation}\n{formatted_rhs}"
 
     def arguments(self, tree):
         preprocessed = IsolateConditions().transform(tree)
