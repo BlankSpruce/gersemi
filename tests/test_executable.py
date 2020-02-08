@@ -58,18 +58,18 @@ def test_format_file_in_place():
 def test_check_formatted_input_from_stdin():
     inp = """set(FOO BAR)
 """
-    assert_success("--check", input=inp, text=True)
+    assert_success("--check", "-", input=inp, text=True)
 
 
 def test_check_not_formatted_input_from_stdin():
     inp = """set(FOO BAR)"""  # missing newline at the end
-    assert_fail("--check", input=inp, text=True)
+    assert_fail("--check", "-", input=inp, text=True)
 
 
 def test_format_formatted_input_from_stdin():
     inp = """set(FOO BAR)
 """
-    completed_process = gersemi(input=inp, text=True, capture_output=True)
+    completed_process = gersemi("-", input=inp, text=True, capture_output=True)
     assert completed_process.returncode == 0
     assert completed_process.stdout == inp
     assert completed_process.stderr == ""
@@ -78,7 +78,17 @@ def test_format_formatted_input_from_stdin():
 def test_format_not_formatted_input_from_stdin():
     inp = "set(FOO BAR)"  # missing newline at the end
 
-    completed_process = gersemi(input=inp, text=True, capture_output=True)
+    completed_process = gersemi("-", input=inp, text=True, capture_output=True)
     assert completed_process.returncode == 0
     assert completed_process.stdout == inp + "\n"
     assert completed_process.stderr == ""
+
+
+def test_when_run_with_no_input_should_return_zero():
+    assert_success()  # no args
+
+
+def test_dont_mix_stdin_and_file_input():
+    assert_fail(case("formatted_file.cmake"), "-")
+    assert_fail("-", case("formatted_file.cmake"))
+    assert_fail(case("formatted_file.cmake"), "-", case("formatted_file.cmake"))

@@ -128,8 +128,14 @@ def main():
 
     formatter = create_formatter(create_parser(), args.format_safely)
 
-    if len(args.files) == 0:
-        runner = StdinRunner(formatter, args)
+    if pathlib.Path("-") in args.files:
+        if len(args.files) == 1:
+            runner = StdinRunner(formatter, args)
+        else:
+            error("Don't mix stdin with file input")
+            sys.exit(1)
+    elif len(args.files) == 0:
+        sys.exit(0)
     else:
         runner = FilesRunner(formatter, args)
 
