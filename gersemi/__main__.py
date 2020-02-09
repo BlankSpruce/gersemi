@@ -27,6 +27,13 @@ def create_argparser():
         help="Format files in-place",
     )
     parser.add_argument(
+        "--diff",
+        dest="show_diff",
+        default=False,
+        action="store_true",
+        help="Show diff on stdout for each formatted file instead",
+    )
+    parser.add_argument(
         "--unsafe",
         dest="format_safely",
         default=True,
