@@ -10,10 +10,17 @@ def noop(*_):
 
 
 class Formatter:  # pylint: disable=too-few-public-methods
-    def __init__(self, parser, sanity_checker, enable_experimental_features):
+    def __init__(
+        self,
+        parser,
+        sanity_checker,
+        enable_experimental_features,
+        preserve_custom_command_formatting,
+    ):
         self.parser = parser
         self.sanity_checker = sanity_checker
         self.enable_experimental_features = enable_experimental_features
+        self.preserve_custom_command_formatting = preserve_custom_command_formatting
 
     def _get_line_comment_reflower(self, code):
         if self.enable_experimental_features:
@@ -21,7 +28,11 @@ class Formatter:  # pylint: disable=too-few-public-methods
         return None
 
     def _parse(self, code):
-        postprocessor = PostProcessor(code, self._get_line_comment_reflower(code))
+        postprocessor = PostProcessor(
+            code,
+            self._get_line_comment_reflower(code),
+            self.preserve_custom_command_formatting,
+        )
         return postprocessor.transform(self.parser.parse(code))
 
     def format(self, code):
@@ -31,6 +42,16 @@ class Formatter:  # pylint: disable=too-few-public-methods
         return result
 
 
-def create_formatter(parser, do_sanity_check, enable_experimental_features=False):
+def create_formatter(
+    parser,
+    do_sanity_check,
+    enable_experimental_features=False,
+    preserve_custom_command_formatting=True,
+):
     sanity_checker = check_code_equivalence if do_sanity_check else noop
-    return Formatter(parser, sanity_checker, enable_experimental_features)
+    return Formatter(
+        parser,
+        sanity_checker,
+        enable_experimental_features,
+        preserve_custom_command_formatting,
+    )

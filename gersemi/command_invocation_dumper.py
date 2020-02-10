@@ -8,9 +8,14 @@ from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
 from gersemi.command_invocation_dumpers.project_command_dumpers import (
     project_command_mapping,
 )
+from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper import (
+    PreservingCommandInvocationDumper,
+)
 
 
-class CommandInvocationDumper(BaseCommandInvocationDumper):
+class CommandInvocationDumper(
+    PreservingCommandInvocationDumper, BaseCommandInvocationDumper
+):
     known_command_mapping = {
         **scripting_command_mapping,
         **project_command_mapping,
