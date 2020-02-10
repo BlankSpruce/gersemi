@@ -1,3 +1,4 @@
+from gersemi.configuration import Configuration
 from gersemi.dumper import Dumper
 from gersemi.experimental.line_comment_reflower import LineCommentReflower
 from gersemi.experimental.dumper import Dumper as ExperimentalDumper
@@ -10,20 +11,13 @@ def noop(*_):
 
 
 class Formatter:  # pylint: disable=too-few-public-methods
-    def __init__(
-        self,
-        parser,
-        sanity_checker,
-        enable_experimental_features,
-        preserve_custom_command_formatting,
-    ):
+    def __init__(self, parser, sanity_checker, configuration: Configuration):
         self.parser = parser
         self.sanity_checker = sanity_checker
-        self.enable_experimental_features = enable_experimental_features
-        self.preserve_custom_command_formatting = preserve_custom_command_formatting
+        self.configuration = configuration
 
     def _get_line_comment_reflower(self, code):
-        if self.enable_experimental_features:
+        if self.configuration.enable_experimental_features:
             return LineCommentReflower(code)
         return None
 
@@ -31,12 +25,17 @@ class Formatter:  # pylint: disable=too-few-public-methods
         postprocessor = PostProcessor(
             code,
             self._get_line_comment_reflower(code),
-            self.preserve_custom_command_formatting,
+            self.configuration.preserve_custom_command_formatting,
         )
         return postprocessor.transform(self.parser.parse(code))
 
+    def _select_dumper(self):
+        if self.configuration.enable_experimental_features:
+            return ExperimentalDumper
+        return Dumper
+
     def format(self, code):
-        dumper = ExperimentalDumper() if self.enable_experimental_features else Dumper()
+        dumper = self._select_dumper()(self.configuration.line_length)
         result = dumper.visit(self._parse(code))
         self.sanity_checker(self.parser, code, result)
         return result
@@ -45,6 +44,7 @@ class Formatter:  # pylint: disable=too-few-public-methods
 def create_formatter(
     parser,
     do_sanity_check,
+    line_length,
     enable_experimental_features=False,
     preserve_custom_command_formatting=True,
 ):
@@ -52,6 +52,9 @@ def create_formatter(
     return Formatter(
         parser,
         sanity_checker,
-        enable_experimental_features,
-        preserve_custom_command_formatting,
+        Configuration(
+            line_length,
+            enable_experimental_features,
+            preserve_custom_command_formatting,
+        ),
     )

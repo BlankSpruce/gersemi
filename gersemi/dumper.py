@@ -13,8 +13,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         return "{}{}{}".format(self.visit(begin), formatted_middle, self.visit(end))
 
     def block_body(self, tree):
-        dumper = type(self)(alignment=self.alignment + self.indent_size)
-        result = "".join(dumper.visit_children(tree))
+        result = "".join(self.indented.visit_children(tree))
         if len(result) == 0:
             return "\n"
         return "\n" + result + "\n"

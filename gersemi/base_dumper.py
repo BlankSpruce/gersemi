@@ -7,8 +7,8 @@ from gersemi.width_limiting_buffer import WidthLimitingBuffer
 
 
 class BaseDumper(Interpreter):
-    def __init__(self, alignment=0):
-        self.width = 80
+    def __init__(self, width, alignment=0):
+        self.width = width
         self.indent_size = 4
         self.alignment = alignment
 
@@ -18,7 +18,7 @@ class BaseDumper(Interpreter):
     def _format_listable_content(self, anchor: str, content) -> str:
         *_, last_line = anchor.splitlines()
         alignment = len(last_line)
-        dumper = type(self)(alignment)
+        dumper = type(self)(self.width, alignment)
         formatted_content = dumper.visit(content)
         buffer = WidthLimitingBuffer(self.width)
         buffer += anchor + formatted_content.lstrip()
@@ -30,9 +30,10 @@ class BaseDumper(Interpreter):
     def _try_to_format_into_single_line(
         self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
-        dumper = type(self)(alignment=0)
         result = self._indent(
-            prefix + separator.join(map(dumper.visit, children)) + postfix
+            prefix
+            + separator.join(map(self.with_no_indentation.visit, children))
+            + postfix
         )
         if len(result) <= self.width and "\n" not in result:
             return result
@@ -42,3 +43,11 @@ class BaseDumper(Interpreter):
         if isinstance(tree, str):
             return tree
         return super().visit(tree)
+
+    @property
+    def indented(self):
+        return type(self)(self.width, self.alignment + self.indent_size)
+
+    @property
+    def with_no_indentation(self):
+        return type(self)(self.width, 0)

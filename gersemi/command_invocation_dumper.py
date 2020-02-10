@@ -28,7 +28,7 @@ class CommandInvocationDumper(
         class Impl(patch, original_dumper):
             pass
 
-        return Impl(self.alignment)
+        return Impl(self.width, self.alignment)
 
     def _get_patch(self, command_name):
         return self.known_command_mapping.get(command_name, None)

@@ -38,8 +38,9 @@ class TargetLinkLibrariesCommandDumper(ArgumentAwareCommandInvocationDumper):
 
     def specified_item(self, tree):
         specifier, item = tree.children
-        dumper = type(self)(alignment=0)
-        return "{} {}".format(self.visit(specifier), dumper.visit(item))
+        return "{} {}".format(
+            self.visit(specifier), self.with_no_indentation.visit(item)
+        )
 
     def arguments(self, tree):
         preprocessed = IsolateConfigurationTypeAndItem().transform(tree)

@@ -129,8 +129,7 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
             return result
 
         begin = "(\n"
-        dumper = type(self)(self.alignment + self.indent_size)
-        formatted_arguments = dumper.visit(arguments)
+        formatted_arguments = self.indented.visit(arguments)
         end = self._indent(")")
         return f"{begin}{formatted_arguments}\n{end}"
 
@@ -141,8 +140,7 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
 
         operation, arg = tree.children
         formatted_operation = self.visit(operation)
-        dumper = type(self)(self.alignment + self.indent_size)
-        formatted_arg = dumper.visit(arg)
+        formatted_arg = self.indented.visit(arg)
         return f"{formatted_operation}\n{formatted_arg}"
 
     def binary_operation(self, tree):
@@ -152,7 +150,7 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
 
         lhs, operation, rhs = tree.children
         formatted_lhs = self.visit(lhs)
-        dumper = type(self)(self.alignment + self.indent_size)
+        dumper = self.indented
         formatted_operation = dumper.visit(operation)
         formatted_rhs = dumper.visit(rhs)
         return f"{formatted_lhs}\n{formatted_operation}\n{formatted_rhs}"

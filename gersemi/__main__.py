@@ -27,6 +27,14 @@ def create_argparser():
         help="Format files in-place",
     )
     parser.add_argument(
+        "-l",
+        "--line-length",
+        dest="line_length",
+        default=80,
+        type=int,
+        help="Maximum line length in characters",
+    )
+    parser.add_argument(
         "--diff",
         dest="show_diff",
         default=False,
@@ -55,7 +63,7 @@ def main():
     argparser = create_argparser()
     args = argparser.parse_args()
 
-    formatter = create_formatter(create_parser(), args.format_safely)
+    formatter = create_formatter(create_parser(), args.format_safely, args.line_length)
 
     if len(args.sources) == 0:
         sys.exit(SUCCESS)

@@ -219,3 +219,60 @@ def test_format_in_place_directory_with_some_not_formatted_files():
         assert_fail("--check", copy)
         gersemi("--in-place", copy)
         assert_success("--check", copy)
+
+
+def test_format_with_default_line_length():
+    inp = "set(FOO long_argument__________________________________________________________)"
+    outp = inp + "\n"
+    assert len(inp) == 80
+    completed_process = gersemi("-", input=inp + "\n", text=True, capture_output=True)
+    assert completed_process.returncode == 0
+    assert completed_process.stdout == outp
+    assert completed_process.stderr == ""
+
+    inp2 = "set(FOO long_argument____________________________________________________________)"
+    outp2 = """set(FOO
+    long_argument____________________________________________________________
+)
+"""
+    assert len(inp2) > 80
+    completed_process = gersemi("-", input=inp2 + "\n", text=True, capture_output=True)
+    assert completed_process.returncode == 0
+    assert completed_process.stdout == outp2
+    assert completed_process.stderr == ""
+
+
+def test_format_with_non_default_line_length():
+    line_length = 30
+    inp = "set(FOO long_argument________)"
+    outp = inp + "\n"
+    assert len(inp) == line_length
+    completed_process = gersemi(
+        "--line-length",
+        str(line_length),
+        "-",
+        input=inp + "\n",
+        text=True,
+        capture_output=True,
+    )
+    assert completed_process.returncode == 0
+    assert completed_process.stdout == outp
+    assert completed_process.stderr == ""
+
+    inp2 = "set(FOO long_argument__________)"
+    outp2 = """set(FOO
+    long_argument__________
+)
+"""
+    assert len(inp2) > line_length
+    completed_process = gersemi(
+        "--line-length",
+        str(line_length),
+        "-",
+        input=inp2 + "\n",
+        text=True,
+        capture_output=True,
+    )
+    assert completed_process.returncode == 0
+    assert completed_process.stdout == outp2
+    assert completed_process.stderr == ""

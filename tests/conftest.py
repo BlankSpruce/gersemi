@@ -25,6 +25,7 @@ def formatter(
     return create_formatter(
         parser,
         do_sanity_check=False,
+        line_length=80,
         enable_experimental_features=experimental_enabled,
         preserve_custom_command_formatting=preserve_custom_command_formatting,
     )

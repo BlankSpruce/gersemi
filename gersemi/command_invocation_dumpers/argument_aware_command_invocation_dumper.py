@@ -35,8 +35,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         if len(values) == 0:
             return begin
 
-        dumper = type(self)(self.alignment + self.indent_size)
-        formatted_keys = "\n".join(dumper.visit(value) for value in values)
+        formatted_keys = "\n".join(self.indented.visit(value) for value in values)
         return f"{begin}\n{formatted_keys}"
 
     @property
@@ -94,8 +93,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
                 return result
 
         begin = self._indent(f"{identifier}(")
-        dumper = type(self)(self.alignment + self.indent_size)
-        formatted_arguments = dumper.visit(arguments)
+        formatted_arguments = self.indented.visit(arguments)
         end = self._indent(")")
         return f"{begin}\n{formatted_arguments}\n{end}"
 

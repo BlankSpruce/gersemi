@@ -4,8 +4,7 @@ from gersemi.base_dumper import BaseDumper
 
 class BaseCommandInvocationDumper(BaseDumper):
     def format_command_with_short_name(self, begin, arguments, end):
-        dumper = type(self)(self.alignment + self.indent_size)
-        formatted_arguments = dumper.visit(arguments).lstrip()
+        formatted_arguments = self.indented.visit(arguments).lstrip()
         if (
             not contains_line_comment(arguments.children)
             and "\n" not in formatted_arguments
@@ -17,8 +16,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         )
 
     def _format_command_with_long_name(self, begin, arguments, end):
-        dumper = type(self)(self.alignment + self.indent_size)
-        formatted_arguments = dumper.visit(arguments)
+        formatted_arguments = self.indented.visit(arguments)
         return "\n".join([self._indent(begin), formatted_arguments, self._indent(end)])
 
     def format_command(self, tree):
