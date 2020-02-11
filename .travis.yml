@@ -1,6 +1,23 @@
 language: python
-python:
-  - "3.7"
+
+cache: false
+
+jobs:
+  include:
+    - os: linux
+      python: "3.7"
+    - os: linux
+      python: "3.8"
+    - stage: deploy
+      script: skip
+      deploy:
+        provider: pypi
+        user: "__token__"
+        password:
+          secure: fEOCpT4G/uK56b252bUm16wyHg/6lcJ9pUx+TNSlqppnB8PbZwsdZBAo2sD3jI2NvoADoVYRKzz4KP6Fx0Y4h+f2hHu0NDaX25IdV187VDwru8OklhogGGdgf+FYxVz+u+9RxvFtA+lb9RdeEpRvx2gLm83NMZ0RGjbYB3ltoegyXtYv3D75OKI0PdVV2iBtHHBCERHADerY04ZyHRGtdo4nH7Cm6PGXGlPVLoFzaDr7F0+IXEwY1/ieRujNxzLAeyVaZk7IHZ7uOqlhw3MdscgTw/oFI2i+0HLEqEZ+ffTKJUso5gxJY07/0VoXTKyBc37lY0swOmB2aoyeTELLvs8Jk+yI/K8uXhsm/Mi/t9+P2cTCwXiDQ19PmvhaKd+5F+WdpCHRufk8dm1t0TNesCnDwzZlB0ea0+QlWcZ/ASHGA09MhIkwu/B1OojwaLRzx/ZBKaxBuXhKx32/yegDonwCn9BGcpCxViK8bKSH3bp6gZWl+PpjPNZ5FaGAUlV6fjh7djZBkgTmjBWeZUZRhfOp/dM9xg7RfU0TvszJvMhldMtrWUYC++fO+CXKGivhQBXT7Oobrx2e3uXydhQSiwk1JwDgHU7ZkWRmmZQAcXLGa5gMAebGXacg0Y4ZlOs07Xl5I8gkxsawEBKLAMk8IYqEKYS2JVJ/agRr6rWOFkc=
+        on:
+          tags: true
+          branch: master
 
 install:
   - pip3 install tox
