@@ -7,7 +7,10 @@ from gersemi.runner import Runner, error, SUCCESS, FAIL
 
 
 def create_argparser():
-    parser = argparse.ArgumentParser(description="Tool to format CMake code")
+    parser = argparse.ArgumentParser(
+        description="A formatter to make your CMake code the real treasure.",
+        prog="gersemi",
+    )
     parser.add_argument(
         "-c",
         "--check",
@@ -29,6 +32,7 @@ def create_argparser():
     parser.add_argument(
         "-l",
         "--line-length",
+        metavar="INTEGER",
         dest="line_length",
         default=80,
         type=int,
