@@ -5,7 +5,7 @@ from itertools import chain
 from pathlib import Path
 import sys
 import lark
-from gersemi.exceptions import ASTMismatch
+from gersemi.exceptions import ASTMismatch, ParsingError
 
 
 SUCCESS = 0
@@ -37,28 +37,31 @@ def smart_open(filename, mode, *args, **kwargs):
             fh.close()
 
 
+def fromfile(path):
+    return "<stdin>" if path == Path("-") else str(path)
+
+
+def tofile(path):
+    return "<stdout>" if path == Path("-") else str(path)
+
+
 class Runner:  # pylint: disable=too-few-public-methods
     def __init__(self, formatter, args):
         self.formatter = formatter
         self.args = args
 
-    def _check_formatting(self, before, after, filename):
+    def _check_formatting(self, before, after, path):
         if before != after:
-            if filename == Path("-"):
-                error("<stdin> would be reformatted")
-            else:
-                error(f"{filename} would be reformatted")
+            error(f"{fromfile(path)} would be reformatted")
             return FAIL
         return SUCCESS
 
-    def _show_diff(self, before, after, filename):
-        fromfile = "<stdin>" if filename == Path("-") else str(filename)
-        tofile = "<stdout>" if filename == Path("-") else str(filename)
+    def _show_diff(self, before, after, path):
         diff = unified_diff(
             a=f"{before}\n".splitlines(keepends=True),
             b=f"{after}\n".splitlines(keepends=True),
-            fromfile=fromfile,
-            tofile=tofile,
+            fromfile=fromfile(path),
+            tofile=tofile(path),
             n=5,
         )
         self._print("".join(diff), sink=sys.stdout)
@@ -73,12 +76,13 @@ class Runner:  # pylint: disable=too-few-public-methods
 
         try:
             formatted_code = self.formatter.format(code_to_format)
-        except lark.UnexpectedInput as exception:
-            # TODO detailed error description with match_examples
-            error(f"Failed to parse {file_to_format}: ", exception)
+        except ParsingError as exception:
+            error(f"{fromfile(file_to_format)}{exception}")
             return INTERNAL_ERROR
         except ASTMismatch:
-            error(f"Failed to format {file_to_format}: AST mismatch after formatting")
+            error(
+                f"Failed to format {fromfile(file_to_format)}: AST mismatch after formatting"
+            )
             return INTERNAL_ERROR
         except lark.exceptions.VisitError as exception:
             error(f"Runtime error when formatting {file_to_format}: ", exception)
@@ -86,12 +90,12 @@ class Runner:  # pylint: disable=too-few-public-methods
 
         if self.args.show_diff:
             return self._show_diff(
-                before=code_to_format, after=formatted_code, filename=file_to_format
+                before=code_to_format, after=formatted_code, path=file_to_format
             )
 
         if self.args.check_formatting:
             return self._check_formatting(
-                before=code_to_format, after=formatted_code, filename=file_to_format
+                before=code_to_format, after=formatted_code, path=file_to_format
             )
 
         if self.args.in_place:
