@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.2] 2020-02-14
+
+### Changed
+- formatting of COMMAND keyworded arguments look better when wrapped to line (or multiple lines) instead of listing each constituent of command in separate line
+
 ## [0.1.1] 2020-02-13
 
 ### Added

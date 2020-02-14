@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="gersemi",
-    version="0.1.1",
+    version="0.1.2",
     author="Blank Spruce",
     author_email="blankspruce@protonmail.com",
     description="A formatter to make your CMake code the real treasure",

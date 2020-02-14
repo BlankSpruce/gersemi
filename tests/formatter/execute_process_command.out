@@ -9,8 +9,7 @@ execute_process(
 # one very long command
 execute_process(
     COMMAND
-        ${PYTHON_CMD}
-        -c
+        ${PYTHON_CMD} -c
         "very_long_lambda=lambda: 42; print(very_long_lambda())"
 )
 
@@ -26,12 +25,10 @@ execute_process(
 # two long commands
 execute_process(
     COMMAND
-        ${PYTHON_CMD}
-        -c
+        ${PYTHON_CMD} -c
         "very_long_lambda=lambda: 42; print(very_long_lambda())"
     COMMAND
-        ${PYTHON_CMD}
-        -c
+        ${PYTHON_CMD} -c
         "very_long_lambda=lambda: 42; print(very_long_lambda())"
 )
 
@@ -39,8 +36,7 @@ execute_process(
 execute_process(
     COMMAND ${PYTHON_CMD} -c "import this"
     COMMAND
-        ${PYTHON_CMD}
-        -c
+        ${PYTHON_CMD} -c
         "very_long_lambda=lambda: 42; print(very_long_lambda())"
 )
 
@@ -83,5 +79,49 @@ if(TRUE)
     execute_process(
         COMMAND ${PYTHON} -c "import this"
         COMMAND ${PYTHON} -c "import this"
+    )
+endif()
+
+execute_process(
+    COMMAND
+        clang-format -length=1000 -sort-includes -style=some_kind_of_style
+        -verbose -output-replacements-xml
+)
+
+execute_process(
+    COMMAND
+        clang-format -length=1000 -sort-includes -style=some_kind_of_style
+        -verbose -output-replacements-xml
+        "multiline
+string"
+        -some-flag with_argument -another
+    COMMAND
+        clang-format -length=1000 -sort-includes -style=some_kind_of_style
+        -verbose -output-replacements-xml
+        "multiline
+string"
+        -some-flag with_argument -another
+)
+
+if(TRUE)
+    execute_process(
+        COMMAND
+            clang-format -length=1000 -sort-includes -style=some_kind_of_style
+            -verbose -output-replacements-xml
+    )
+
+    execute_process(
+        COMMAND
+            clang-format -length=1000 -sort-includes -style=some_kind_of_style
+            -verbose -output-replacements-xml
+            "multiline
+string"
+            -some-flag with_argument -another
+        COMMAND
+            clang-format -length=1000 -sort-includes -style=some_kind_of_style
+            -verbose -output-replacements-xml
+            "multiline
+string"
+            -some-flag with_argument -another
     )
 endif()

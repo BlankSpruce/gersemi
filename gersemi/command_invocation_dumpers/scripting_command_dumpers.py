@@ -1,3 +1,4 @@
+from gersemi.command_line_formatter import CommandLineFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -39,7 +40,9 @@ class EndMacroCommandDumper(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class ExecuteProcessCommandDumper(ArgumentAwareCommandInvocationDumper):
+class ExecuteProcessCommandDumper(
+    CommandLineFormatter, ArgumentAwareCommandInvocationDumper
+):
     options = [
         "OUTPUT_QUIET",
         "ERROR_QUIET",
@@ -60,6 +63,7 @@ class ExecuteProcessCommandDumper(ArgumentAwareCommandInvocationDumper):
         "ENCODING",
     ]
     multi_value_keywords = ["COMMAND"]
+    keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
 class FileCommandDumper(MultipleSignatureCommandInvocationDumper):

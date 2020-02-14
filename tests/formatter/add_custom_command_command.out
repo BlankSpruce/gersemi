@@ -158,3 +158,39 @@ add_custom_command(
     USES_TERMINAL
     COMMAND_EXPANDS_LISTS
 )
+
+add_custom_command(
+    OUTPUT FOOBAR
+    COMMAND
+        clang-format -length=1000 -sort-includes -style=some_kind_of_style
+        -verbose -output-replacements-xml
+)
+
+add_custom_command(
+    OUTPUT FOOBAR
+    COMMAND
+        clang-format -length=1000 -sort-includes -style=some_kind_of_style
+        -verbose -output-replacements-xml
+        "multiline
+string"
+        -some-flag with_argument -another
+)
+
+if(TRUE)
+    add_custom_command(
+        OUTPUT FOOBAR
+        COMMAND
+            clang-format -length=1000 -sort-includes -style=some_kind_of_style
+            -verbose -output-replacements-xml
+    )
+
+    add_custom_command(
+        OUTPUT FOOBAR
+        COMMAND
+            clang-format -length=1000 -sort-includes -style=some_kind_of_style
+            -verbose -output-replacements-xml
+            "multiline
+string"
+            -some-flag with_argument -another
+    )
+endif()

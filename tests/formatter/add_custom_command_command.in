@@ -30,4 +30,26 @@ add_custom_command(TARGET FOO POST_BUILD COMMAND FOO BAR BAZ COMMAND FOO BAR BAZ
 
 add_custom_command(TARGET long_arg____________________________________________________________ POST_BUILD COMMAND long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________ COMMAND long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________ COMMAND long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________ BYPRODUCTS long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________ WORKING_DIRECTORY long_arg____________________________________________________________ COMMENT long_arg____________________________________________________________ VERBATIM USES_TERMINAL COMMAND_EXPANDS_LISTS)
 
+add_custom_command(
+OUTPUT FOOBAR
+COMMAND clang-format -length=1000 -sort-includes -style=some_kind_of_style -verbose -output-replacements-xml
+)
 
+add_custom_command(
+OUTPUT FOOBAR
+COMMAND clang-format -length=1000 -sort-includes -style=some_kind_of_style -verbose -output-replacements-xml "multiline
+string" -some-flag with_argument -another
+)
+
+if(TRUE)
+add_custom_command(
+OUTPUT FOOBAR
+COMMAND clang-format -length=1000 -sort-includes -style=some_kind_of_style -verbose -output-replacements-xml
+)
+
+add_custom_command(
+OUTPUT FOOBAR
+COMMAND clang-format -length=1000 -sort-includes -style=some_kind_of_style -verbose -output-replacements-xml "multiline
+string" -some-flag with_argument -another
+)
+endif()

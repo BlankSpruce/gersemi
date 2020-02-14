@@ -1,3 +1,4 @@
+from gersemi.command_line_formatter import CommandLineFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -11,7 +12,9 @@ from .multiple_signature_command_invocation_dumper import (
 from .target_link_libraries_command_dumper import TargetLinkLibrariesCommandDumper
 
 
-class AddCustomCommandCommandDumper(MultipleSignatureCommandInvocationDumper):
+class AddCustomCommandCommandDumper(
+    CommandLineFormatter, MultipleSignatureCommandInvocationDumper
+):
     customized_signatures = {
         "OUTPUT": dict(
             options=["VERBATIM", "APPEND", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"],
@@ -44,18 +47,23 @@ class AddCustomCommandCommandDumper(MultipleSignatureCommandInvocationDumper):
             multi_value_keywords=["COMMAND", "ARGS", "BYPRODUCTS"],
         ),
     }
+    keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class AddCustomTargetCommandDumper(ArgumentAwareCommandInvocationDumper):
+class AddCustomTargetCommandDumper(
+    CommandLineFormatter, ArgumentAwareCommandInvocationDumper
+):
     options = ["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["WORKING_DIRECTORY", "COMMENT", "JOB_POOL"]
     multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
+    keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class AddTestCommandDumper(ArgumentAwareCommandInvocationDumper):
+class AddTestCommandDumper(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
     options = ["COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["NAME", "WORKING_DIRECTORY"]
     multi_value_keywords = ["COMMAND", "CONFIGURATIONS"]
+    keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
 class BuildCommandCommandDumper(ArgumentAwareCommandInvocationDumper):

@@ -1,4 +1,4 @@
-from typing import Iterator, List, Optional, Sized, Tuple
+from typing import Dict, Iterator, List, Optional, Sized, Tuple
 from gersemi.ast_helpers import contains_line_comment, is_keyword
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Node, Nodes
@@ -23,8 +23,12 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     options: List[str] = []
     one_value_keywords: List[str] = []
     multi_value_keywords: List[str] = []
+    keyword_formatters: Dict[str, str] = {}
 
-    def _format_group(self, group: Nodes) -> str:
+    def _default_format_values(self, values) -> str:
+        return "\n".join(map(self.visit, values))
+
+    def _format_group(self, group) -> str:
         if not contains_line_comment(group):
             result = self._try_to_format_into_single_line(group, separator=" ")
             if result is not None:
@@ -35,8 +39,13 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         if len(values) == 0:
             return begin
 
-        formatted_keys = "\n".join(self.indented.visit(value) for value in values)
-        return f"{begin}\n{formatted_keys}"
+        keyword_as_value = keyword.children[0]
+        formatter = getattr(
+            self.indented,
+            self.keyword_formatters.get(keyword_as_value, "_default_format_values"),
+        )
+        formatted_values = formatter(values)
+        return f"{begin}\n{formatted_values}"
 
     @property
     def _keywords(self):
