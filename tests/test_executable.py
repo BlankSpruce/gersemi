@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 
 
 def gersemi(*gersemi_args, **subprocess_kwargs):
@@ -25,7 +26,7 @@ def case(filepath):
 def temporary_copy(original):
     temp_directory = tempfile.gettempdir()
     original_base = os.path.basename(original)
-    temp_path = os.path.join(temp_directory, original_base)
+    temp_path = os.path.join(temp_directory, uuid.uuid4().hex + original_base)
     try:
         shutil.copy2(original, temp_path)
         yield temp_path
@@ -37,7 +38,7 @@ def temporary_copy(original):
 def temporary_dir_copy(original):
     temp_directory = tempfile.gettempdir()
     original_base = os.path.basename(original)
-    temp_path = os.path.join(temp_directory, original_base)
+    temp_path = os.path.join(temp_directory, uuid.uuid4().hex + original_base)
     try:
         shutil.copytree(original, temp_path)
         yield temp_path
