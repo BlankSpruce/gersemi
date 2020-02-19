@@ -5,7 +5,7 @@ from gersemi.command_invocation_dumper import CommandInvocationDumper
 
 class Dumper(CommandInvocationDumper, BaseDumper):
     def file(self, tree):
-        return "{}\n".format(self.__default__(tree))
+        return "{}\n".format(super().file(tree))
 
     def block(self, tree):
         begin, *middle, end = tree.children

@@ -11,6 +11,7 @@ from gersemi.command_invocation_dumpers.project_command_dumpers import (
 from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
+from gersemi.custom_command_dumper_generator import generate_custom_command_dumpers
 
 
 class CommandInvocationDumper(
@@ -21,6 +22,10 @@ class CommandInvocationDumper(
         **project_command_mapping,
         **ctest_command_mapping,
     }
+
+    def file(self, tree):
+        self.known_command_mapping.update(generate_custom_command_dumpers(tree))
+        return self.__default__(tree)
 
     def _patch_dumper(self, patch):
         original_dumper = type(self)
