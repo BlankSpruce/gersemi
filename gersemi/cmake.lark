@@ -30,8 +30,8 @@ quoted_element      : /([^\\\"]|\n)+/
 QUOTED_CONTINUATION : BACKSLASH NEWLINE
 
 unquoted_argument : _unquoted_element+
-_unquoted_element : /[^\$\s\[\(\)#\"\\]+/
-                  | /[^\s\[\(\)#\"\\]/
+_unquoted_element : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
+                  | /(?:(?!\[=*\[))[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
                   | MAKE_STYLE_REFERENCE
                   | _unquoted_element DOUBLE_QUOTED_STRING

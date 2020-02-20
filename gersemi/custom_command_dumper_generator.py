@@ -55,11 +55,13 @@ class ExtractVariableFromSetCommand(Interpreter):
         result = self.visit_children(tree)
         return result[0], result[1:]
 
-    def unquoted_argument(self, tree):
-        return str(tree.children[0])
+    def _join(self, tree):
+        return "".join(self.visit_children(tree))
 
-    def quoted_argument(self, tree):
-        return str(tree.children[0].children[0])
+    bracket_argument = _join
+    unquoted_argument = _join
+    quoted_argument = _join
+    quoted_element = _join
 
 
 def find_set_variables(tree):
@@ -90,8 +92,11 @@ def create_specialized_dumper(options_, one_value_keywords_, multi_value_keyword
 
 def evaluate_variables(argument, variables):
     class Impl(Interpreter):
+        def quoted_element(self, tree):
+            return "".join(self.visit_children(tree))
+
         def quoted_argument(self, tree):
-            content = tree.children[0].children[0]
+            content = "".join(self.visit_children(tree))
             for name, value in variables.items():
                 content = content.replace(f"${{{name}}}", ";".join(value))
 
