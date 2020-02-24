@@ -1,11 +1,11 @@
-from typing import Dict, Iterator, List, Optional, Sized, Tuple
+from typing import Dict, Iterator, Iterable, List, Optional, Sized, Tuple
 from gersemi.ast_helpers import contains_line_comment, is_keyword
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Node, Nodes
 from gersemi.utils import pop_all
 
 
-def is_one_of_keywords(argument: Node, keywords: List[str]) -> bool:
+def is_one_of_keywords(argument: Node, keywords: Iterable[str]) -> bool:
     predicates = map(is_keyword, keywords)
     invoke = lambda predicate: predicate(argument)
     return any(map(invoke, predicates))
@@ -20,9 +20,9 @@ def is_non_empty(l: Sized) -> bool:
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
-    options: List[str] = []
-    one_value_keywords: List[str] = []
-    multi_value_keywords: List[str] = []
+    options: Iterable[str] = []
+    one_value_keywords: Iterable[str] = []
+    multi_value_keywords: Iterable[str] = []
     keyword_formatters: Dict[str, str] = {}
 
     def _default_format_values(self, values) -> str:
