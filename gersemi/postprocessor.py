@@ -1,5 +1,5 @@
 from itertools import dropwhile
-from typing import Callable, Iterator, Optional
+from typing import Callable, Iterator
 from lark import Discard, Tree, Token
 from lark.tree import Meta
 from lark.visitors import (
@@ -459,9 +459,7 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
 
 
 def PostProcessor(
-    code: str,
-    line_comment_reflower: Optional[Transformer] = None,
-    preserve_custom_command_formatting: bool = True,
+    code: str, preserve_custom_command_formatting: bool = True,
 ) -> Transformer:
     chain = TransformerChain(
         RestructureBracketTypeRules(),
@@ -478,6 +476,4 @@ def PostProcessor(
     )
     if preserve_custom_command_formatting:
         chain = PreserveCustomCommandFormatting(code) * chain
-    if line_comment_reflower is not None:
-        chain = line_comment_reflower * chain
     return chain

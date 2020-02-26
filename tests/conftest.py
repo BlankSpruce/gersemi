@@ -9,23 +9,17 @@ def parser():
 
 
 @pytest.fixture(scope="module")
-def experimental_enabled():
-    return False
-
-
-@pytest.fixture(scope="module")
 def preserve_custom_command_formatting():
     return False
 
 
 @pytest.fixture(scope="module")
 def formatter(
-    parser, experimental_enabled, preserve_custom_command_formatting
+    parser, preserve_custom_command_formatting
 ):  # pylint: disable=redefined-outer-name
     return create_formatter(
         parser,
         do_sanity_check=False,
         line_length=80,
-        enable_experimental_features=experimental_enabled,
         preserve_custom_command_formatting=preserve_custom_command_formatting,
     )

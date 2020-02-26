@@ -1,5 +1,0 @@
-#[==[two consecutive bracket comments
-which have matching ]===] bracket of its counterpart]==]
-#[===[inside ]==] comment content
-which could be only merged using different brackets
-like [=[/]=] or [====[/]====] instead]===]

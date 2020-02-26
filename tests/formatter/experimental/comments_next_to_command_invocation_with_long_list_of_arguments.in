@@ -1,3 +1,0 @@
-foo(arg1 arg2 arg3 arg4 arg5 arg6 arg7) # the line comment which should stay in single line because it's just in limit
-
-bar(arg1 arg2 arg3 arg4 arg5 arg6 arg7) # the multiline comment which is just beyond the limit should be split into two
