@@ -418,16 +418,43 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
 
     def _get_original_formatting(self, meta):
         start, end = meta.start_pos, meta.end_pos
+        return Tree("formatted_node", [self.code[start:end]])
+
+    def _get_indentation(self, command_element_meta, command_invocation_meta):
+        start, end = (
+            command_element_meta.start_pos,
+            command_invocation_meta.start_pos,
+        )
         return self.code[start:end]
+
+    def _make_custom_command(self, command_invocation, indentation):
+        identifier, arguments = command_invocation.children
+        return Tree(
+            "custom_command",
+            [indentation, identifier, self._get_original_formatting(arguments.meta)],
+            command_invocation.meta,
+        )
+
+    def _is_builtin(self, command_invocation):
+        identifier, *_ = command_invocation.children
+        return identifier in self.builtin_commands
 
     @v_args(meta=True)
     def command_element(self, children, meta):
-        command_invocation, *_ = children
-        identifier, *_ = command_invocation.children
-        if identifier in self.builtin_commands:
+        command_invocation, *rest = children
+        if self._is_builtin(command_invocation):
             return Tree("command_element", children, meta)
+
         return Tree(
-            "formatted_command_element", [self._get_original_formatting(meta)], meta
+            "command_element",
+            [
+                self._make_custom_command(
+                    command_invocation,
+                    self._get_indentation(meta, command_invocation.meta),
+                ),
+                *rest,
+            ],
+            meta,
         )
 
 

@@ -50,3 +50,37 @@ its \\-content changed"
     )
 endif()
 endif()
+
+# command name will still get downcased and parentheses will get properly aligned
+SOME_custom_COMMAND(FOO
+    BAR
+        Baz
+    FOO
+        bar bAZ
+    [[some bracket
+multiline \- argument ]=]
+which shouldn't [===[ have
+its content changed]]
+    "some quoted
+multiline argument \
+which \" shouldn't have
+its \\-content changed"
+          )
+
+if(TRUE)
+# command name will still get downcased and parentheses will get properly aligned
+SOME_custom_COMMAND(FOO
+    BAR
+        Baz
+    FOO
+        bar bAZ
+    [[some bracket
+multiline \- argument ]=]
+which shouldn't [===[ have
+its content changed]]
+    "some quoted
+multiline argument \
+which \" shouldn't have
+its \\-content changed"
+          )
+endif()
