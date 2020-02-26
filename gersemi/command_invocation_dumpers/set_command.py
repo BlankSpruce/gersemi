@@ -52,6 +52,23 @@ class SetCommandDumper(BaseCommandInvocationDumper):
         formatted_force = "" if force is None else "\n" + self.visit(force)
         return f"{formatted_begin}\n{formatted_cache_part}{formatted_force}"
 
+    def complex_argument(self, tree):
+        arguments = tree.children[0]
+        if not contains_line_comment(tree.children) and len(arguments.children) <= 4:
+            result = self._try_to_format_into_single_line(
+                arguments.children, separator=" ", prefix="(", postfix=")"
+            )
+            if result is not None:
+                return result
+
+        return "\n".join(
+            [
+                self._indent("("),
+                *self.indented.visit_children(arguments),
+                self._indent(")"),
+            ]
+        )
+
     def arguments(self, tree):
         if can_be_formatted_into_single_line(tree.children):
             result = self._try_to_format_into_single_line(tree.children, separator=" ")

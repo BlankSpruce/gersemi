@@ -1,10 +1,10 @@
 # Already formatted
 
-foo()
+include_guard()
 
-foo(bar)
+set(bar)
 
-foo(bar "baz")
+set(bar "baz")
 
 #[=[    spaces     in     bracket    comments   untouched     ]=]
 
@@ -12,29 +12,29 @@ foo(bar "baz")
 
 # To format
 
-foo()
+include_guard()
 
-foo()
+include_guard()
 
-foo(bar)
+set(bar)
 
-foo(bar)
+set(bar)
 
-foo(bar)
+set(bar)
 
-foo(bar)
+set(bar)
 
-foo(bar "baz")
+set(bar "baz")
 
-foo(#[=[some bracket comment]=] bar "baz")
+set(#[=[some bracket comment]=] bar "baz")
 
 #[=[some bracket comment]=] # followed by superfluous spaces and line comment
 
-foo(bar) # some comment following command invocation
+set(bar) # some comment following command invocation
 
-foo(bar baz)
+set(bar baz)
 
-foo()
+include_guard()
 
 if()
     message(STATUS "foo")

@@ -5,7 +5,7 @@ from .tests_generator import generate_input_only_tests
 
 
 def parse_and_postprocess(parser, code):
-    postprocessor = PostProcessor(code, preserve_custom_command_formatting=False)
+    postprocessor = PostProcessor(code)
     return postprocessor.transform(parser.parse(code))
 
 

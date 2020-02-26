@@ -35,9 +35,11 @@ def safe_indent(string, indent_size):
 
 class PreservingCommandInvocationDumper(BaseDumper):
     def custom_command(self, tree):
-        indentation, identifier, formatted_arguments = tree.children
+        indentation, identifier, _, formatted_arguments = tree.children
         begin = self._indent(f"{identifier}(")
         content = formatted_arguments.children[0]
+        if content == "":
+            return f"{begin})"
 
         body = safe_indent(content, self.alignment - len(indentation))
         if not content.startswith("\n"):

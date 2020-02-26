@@ -416,9 +416,13 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         super().__init__()
         self.code = code
 
-    def _get_original_formatting(self, meta):
-        start, end = meta.start_pos, meta.end_pos
-        return Tree("formatted_node", [self.code[start:end]])
+    def _get_original_formatting(self, arguments):
+        if len(arguments.children) == 0:
+            content = ""
+        else:
+            start, end = arguments.meta.start_pos, arguments.meta.end_pos
+            content = self.code[start:end]
+        return Tree("formatted_node", [content])
 
     def _get_indentation(self, command_element_meta, command_invocation_meta):
         start, end = (
@@ -431,7 +435,12 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         identifier, arguments = command_invocation.children
         return Tree(
             "custom_command",
-            [indentation, identifier, self._get_original_formatting(arguments.meta)],
+            [
+                indentation,
+                identifier,
+                arguments,
+                self._get_original_formatting(arguments),
+            ],
             command_invocation.meta,
         )
 
@@ -458,10 +467,9 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         )
 
 
-def PostProcessor(
-    code: str, preserve_custom_command_formatting: bool = True,
-) -> Transformer:
+def PostProcessor(code: str) -> Transformer:
     chain = TransformerChain(
+        PreserveCustomCommandFormatting(code),
         RestructureBracketTypeRules(),
         IsolateCommentedArguments(),
         SimplifyParseTree(),
@@ -474,6 +482,4 @@ def PostProcessor(
         IsolateDisabledFormattingBlock(code),
         RemoveSuperfluousEmptyLines(),
     )
-    if preserve_custom_command_formatting:
-        chain = PreserveCustomCommandFormatting(code) * chain
     return chain

@@ -15,9 +15,7 @@ class Formatter:  # pylint: disable=too-few-public-methods
         self.configuration = configuration
 
     def _parse(self, code):
-        postprocessor = PostProcessor(
-            code, self.configuration.preserve_custom_command_formatting
-        )
+        postprocessor = PostProcessor(code)
         return postprocessor.transform(self.parser.parse(code))
 
     def format(self, code):
@@ -27,12 +25,6 @@ class Formatter:  # pylint: disable=too-few-public-methods
         return result
 
 
-def create_formatter(
-    parser, do_sanity_check, line_length, preserve_custom_command_formatting=True,
-):
+def create_formatter(parser, do_sanity_check, line_length):
     sanity_checker = check_code_equivalence if do_sanity_check else noop
-    return Formatter(
-        parser,
-        sanity_checker,
-        Configuration(line_length, preserve_custom_command_formatting),
-    )
+    return Formatter(parser, sanity_checker, Configuration(line_length))

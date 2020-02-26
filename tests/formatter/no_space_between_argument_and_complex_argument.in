@@ -4,20 +4,29 @@ endif()
 if(NOT(-1 EQUAL (${v}))AND(1 EQUAL 1))
 endif()
 
-foo(BAR(-1))
+if(BAR(-1))
+endif()
 
-foo("BAR"(-1))
+if("BAR"(-1))
+endif()
 
-foo([[BAR]](-1))
+if([[BAR]](-1))
+endif()
 
-foo((-1)BAR)
+if((-1)BAR)
+endif()
 
-foo((-1)"BAR")
+if((-1)"BAR")
+endif()
 
-foo((-1)[[BAR]])
+if((-1)[[BAR]])
+endif()
 
-foo(BAR(-1)BAZ)
+if(BAR(-1)BAZ)
+endif()
 
-foo(BAR(-1)"BAZ")
+if(BAR(-1)"BAZ")
+endif()
 
-foo(BAR(-1)[[BAZ]])
+if(BAR(-1)[[BAZ]])
+endif()

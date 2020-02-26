@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Tuple
-from lark import Discard
+from lark import Discard, Tree
 from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import is_keyword
 from gersemi.command_invocation_dumpers.argument_aware_command_invocation_dumper import (
@@ -30,6 +30,10 @@ def create_specialized_dumper(keywords: Keywords):
         options = keywords.options
         one_value_keywords = keywords.one_value_keywords
         multi_value_keywords = keywords.multi_value_keywords
+
+        def custom_command(self, tree):
+            _, command_name, arguments, *_ = tree.children
+            return self.visit(Tree("command_invocation", [command_name, arguments]))
 
     return Impl
 
@@ -102,7 +106,11 @@ class CMakeInterpreter(Interpreter):
     def _join(self, tree):
         return "".join(self.visit_children(tree))
 
+    def complex_argument(self, tree):
+        return f"({self.visit_children(tree)})"
+
     bracket_argument = _join
+    commented_argument = _join
     unquoted_argument = _join
     quoted_argument = _join
     quoted_element = _join
