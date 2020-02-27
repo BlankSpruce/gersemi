@@ -45,6 +45,14 @@ def tofile(path):
     return "<stdout>" if path == Path("-") else str(path)
 
 
+def get_newlines_style(code):
+    crlf = "\r\n"
+    if crlf in code:
+        return crlf
+
+    return "\n"
+
+
 class Runner:  # pylint: disable=too-few-public-methods
     def __init__(self, formatter, args):
         self.formatter = formatter
@@ -71,8 +79,10 @@ class Runner:  # pylint: disable=too-few-public-methods
         print(txt, file=sink, end="")
 
     def _run_on_single_file(self, file_to_format):
-        with smart_open(file_to_format, "r") as f:
+        with smart_open(file_to_format, "r", newline="") as f:
             code_to_format = f.read()
+
+        newlines_style = get_newlines_style(code_to_format)
 
         try:
             formatted_code = self.formatter.format(code_to_format)
@@ -99,7 +109,7 @@ class Runner:  # pylint: disable=too-few-public-methods
             )
 
         if self.args.in_place:
-            with smart_open(file_to_format, "w") as f:
+            with smart_open(file_to_format, "w", newline=newlines_style) as f:
                 self._print(formatted_code, sink=f)
         else:
             self._print(formatted_code, sink=sys.stdout)
