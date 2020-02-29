@@ -61,13 +61,9 @@ class SetCommandDumper(BaseCommandInvocationDumper):
             if result is not None:
                 return result
 
-        return "\n".join(
-            [
-                self._indent("("),
-                *self.indented.visit_children(arguments),
-                self._indent(")"),
-            ]
-        )
+        with self.indented():
+            formatted_arguments = self.visit_children(arguments)
+        return "\n".join([self._indent("("), *formatted_arguments, self._indent(")")])
 
     def arguments(self, tree):
         if can_be_formatted_into_single_line(tree.children):

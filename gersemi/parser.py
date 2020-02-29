@@ -6,6 +6,7 @@ from gersemi.exceptions import (
     UnbalancedParentheses,
     UnbalancedBrackets,
 )
+from gersemi.postprocessor import PostProcessor
 
 
 class DowncaseIdentifiers(Transformer):
@@ -70,5 +71,18 @@ class Parser:  # pylint: disable=too-few-public-methods
             self._match_parsing_error(code, u)
 
 
+class ParserWithPostProcessing:  # pylint: disable=too-few-public-methods
+    def __init__(self, parser):
+        self.parser = parser
+
+    def parse(self, code):
+        postprocessor = PostProcessor(code)
+        return postprocessor.transform(self.parser.parse(code))
+
+
 def create_parser():
     return Parser()
+
+
+def create_parser_with_postprocessing(bare_parser):
+    return ParserWithPostProcessing(bare_parser)

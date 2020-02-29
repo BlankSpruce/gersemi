@@ -1,8 +1,6 @@
 import argparse
 import pathlib
 import sys
-from gersemi.formatter import create_formatter
-from gersemi.parser import create_parser
 from gersemi.runner import Runner, error, SUCCESS, FAIL
 
 
@@ -67,8 +65,6 @@ def main():
     argparser = create_argparser()
     args = argparser.parse_args()
 
-    formatter = create_formatter(create_parser(), args.format_safely, args.line_length)
-
     if len(args.sources) == 0:
         sys.exit(SUCCESS)
 
@@ -76,7 +72,7 @@ def main():
         error("Don't mix stdin with file input")
         sys.exit(FAIL)
 
-    sys.exit(Runner(formatter, args).run())
+    sys.exit(Runner(args).run())
 
 
 if __name__ == "__main__":

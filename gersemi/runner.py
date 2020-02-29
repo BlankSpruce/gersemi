@@ -1,11 +1,14 @@
 from contextlib import contextmanager
-from functools import partial
+from functools import lru_cache, partial
 from difflib import unified_diff
 from itertools import chain
 from pathlib import Path
 import sys
 import lark
 from gersemi.exceptions import ASTMismatch, ParsingError
+from gersemi.formatter import create_formatter
+from gersemi.custom_command_dumper_generator import generate_custom_command_dumpers
+from gersemi.parser import create_parser, create_parser_with_postprocessing
 
 
 SUCCESS = 0
@@ -16,9 +19,16 @@ INTERNAL_ERROR = 123
 error = partial(print, file=sys.stderr)
 
 
+class StdinWrapper:  # pylint: disable=too-few-public-methods
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def read():
+        return sys.stdin.read()
+
+
 def standard_stream_open(mode):
     if mode is None or mode == "" or "r" in mode:
-        return sys.stdin
+        return StdinWrapper()
     return sys.stdout
 
 
@@ -53,10 +63,21 @@ def get_newlines_style(code):
     return "\n"
 
 
+def translate_newlines_to_line_feed(code):
+    return code.replace("\r\n", "\n").replace("\r", "\n")
+
+
 class Runner:  # pylint: disable=too-few-public-methods
-    def __init__(self, formatter, args):
-        self.formatter = formatter
+    def __init__(self, args):
         self.args = args
+        self.bare_parser = create_parser()
+        self.parser = create_parser_with_postprocessing(self.bare_parser)
+        self.formatter = create_formatter(
+            self.bare_parser,
+            self.args.format_safely,
+            self.args.line_length,
+            self._generate_custom_command_dumpers(self.args.sources),
+        )
 
     def _check_formatting(self, before, after, path):
         if before != after:
@@ -83,6 +104,7 @@ class Runner:  # pylint: disable=too-few-public-methods
             code_to_format = f.read()
 
         newlines_style = get_newlines_style(code_to_format)
+        code_to_format = translate_newlines_to_line_feed(code_to_format)
 
         try:
             formatted_code = self.formatter.format(code_to_format)
@@ -116,14 +138,25 @@ class Runner:  # pylint: disable=too-few-public-methods
 
         return SUCCESS
 
-    def _run_on_single_path(self, path):
+    def _get_files_to_format(self, path):
         if path.is_dir():
-            files_to_format = chain(
-                path.rglob("CMakeLists.txt"), path.rglob("*.cmake"),
-            )
-        else:
-            files_to_format = [path]
-        return max(map(self._run_on_single_file, files_to_format))
+            return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"),)
+        return [path]
+
+    def _generate_custom_command_dumpers(self, paths):
+        result = dict()
+
+        for path in paths:
+            for filepath in self._get_files_to_format(path):
+                with smart_open(filepath, "r") as f:
+                    code = f.read()
+
+                    parse_tree = self.parser.parse(code)
+                    result.update(generate_custom_command_dumpers(parse_tree))
+        return result
+
+    def _run_on_single_path(self, path):
+        return max(map(self._run_on_single_file, self._get_files_to_format(path)))
 
     def run(self):
         return max(map(self._run_on_single_path, self.args.sources))

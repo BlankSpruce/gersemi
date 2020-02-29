@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Optional
 from lark import Tree
 from lark.visitors import Interpreter
@@ -18,8 +19,8 @@ class BaseDumper(Interpreter):
     def _format_listable_content(self, anchor: str, content) -> str:
         *_, last_line = anchor.splitlines()
         alignment = len(last_line)
-        dumper = type(self)(self.width, alignment)
-        formatted_content = dumper.visit(content)
+        with self.aligned_to(alignment):
+            formatted_content = self.visit(content)
         buffer = WidthLimitingBuffer(self.width)
         buffer += anchor + formatted_content.lstrip()
         return str(buffer)
@@ -30,11 +31,9 @@ class BaseDumper(Interpreter):
     def _try_to_format_into_single_line(
         self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
-        result = self._indent(
-            prefix
-            + separator.join(map(self.with_no_indentation.visit, children))
-            + postfix
-        )
+        with self.not_indented():
+            formatted_children = separator.join(map(self.visit, children))
+        result = self._indent(f"{prefix}{formatted_children}{postfix}")
         if len(result) <= self.width and "\n" not in result:
             return result
         return None
@@ -44,10 +43,17 @@ class BaseDumper(Interpreter):
             return tree
         return super().visit(tree)
 
-    @property
-    def indented(self):
-        return type(self)(self.width, self.alignment + self.indent_size)
+    @contextmanager
+    def aligned_to(self, alignment):
+        try:
+            old_alignment = self.alignment
+            self.alignment = alignment
+            yield self
+        finally:
+            self.alignment = old_alignment
 
-    @property
-    def with_no_indentation(self):
-        return type(self)(self.width, 0)
+    def indented(self):
+        return self.aligned_to(self.alignment + self.indent_size)
+
+    def not_indented(self):
+        return self.aligned_to(0)

@@ -1,4 +1,5 @@
 from contextlib import contextmanager, ExitStack
+import filecmp
 import os
 import shutil
 import subprocess
@@ -52,6 +53,34 @@ def assert_success(*args, **kwargs):
 
 def assert_fail(*args, **kwargs):
     assert gersemi(*args, **kwargs).returncode == 1
+
+
+def compare_directories(left, right):
+    comparison = filecmp.dircmp(left, right)
+    return {
+        "left_only": comparison.left_only,
+        "right_only": comparison.right_only,
+        "diff_files": comparison.diff_files,
+        "funny_files": comparison.funny_files,
+    }
+
+
+def assert_that_directories_differ(left, right):
+    comparison = compare_directories(left, right)
+    for value in comparison.values():
+        if len(value) > 0:
+            return
+    raise AssertionError("directories have the same content")
+
+
+def assert_that_directories_have_the_same_content(left, right):
+    comparison = compare_directories(left, right)
+    report = []
+    for key, value in comparison.items():
+        if len(value) > 0:
+            report += [f"{key}: {value}"]
+
+    assert len(report) == 0, "directories differences:\n" + "\n".join(report)
 
 
 def test_help_just_works():
@@ -277,3 +306,27 @@ def test_format_with_non_default_line_length():
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp2
     assert completed_process.stderr == ""
+
+
+def test_check_project_with_custom_commands():
+    with temporary_dir_copy(case("custom_project/not_formatted")) as copy:
+        assert_fail("--check", copy)
+
+    with temporary_dir_copy(case("custom_project/formatted")) as copy:
+        assert_success("--check", copy)
+
+
+def test_format_project_with_custom_commands():
+    case_ = lambda dirname: case("custom_project/" + dirname)
+
+    with ExitStack() as stack:
+        not_formatted, formatted = [
+            stack.enter_context(temporary_dir_copy(case_(d)))
+            for d in ["not_formatted", "formatted"]
+        ]
+
+        assert_that_directories_differ(not_formatted, formatted)
+        assert_success("--check", formatted)
+        assert_fail("--check", not_formatted)
+        assert_success("--in-place", not_formatted)
+        assert_that_directories_have_the_same_content(not_formatted, formatted)

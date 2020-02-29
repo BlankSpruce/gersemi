@@ -18,7 +18,8 @@ class CommandLineFormatter(BaseDumper):
                 lines += [self.visit(arg)]
                 continue
 
-            formatted_arg = self.with_no_indentation.visit(arg)
+            with self.not_indented():
+                formatted_arg = self.visit(arg)
             updated_line = f"{lines[-1]} {formatted_arg}"
             if self._should_start_new_line(updated_line, lines[-1]):
                 lines += [self.visit(arg)]

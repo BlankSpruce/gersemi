@@ -40,11 +40,12 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             return begin
 
         keyword_as_value = keyword.children[0]
-        formatter = getattr(
-            self.indented,
-            self.keyword_formatters.get(keyword_as_value, "_default_format_values"),
-        )
-        formatted_values = formatter(values)
+        with self.indented():
+            formatter = getattr(
+                self,
+                self.keyword_formatters.get(keyword_as_value, "_default_format_values"),
+            )
+            formatted_values = formatter(values)
         return f"{begin}\n{formatted_values}"
 
     @property
@@ -102,7 +103,8 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
                 return result
 
         begin = self._indent(f"{identifier}(")
-        formatted_arguments = self.indented.visit(arguments)
+        with self.indented():
+            formatted_arguments = self.visit(arguments)
         end = self._indent(")")
         return f"{begin}\n{formatted_arguments}\n{end}"
 

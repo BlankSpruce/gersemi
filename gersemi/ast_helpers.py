@@ -17,6 +17,7 @@ is_line_comment = is_tree("line_comment")
 is_bracket_comment = is_tree("bracket_comment")
 is_unquoted_argument = is_tree("unquoted_argument")
 is_commented_argument = is_tree("commented_argument")
+is_block = is_tree("block")
 
 is_newline = is_token("NEWLINE")
 

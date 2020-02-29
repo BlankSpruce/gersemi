@@ -4,8 +4,12 @@ from gersemi.command_invocation_dumper import CommandInvocationDumper
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
+    def __init__(self, width, custom_command_dumpers):
+        self.known_command_mapping.update(custom_command_dumpers)
+        super().__init__(width)
+
     def file(self, tree):
-        return "{}\n".format(super().file(tree))
+        return "{}\n".format(self.__default__(tree))
 
     def block(self, tree):
         begin, *middle, end = tree.children
@@ -13,7 +17,8 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         return "{}{}{}".format(self.visit(begin), formatted_middle, self.visit(end))
 
     def block_body(self, tree):
-        result = "".join(self.indented.visit_children(tree))
+        with self.indented():
+            result = "".join(self.visit_children(tree))
         if len(result) == 0:
             return "\n"
         return "\n" + result + "\n"

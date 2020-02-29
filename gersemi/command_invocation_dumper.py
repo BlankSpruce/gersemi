@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from lark import Tree
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.command_invocation_dumpers.ctest_command_dumpers import (
@@ -12,7 +13,6 @@ from gersemi.command_invocation_dumpers.project_command_dumpers import (
 from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
-from gersemi.custom_command_dumper_generator import generate_custom_command_dumpers
 
 
 class CommandInvocationDumper(
@@ -24,17 +24,18 @@ class CommandInvocationDumper(
         **ctest_command_mapping,
     }
 
-    def file(self, tree):
-        self.known_command_mapping.update(generate_custom_command_dumpers(tree))
-        return self.__default__(tree)
+    @contextmanager
+    def patched(self, patch):
+        old_class = self.__class__
 
-    def _patch_dumper(self, patch):
-        original_dumper = type(self)
-
-        class Impl(patch, original_dumper):
+        class Impl(patch, old_class):  # pylint: disable=too-few-public-methods
             pass
 
-        return Impl(self.width, self.alignment)
+        try:
+            self.__class__ = Impl
+            yield self
+        finally:
+            self.__class__ = old_class
 
     def _get_patch(self, command_name):
         return self.known_command_mapping.get(command_name, None)
@@ -44,7 +45,8 @@ class CommandInvocationDumper(
         patch = self._get_patch(command_name)
         if patch is None:
             return super().format_command(tree)
-        return self._patch_dumper(patch).format_command(tree)
+        with self.patched(patch):
+            return self.format_command(tree)
 
     def custom_command(self, tree):
         _, command_name, arguments, *_ = tree.children
