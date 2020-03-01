@@ -91,7 +91,9 @@ class CMakeInterpreter(Interpreter):
             self.found_commands[name.lower()] = keywords[0]
 
     def block_body(self, tree):
-        return [item for item in self.visit_children(tree) if item is not None][:1]
+        return [
+            item for item in self.visit_children(tree) if isinstance(item, Keywords)
+        ][:1]
 
     def command_invocation(self, tree):
         identifier, arguments = tree.children
