@@ -1,6 +1,7 @@
 from contextlib import contextmanager
-from functools import lru_cache, partial
+from dataclasses import dataclass
 from difflib import unified_diff
+from functools import lru_cache, partial
 from itertools import chain
 from pathlib import Path
 import sys
@@ -67,96 +68,120 @@ def translate_newlines_to_line_feed(code):
     return code.replace("\r\n", "\n").replace("\r", "\n")
 
 
-class Runner:  # pylint: disable=too-few-public-methods
-    def __init__(self, args):
-        self.args = args
-        self.bare_parser = create_parser()
-        self.parser = create_parser_with_postprocessing(self.bare_parser)
-        self.formatter = create_formatter(
-            self.bare_parser,
-            self.args.format_safely,
-            self.args.line_length,
-            self._generate_custom_command_dumpers(self.args.sources),
-        )
+def _print(txt, sink):
+    print(txt, file=sink, end="")
 
-    def _check_formatting(self, before, after, path):
-        if before != after:
-            error(f"{fromfile(path)} would be reformatted")
-            return FAIL
-        return SUCCESS
 
-    def _show_diff(self, before, after, path):
-        diff = unified_diff(
-            a=f"{before}\n".splitlines(keepends=True),
-            b=f"{after}\n".splitlines(keepends=True),
-            fromfile=fromfile(path),
-            tofile=tofile(path),
-            n=5,
-        )
-        self._print("".join(diff), sink=sys.stdout)
-        return SUCCESS
-
-    def _print(self, txt, sink):
-        print(txt, file=sink, end="")
-
-    def _run_on_single_file(self, file_to_format):
-        with smart_open(file_to_format, "r", newline="") as f:
-            code_to_format = f.read()
-
-        newlines_style = get_newlines_style(code_to_format)
-        code_to_format = translate_newlines_to_line_feed(code_to_format)
-
-        try:
-            formatted_code = self.formatter.format(code_to_format)
-        except ParsingError as exception:
-            error(f"{fromfile(file_to_format)}{exception}")
-            return INTERNAL_ERROR
-        except ASTMismatch:
-            error(
-                f"Failed to format {fromfile(file_to_format)}: AST mismatch after formatting"
-            )
-            return INTERNAL_ERROR
-        except lark.exceptions.VisitError as exception:
-            error(f"Runtime error when formatting {file_to_format}: ", exception)
-            return INTERNAL_ERROR
-
-        if self.args.show_diff:
-            return self._show_diff(
-                before=code_to_format, after=formatted_code, path=file_to_format
-            )
-
-        if self.args.check_formatting:
-            return self._check_formatting(
-                before=code_to_format, after=formatted_code, path=file_to_format
-            )
-
-        if self.args.in_place:
-            with smart_open(file_to_format, "w", newline=newlines_style) as f:
-                self._print(formatted_code, sink=f)
-        else:
-            self._print(formatted_code, sink=sys.stdout)
-
-        return SUCCESS
-
-    def _get_files_to_format(self, path):
+def get_files(paths):
+    def get_files_from_single_path(path):
         if path.is_dir():
             return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"),)
         return [path]
 
-    def _generate_custom_command_dumpers(self, paths):
-        result = dict()
+    for path in paths:
+        for item in get_files_from_single_path(path):
+            yield item
 
-        for path in paths:
-            for filepath in self._get_files_to_format(path):
-                with smart_open(filepath, "r") as f:
-                    code = f.read()
 
-                    parse_tree = self.parser.parse(code)
-                    result.update(generate_custom_command_dumpers(parse_tree))
-        return result
+def generate_specialized_dumpers(bare_parser, paths):
+    parser = create_parser_with_postprocessing(bare_parser)
+    result = dict()
+    for filepath in get_files(paths):
+        with smart_open(filepath, "r") as f:
+            code = f.read()
+        parse_tree = parser.parse(code)
+        result.update(generate_custom_command_dumpers(parse_tree))
+    return result
 
-    def _run_on_single_path(self, path):
-        return max(map(self._run_on_single_file, self._get_files_to_format(path)))
 
-    def run(self):
-        return max(map(self._run_on_single_path, self.args.sources))
+@dataclass
+class FormattedFile:
+    before: str
+    after: str
+    newlines_style: str
+    path: Path
+
+
+def format_file(path, formatter):
+    with smart_open(path, "r", newline="") as f:
+        code = f.read()
+
+    newlines_style = get_newlines_style(code)
+    code = translate_newlines_to_line_feed(code)
+    return FormattedFile(
+        before=code,
+        after=formatter.format(code),
+        newlines_style=newlines_style,
+        path=path,
+    )
+
+
+def show_diff(formatted_file):
+    diff = unified_diff(
+        a=f"{formatted_file.before}\n".splitlines(keepends=True),
+        b=f"{formatted_file.after}\n".splitlines(keepends=True),
+        fromfile=fromfile(formatted_file.path),
+        tofile=tofile(formatted_file.path),
+        n=5,
+    )
+    _print("".join(diff), sink=sys.stdout)
+    return SUCCESS
+
+
+def check_formatting(formatted_file):
+    if formatted_file.before != formatted_file.after:
+        error(f"{fromfile(formatted_file.path)} would be reformatted")
+        return FAIL
+    return SUCCESS
+
+
+def format_in_place(formatted_file):
+    with smart_open(
+        formatted_file.path, "w", newline=formatted_file.newlines_style
+    ) as f:
+        _print(formatted_file.after, sink=f)
+    return SUCCESS
+
+
+def format_and_print_to_stdout(formatted_file):
+    _print(formatted_file.after, sink=sys.stdout)
+    return SUCCESS
+
+
+def select_executor(args):
+    if args.show_diff:
+        return show_diff
+    if args.check_formatting:
+        return check_formatting
+    if args.in_place:
+        return format_in_place
+    return format_and_print_to_stdout
+
+
+def execute_on_single_file(file_to_format, formatter, execute):
+    try:
+        formatted_file = format_file(file_to_format, formatter)
+        return execute(formatted_file)
+    except ParsingError as exception:
+        error(f"{fromfile(file_to_format)}{exception}")
+    except ASTMismatch:
+        error(
+            f"Failed to format {fromfile(file_to_format)}: AST mismatch after formatting"
+        )
+    except lark.exceptions.VisitError as exception:
+        error(f"Runtime error when formatting {fromfile(file_to_format)}: ", exception)
+    return INTERNAL_ERROR
+
+
+def run(args):
+    bare_parser = create_parser()
+    formatter = create_formatter(
+        bare_parser,
+        args.format_safely,
+        args.line_length,
+        generate_specialized_dumpers(bare_parser, args.sources),
+    )
+    run_on_single_file = partial(
+        execute_on_single_file, formatter=formatter, execute=select_executor(args)
+    )
+    return max(map(run_on_single_file, get_files(args.sources)))

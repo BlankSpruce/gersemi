@@ -1,7 +1,7 @@
 import argparse
 import pathlib
 import sys
-from gersemi.runner import Runner, error, SUCCESS, FAIL
+from gersemi.runner import run, error, SUCCESS, FAIL
 
 
 def create_argparser():
@@ -72,7 +72,7 @@ def main():
         error("Don't mix stdin with file input")
         sys.exit(FAIL)
 
-    sys.exit(Runner(args).run())
+    sys.exit(run(args))
 
 
 if __name__ == "__main__":
