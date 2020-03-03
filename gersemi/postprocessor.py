@@ -1,6 +1,6 @@
 from itertools import dropwhile
 from typing import Callable, Iterator
-from lark import Discard, Tree, Token
+from lark import Discard, Tree
 from lark.tree import Meta
 from lark.visitors import (
     Transformer,
@@ -150,40 +150,6 @@ class IsolateCommentedArguments(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-class RestructureBracketTypeRules(Transformer_InPlace):
-    def _split_bracket_argument(self, arg):
-        bracket_length = arg.index("[", 1) + 1
-        return (
-            arg[:bracket_length],
-            arg[bracket_length:-bracket_length],
-            arg[-bracket_length:],
-        )
-
-    def bracket_argument(self, children):
-        token, *_ = children
-        bracket_open, content, bracket_close = self._split_bracket_argument(token)
-        return Tree(
-            "bracket_argument",
-            [
-                Token("bracket_argument_begin", bracket_open),
-                Token("bracket_argument_body", content),
-                Token("bracket_argument_end", bracket_close),
-            ],
-        )
-
-    def bracket_comment(self, children) -> Tree:
-        *_, bracket_argument = children
-        bracket_open, content, bracket_close = bracket_argument.children
-        return Tree(
-            "bracket_comment",
-            [
-                Token("bracket_comment_begin", f"#{bracket_open}"),
-                Token("bracket_comment_body", content),
-                Token("bracket_comment_end", bracket_close),
-            ],
-        )
-
-
 class SimplifyParseTree(Transformer_InPlace):
     def command_element(self, children) -> Tree:
         command_invocation, *rest = children
@@ -202,11 +168,6 @@ class SimplifyParseTree(Transformer_InPlace):
 
     def argument(self, children: Nodes) -> Node:
         return children[0]
-
-    def unquoted_argument(self, children) -> Tree:
-        return Tree(
-            "unquoted_argument", [Token("unquoted_argument_content", "".join(children))]
-        )
 
 
 class IsolateIfBlock(IsolateSingleBlockType):
@@ -470,7 +431,6 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
 def PostProcessor(code: str) -> Transformer:
     chain = TransformerChain(
         PreserveCustomCommandFormatting(code),
-        RestructureBracketTypeRules(),
         IsolateCommentedArguments(),
         SimplifyParseTree(),
         IsolateIfBlock(),

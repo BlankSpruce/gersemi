@@ -23,8 +23,8 @@ argument : bracket_argument
 bracket_argument : BRACKET_ARGUMENT
 BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
-quoted_argument     : _QUOTATION_MARK quoted_element* _QUOTATION_MARK
-quoted_element      : /([^\\\"]|\n)+/
+quoted_argument     : _QUOTATION_MARK QUOTED_ELEMENT* _QUOTATION_MARK
+QUOTED_ELEMENT      : /([^\\\"]|\n)+/
                     | ESCAPE_SEQUENCE
                     | QUOTED_CONTINUATION
 QUOTED_CONTINUATION : BACKSLASH NEWLINE

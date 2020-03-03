@@ -1,25 +1,12 @@
 import os
-from lark import Lark, Token, UnexpectedInput
-from lark.visitors import Transformer
+from lark import Lark, UnexpectedInput
 from gersemi.exceptions import (
     GenericParsingError,
     UnbalancedParentheses,
     UnbalancedBrackets,
 )
+from gersemi.parsing_transformer import ParsingTransformer
 from gersemi.postprocessor import PostProcessor
-
-
-class DowncaseIdentifiers(Transformer):
-    def IDENTIFIER(self, token):
-        return Token(
-            "IDENTIFIER",
-            token.lower(),
-            pos_in_stream=token.pos_in_stream,
-            line=token.line,
-            column=token.column,
-            end_line=token.end_line,
-            end_column=token.end_column,
-        )
 
 
 class Parser:  # pylint: disable=too-few-public-methods
@@ -51,7 +38,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             parser="lalr",
             propagate_positions=True,
             maybe_placeholders=False,
-            transformer=DowncaseIdentifiers(),
+            transformer=ParsingTransformer(),
         )
 
     def _match_parsing_error(self, code, exception):

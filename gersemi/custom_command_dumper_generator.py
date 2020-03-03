@@ -111,11 +111,13 @@ class CMakeInterpreter(Interpreter):
     def complex_argument(self, tree):
         return f"({self.visit_children(tree)})"
 
+    def _extract_first(self, tree):
+        return tree.children[0]
+
     bracket_argument = _join
     commented_argument = _join
-    unquoted_argument = _join
-    quoted_argument = _join
-    quoted_element = _join
+    unquoted_argument = _extract_first
+    quoted_argument = _extract_first
 
 
 def generate_custom_command_dumpers(tree):
