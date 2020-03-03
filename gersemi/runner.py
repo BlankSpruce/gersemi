@@ -83,12 +83,23 @@ def get_files(paths):
             yield item
 
 
+def has_custom_command_definition(code):
+    lowercased = code.lower()
+    has_function_definition = "function" in lowercased and "endfunction" in lowercased
+    has_macro_definition = "macro" in lowercased and "endmacro" in lowercased
+    return has_function_definition or has_macro_definition
+
+
 def generate_specialized_dumpers(bare_parser, paths):
     parser = create_parser_with_postprocessing(bare_parser)
     result = dict()
     for filepath in get_files(paths):
         with smart_open(filepath, "r") as f:
             code = f.read()
+
+        if not has_custom_command_definition(code):
+            continue
+
         parse_tree = parser.parse(code)
         result.update(generate_custom_command_dumpers(parse_tree))
     return result
