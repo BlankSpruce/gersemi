@@ -41,6 +41,13 @@ class PreservingCommandInvocationDumper(BaseDumper):
         if content == "":
             return f"{begin})"
 
+        with self.not_indented():
+            result = self._try_to_format_into_single_line(
+                formatted_arguments.children, separator=" ", prefix=begin, postfix=")"
+            )
+        if result is not None:
+            return result
+
         body = safe_indent(content, self.alignment - len(indentation))
         if not content.startswith("\n"):
             body = body.strip(" ")
