@@ -3,19 +3,20 @@ from lark.visitors import Transformer
 from gersemi.exceptions import ASTMismatch
 
 
-def drop_whitespaces(tree):
-    class Impl(Transformer):  # pylint: disable=too-few-public-methods
-        def _drop_node(self, _):
+class DropWhitespaces(Transformer):  # pylint: disable=too-few-public-methods
+    def _drop_node(self, _):
+        raise Discard()
+
+    def non_command_element(self, children):
+        if len(children) == 0:
             raise Discard()
+        return Tree("non_command_element", children)
 
-        def non_command_element(self, children):
-            if len(children) == 0:
-                raise Discard()
-            return Tree("non_command_element", children)
+    NEWLINE = _drop_node
 
-        NEWLINE = _drop_node
 
-    return Impl(visit_tokens=True).transform(tree)
+def drop_whitespaces(tree):
+    return DropWhitespaces(visit_tokens=True).transform(tree)
 
 
 def check_abstract_syntax_trees_equivalence(lhs, rhs):

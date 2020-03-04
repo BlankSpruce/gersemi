@@ -120,20 +120,21 @@ class CMakeInterpreter(Interpreter):
     quoted_argument = _extract_first
 
 
+class GenerateCustomCommandDumpers(Interpreter):
+    def start(self, tree):
+        return self.visit_children(tree)[0]
+
+    def file(self, tree):
+        tree = DropIrrelevantElements(visit_tokens=True).transform(tree)
+        found_commands = CMakeInterpreter().visit(tree)
+        return {
+            name: create_specialized_dumper(keywords)
+            for name, keywords in found_commands.items()
+        }
+
+    def __default__(self, tree):
+        return None
+
+
 def generate_custom_command_dumpers(tree):
-    class Impl(Interpreter):
-        def start(self, tree):
-            return self.visit_children(tree)[0]
-
-        def file(self, tree):
-            tree = DropIrrelevantElements(visit_tokens=True).transform(tree)
-            found_commands = CMakeInterpreter().visit(tree)
-            return {
-                name: create_specialized_dumper(keywords)
-                for name, keywords in found_commands.items()
-            }
-
-        def __default__(self, tree):
-            return None
-
-    return Impl().visit(tree)
+    return GenerateCustomCommandDumpers().visit(tree)

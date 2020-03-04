@@ -14,12 +14,13 @@ def is_includes(node) -> bool:
 is_destination = is_keyword("DESTINATION")
 
 
-def prepend_includes(node):
-    class Impl(Transformer):
-        def unquoted_argument(self, children):
-            return Tree("unquoted_argument", ["INCLUDES " + "".join(children)])
+class PrependIncludes(Transformer):
+    def unquoted_argument(self, children):
+        return Tree("unquoted_argument", ["INCLUDES " + "".join(children)])
 
-    return Impl().transform(node)
+
+def prepend_includes(node):
+    return PrependIncludes().transform(node)
 
 
 class IsolateIncludeDestinationsKeyword(Transformer_InPlace):

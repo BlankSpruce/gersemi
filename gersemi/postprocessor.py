@@ -14,20 +14,24 @@ from gersemi.types import Node, Nodes
 from gersemi.utils import pop_all
 
 
+class IsCommand(Interpreter):
+    def __init__(self, command_name):
+        self.command_name = command_name
+
+    def command_element(self, tree):
+        command_invocation, *_ = tree.children
+        return self.visit(command_invocation)
+
+    def command_invocation(self, tree):
+        name, *_ = tree.children
+        return name == self.command_name
+
+    def __default__(self, tree):
+        return False
+
+
 def is_command(command_name: str) -> Callable[[Node], bool]:
-    class IsCommandImpl(Interpreter):
-        def command_element(self, tree):
-            command_invocation, *_ = tree.children
-            return self.visit(command_invocation)
-
-        def command_invocation(self, tree):
-            name, *_ = tree.children
-            return name.lower() == command_name
-
-        def __default__(self, tree):
-            return False
-
-    return lambda node: isinstance(node, Tree) and IsCommandImpl().visit(node)
+    return lambda node: isinstance(node, Tree) and IsCommand(command_name).visit(node)
 
 
 class IsolateSingleBlockType(Transformer_InPlace):
@@ -200,20 +204,26 @@ class IsolateWhileBlock(IsolateSingleBlockType):
     error_message = "Unbalanced while(), missing ending endwhile() command"
 
 
-def has_line_comment_with_given_content(node, expected_content):
-    class Impl(Interpreter):
-        def __default__(self, tree):
+class HasLineCommentWithGivenContent(Interpreter):
+    def __init__(self, expected_content):
+        self.expected_content = expected_content
+
+    def __default__(self, tree):
+        return False
+
+    def non_command_element(self, tree):
+        return any(self.visit_children(tree))
+
+    def line_comment(self, tree):
+        if len(tree.children) == 0:
             return False
+        return tree.children[0].strip() == self.expected_content
 
-        def non_command_element(self, tree):
-            return any(self.visit_children(tree))
 
-        def line_comment(self, tree):
-            if len(tree.children) == 0:
-                return False
-            return tree.children[0].strip() == expected_content
-
-    return isinstance(node, Tree) and Impl().visit(node)
+def has_line_comment_with_given_content(node, expected_content):
+    return isinstance(node, Tree) and HasLineCommentWithGivenContent(
+        expected_content
+    ).visit(node)
 
 
 class IsolateDisabledFormattingBlock(IsolateSingleBlockType):
