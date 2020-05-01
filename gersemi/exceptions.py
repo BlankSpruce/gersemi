@@ -6,7 +6,7 @@ class ParsingError(SyntaxError):
     description: str = ""
 
     def __str__(self):
-        context, line, column = self.args  # pylint: disable=unpacking-non-sequence
+        context, line, column = self.args  # pylint: disable=unbalanced-tuple-unpacking
         return f":{line}:{column}: {self.description}\n{context}"
 
 

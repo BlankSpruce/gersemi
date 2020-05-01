@@ -14,7 +14,7 @@ def test_formatter_idempotence(formatter, case):
     assert formatted_once == formatted_twice
 
 
-def test_abstract_syntax_tree_equivalence(parser, formatter, case):
+def test_abstract_syntax_tree_equivalence(parser, case):
     try:
         check_code_equivalence(parser, case.given, case.expected)
     except ASTMismatch:
@@ -23,5 +23,5 @@ def test_abstract_syntax_tree_equivalence(parser, formatter, case):
 
 
 pytest_generate_tests = generate_input_output_tests(
-    where="formatter", input_extension=".in", output_extension=".out",
+    where="formatter", input_extension=".in.cmake", output_extension=".out.cmake",
 )
