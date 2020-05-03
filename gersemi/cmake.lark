@@ -23,18 +23,19 @@ argument : bracket_argument
 bracket_argument : BRACKET_ARGUMENT
 BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
-quoted_argument     : _QUOTATION_MARK QUOTED_ELEMENT* _QUOTATION_MARK
+quoted_argument     : _QUOTATION_MARK [QUOTED_ARGUMENT_CONTENT] _QUOTATION_MARK
+QUOTED_ARGUMENT_CONTENT : QUOTED_ELEMENT+
 QUOTED_ELEMENT      : /([^\\\"]|\n)+/
                     | ESCAPE_SEQUENCE
                     | QUOTED_CONTINUATION
 QUOTED_CONTINUATION : BACKSLASH NEWLINE
 
-unquoted_argument : _unquoted_element+
-_unquoted_element : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
+unquoted_argument : UNQUOTED_ARGUMENT_CONTENT
+UNQUOTED_ARGUMENT_CONTENT : (UNQUOTED_ELEMENT [DOUBLE_QUOTED_STRING])+
+UNQUOTED_ELEMENT  : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
                   | /(?:(?!\[=*\[))[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
                   | MAKE_STYLE_REFERENCE
-                  | _unquoted_element DOUBLE_QUOTED_STRING
 
 MAKE_STYLE_REFERENCE : /\$\([^\)\n\"#]+?\)/
 DOUBLE_QUOTED_STRING : /\"[^\n#]*?\"/

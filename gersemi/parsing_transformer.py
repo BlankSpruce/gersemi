@@ -15,18 +15,6 @@ class DowncaseIdentifiers(Transformer):
         )
 
 
-class SmashArguments(Transformer):
-    def unquoted_argument(self, children) -> Tree:
-        return Tree(
-            "unquoted_argument", [Token("unquoted_argument_content", "".join(children))]
-        )
-
-    def quoted_argument(self, children) -> Tree:
-        return Tree(
-            "quoted_argument", [Token("quoted_argument_content", "".join(children))]
-        )
-
-
 class RestructureBracketTypeRules(Transformer):
     def _split_bracket_argument(self, arg):
         bracket_length = arg.index("[", 1) + 1
@@ -61,7 +49,5 @@ class RestructureBracketTypeRules(Transformer):
         )
 
 
-class ParsingTransformer(
-    DowncaseIdentifiers, SmashArguments, RestructureBracketTypeRules
-):
+class ParsingTransformer(DowncaseIdentifiers, RestructureBracketTypeRules):
     pass

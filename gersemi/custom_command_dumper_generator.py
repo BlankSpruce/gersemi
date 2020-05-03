@@ -114,10 +114,12 @@ class CMakeInterpreter(Interpreter):
     def _extract_first(self, tree):
         return tree.children[0]
 
+    def quoted_argument(self, tree):
+        return tree.children[0] if tree.children else ""
+
     bracket_argument = _join
     commented_argument = _join
     unquoted_argument = _extract_first
-    quoted_argument = _extract_first
 
 
 class GenerateCustomCommandDumpers(Interpreter):
