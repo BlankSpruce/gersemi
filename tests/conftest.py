@@ -1,11 +1,16 @@
 import pytest
-from gersemi.parser import create_parser
+from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.formatter import create_formatter
 
 
 @pytest.fixture(scope="module")
 def parser():
     return create_parser()
+
+
+@pytest.fixture(scope="module")
+def parser_with_postprocessing(parser):  # pylint: disable=redefined-outer-name
+    return create_parser_with_postprocessing(parser)
 
 
 @pytest.fixture(scope="module")
