@@ -1,8 +1,8 @@
 from contextlib import contextmanager
+from textwrap import indent
 from typing import Optional
 from lark import Tree
 from lark.visitors import Interpreter
-from gersemi.indenter import indent
 from gersemi.types import Nodes
 from gersemi.width_limiting_buffer import WidthLimitingBuffer
 
@@ -26,7 +26,7 @@ class BaseDumper(Interpreter):
         return str(buffer)
 
     def _indent(self, text: str):
-        return indent(text, self.alignment)
+        return indent(text, " " * self.alignment)
 
     def _try_to_format_into_single_line(
         self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""

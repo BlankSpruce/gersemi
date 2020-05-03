@@ -1,6 +1,6 @@
 import re
+from textwrap import indent
 from gersemi.base_dumper import BaseDumper
-from gersemi.indenter import indent
 
 
 BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
@@ -22,9 +22,10 @@ def split_into_segments(string):
 
 
 def indent_segment(segment, indent_size):
+    prefix = " " * indent_size
     if segment[:1] in ["[", '"']:
-        return segment
-    return indent(segment, indent_size)
+        return f"{prefix}{segment}"
+    return indent(segment, prefix)
 
 
 def safe_indent(string, indent_size):
