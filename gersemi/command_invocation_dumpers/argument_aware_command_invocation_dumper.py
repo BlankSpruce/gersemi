@@ -11,12 +11,12 @@ def is_one_of_keywords(argument: Node, keywords: Iterable[str]) -> bool:
     return any(map(invoke, predicates))
 
 
-def to_list_of_single_item_lists(l):
-    return [*map(lambda item: [item], l)]
+def to_list_of_single_item_lists(sequence):
+    return [*map(lambda item: [item], sequence)]
 
 
-def is_non_empty(l: Sized) -> bool:
-    return len(l) != 0
+def is_non_empty(sequence: Sized) -> bool:
+    return len(sequence) > 0
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):

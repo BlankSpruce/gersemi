@@ -1,0 +1,56 @@
+start: file
+
+file          : (_file_element NEWLINE)* _file_element
+_file_element : command_element
+              | non_command_element
+
+command_element     : [_SPACE] command_invocation [_SPACE] [line_comment]
+non_command_element : (bracket_comment | _SPACE)* [line_comment]
+
+command_invocation  : IDENTIFIER [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
+IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
+arguments           : [_separation] (argument [_separation])*
+_separation         : _separation_atom+
+_separation_atom    : _SPACE
+                    | bracket_comment
+                    | [line_comment] NEWLINE
+
+argument : bracket_argument
+         | quoted_argument
+         | unquoted_argument
+         | complex_argument
+
+bracket_argument : BRACKET_ARGUMENT
+BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
+
+quoted_argument     : _QUOTATION_MARK QUOTED_ELEMENT* _QUOTATION_MARK
+QUOTED_ELEMENT      : /([^\\\"]|\n)+/
+                    | ESCAPE_SEQUENCE
+                    | QUOTED_CONTINUATION
+QUOTED_CONTINUATION : BACKSLASH NEWLINE
+
+unquoted_argument : _unquoted_element+
+_unquoted_element : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
+                  | /(?:(?!\[=*\[))[^\s\(\)#\"\\]/
+                  | ESCAPE_SEQUENCE
+                  | MAKE_STYLE_REFERENCE
+                  | _unquoted_element DOUBLE_QUOTED_STRING
+
+MAKE_STYLE_REFERENCE : /\$\([^\)\n\"#]+?\)/
+DOUBLE_QUOTED_STRING : /\"[^\n#]*?\"/
+
+complex_argument : _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
+
+ESCAPE_SEQUENCE: /\\([^A-Za-z0-9]|[nrt])/
+
+bracket_comment : _POUND_SIGN bracket_argument
+line_comment    : _POUND_SIGN [LINE_COMMENT_CONTENT]
+LINE_COMMENT_CONTENT : /.+/
+
+BACKSLASH              : "\\"
+_LEFT_PARENTHESIS      : /\(/
+NEWLINE                : "\n"
+_POUND_SIGN            : "#"
+_QUOTATION_MARK        : "\""
+_RIGHT_PARENTHESIS     : /\)/
+_SPACE                 : /[ \t]+/

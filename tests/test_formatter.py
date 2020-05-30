@@ -14,12 +14,13 @@ def test_formatter_idempotence(formatter, case):
     assert formatted_once == formatted_twice
 
 
-def test_abstract_syntax_tree_equivalence(parser, case):
-    try:
-        check_code_equivalence(parser, case.given, case.expected)
-    except ASTMismatch:
-        pytest.fail("ASTs mismatch")
-        raise
+def test_abstract_syntax_tree_equivalence(parser, parser_with_simple_grammar, case):
+    for p in [parser, parser_with_simple_grammar]:
+        try:
+            check_code_equivalence(p, case.given, case.expected)
+        except ASTMismatch:
+            pytest.fail("ASTs mismatch")
+            raise
 
 
 pytest_generate_tests = generate_input_output_tests(

@@ -77,36 +77,6 @@ class IsolateSingleBlockType(Transformer_InPlace):
         return Tree("block_body", self._restructure(children))
 
 
-class RestructureIfBlock(Transformer_InPlace):
-    def __init__(self):
-        super().__init__()
-
-    def is_alternative_clause(self, node: Node) -> bool:
-        is_elseif = is_command("elseif")
-        is_else = is_command("else")
-        return is_elseif(node) or is_else(node)
-
-    def _restructure(self, node_stream: Iterator) -> Nodes:
-        children: Nodes = []
-        for node in node_stream:
-            if self.is_alternative_clause(node):
-                return [
-                    Tree("block_body", children),
-                    Tree("alternative_clause", [node]),
-                    *self._restructure(node_stream),
-                ]
-            children.append(node)
-        return [Tree("block_body", children)]
-
-    def restructure(self, block_body: Tree) -> Nodes:
-        children_as_stream = (child for child in block_body.children)
-        return self._restructure(children_as_stream)
-
-    def block(self, children) -> Tree:
-        if_, body, endif_ = children
-        return Tree("block", [if_, *self.restructure(body), endif_])
-
-
 class RemoveSuperfluousEmptyLines(Transformer_InPlace):
     def _filter_superfluous_empty_lines(self, children) -> Iterator:
         consecutive_newlines = 0
@@ -172,36 +142,6 @@ class SimplifyParseTree(Transformer_InPlace):
 
     def argument(self, children: Nodes) -> Node:
         return children[0]
-
-
-class IsolateIfBlock(IsolateSingleBlockType):
-    is_block_begin = staticmethod(is_command("if"))
-    is_block_end = staticmethod(is_command("endif"))
-    error_message = "Unbalanced if(), missing ending endif() command"
-
-
-class IsolateForeachBlock(IsolateSingleBlockType):
-    is_block_begin = staticmethod(is_command("foreach"))
-    is_block_end = staticmethod(is_command("endforeach"))
-    error_message = "Unbalanced foreach(), missing ending endforeach() command"
-
-
-class IsolateFunctionBlock(IsolateSingleBlockType):
-    is_block_begin = staticmethod(is_command("function"))
-    is_block_end = staticmethod(is_command("endfunction"))
-    error_message = "Unbalanced function(), missing ending endfunction() command"
-
-
-class IsolateMacroBlock(IsolateSingleBlockType):
-    is_block_begin = staticmethod(is_command("macro"))
-    is_block_end = staticmethod(is_command("endmacro"))
-    error_message = "Unbalanced macro(), missing ending endmacro() command"
-
-
-class IsolateWhileBlock(IsolateSingleBlockType):
-    is_block_begin = staticmethod(is_command("while"))
-    is_block_end = staticmethod(is_command("endwhile"))
-    error_message = "Unbalanced while(), missing ending endwhile() command"
 
 
 class HasLineCommentWithGivenContent(Interpreter):
@@ -395,15 +335,13 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
             content = self.code[start:end]
         return Tree("formatted_node", [content])
 
-    def _get_indentation(self, command_element_meta, command_invocation_meta):
-        start, end = (
-            command_element_meta.start_pos,
-            command_invocation_meta.start_pos,
-        )
+    def _get_indentation(self, meta):
+        end = meta.start_pos
+        start = end - meta.column + 1
         return self.code[start:end]
 
-    def _make_custom_command(self, command_invocation, indentation):
-        identifier, arguments = command_invocation.children
+    def _make_custom_command(self, children, meta, indentation):
+        identifier, arguments = children
         return Tree(
             "custom_command",
             [
@@ -412,30 +350,19 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
                 arguments,
                 self._get_original_formatting(arguments),
             ],
-            command_invocation.meta,
+            meta,
         )
 
-    def _is_builtin(self, command_invocation):
-        identifier, *_ = command_invocation.children
+    def _is_builtin(self, command_invocation_children):
+        identifier, *_ = command_invocation_children
         return identifier in self.builtin_commands
 
     @v_args(meta=True)
-    def command_element(self, children, meta):
-        command_invocation, *rest = children
-        if self._is_builtin(command_invocation):
-            return Tree("command_element", children, meta)
+    def command_invocation(self, children, meta):
+        if self._is_builtin(children):
+            return Tree("command_invocation", children, meta)
 
-        return Tree(
-            "command_element",
-            [
-                self._make_custom_command(
-                    command_invocation,
-                    self._get_indentation(meta, command_invocation.meta),
-                ),
-                *rest,
-            ],
-            meta,
-        )
+        return self._make_custom_command(children, meta, self._get_indentation(meta))
 
 
 def PostProcessor(code: str) -> Transformer:
@@ -443,12 +370,6 @@ def PostProcessor(code: str) -> Transformer:
         PreserveCustomCommandFormatting(code),
         IsolateCommentedArguments(),
         SimplifyParseTree(),
-        IsolateIfBlock(),
-        RestructureIfBlock(),
-        IsolateForeachBlock(),
-        IsolateFunctionBlock(),
-        IsolateMacroBlock(),
-        IsolateWhileBlock(),
         IsolateDisabledFormattingBlock(code),
         RemoveSuperfluousEmptyLines(),
     )

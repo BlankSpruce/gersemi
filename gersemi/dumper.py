@@ -1,6 +1,11 @@
-from gersemi.ast_helpers import is_newline
 from gersemi.base_dumper import BaseDumper
 from gersemi.command_invocation_dumper import CommandInvocationDumper
+
+
+def filter_empty(iterable):
+    for i in iterable:
+        if i != "":
+            yield i
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
@@ -9,30 +14,31 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         super().__init__(width)
 
     def file(self, tree):
-        return "{}\n".format(self.__default__(tree))
+        result = "{}".format(self.__default__(tree))
+        if result.endswith("\n"):
+            return result
+        return result + "\n"
 
     def block(self, tree):
-        begin, *middle, end = tree.children
-        formatted_middle = "".join(map(self.visit, middle))
-        return "{}{}{}".format(self.visit(begin), formatted_middle, self.visit(end))
+        return "\n".join(filter_empty(map(self.visit, tree.children)))
 
     def block_body(self, tree):
         with self.indented():
-            result = "".join(self.visit_children(tree))
-        if len(result) == 0:
-            return "\n"
-        return "\n" + result + "\n"
+            return "".join(self.visit_children(tree))
 
     def command_element(self, tree):
-        command_invocation, line_comment = tree.children
-        begin = self.visit(command_invocation) + " "
-        return self._format_listable_content(begin, line_comment)
+        invocation, *comment = tree.children
+        formatted_invocation = self.visit(invocation)
+        if len(comment) == 0:
+            return formatted_invocation
+
+        with self.not_indented():
+            formatted_comment = self.visit(comment[0])
+
+        return f"{formatted_invocation} {formatted_comment}"
 
     def non_command_element(self, tree):
-        non_newline_elements = [
-            child for child in tree.children if not is_newline(child)
-        ]
-        return " ".join(map(self.visit, non_newline_elements))
+        return " ".join(self.visit(child) for child in tree.children)
 
     def line_comment(self, tree):
         return self._indent("#{}".format("".join(tree.children)))

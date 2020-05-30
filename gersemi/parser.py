@@ -31,10 +31,9 @@ class Parser:  # pylint: disable=too-few-public-methods
         ],
     }
 
-    def __init__(self):
-        this_file_dir = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, grammar_filename):
         self.lark_parser = Lark.open(
-            grammar_filename=os.path.join(this_file_dir, "cmake.lark"),
+            grammar_filename=grammar_filename,
             parser="lalr",
             propagate_positions=True,
             maybe_placeholders=False,
@@ -67,8 +66,12 @@ class ParserWithPostProcessing:  # pylint: disable=too-few-public-methods
         return postprocessor.transform(self.parser.parse(code))
 
 
-def create_parser():
-    return Parser()
+THIS_FILE_DIR = os.path.dirname(os.path.realpath(__file__))
+GRAMMAR = os.path.join(THIS_FILE_DIR, "cmake.lark")
+
+
+def create_parser(grammar_filename=GRAMMAR):
+    return Parser(grammar_filename)
 
 
 def create_parser_with_postprocessing(bare_parser):

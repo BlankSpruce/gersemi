@@ -81,8 +81,7 @@ class CMakeInterpreter(Interpreter):
 
     def block(self, tree):
         subinterpreter = self._inner_scope
-        block_begin, *body, _ = subinterpreter.visit_children(tree)
-        name, *_ = block_begin
+        name, *body, _ = subinterpreter.visit_children(tree)
         if name is None:
             return
 

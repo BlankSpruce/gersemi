@@ -3,16 +3,74 @@ start: file
 file          : (_file_element NEWLINE)* _file_element
 _file_element : command_element
               | non_command_element
+              | block
 
-command_element     : [_SPACE] command_invocation [_SPACE] [line_comment]
-non_command_element : (bracket_comment | _SPACE)* [line_comment]
+command_element     : command_invocation [line_comment]
+non_command_element : bracket_comment* [line_comment]
 
-command_invocation  : IDENTIFIER [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
+block      : _foreach_block
+           | _function_block
+           | _if_block
+           | _macro_block
+           | _while_block
+block_body : (NEWLINE _file_element)* NEWLINE
+
+_foreach_block  : foreach_command  [line_comment] block_body endforeach_command  [line_comment]
+_function_block : function_command [line_comment] block_body endfunction_command [line_comment]
+
+_if_block       : if_command       [line_comment] block_body [_alternatives] endif_command [line_comment]
+_alternatives   : _elseif_clause* _else_clause
+_elseif_clause  : elseif_command   [line_comment] block_body
+_else_clause    : else_command     [line_comment] block_body
+
+_macro_block    : macro_command    [line_comment] block_body endmacro_command    [line_comment]
+_while_block    : while_command    [line_comment] block_body endwhile_command    [line_comment]
+
+else_command        : else_term   _invocation_part -> command_invocation
+elseif_command      : elseif      _invocation_part -> command_invocation
+endforeach_command  : endforeach  _invocation_part -> command_invocation
+endfunction_command : endfunction _invocation_part -> command_invocation
+endif_command       : endif       _invocation_part -> command_invocation
+endmacro_command    : endmacro    _invocation_part -> command_invocation
+endwhile_command    : endwhile    _invocation_part -> command_invocation
+foreach_command     : foreach     _invocation_part -> command_invocation
+function_command    : function    _invocation_part -> command_invocation
+if_command          : if_term     _invocation_part -> command_invocation
+macro_command       : macro       _invocation_part -> command_invocation
+while_command       : while_term  _invocation_part -> command_invocation
+
+else_term   : ELSE
+elseif      : ELSEIF
+endforeach  : ENDFOREACH
+endfunction : ENDFUNCTION
+endif       : ENDIF
+endmacro    : ENDMACRO
+endwhile    : ENDWHILE
+foreach     : FOREACH
+function    : FUNCTION
+if_term     : IF
+macro       : MACRO
+while_term  : WHILE
+
+ELSE        : "else"i
+ELSEIF      : "elseif"i
+ENDFOREACH  : "endforeach"i
+ENDFUNCTION : "endfunction"i
+ENDIF       : "endif"i
+ENDMACRO    : "endmacro"i
+ENDWHILE    : "endwhile"i
+FOREACH     : "foreach"i
+FUNCTION    : "function"i
+IF          : "if"i
+MACRO       : "macro"i
+WHILE       : "while"i
+
+command_invocation  : IDENTIFIER _invocation_part
+_invocation_part    : [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
 IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
 arguments           : [_separation] (argument [_separation])*
 _separation         : _separation_atom+
-_separation_atom    : _SPACE
-                    | bracket_comment
+_separation_atom    : bracket_comment
                     | [line_comment] NEWLINE
 
 argument : bracket_argument
@@ -46,7 +104,7 @@ ESCAPE_SEQUENCE: /\\([^A-Za-z0-9]|[nrt])/
 
 bracket_comment : _POUND_SIGN bracket_argument
 line_comment    : _POUND_SIGN [LINE_COMMENT_CONTENT]
-LINE_COMMENT_CONTENT : /.+/
+LINE_COMMENT_CONTENT : /[^\n]+/
 
 BACKSLASH              : "\\"
 _LEFT_PARENTHESIS      : /\(/
@@ -55,3 +113,5 @@ _POUND_SIGN            : "#"
 _QUOTATION_MARK        : "\""
 _RIGHT_PARENTHESIS     : /\)/
 _SPACE                 : /[ \t]+/
+
+%ignore _SPACE
