@@ -28,6 +28,9 @@ class Parser:  # pylint: disable=too-few-public-methods
             "foo(BAR (BAZ FOO)))",
             "foo",
             "foo # (",
+            "foo(commented_argument #foobar)",
+            "foo(commented_argument #[[foobar]]",
+            "foo(almost_commented_argument #)",
         ],
     }
 

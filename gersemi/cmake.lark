@@ -75,15 +75,18 @@ WHILE       : "while"i
 command_invocation  : IDENTIFIER _invocation_part
 _invocation_part    : [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
 IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
-arguments           : [_separation] (argument [_separation])*
+arguments           : (commented_argument | _separation)*
 _separation         : _separation_atom+
 _separation_atom    : bracket_comment
                     | [line_comment] NEWLINE
 
-argument : bracket_argument
-         | quoted_argument
-         | unquoted_argument
-         | complex_argument
+?commented_argument : argument [line_comment NEWLINE]
+                    | argument [bracket_comment]
+
+?argument : bracket_argument
+          | quoted_argument
+          | unquoted_argument
+          | complex_argument
 
 bracket_argument : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 

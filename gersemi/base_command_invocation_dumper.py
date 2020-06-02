@@ -43,7 +43,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         return "\n".join(self.visit_children(tree))
 
     def commented_argument(self, tree):
-        argument, *_, comment = tree.children
+        argument, comment, *_ = tree.children
         begin = "".join(self.visit(argument)) + " "
         return self._format_listable_content(begin, comment)
 

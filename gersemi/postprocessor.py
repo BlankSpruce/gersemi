@@ -8,9 +8,8 @@ from lark.visitors import (
     Transformer_InPlace,
     v_args,
 )
-from gersemi.ast_helpers import is_newline, is_argument, is_comment
-from gersemi.types import Node, Nodes
-from gersemi.utils import pop_all
+from gersemi.ast_helpers import is_newline
+from gersemi.types import Nodes
 
 
 class RemoveSuperfluousEmptyLines(Transformer_InPlace):
@@ -43,23 +42,6 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
         return self._make_node("block_body", children)
 
 
-class IsolateCommentedArguments(Transformer_InPlace):
-    def arguments(self, children) -> Tree:
-        new_children: Nodes = []
-        accumulator: Nodes = []
-        for child in children:
-            if is_argument(child):
-                new_children += pop_all(accumulator)
-
-            accumulator += [child]
-            if is_comment(child) and is_argument(accumulator[0]):
-                new_children += [Tree("commented_argument", pop_all(accumulator))]
-            if is_newline(child):
-                new_children += pop_all(accumulator)
-        new_children += accumulator
-        return Tree("arguments", new_children)
-
-
 class SimplifyParseTree(Transformer_InPlace):
     @v_args(meta=True)
     def non_command_element(self, children: Nodes, meta: Meta) -> Tree:
@@ -69,9 +51,6 @@ class SimplifyParseTree(Transformer_InPlace):
 
     def arguments(self, children: Nodes) -> Tree:
         return Tree("arguments", [child for child in children if not is_newline(child)])
-
-    def argument(self, children: Nodes) -> Node:
-        return children[0]
 
 
 class PreserveCustomCommandFormatting(Transformer_InPlace):
@@ -246,7 +225,6 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
 def PostProcessor(code: str) -> Transformer:
     chain = TransformerChain(
         PreserveCustomCommandFormatting(code),
-        IsolateCommentedArguments(),
         SimplifyParseTree(),
         RemoveSuperfluousEmptyLines(),
     )

@@ -12,7 +12,6 @@ def is_token(token_type: str) -> Callable[[Node], bool]:
     return lambda element: isinstance(element, Token) and element.type == token_type
 
 
-is_argument = is_tree("argument")
 is_line_comment = is_tree("line_comment")
 is_bracket_comment = is_tree("bracket_comment")
 is_unquoted_argument = is_tree("unquoted_argument")
