@@ -1,80 +1,16 @@
 from itertools import dropwhile
-from typing import Callable, Iterator
+from typing import Iterator
 from lark import Discard, Tree
 from lark.tree import Meta
 from lark.visitors import (
     Transformer,
     TransformerChain,
     Transformer_InPlace,
-    Interpreter,
     v_args,
 )
 from gersemi.ast_helpers import is_newline, is_argument, is_comment
 from gersemi.types import Node, Nodes
 from gersemi.utils import pop_all
-
-
-class IsCommand(Interpreter):
-    def __init__(self, command_name):
-        self.command_name = command_name
-
-    def command_element(self, tree):
-        command_invocation, *_ = tree.children
-        return self.visit(command_invocation)
-
-    def command_invocation(self, tree):
-        name, *_ = tree.children
-        return name == self.command_name
-
-    def __default__(self, tree):
-        return False
-
-
-def is_command(command_name: str) -> Callable[[Node], bool]:
-    return lambda node: isinstance(node, Tree) and IsCommand(command_name).visit(node)
-
-
-class IsolateSingleBlockType(Transformer_InPlace):
-    is_block_begin = staticmethod(lambda _: False)
-    is_block_end = staticmethod(lambda _: False)
-    error_message = ""
-
-    def _create_block_node(self, begin, body, end):
-        return Tree(
-            "block",
-            [
-                Tree("block_begin", [begin]),
-                Tree("block_body", body),
-                Tree("block_end", [end]),
-            ],
-        )
-
-    def _build_block(self, node_stream: Iterator[Node], begin: Node) -> Tree:
-        children: Nodes = []
-        for node in node_stream:
-            if self.is_block_begin(node):
-                children.append(self._build_block(node_stream, node))
-            elif self.is_block_end(node):
-                return self._create_block_node(begin, children, node)
-            else:
-                children.append(node)
-        raise RuntimeError(self.error_message)
-
-    def _restructure(self, children: Nodes) -> Nodes:
-        children_as_stream = (child for child in children)
-        new_children: Nodes = []
-        for node in children_as_stream:
-            if self.is_block_begin(node):
-                new_children.append(self._build_block(children_as_stream, begin=node))
-            else:
-                new_children.append(node)
-        return new_children
-
-    def file(self, children: Nodes) -> Tree:
-        return Tree("file", self._restructure(children))
-
-    def block_body(self, children: Nodes) -> Tree:
-        return Tree("block_body", self._restructure(children))
 
 
 class RemoveSuperfluousEmptyLines(Transformer_InPlace):
@@ -142,58 +78,6 @@ class SimplifyParseTree(Transformer_InPlace):
 
     def argument(self, children: Nodes) -> Node:
         return children[0]
-
-
-class HasLineCommentWithGivenContent(Interpreter):
-    def __init__(self, expected_content):
-        self.expected_content = expected_content
-
-    def __default__(self, tree):
-        return False
-
-    def non_command_element(self, tree):
-        return any(self.visit_children(tree))
-
-    def line_comment(self, tree):
-        if len(tree.children) == 0:
-            return False
-        return tree.children[0].strip() == self.expected_content
-
-
-def has_line_comment_with_given_content(node, expected_content):
-    return isinstance(node, Tree) and HasLineCommentWithGivenContent(
-        expected_content
-    ).visit(node)
-
-
-class IsolateDisabledFormattingBlock(IsolateSingleBlockType):
-    error_message = "Unbalanced # gersemi: off, missing ending # gersemi: on comment"
-
-    def __init__(self, code):
-        super().__init__()
-        self.lines_of_code = code.splitlines()
-
-    def _create_block_node(self, begin, _, end):
-        range_start, range_end = begin.meta.line, end.meta.line - 1
-        return Tree(
-            "disabled_formatting",
-            [
-                begin,
-                Tree(
-                    "disabled_formatting_body",
-                    self.lines_of_code[range_start:range_end],
-                ),
-                end,
-            ],
-        )
-
-    @staticmethod
-    def is_block_begin(node):
-        return has_line_comment_with_given_content(node, "gersemi: off")
-
-    @staticmethod
-    def is_block_end(node):
-        return has_line_comment_with_given_content(node, "gersemi: on")
 
 
 class PreserveCustomCommandFormatting(Transformer_InPlace):
@@ -370,7 +254,6 @@ def PostProcessor(code: str) -> Transformer:
         PreserveCustomCommandFormatting(code),
         IsolateCommentedArguments(),
         SimplifyParseTree(),
-        IsolateDisabledFormattingBlock(code),
         RemoveSuperfluousEmptyLines(),
     )
     return chain

@@ -4,9 +4,16 @@ file          : (_file_element NEWLINE)* _file_element
 _file_element : command_element
               | non_command_element
               | block
+              | preformatted_block
 
 command_element     : command_invocation [line_comment]
 non_command_element : bracket_comment* [line_comment]
+
+preformatted_block : DISABLE_FORMATTER PREFORMATTED_LINE* ENABLE_FORMATTER
+
+DISABLE_FORMATTER : "# gersemi: off"
+ENABLE_FORMATTER  : "# gersemi: on"
+PREFORMATTED_LINE : /(?:(?!( |\t)*# gersemi: on))( |\t|.)*\n/
 
 block      : _foreach_block
            | _function_block
