@@ -61,12 +61,6 @@ class IsolateCommentedArguments(Transformer_InPlace):
 
 
 class SimplifyParseTree(Transformer_InPlace):
-    def command_element(self, children) -> Tree:
-        command_invocation, *rest = children
-        if len(rest) == 0:
-            return command_invocation
-        return Tree("command_element", children)
-
     @v_args(meta=True)
     def non_command_element(self, children: Nodes, meta: Meta) -> Tree:
         if len(children) == 0:

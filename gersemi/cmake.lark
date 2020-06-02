@@ -6,7 +6,7 @@ _file_element : command_element
               | block
               | preformatted_block
 
-command_element     : command_invocation [line_comment]
+?command_element    : command_invocation [line_comment]
 non_command_element : bracket_comment* [line_comment]
 
 preformatted_block : DISABLE_FORMATTER PREFORMATTED_LINE* ENABLE_FORMATTER
@@ -85,18 +85,16 @@ argument : bracket_argument
          | unquoted_argument
          | complex_argument
 
-bracket_argument : BRACKET_ARGUMENT
-BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
+bracket_argument : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
-quoted_argument     : _QUOTATION_MARK [QUOTED_ARGUMENT_CONTENT] _QUOTATION_MARK
-QUOTED_ARGUMENT_CONTENT : QUOTED_ELEMENT+
+quoted_argument     : _QUOTATION_MARK QUOTED_ELEMENT* _QUOTATION_MARK
 QUOTED_ELEMENT      : /([^\\\"]|\n)+/
                     | ESCAPE_SEQUENCE
                     | QUOTED_CONTINUATION
 QUOTED_CONTINUATION : BACKSLASH NEWLINE
 
-unquoted_argument : UNQUOTED_ARGUMENT_CONTENT
-UNQUOTED_ARGUMENT_CONTENT : (UNQUOTED_ELEMENT [DOUBLE_QUOTED_STRING])+
+unquoted_argument : UNQUOTED_ARGUMENT
+UNQUOTED_ARGUMENT : (UNQUOTED_ELEMENT [DOUBLE_QUOTED_STRING])+
 UNQUOTED_ELEMENT  : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
                   | /(?:(?!\[=*\[))[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
