@@ -13,6 +13,7 @@ class DropWhitespaces(Transformer):  # pylint: disable=too-few-public-methods
         return Tree("non_command_element", children)
 
     NEWLINE = _drop_node
+    newline_or_gap = _drop_node
 
 
 def drop_whitespaces(tree):

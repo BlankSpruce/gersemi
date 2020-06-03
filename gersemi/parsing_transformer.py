@@ -1,5 +1,7 @@
 from lark import Token, Tree
 from lark.visitors import Transformer
+from gersemi.ast_helpers import is_newline
+from gersemi.types import Nodes
 
 
 class DowncaseIdentifiers(Transformer):
@@ -69,7 +71,18 @@ class CleanUpComplexArgument(Transformer):
         return Tree("complex_argument", children[1:-1])
 
 
+class CleanUpNewlines(Transformer):
+    def newline_or_gap(self, children):
+        return Token("NEWLINE", "".join(children)[:2])
+
+    def arguments(self, children: Nodes) -> Tree:
+        return Tree("arguments", [child for child in children if not is_newline(child)])
+
+
 class ParsingTransformer(
-    DowncaseIdentifiers, RestructureBracketTypeRules, CleanUpComplexArgument
+    DowncaseIdentifiers,
+    RestructureBracketTypeRules,
+    CleanUpComplexArgument,
+    CleanUpNewlines,
 ):
     pass

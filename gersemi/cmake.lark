@@ -1,6 +1,6 @@
 start: file
 
-file          : (_file_element NEWLINE)* _file_element
+file          : (_file_element newline_or_gap)* _file_element
 _file_element : command_element
               | non_command_element
               | block
@@ -11,6 +11,8 @@ non_command_element : bracket_comment* [line_comment]
 
 preformatted_block : DISABLE_FORMATTER PREFORMATTED_LINE* ENABLE_FORMATTER
 
+?newline_or_gap : NEWLINE+
+
 DISABLE_FORMATTER : "# gersemi: off"
 ENABLE_FORMATTER  : "# gersemi: on"
 PREFORMATTED_LINE : /(?:(?!( |\t)*# gersemi: on))( |\t|.)*\n/
@@ -20,7 +22,7 @@ block      : _foreach_block
            | _if_block
            | _macro_block
            | _while_block
-block_body : (NEWLINE _file_element)* NEWLINE
+block_body : (newline_or_gap _file_element)* newline_or_gap
 
 _foreach_block  : foreach_command  [line_comment] block_body endforeach_command  [line_comment]
 _function_block : function_command [line_comment] block_body endfunction_command [line_comment]

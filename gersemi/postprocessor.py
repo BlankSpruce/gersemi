@@ -1,6 +1,6 @@
 from itertools import dropwhile
 import os
-from typing import Iterator
+from typing import List
 from lark import Discard, Tree
 from lark.visitors import Transformer_InPlace
 from gersemi.ast_helpers import is_newline
@@ -8,33 +8,16 @@ from gersemi.types import Nodes
 
 
 class RemoveSuperfluousEmptyLines(Transformer_InPlace):
-    def _filter_superfluous_empty_lines(self, children) -> Iterator:
-        consecutive_newlines = 0
-        for child in children:
-            if is_newline(child):
-                if consecutive_newlines >= 2:
-                    continue
-                consecutive_newlines += 1
-            else:
-                consecutive_newlines = 0
-            yield child
-
-    def _drop_edge_empty_lines(self, children) -> Iterator:
+    def _drop_edge_empty_lines(self, children) -> List:
         while len(children) > 0 and is_newline(children[-1]):
             children.pop()
-        return dropwhile(is_newline, children)
-
-    def _make_node(self, node_type, children) -> Tree:
-        new_children = self._filter_superfluous_empty_lines(
-            self._drop_edge_empty_lines(children)
-        )
-        return Tree(node_type, list(new_children))
+        return list(dropwhile(is_newline, children))
 
     def file(self, children) -> Tree:
-        return self._make_node("file", children)
+        return Tree("file", self._drop_edge_empty_lines(children))
 
     def block_body(self, children) -> Tree:
-        return self._make_node("block_body", children)
+        return Tree("block_body", self._drop_edge_empty_lines(children))
 
 
 class SimplifyParseTree(Transformer_InPlace):
@@ -42,9 +25,6 @@ class SimplifyParseTree(Transformer_InPlace):
         if len(children) == 0:
             raise Discard
         return Tree("non_command_element", children)
-
-    def arguments(self, children: Nodes) -> Tree:
-        return Tree("arguments", [child for child in children if not is_newline(child)])
 
 
 def get_builtin_commands():
