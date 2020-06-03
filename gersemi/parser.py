@@ -38,7 +38,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         self.lark_parser = Lark.open(
             grammar_filename=grammar_filename,
             parser="lalr",
-            propagate_positions=True,
+            propagate_positions=False,
             maybe_placeholders=False,
             transformer=ParsingTransformer(),
         )

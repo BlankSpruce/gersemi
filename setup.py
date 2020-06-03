@@ -13,7 +13,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/BlankSpruce/gersemi",
     packages=find_packages(include=["gersemi", "gersemi.*"]),
-    package_data={"gersemi": ["cmake.lark"]},
+    package_data={"gersemi": ["cmake.lark", "builtin_commands"]},
     install_requires=["lark-parser==0.8"],
     python_requires=">=3.7",
     entry_points={"console_scripts": ["gersemi = gersemi.__main__:main"]},

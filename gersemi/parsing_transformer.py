@@ -64,5 +64,12 @@ class RestructureBracketTypeRules(Transformer):
         )
 
 
-class ParsingTransformer(DowncaseIdentifiers, RestructureBracketTypeRules):
+class CleanUpComplexArgument(Transformer):
+    def complex_argument(self, children):
+        return Tree("complex_argument", children[1:-1])
+
+
+class ParsingTransformer(
+    DowncaseIdentifiers, RestructureBracketTypeRules, CleanUpComplexArgument
+):
     pass

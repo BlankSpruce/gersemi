@@ -73,7 +73,7 @@ MACRO       : "macro"i
 WHILE       : "while"i
 
 command_invocation  : IDENTIFIER _invocation_part
-_invocation_part    : [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
+_invocation_part    : [_SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
 arguments           : (commented_argument | _separation)*
 _separation         : _separation_atom+
@@ -106,7 +106,7 @@ UNQUOTED_ELEMENT  : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
 MAKE_STYLE_REFERENCE : /\$\([^\)\n\"#]+?\)/
 DOUBLE_QUOTED_STRING : /\"[^\n#]*?\"/
 
-complex_argument : _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
+complex_argument : LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 
 ESCAPE_SEQUENCE: /\\([^A-Za-z0-9]|[nrt])/
 
@@ -115,11 +115,11 @@ line_comment    : _POUND_SIGN [LINE_COMMENT_CONTENT]
 LINE_COMMENT_CONTENT : /[^\n]+/
 
 BACKSLASH              : "\\"
-_LEFT_PARENTHESIS      : /\(/
+LEFT_PARENTHESIS       : "("
 NEWLINE                : "\n"
 _POUND_SIGN            : "#"
 _QUOTATION_MARK        : "\""
-_RIGHT_PARENTHESIS     : /\)/
+RIGHT_PARENTHESIS      : ")"
 _SPACE                 : /[ \t]+/
 
 %ignore _SPACE
