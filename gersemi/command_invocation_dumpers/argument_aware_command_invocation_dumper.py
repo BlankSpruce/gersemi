@@ -1,5 +1,5 @@
 from typing import Dict, Iterator, Iterable, List, Optional, Sized, Tuple
-from gersemi.ast_helpers import contains_line_comment, is_keyword
+from gersemi.ast_helpers import is_keyword
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Node, Nodes
 from gersemi.utils import pop_all
@@ -29,10 +29,9 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return "\n".join(map(self.visit, values))
 
     def _format_group(self, group) -> str:
-        if not contains_line_comment(group):
-            result = self._try_to_format_into_single_line(group, separator=" ")
-            if result is not None:
-                return result
+        result = self._try_to_format_into_single_line(group, separator=" ")
+        if result is not None:
+            return result
 
         keyword, *values = group
         begin = self.visit(keyword)
@@ -95,12 +94,11 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
 
     def format_command(self, tree):
         identifier, arguments = tree.children
-        if not contains_line_comment(tree.children):
-            result = self._try_to_format_into_single_line(
-                arguments.children, separator=" ", prefix=f"{identifier}(", postfix=")"
-            )
-            if result is not None:
-                return result
+        result = self._try_to_format_into_single_line(
+            arguments.children, separator=" ", prefix=f"{identifier}(", postfix=")"
+        )
+        if result is not None:
+            return result
 
         begin = self._indent(f"{identifier}(")
         with self.indented():

@@ -1,10 +1,10 @@
 from itertools import dropwhile, takewhile
-from gersemi.ast_helpers import contains_line_comment, is_keyword
+from gersemi.ast_helpers import is_keyword
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 
 
 def can_be_formatted_into_single_line(children):
-    return not contains_line_comment(children) and len(just_values(children)) <= 4
+    return len(just_values(children)) <= 4
 
 
 def just_values(children):
@@ -54,7 +54,7 @@ class SetCommandDumper(BaseCommandInvocationDumper):
 
     def complex_argument(self, tree):
         arguments = tree.children[0]
-        if not contains_line_comment(tree.children) and len(arguments.children) <= 4:
+        if len(arguments.children) <= 4:
             result = self._try_to_format_into_single_line(
                 arguments.children, separator=" ", prefix="(", postfix=")"
             )

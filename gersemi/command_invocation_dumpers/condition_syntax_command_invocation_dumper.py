@@ -1,6 +1,7 @@
 from typing import List
 from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
+from gersemi.ast_helpers import contains_line_comment
 from gersemi.types import Node, Nodes
 from gersemi.utils import advance
 from .argument_aware_command_invocation_dumper import (
@@ -118,6 +119,8 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
             return begin
 
         formatted_keys = "\n".join(self.visit(value) for value in values)
+        if contains_line_comment([keyword]):
+            return f"{begin}\n{self._indent(formatted_keys)}"
         return f"{begin} {formatted_keys.lstrip()}"
 
     def complex_argument(self, tree):

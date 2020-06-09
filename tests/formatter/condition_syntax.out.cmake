@@ -1,10 +1,69 @@
 if(FOO)
 endif()
 
+if(
+    FOO #FOO
+)
+endif()
+
 if(FOO AND BAR)
 endif()
 
 if(FOO AND BAR AND BAZ)
+endif()
+
+if(
+    FOO
+    AND BAR #BAR
+    AND BAZ #BAZ
+)
+endif()
+
+if(
+    FOO # some quite some           long comment
+    AND BAR
+    AND BAZ
+)
+endif()
+
+if(
+    FOO
+    AND BAR
+    AND BAZ # some quite some           long comment
+)
+endif()
+
+if(
+    FOO
+    AND #AND
+        BAR
+)
+endif()
+
+if(
+    FOO #FOO
+    AND #AND
+        BAR #BAR
+    OR BAZ #BAZ
+    OR #OR
+        QUX
+    OR FOO
+        IS_NEWER_THAN
+        BAR #BAR
+    OR FOO
+        IS_NEWER_THAN #IS_NEWER_THAN
+        BAR
+    OR FOO #FOO
+        IS_NEWER_THAN
+        BAR
+)
+endif()
+
+if(
+    FOO
+        IS_NEWER_THAN #IS_NEWER_THAN
+        BAR
+)
 endif()
 
 if(

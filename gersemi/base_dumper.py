@@ -3,6 +3,7 @@ from textwrap import indent
 from typing import Optional
 from lark import Tree
 from lark.visitors import Interpreter
+from gersemi.ast_helpers import contains_line_comment
 from gersemi.types import Nodes
 from gersemi.width_limiting_buffer import WidthLimitingBuffer
 
@@ -31,11 +32,12 @@ class BaseDumper(Interpreter):
     def _try_to_format_into_single_line(
         self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
-        with self.not_indented():
-            formatted_children = separator.join(map(self.visit, children))
-        result = self._indent(f"{prefix}{formatted_children}{postfix}")
-        if len(result) <= self.width and "\n" not in result:
-            return result
+        if not contains_line_comment(children):
+            with self.not_indented():
+                formatted_children = separator.join(map(self.visit, children))
+            result = self._indent(f"{prefix}{formatted_children}{postfix}")
+            if len(result) <= self.width and "\n" not in result:
+                return result
         return None
 
     def visit(self, tree):

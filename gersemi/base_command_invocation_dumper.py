@@ -25,10 +25,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         identifier, arguments = tree.children
         begin = f"{identifier}("
         end = ")"
-        if (
-            not contains_line_comment(arguments.children)
-            and len(arguments.children) <= 4
-        ):
+        if len(arguments.children) <= 4:
             result = self._try_to_format_into_single_line(
                 arguments.children, separator=" ", prefix=begin, postfix=end
             )
@@ -50,10 +47,7 @@ class BaseCommandInvocationDumper(BaseDumper):
     def complex_argument(self, tree):
         arguments, *_ = tree.children
         begin = self._indent("(")
-        if (
-            not contains_line_comment(arguments.children)
-            and len(arguments.children) <= 4
-        ):
+        if len(arguments.children) <= 4:
             result = self._try_to_format_into_single_line(
                 arguments.children, separator=" ", prefix="(", postfix=")"
             )
