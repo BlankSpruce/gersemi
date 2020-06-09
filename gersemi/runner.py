@@ -90,18 +90,32 @@ def has_custom_command_definition(code):
     return has_function_definition or has_macro_definition
 
 
+def save_read(filepath):
+    try:
+        with smart_open(filepath, "r") as f:
+            return f.read()
+    except UnicodeDecodeError as exception:
+        error(f"File {fromfile(filepath)} can't be read: ", exception)
+        return None
+
+
 def generate_specialized_dumpers(bare_parser, paths):
     parser = create_parser_with_postprocessing(bare_parser)
     result = dict()
     for filepath in get_files(paths):
-        with smart_open(filepath, "r") as f:
-            code = f.read()
-
-        if not has_custom_command_definition(code):
+        code = save_read(filepath)
+        if code is None or not has_custom_command_definition(code):
             continue
 
-        parse_tree = parser.parse(code)
-        result.update(generate_custom_command_dumpers(parse_tree))
+        try:
+            parse_tree = parser.parse(code)
+            result.update(generate_custom_command_dumpers(parse_tree))
+        except ParsingError as exception:
+            error(f"{fromfile(filepath)}{exception}")
+        except lark.exceptions.VisitError as exception:
+            error(
+                f"Runtime error when interpretting {fromfile(filepath)}: ", exception,
+            )
     return result
 
 
