@@ -1,0 +1,5 @@
+if(TRUE)
+    message(FOO "OK")
+elseif(TRUE)
+    message(FOO "Also ok")
+endif()

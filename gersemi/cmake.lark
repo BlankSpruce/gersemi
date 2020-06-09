@@ -28,7 +28,7 @@ _foreach_block  : foreach_command  [line_comment] block_body endforeach_command 
 _function_block : function_command [line_comment] block_body endfunction_command [line_comment]
 
 _if_block       : if_command       [line_comment] block_body [_alternatives] endif_command [line_comment]
-_alternatives   : _elseif_clause* _else_clause
+_alternatives   : _elseif_clause* [_else_clause]
 _elseif_clause  : elseif_command   [line_comment] block_body
 _else_clause    : else_command     [line_comment] block_body
 
