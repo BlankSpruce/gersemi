@@ -5,7 +5,6 @@ from lark import Tree
 from lark.visitors import Interpreter
 from gersemi.ast_helpers import contains_line_comment
 from gersemi.types import Nodes
-from gersemi.width_limiting_buffer import WidthLimitingBuffer
 
 
 class BaseDumper(Interpreter):
@@ -16,15 +15,6 @@ class BaseDumper(Interpreter):
 
     def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))
-
-    def _format_listable_content(self, anchor: str, content) -> str:
-        *_, last_line = anchor.splitlines()
-        alignment = len(last_line)
-        with self.aligned_to(alignment):
-            formatted_content = self.visit(content)
-        buffer = WidthLimitingBuffer(self.width)
-        buffer += anchor + formatted_content.lstrip()
-        return str(buffer)
 
     def _indent(self, text: str):
         return indent(text, " " * self.alignment)

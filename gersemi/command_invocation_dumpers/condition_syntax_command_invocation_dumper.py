@@ -123,20 +123,6 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
             return f"{begin}\n{self._indent(formatted_keys)}"
         return f"{begin} {formatted_keys.lstrip()}"
 
-    def complex_argument(self, tree):
-        arguments, *_ = tree.children
-        result = self._try_to_format_into_single_line(
-            arguments.children, separator=" ", prefix="(", postfix=")"
-        )
-        if result is not None:
-            return result
-
-        begin = "(\n"
-        with self.indented():
-            formatted_arguments = self.visit(arguments)
-        end = self._indent(")")
-        return f"{begin}{formatted_arguments}\n{end}"
-
     def unary_operation(self, tree):
         result = self._try_to_format_into_single_line(tree.children, separator=" ")
         if result is not None:

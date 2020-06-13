@@ -41,25 +41,24 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def commented_argument(self, tree):
         argument, comment, *_ = tree.children
-        begin = "".join(self.visit(argument)) + " "
-        return self._format_listable_content(begin, comment)
+        formatted_argument = self.visit(argument)
+        with self.not_indented():
+            formatted_comment = self.visit(comment)
+        return f"{formatted_argument} {formatted_comment}"
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children
-        begin = self._indent("(")
-        if len(arguments.children) <= 4:
-            result = self._try_to_format_into_single_line(
-                arguments.children, separator=" ", prefix="(", postfix=")"
-            )
-            if result is not None:
-                return result
+        result = self._try_to_format_into_single_line(
+            arguments.children, separator=" ", prefix="(", postfix=")"
+        )
+        if result is not None:
+            return result
 
-        result = self._format_listable_content(begin, arguments)
-        if "\n" in result or contains_line_comment(arguments.children):
-            result += f"\n{self._indent(')')}"
-        else:
-            result += ")"
-        return result
+        begin = "(\n"
+        with self.indented():
+            formatted_arguments = self.visit(arguments)
+        end = self._indent(")")
+        return f"{begin}{formatted_arguments}\n{end}"
 
     def bracket_comment(self, tree):
         return " " * self.alignment + self.__default__(tree)
