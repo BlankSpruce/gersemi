@@ -57,3 +57,15 @@ def is_keyword(keyword):
         )
 
     return impl
+
+
+class KeywordMatcher:  # pylint: disable=too-few-public-methods
+    def __init__(self, keywords):
+        self.keywords = keywords
+
+    def __eq__(self, other):
+        return any(map(other.__eq__, self.keywords))
+
+
+def is_one_of_keywords(keywords):
+    return is_keyword(KeywordMatcher(keywords))

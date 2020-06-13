@@ -38,6 +38,9 @@ def create_specialized_dumper(keywords: Keywords):
     return Impl
 
 
+is_parse_argv = is_keyword("PARSE_ARGV")
+
+
 class CMakeInterpreter(Interpreter):
     def __init__(self, stack=None):
         self.stack = dict() if stack is None else stack
@@ -65,7 +68,7 @@ class CMakeInterpreter(Interpreter):
         raise RuntimeError
 
     def _cmake_parse_arguments(self, arguments):
-        if is_keyword("PARSE_ARGV")(arguments.children[0]):
+        if is_parse_argv(arguments.children[0]):
             keywords = arguments.children[3:6]
         else:
             keywords = arguments.children[1:4]

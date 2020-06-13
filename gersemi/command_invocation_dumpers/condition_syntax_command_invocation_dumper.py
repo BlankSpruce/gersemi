@@ -1,12 +1,11 @@
 from typing import List
 from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
-from gersemi.ast_helpers import contains_line_comment
-from gersemi.types import Node, Nodes
+from gersemi.ast_helpers import contains_line_comment, is_one_of_keywords
+from gersemi.types import Nodes
 from gersemi.utils import advance
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
-    is_one_of_keywords,
 )
 
 
@@ -19,8 +18,9 @@ class IsolateUnaryOperators(Transformer_InPlace):
 
         new_children: Nodes = []
         iterator = zip(children, children[1:])
+        is_one_of_unary_operators = is_one_of_keywords(self.unary_operators)
         for one_behind, current in iterator:
-            if is_one_of_keywords(one_behind, self.unary_operators):
+            if is_one_of_unary_operators(one_behind):
                 new_children += [Tree("unary_operation", [one_behind, current])]
                 _, current = advance(iterator, times=1, default=(None, None))
                 if current is None:
@@ -74,8 +74,9 @@ class IsolateBinaryTests(Transformer_InPlace):
 
         new_children: Nodes = []
         iterator = zip(children, children[1:], children[2:])
+        is_one_of_binary_operators = is_one_of_keywords(self.binary_operators)
         for two_behind, one_behind, current in iterator:
-            if is_one_of_keywords(one_behind, self.binary_operators):
+            if is_one_of_binary_operators(one_behind):
                 new_children += [
                     Tree("binary_operation", [two_behind, one_behind, current])
                 ]
@@ -99,10 +100,6 @@ def IsolateConditions() -> Transformer:
     return TransformerChain(
         IsolateUnaryTests(), IsolateBinaryTests(), IsolateNotExpressions(),
     )
-
-
-def is_boolean_operator(argument: Node) -> bool:
-    return is_one_of_keywords(argument, ["AND", "OR"])
 
 
 class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):

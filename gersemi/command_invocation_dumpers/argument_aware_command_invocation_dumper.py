@@ -1,14 +1,8 @@
 from typing import Dict, Iterator, Iterable, List, Optional, Sized, Tuple
-from gersemi.ast_helpers import is_keyword
+from gersemi.ast_helpers import is_one_of_keywords
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.types import Node, Nodes
+from gersemi.types import Nodes
 from gersemi.utils import pop_all
-
-
-def is_one_of_keywords(argument: Node, keywords: Iterable[str]) -> bool:
-    predicates = map(is_keyword, keywords)
-    invoke = lambda predicate: predicate(argument)
-    return any(map(invoke, predicates))
 
 
 def to_list_of_single_item_lists(sequence):
@@ -47,13 +41,12 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             formatted_values = formatter(values)
         return f"{begin}\n{formatted_values}"
 
-    @property
-    def _keywords(self):
-        return self.one_value_keywords + self.multi_value_keywords
-
     def _separate_front(self, arguments: Nodes) -> Tuple[List[Nodes], Nodes]:
+        is_one_of_keywords_with_values = is_one_of_keywords(
+            list(self.one_value_keywords) + list(self.multi_value_keywords)
+        )
         for index, argument in enumerate(arguments):
-            if is_one_of_keywords(argument, self._keywords):
+            if is_one_of_keywords_with_values(argument):
                 pivot = index
                 break
         else:
@@ -61,18 +54,21 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return to_list_of_single_item_lists(arguments[:pivot]), arguments[pivot:]
 
     def _split_by_keywords(self, arguments: Nodes) -> Tuple[Iterator[Nodes], Nodes]:
+        is_one_of_options = is_one_of_keywords(self.options)
+        is_one_of_one_value_keywords = is_one_of_keywords(self.one_value_keywords)
+        is_one_of_multi_value_keywords = is_one_of_keywords(self.multi_value_keywords)
         groups: List[Nodes] = []
         accumulator: Nodes = []
         tail: Optional[Nodes] = None
         iterator = iter(arguments)
         for argument in iterator:
-            if is_one_of_keywords(argument, self.options):
+            if is_one_of_options(argument):
                 groups += [pop_all(accumulator)]
                 groups += [[argument]]
-            elif is_one_of_keywords(argument, self.one_value_keywords):
+            elif is_one_of_one_value_keywords(argument):
                 groups += [pop_all(accumulator)]
                 groups += [[argument, next(iterator)]]
-            elif is_one_of_keywords(argument, self.multi_value_keywords):
+            elif is_one_of_multi_value_keywords(argument):
                 groups += [pop_all(accumulator)]
                 accumulator = [argument]
             elif is_non_empty(accumulator):
