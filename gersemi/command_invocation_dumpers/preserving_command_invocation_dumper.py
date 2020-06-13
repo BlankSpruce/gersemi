@@ -52,5 +52,6 @@ class PreservingCommandInvocationDumper(BaseDumper):
         body = safe_indent(content, self.alignment - len(indentation))
         if not content.startswith("\n"):
             body = body.strip(" ")
-        end = self._indent(")")
+
+        end = self._indent(")") if "\n" in body else ")"
         return f"{begin}{body}{end}"

@@ -3,3 +3,4 @@
 .tox
 *.egg-info
 __pycache__
+prof/

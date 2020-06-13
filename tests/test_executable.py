@@ -310,9 +310,19 @@ def test_format_with_non_default_line_length():
 
 def test_check_project_with_custom_commands():
     with temporary_dir_copy(case("custom_project/not_formatted")) as copy:
-        assert_fail("--check", copy)
+        assert_fail("--check", copy, "--definitions", copy)
 
     with temporary_dir_copy(case("custom_project/formatted")) as copy:
+        assert_success("--check", copy, "--definitions", copy)
+
+
+def test_check_project_with_custom_commands_but_without_definitions():
+    with temporary_dir_copy(case("custom_project/not_formatted")) as copy:
+        assert_fail("--check", copy)
+
+    with temporary_dir_copy(
+        case("custom_project/only_custom_commands_not_formatted")
+    ) as copy:
         assert_success("--check", copy)
 
 
@@ -323,6 +333,22 @@ def test_format_project_with_custom_commands():
         not_formatted, formatted = [
             stack.enter_context(temporary_dir_copy(case_(d)))
             for d in ["not_formatted", "formatted"]
+        ]
+
+        assert_that_directories_differ(not_formatted, formatted)
+        assert_success("--check", formatted, "--definitions", formatted)
+        assert_fail("--check", not_formatted, "--definitions", not_formatted)
+        assert_success("--in-place", not_formatted, "--definitions", not_formatted)
+        assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+
+def test_format_project_with_custom_commands_but_without_definitions():
+    case_ = lambda dirname: case("custom_project/" + dirname)
+
+    with ExitStack() as stack:
+        not_formatted, formatted = [
+            stack.enter_context(temporary_dir_copy(case_(d)))
+            for d in ["not_formatted", "only_custom_commands_not_formatted"]
         ]
 
         assert_that_directories_differ(not_formatted, formatted)

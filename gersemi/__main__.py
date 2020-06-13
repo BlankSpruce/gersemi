@@ -37,6 +37,16 @@ def create_argparser():
         help="Maximum line length in characters",
     )
     parser.add_argument(
+        "--definitions",
+        dest="definitions",
+        metavar="src",
+        default=[],
+        nargs="+",
+        type=pathlib.Path,
+        help="Files or directories containing custom command definitions (functions or macros). "
+        "If only - is provided custom definitions, if there are any, are taken from stdin instead",
+    )
+    parser.add_argument(
         "--diff",
         dest="show_diff",
         default=False,
@@ -61,14 +71,15 @@ def create_argparser():
     return parser
 
 
+def is_stdin_mixed_with_file_input(sources):
+    return pathlib.Path("-") in sources and len(sources) != 1
+
+
 def main():
     argparser = create_argparser()
     args = argparser.parse_args()
 
-    if len(args.sources) == 0:
-        sys.exit(SUCCESS)
-
-    if pathlib.Path("-") in args.sources and len(args.sources) != 1:
+    if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
         error("Don't mix stdin with file input")
         sys.exit(FAIL)
 

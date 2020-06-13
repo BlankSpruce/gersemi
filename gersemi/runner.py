@@ -198,15 +198,31 @@ def execute_on_single_file(file_to_format, formatter, execute):
     return INTERNAL_ERROR
 
 
+class LazyFormatter:  # pylint: disable=too-few-public-methods
+    def __init__(self, args):
+        self.args = args
+        self.bare_parser = None
+        self.formatter = None
+
+    def _actual_format(self, code):
+        return self.formatter.format(code)
+
+    def format(self, code):
+        if self.formatter is None:
+            self.bare_parser = create_parser()
+            self.formatter = create_formatter(
+                self.bare_parser,
+                self.args.format_safely,
+                self.args.line_length,
+                generate_specialized_dumpers(self.bare_parser, self.args.definitions),
+            )
+
+        return self._actual_format(code)
+
+
 def run(args):
-    bare_parser = create_parser()
-    formatter = create_formatter(
-        bare_parser,
-        args.format_safely,
-        args.line_length,
-        generate_specialized_dumpers(bare_parser, args.sources),
-    )
+    formatter = LazyFormatter(args)
     run_on_single_file = partial(
         execute_on_single_file, formatter=formatter, execute=select_executor(args)
     )
-    return max(map(run_on_single_file, get_files(args.sources)))
+    return max(map(run_on_single_file, get_files(args.sources)), default=SUCCESS)
