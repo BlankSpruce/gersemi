@@ -1,7 +1,9 @@
 import argparse
 import pathlib
 import sys
+from lark import __version__ as lark_version
 from gersemi.runner import run, error, SUCCESS, FAIL
+from gersemi.__version__ import __title__, __version__
 
 
 def create_argparser():
@@ -68,6 +70,13 @@ def create_argparser():
         help="File or directory to format. "
         "If only - is provided input is taken from stdin instead",
     )
+    parser.add_argument(
+        "--version",
+        dest="show_version",
+        default=False,
+        action="store_true",
+        help="Show version.",
+    )
     return parser
 
 
@@ -75,9 +84,19 @@ def is_stdin_mixed_with_file_input(sources):
     return pathlib.Path("-") in sources and len(sources) != 1
 
 
+def show_version():
+    print(f"{__title__} {__version__}")
+    print(f"lark {lark_version}")
+    print(f"Python {sys.version}")
+
+
 def main():
     argparser = create_argparser()
     args = argparser.parse_args()
+
+    if args.show_version:
+        show_version()
+        sys.exit(SUCCESS)
 
     if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
         error("Don't mix stdin with file input")

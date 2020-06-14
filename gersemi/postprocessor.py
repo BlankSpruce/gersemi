@@ -28,8 +28,8 @@ class SimplifyParseTree(Transformer_InPlace):
 
 
 def get_builtin_commands():
-    THIS_FILE_DIR = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(THIS_FILE_DIR, "builtin_commands"), "r") as f:
+    HERE = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(HERE, "builtin_commands"), "r") as f:
         return set(f.read().splitlines())
 
 

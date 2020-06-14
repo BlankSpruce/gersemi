@@ -69,8 +69,8 @@ class ParserWithPostProcessing:  # pylint: disable=too-few-public-methods
         return postprocessor.transform(self.parser.parse(code))
 
 
-THIS_FILE_DIR = os.path.dirname(os.path.realpath(__file__))
-GRAMMAR = os.path.join(THIS_FILE_DIR, "cmake.lark")
+HERE = os.path.dirname(os.path.realpath(__file__))
+GRAMMAR = os.path.join(HERE, "cmake.lark")
 
 
 def create_parser(grammar_filename=GRAMMAR):

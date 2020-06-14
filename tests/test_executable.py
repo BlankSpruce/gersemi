@@ -16,11 +16,11 @@ def gersemi(*gersemi_args, **subprocess_kwargs):
     )
 
 
-THIS_FILE_DIR = os.path.dirname(os.path.realpath(__file__))
+HERE = os.path.dirname(os.path.realpath(__file__))
 
 
 def case(filepath):
-    return f"{THIS_FILE_DIR}/executable/{filepath}"
+    return f"{HERE}/executable/{filepath}"
 
 
 @contextmanager
