@@ -18,4 +18,6 @@ disable=
     missing-function-docstring,
     missing-module-docstring,
 
-    no-self-use
+    no-self-use,
+
+    too-many-ancestors

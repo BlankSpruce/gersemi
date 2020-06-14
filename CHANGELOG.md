@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0] 2020-06-14
+
+### Added
+- custom commands formatting when definitions of these commands are provided with `--definitions`
+- preserving CRLF style of newlines if formatted file used that style
+- `--version`
+- performance improvements
+
+### Fixed
+- bracket argument / bracket comment parsing bugfixes
+- removed strict dependency to lark `0.8.0`, now anything from `0.8` but below `0.9` should work
+
 ## [0.1.2] 2020-02-14
 
 ### Changed

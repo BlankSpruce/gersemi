@@ -7,12 +7,16 @@ from .tests_generator import generate_input_only_tests
 
 custom_command_to_format = """
 seven_samurai(
+three standalone arguments
 KAMBEI KATSUSHIRO
 GOROBEI foo HEIHACHI bar KYUZO baz
 SHICHIROJI foo bar baz KIKUCHIYO bar baz foo)
 """
 
 custom_command_properly_formatted = """seven_samurai(
+    three
+    standalone
+    arguments
     KAMBEI
     KATSUSHIRO
     GOROBEI foo
