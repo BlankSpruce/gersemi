@@ -3,12 +3,6 @@ from gersemi.base_dumper import BaseDumper
 from gersemi.command_invocation_dumper import CommandInvocationDumper
 
 
-def filter_empty(iterable):
-    for i in iterable:
-        if i != "":
-            yield i
-
-
 class Dumper(CommandInvocationDumper, BaseDumper):
     def __init__(self, width, custom_command_dumpers):
         self.known_command_mapping.update(custom_command_dumpers)
@@ -21,7 +15,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         return result + "\n"
 
     def block(self, tree):
-        return "\n".join(filter_empty(map(self.visit, tree.children)))
+        return "\n".join(filter(None, map(self.visit, tree.children)))
 
     def block_body(self, tree):
         with self.indented():

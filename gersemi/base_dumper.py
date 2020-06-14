@@ -24,16 +24,13 @@ class BaseDumper(Interpreter):
     ) -> Optional[str]:
         if not contains_line_comment(children):
             with self.not_indented():
-                formatted_children = separator.join(map(self.visit, children))
+                formatted_children = separator.join(
+                    self.visit(c) if isinstance(c, Tree) else c for c in children
+                )
             result = self._indent(f"{prefix}{formatted_children}{postfix}")
             if len(result) <= self.width and "\n" not in result:
                 return result
         return None
-
-    def visit(self, tree):
-        if isinstance(tree, str):
-            return tree
-        return super().visit(tree)
 
     @contextmanager
     def aligned_to(self, alignment):
