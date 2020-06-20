@@ -90,7 +90,7 @@ def has_custom_command_definition(code):
     return has_function_definition or has_macro_definition
 
 
-def save_read(filepath):
+def safe_read(filepath):
     try:
         with smart_open(filepath, "r") as f:
             return f.read()
@@ -103,7 +103,7 @@ def generate_specialized_dumpers(bare_parser, paths):
     parser = create_parser_with_postprocessing(bare_parser)
     result = dict()
     for filepath in get_files(paths):
-        code = save_read(filepath)
+        code = safe_read(filepath)
         if code is None or not has_custom_command_definition(code):
             continue
 
