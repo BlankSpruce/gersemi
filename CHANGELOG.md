@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] 2020-06-20
+
+### Fixed
+- Missing value for one value keyword no longer leads to stopping formatting of remaining files in the batch
+
 ## [0.2.0] 2020-06-14
 
 ### Added

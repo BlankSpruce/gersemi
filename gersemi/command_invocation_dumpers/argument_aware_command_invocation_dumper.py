@@ -67,7 +67,11 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
                 groups += [[argument]]
             elif is_one_of_one_value_keywords(argument):
                 groups += [pop_all(accumulator)]
-                groups += [[argument, next(iterator)]]
+                next_argument = next(iterator, None)
+                if next_argument is None:
+                    groups += [[argument]]
+                else:
+                    groups += [[argument, next_argument]]
             elif is_one_of_multi_value_keywords(argument):
                 groups += [pop_all(accumulator)]
                 accumulator = [argument]
