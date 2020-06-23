@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2] 2020-06-23
+
+### Fixed
+- fixed condition syntax formatting edge-case with opening parenthesis indentation
+
 ## [0.2.1] 2020-06-20
 
 ### Fixed

@@ -54,7 +54,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         if result is not None:
             return result
 
-        begin = "(\n"
+        begin = self._indent("(\n")
         with self.indented():
             formatted_arguments = self.visit(arguments)
         end = self._indent(")")
