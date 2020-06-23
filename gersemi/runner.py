@@ -90,9 +90,9 @@ def has_custom_command_definition(code):
     return has_function_definition or has_macro_definition
 
 
-def safe_read(filepath):
+def safe_read(filepath, *args, **kwargs):
     try:
-        with smart_open(filepath, "r") as f:
+        with smart_open(filepath, "r", *args, **kwargs) as f:
             return f.read()
     except UnicodeDecodeError as exception:
         error(f"File {fromfile(filepath)} can't be read: ", exception)
@@ -128,8 +128,9 @@ class FormattedFile:
 
 
 def format_file(path, formatter):
-    with smart_open(path, "r", newline="") as f:
-        code = f.read()
+    code = safe_read(path, newline="")
+    if code is None:
+        return None
 
     newlines_style = get_newlines_style(code)
     code = translate_newlines_to_line_feed(code)
@@ -186,7 +187,8 @@ def select_executor(args):
 def execute_on_single_file(file_to_format, formatter, execute):
     try:
         formatted_file = format_file(file_to_format, formatter)
-        return execute(formatted_file)
+        if formatted_file is not None:
+            return execute(formatted_file)
     except ParsingError as exception:
         error(f"{fromfile(file_to_format)}{exception}")
     except ASTMismatch:
