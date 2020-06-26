@@ -1,11 +1,19 @@
 from itertools import chain
 from gersemi.base_dumper import BaseDumper
 from gersemi.command_invocation_dumper import CommandInvocationDumper
+from gersemi.command_invocation_dumpers.specialized_dumpers import (
+    create_specialized_dumper,
+)
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
-    def __init__(self, width, custom_command_dumpers):
-        self.known_command_mapping.update(custom_command_dumpers)
+    def __init__(self, width, custom_command_definitions):
+        self.known_command_mapping.update(
+            {
+                name: create_specialized_dumper(keywords)
+                for name, keywords in custom_command_definitions.items()
+            }
+        )
         super().__init__(width)
 
     def file(self, tree):

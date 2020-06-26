@@ -1,11 +1,7 @@
-from dataclasses import dataclass
-from typing import Tuple
-from lark import Discard, Tree
+from lark import Discard
 from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import is_keyword
-from gersemi.command_invocation_dumpers.argument_aware_command_invocation_dumper import (
-    ArgumentAwareCommandInvocationDumper,
-)
+from gersemi.keywords import Keywords
 
 
 class DropIrrelevantElements(Transformer):  # pylint: disable=too-few-public-methods
@@ -16,26 +12,6 @@ class DropIrrelevantElements(Transformer):  # pylint: disable=too-few-public-met
     line_comment = _discard
     bracket_comment = _discard
     non_command_element = _discard
-
-
-@dataclass
-class Keywords:
-    options: Tuple[str]
-    one_value_keywords: Tuple[str]
-    multi_value_keywords: Tuple[str]
-
-
-def create_specialized_dumper(keywords: Keywords):
-    class Impl(ArgumentAwareCommandInvocationDumper):
-        options = keywords.options
-        one_value_keywords = keywords.one_value_keywords
-        multi_value_keywords = keywords.multi_value_keywords
-
-        def custom_command(self, tree):
-            _, command_name, arguments, *_ = tree.children
-            return self.visit(Tree("command_invocation", [command_name, arguments]))
-
-    return Impl
 
 
 is_parse_argv = is_keyword("PARSE_ARGV")
@@ -77,6 +53,9 @@ class CMakeInterpreter(Interpreter):
             self._eval_variables(self.visit(item)) for item in keywords
         ]
         return Keywords(options, one_value_keywords, multi_value_keywords)
+
+    def start(self, tree):
+        return self.visit(tree.children[0])
 
     def file(self, tree):
         self.visit_children(tree)
@@ -125,21 +104,6 @@ class CMakeInterpreter(Interpreter):
     unquoted_argument = _extract_first
 
 
-class GenerateCustomCommandDumpers(Interpreter):
-    def start(self, tree):
-        return self.visit_children(tree)[0]
-
-    def file(self, tree):
-        tree = DropIrrelevantElements(visit_tokens=True).transform(tree)
-        found_commands = CMakeInterpreter().visit(tree)
-        return {
-            name: create_specialized_dumper(keywords)
-            for name, keywords in found_commands.items()
-        }
-
-    def __default__(self, tree):
-        return None
-
-
-def generate_custom_command_dumpers(tree):
-    return GenerateCustomCommandDumpers().visit(tree)
+def find_custom_command_definitions(tree):
+    tree = DropIrrelevantElements(visit_tokens=True).transform(tree)
+    return CMakeInterpreter().visit(tree)

@@ -8,7 +8,7 @@ import sys
 import lark
 from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.formatter import create_formatter
-from gersemi.custom_command_dumper_generator import generate_custom_command_dumpers
+from gersemi.custom_command_definition_finder import find_custom_command_definitions
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 
 
@@ -99,7 +99,7 @@ def safe_read(filepath, *args, **kwargs):
         return None
 
 
-def generate_specialized_dumpers(bare_parser, paths):
+def find_all_custom_command_definitions(bare_parser, paths):
     parser = create_parser_with_postprocessing(bare_parser)
     result = dict()
     for filepath in get_files(paths):
@@ -109,7 +109,7 @@ def generate_specialized_dumpers(bare_parser, paths):
 
         try:
             parse_tree = parser.parse(code)
-            result.update(generate_custom_command_dumpers(parse_tree))
+            result.update(find_custom_command_definitions(parse_tree))
         except ParsingError as exception:
             error(f"{fromfile(filepath)}{exception}")
         except lark.exceptions.VisitError as exception:
@@ -216,7 +216,9 @@ class LazyFormatter:  # pylint: disable=too-few-public-methods
                 self.bare_parser,
                 self.args.format_safely,
                 self.args.line_length,
-                generate_specialized_dumpers(self.bare_parser, self.args.definitions),
+                find_all_custom_command_definitions(
+                    self.bare_parser, self.args.definitions
+                ),
             )
 
         return self._actual_format(code)

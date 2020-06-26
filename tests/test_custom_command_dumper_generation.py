@@ -1,5 +1,5 @@
 import pytest
-from gersemi.custom_command_dumper_generator import generate_custom_command_dumpers
+from gersemi.custom_command_definition_finder import find_custom_command_definitions
 from gersemi.dumper import Dumper
 from gersemi.parser import create_parser_with_postprocessing
 from .tests_generator import generate_input_only_tests
@@ -33,11 +33,8 @@ def parser_with_postprocessing(parser):
     return create_parser_with_postprocessing(parser)
 
 
-def create_patched_dumper(generated_formatter):
-    class Impl(generated_formatter, Dumper):
-        pass
-
-    return Impl(width=80, custom_command_dumpers=dict())
+def create_dumper(custom_command_definitions):
+    return Dumper(width=80, custom_command_definitions=custom_command_definitions)
 
 
 def test_custom_command_generated_dumper(
@@ -46,8 +43,8 @@ def test_custom_command_generated_dumper(
     parsed_function_def = parser_with_postprocessing.parse(case.content)
     parsed_function = parser_with_postprocessing.parse(custom_command_to_format)
 
-    formatters = generate_custom_command_dumpers(parsed_function_def)
-    dumper = create_patched_dumper(formatters["seven_samurai"])
+    formatters = find_custom_command_definitions(parsed_function_def)
+    dumper = create_dumper(formatters)
 
     custom_command_formatted = dumper.visit(parsed_function)
 
