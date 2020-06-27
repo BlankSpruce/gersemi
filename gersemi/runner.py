@@ -1,6 +1,8 @@
 from dataclasses import astuple
 from functools import partial
 from itertools import chain
+import multiprocessing as mp
+import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
 from typing import Callable
@@ -17,6 +19,9 @@ from gersemi.tasks.format_file import format_file, Error, FormattedFile, Result
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_diff
 from gersemi.utils import fromfile, smart_open
+
+
+CHUNKSIZE = 16
 
 
 print_to_stdout = partial(print, file=sys.stdout, end="")
@@ -50,23 +55,33 @@ def safe_read(filepath, *args, **kwargs):
         return None
 
 
-def find_all_custom_command_definitions(bare_parser, paths):
+def find_custom_command_definitions_in_file(filepath, parser):
+    code = safe_read(filepath)
+    if code is None or not has_custom_command_definition(code):
+        return None
+
+    try:
+        parse_tree = parser.parse(code)
+        return find_custom_command_definitions(parse_tree)
+    except ParsingError as exception:
+        print_to_stderr(f"{fromfile(filepath)}{exception}")
+    except LarkVisitError as exception:
+        print_to_stderr(
+            f"Runtime error when interpretting {fromfile(filepath)}: ", exception,
+        )
+    return None
+
+
+def find_all_custom_command_definitions(bare_parser, paths, pool):
     parser = create_parser_with_postprocessing(bare_parser)
     result = dict()
-    for filepath in get_files(paths):
-        code = safe_read(filepath)
-        if code is None or not has_custom_command_definition(code):
-            continue
 
-        try:
-            parse_tree = parser.parse(code)
-            result.update(find_custom_command_definitions(parse_tree))
-        except ParsingError as exception:
-            print_to_stderr(f"{fromfile(filepath)}{exception}")
-        except LarkVisitError as exception:
-            print_to_stderr(
-                f"Runtime error when interpretting {fromfile(filepath)}: ", exception,
-            )
+    files = list(get_files(paths))
+    find = partial(find_custom_command_definitions_in_file, parser=parser)
+
+    for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
+        if defs is not None:
+            result.update(defs)
     return result
 
 
@@ -78,30 +93,6 @@ def select_task(args):
     if args.in_place:
         return rewrite_in_place
     return forward_to_stdout
-
-
-class LazyFormatter:  # pylint: disable=too-few-public-methods
-    def __init__(self, args):
-        self.args = args
-        self.bare_parser = None
-        self.formatter = None
-
-    def _actual_format(self, code):
-        return self.formatter.format(code)
-
-    def format(self, code):
-        if self.formatter is None:
-            self.bare_parser = create_parser()
-            self.formatter = create_formatter(
-                self.bare_parser,
-                self.args.format_safely,
-                self.args.line_length,
-                find_all_custom_command_definitions(
-                    self.bare_parser, self.args.definitions
-                ),
-            )
-
-        return self._actual_format(code)
 
 
 ERROR_MESSAGE_TEMPLATES = {
@@ -149,9 +140,33 @@ def consume_task_result(task_result: TaskResult) -> int:
     return return_code
 
 
+def create_pool(is_stdin_in_sources):
+    if is_stdin_in_sources:
+        return mp_dummy.Pool()
+    return mp.Pool(processes=mp.cpu_count())
+
+
 def run(args):
-    formatter = LazyFormatter(args)
+    bare_parser = create_parser()
+    files_to_format = list(get_files(args.sources))
     task = select_task(args)
-    execute = partial(run_task, formatter=formatter, task=task)
-    results = map(execute, get_files(args.sources))
-    return max(map(consume_task_result, results), default=SUCCESS)
+
+    with create_pool(Path("-") in files_to_format) as pool:
+        custom_command_definitions = find_all_custom_command_definitions(
+            bare_parser, args.definitions, pool
+        )
+        formatter = create_formatter(
+            bare_parser,
+            args.format_safely,
+            args.line_length,
+            custom_command_definitions,
+        )
+        execute = partial(run_task, formatter=formatter, task=task)
+
+        return max(
+            map(
+                consume_task_result,
+                pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE),
+            ),
+            default=SUCCESS,
+        )

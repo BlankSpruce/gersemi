@@ -1,7 +1,5 @@
-import pytest
 from gersemi.custom_command_definition_finder import find_custom_command_definitions
 from gersemi.dumper import Dumper
-from gersemi.parser import create_parser_with_postprocessing
 from .tests_generator import generate_input_only_tests
 
 
@@ -26,11 +24,6 @@ custom_command_properly_formatted = """seven_samurai(
     KIKUCHIYO bar baz foo
 )
 """
-
-
-@pytest.fixture
-def parser_with_postprocessing(parser):
-    return create_parser_with_postprocessing(parser)
 
 
 def create_dumper(custom_command_definitions):

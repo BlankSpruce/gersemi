@@ -103,6 +103,9 @@ def main():
         print_to_stderr("Don't mix stdin with file input")
         sys.exit(FAIL)
 
+    if len(args.sources) < 1:
+        sys.exit(SUCCESS)
+
     sys.exit(run(args))
 
 
