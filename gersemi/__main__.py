@@ -2,7 +2,8 @@ import argparse
 import pathlib
 import sys
 from lark import __version__ as lark_version
-from gersemi.runner import run, error, SUCCESS, FAIL
+from gersemi.return_codes import SUCCESS, FAIL
+from gersemi.runner import run, print_to_stderr
 from gersemi.__version__ import __title__, __version__
 
 
@@ -99,7 +100,7 @@ def main():
         sys.exit(SUCCESS)
 
     if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
-        error("Don't mix stdin with file input")
+        print_to_stderr("Don't mix stdin with file input")
         sys.exit(FAIL)
 
     sys.exit(run(args))

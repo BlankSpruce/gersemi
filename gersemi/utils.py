@@ -1,3 +1,7 @@
+from contextlib import contextmanager
+from functools import lru_cache
+from pathlib import Path
+import sys
 from typing import Any, Iterator, List
 
 
@@ -14,3 +18,39 @@ def advance(iterator: Iterator, times: int, default: Any) -> Any:
             break
         result = new_result
     return result
+
+
+def fromfile(path):
+    return "<stdin>" if path == Path("-") else str(path)
+
+
+def tofile(path):
+    return "<stdout>" if path == Path("-") else str(path)
+
+
+class StdinWrapper:  # pylint: disable=too-few-public-methods
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def read():
+        return sys.stdin.read()
+
+
+def standard_stream_open(mode):
+    if mode is None or mode == "" or "r" in mode:
+        return StdinWrapper()
+    return sys.stdout
+
+
+@contextmanager
+def smart_open(filename, mode, *args, **kwargs):
+    if filename == Path("-"):
+        try:
+            yield standard_stream_open(mode)
+        finally:
+            pass
+    else:
+        try:
+            fh = open(filename, mode, *args, **kwargs)
+            yield fh
+        finally:
+            fh.close()
