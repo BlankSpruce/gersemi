@@ -11,3 +11,9 @@ def check_formatting(formatted_file: FormattedFile) -> TaskResult:
             to_stderr=f"{fromfile(formatted_file.path)} would be reformatted",
         )
     return TaskResult(return_code=SUCCESS)
+
+
+def quiet_check_formatting(formatted_file: FormattedFile) -> TaskResult:
+    if formatted_file.before != formatted_file.after:
+        return TaskResult(return_code=FAIL)
+    return TaskResult(return_code=SUCCESS)

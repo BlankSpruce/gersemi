@@ -356,3 +356,23 @@ def test_format_project_with_custom_commands_but_without_definitions():
         assert_fail("--check", not_formatted)
         assert_success("--in-place", not_formatted)
         assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+
+def test_non_empty_stderr_when_files_are_not_formatted():
+    completed_process = gersemi(
+        "--check", case("custom_project/not_formatted"), text=True, capture_output=True,
+    )
+    assert completed_process.returncode == 1
+    assert completed_process.stderr != ""
+
+
+def test_empty_stderr_when_files_are_not_formatted_but_quiet_is_supplied():
+    completed_process = gersemi(
+        "--check",
+        case("custom_project/not_formatted"),
+        "--quiet",
+        text=True,
+        capture_output=True,
+    )
+    assert completed_process.returncode == 1
+    assert completed_process.stderr == ""

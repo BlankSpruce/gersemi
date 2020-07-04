@@ -13,7 +13,7 @@ from gersemi.formatter import create_formatter, Formatter
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
 from gersemi.task_result import TaskResult
-from gersemi.tasks.check_formatting import check_formatting
+from gersemi.tasks.check_formatting import check_formatting, quiet_check_formatting
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.format_file import format_file, Error, FormattedFile, Result
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
@@ -89,6 +89,8 @@ def select_task(args):
     if args.show_diff:
         return show_diff
     if args.check_formatting:
+        if args.quiet:
+            return quiet_check_formatting
         return check_formatting
     if args.in_place:
         return rewrite_in_place

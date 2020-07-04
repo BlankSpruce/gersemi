@@ -78,6 +78,14 @@ def create_argparser():
         action="store_true",
         help="Show version.",
     )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        dest="quiet",
+        default=False,
+        action="store_true",
+        help="Skip printing non-error messages to stderr",
+    )
     return parser
 
 
