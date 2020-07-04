@@ -34,7 +34,23 @@ def safe_indent(string, indent_size):
     return "".join(map(segment_indenter, segments))
 
 
+def strip_empty_lines_from_edges(s):
+    lines = s.splitlines()
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return "\n".join(lines)
+
+
 class PreservingCommandInvocationDumper(BaseDumper):
+    def _preprocess_content(self, content):
+        begin = "\n" if content.startswith("\n") else ""
+        end = "\n" if content.endswith("\n") else ""
+        stripped_content = strip_empty_lines_from_edges(content)
+
+        return f"{begin}{stripped_content.rstrip()}{end}"
+
     def custom_command(self, tree):
         indentation, identifier, _, formatted_arguments = tree.children
         begin = self._indent(f"{identifier}(")
@@ -49,9 +65,17 @@ class PreservingCommandInvocationDumper(BaseDumper):
         if result is not None:
             return result
 
-        body = safe_indent(content, self.alignment - len(indentation))
+        body = safe_indent(
+            self._preprocess_content(content), self.alignment - len(indentation)
+        )
         if not content.startswith("\n"):
             body = body.strip(" ")
 
-        end = self._indent(")") if "\n" in body else ")"
+        if "\n" not in body:
+            end = ")"
+        elif body.endswith("\n"):
+            end = self._indent(")")
+        else:
+            end = "\n" + self._indent(")")
+
         return f"{begin}{body}{end}"
