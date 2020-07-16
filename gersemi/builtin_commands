@@ -1,3 +1,5 @@
+# cmake-commands
+## Scripting Commands
 break
 cmake_host_system_information
 cmake_minimum_required
@@ -44,6 +46,8 @@ string
 unset
 variable_watch
 while
+
+## Project Commands
 add_compile_definitions
 add_compile_options
 add_custom_command
@@ -90,6 +94,8 @@ target_precompile_headers
 target_sources
 try_compile
 try_run
+
+## CTest Commands
 ctest_build
 ctest_configure
 ctest_coverage
@@ -103,6 +109,8 @@ ctest_submit
 ctest_test
 ctest_update
 ctest_upload
+
+## Deprecated Commands
 build_name
 exec_program
 export_library_dependencies
@@ -121,3 +129,310 @@ use_mangled_mesa
 utility_source
 variable_requires
 write_file
+
+
+# cmake-modules
+## AddFileDependencies
+add_file_dependencies
+
+## AndroidTestUtilities
+android_add_test_data
+
+## BundleUtilities
+fixup_bundle
+copy_and_fixup_bundle
+verify_app
+get_bundle_main_executable
+get_dotapp_dir
+get_bundle_and_executable
+get_bundle_all_executables
+get_item_key
+get_item_rpaths
+clear_bundle_keys
+set_bundle_key_values
+get_bundle_keys
+copy_resolved_item_into_bundle
+copy_resolved_framework_into_bundle
+fixup_bundle_item
+verify_bundle_prerequisites
+verify_bundle_symlinks
+
+## CheckCCompilerFlag
+check_c_compiler_flag
+
+## CheckCSourceCompiles
+check_c_source_compiles
+
+## CheckCSourceRuns
+check_c_source_runs
+
+## CheckCXXCompilerFlag
+check_cxx_compiler_flag
+
+## CheckCXXSourceCompiles
+check_cxx_source_compiles
+
+## CheckCXXSourceRuns
+check_cxx_source_runs
+
+## CheckCXXSymbolExists
+check_cxx_symbol_exists
+
+## CheckFortranCompilerFlag
+check_fortran_compiler_flag
+
+## CheckFortranFunctionExists
+check_fortran_function_exists
+
+## CheckFortranSourceCompiles
+check_fortran_source_compiles
+## CheckFortranSourceRuns
+check_fortran_source_runs
+
+## CheckFunctionExists
+check_function_exists
+
+## CheckIPOSupported
+check_ipo_supported
+
+## CheckIncludeFileCXX
+check_include_file_cxx
+
+## CheckIncludeFile
+check_include_file
+
+## CheckIncludeFiles
+check_include_files
+
+## CheckLanguage
+check_language
+
+## CheckLibraryExists
+check_library_exists
+
+## CheckLinkerFlag
+check_linker_flag
+
+## CheckOBJCCompilerFlag
+check_objc_compiler_flag
+
+## CheckOBJCSourceCompiles
+check_objc_source_compiles
+
+## CheckOBJCSourceRuns
+check_objc_source_runs
+
+## CheckOBJCXXCompilerFlag
+check_objcxx_compiler_flag
+
+## CheckOBJCXXSourceCompiles
+check_objcxx_source_compiles
+
+## CheckOBJCXXSourceRuns
+check_objcxx_source_runs
+
+## CheckPIESupported
+check_pie_supported
+
+## CheckPrototypeDefinition
+check_prototype_definition
+
+## CheckStructHasMember
+check_struct_has_member
+
+## CheckSymbolExists
+check_symbol_exists
+
+## CheckTypeSize
+check_type_size
+
+## CheckVariableExists
+check_variable_exists
+
+## CMakeAddFortranSubdirectory
+cmake_add_fortran_subdirectory
+
+## CMakeBackwardCompatibilityCXX
+
+## CMakeDependentOption
+cmake_dependent_option
+
+## CMakeFindDependencyMacro
+find_dependency
+
+## CMakeFindFrameworks
+cmake_find_frameworks
+
+## CMakeFindPackageMode
+
+## CMakeGraphVizOptions
+
+## CMakePackageConfigHelpers
+configure_package_config_file
+write_basic_package_version_file
+
+## CMakePrintHelpers
+cmake_print_properties
+cmake_print_variables
+
+## CMakePrintSystemInformation
+
+## CMakePushCheckState
+cmake_push_check_state
+cmake_pop_check_state
+cmake_reset_check_state
+
+## CMakeVerifyManifest
+
+## CPackComponent
+cpack_add_component
+cpack_add_component_group
+cpack_add_install_type
+cpack_configure_downloads
+
+## CPackIFW
+cpack_ifw_configure_component
+cpack_ifw_configure_component_group
+cpack_ifw_add_repository
+cpack_ifw_update_repository
+cpack_ifw_add_package_resources
+
+## CPackIFWConfigureFile
+cpack_ifw_configure_file
+
+## CPack
+
+## CSharpUtilities
+csharp_get_dependentupon_name
+csharp_get_filename_key_base
+csharp_get_filename_keys
+csharp_set_designer_cs_properties
+csharp_set_windows_forms_properties
+csharp_set_xaml_cs_properties
+
+## CTest
+
+## CTestCoverageCollectGCOV
+ctest_coverage_collect_gcov
+
+## CTestScriptMode
+
+## CTestUseLaunchers
+
+## Dart
+
+## DeployQt4
+write_qt4_conf
+resolve_qt4_paths
+fixup_qt4_executable
+install_qt4_executable
+install_qt4_plugin
+install_qt4_plugin_path
+
+## Documentation
+
+## ExternalData
+externaldata_expand_arguments
+externaldata_add_test
+externaldata_add_target
+
+## ExternalProject
+externalproject_add
+externalproject_add_step
+externalproject_add_stepdependencies
+externalproject_add_steptargets
+externalproject_get_property
+
+## FeatureSummary
+feature_summary
+set_package_properties
+add_feature_info
+
+## FetchContent
+fetchcontent_declare
+fetchcontent_getproperties
+fetchcontent_makeavailable
+fetchcontent_populate
+
+## FindPackageHandleStandardArgs
+find_package_handle_standard_args
+
+## FindPackageMessage
+find_package_message
+
+## FortranCInterface
+fortrancinterface_header
+fortrancinterface_verify
+
+## GenerateExportHeader
+generate_export_header
+
+## GetPrerequisites
+get_prerequisites
+list_prerequisites
+list_prerequisites_by_glob
+gp_append_unique
+is_file_executable
+gp_item_default_embedded_path
+gp_file_type
+gp_resolved_file_type
+gp_resolve_item
+
+## GNUInstallDirs
+gnuinstalldirs_get_absolute_install_dir
+
+## GoogleTest
+gtest_add_tests
+gtest_discover_tests
+
+## InstallRequiredSystemLibraries
+
+## ProcessorCount
+processorcount
+
+## SelectLibraryConfigurations
+select_library_configurations
+
+## SquishTestScript
+
+## TestBigEndian
+test_big_endian
+
+## TestForANSIForScope
+
+## TestForANSIStreamHeaders
+
+## TestForSSTREAM
+
+## TestForSTDNamespace
+
+## UseEcos
+ecos_add_executable
+ecos_add_include_directories
+ecos_adjust_directory
+ecos_use_arm_elf_tools
+ecos_use_i386_elf_tools
+ecos_use_ppc_eabi_tools
+
+## UseJavaClassFilelist
+
+## UseJava
+add_jar
+install_jar
+install_jar_exports
+install_jni_symlink
+export_jars
+find_jar
+create_javadoc
+create_javah
+
+## UseJavaSymlinks
+
+## UseSWIG
+swig_add_library
+swig_link_libraries
+
+## UsewxWidgets
+
+## WriteCompilerDetectionHeader
+write_compiler_detection_header

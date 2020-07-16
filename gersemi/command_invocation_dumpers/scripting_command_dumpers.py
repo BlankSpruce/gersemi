@@ -1,9 +1,7 @@
 from gersemi.command_line_formatter import CommandLineFormatter
+from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
-)
-from .command_with_property_value_pairs_dumper import (
-    CommandWithPropertyValuePairsDumper,
 )
 from .condition_syntax_command_invocation_dumper import (
     ConditionSyntaxCommandInvocationDumper,
@@ -11,38 +9,36 @@ from .condition_syntax_command_invocation_dumper import (
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
-from .set_command import SetCommandDumper
+from .set_command import Set
 
 
-class CMakeHostSysteInformationCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CMakeHostSysteInformation(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["RESULT"]
     multi_value_keywords = ["QUERY"]
 
 
-class CMakeParseArgumentsCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CMakeParseArguments(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["PARSE_ARGV"]
 
 
-class ConfigureFileCommandDumper(ArgumentAwareCommandInvocationDumper):
+class ConfigureFile(ArgumentAwareCommandInvocationDumper):
     options = ["COPYONLY", "ESCAPE_QUOTES", "@ONLY"]
     one_value_keywords = ["NEWLINE_STYLE"]
 
 
-class EndForeachCommandDumper(ArgumentAwareCommandInvocationDumper):
+class EndForeach(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class EndFunctionCommandDumper(ArgumentAwareCommandInvocationDumper):
+class EndFunction(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class EndMacroCommandDumper(ArgumentAwareCommandInvocationDumper):
+class EndMacro(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class ExecuteProcessCommandDumper(
-    CommandLineFormatter, ArgumentAwareCommandInvocationDumper
-):
+class ExecuteProcess(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
     options = [
         "OUTPUT_QUIET",
         "ERROR_QUIET",
@@ -66,7 +62,7 @@ class ExecuteProcessCommandDumper(
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class FileCommandDumper(MultipleSignatureCommandInvocationDumper):
+class File(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Reading
         "READ": dict(
@@ -197,7 +193,7 @@ class FileCommandDumper(MultipleSignatureCommandInvocationDumper):
     }
 
 
-class FindFileCommandDumper(ArgumentAwareCommandInvocationDumper):
+class FindFile(ArgumentAwareCommandInvocationDumper):
     options = [
         "NO_DEFAULT_PATH",
         "NO_PACKAGE_ROOT_PATH",
@@ -213,7 +209,7 @@ class FindFileCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
-class FindLibraryCommandDumper(ArgumentAwareCommandInvocationDumper):
+class FindLibrary(ArgumentAwareCommandInvocationDumper):
     options = [
         "NAMES_PER_DIR",
         "NO_DEFAULT_PATH",
@@ -230,7 +226,7 @@ class FindLibraryCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
-class FindPackageCommandDumper(ArgumentAwareCommandInvocationDumper):
+class FindPackage(ArgumentAwareCommandInvocationDumper):
     options = [
         "EXACT",
         "QUIET",
@@ -263,7 +259,7 @@ class FindPackageCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class FindPathCommandDumper(ArgumentAwareCommandInvocationDumper):
+class FindPath(ArgumentAwareCommandInvocationDumper):
     options = [
         "NO_DEFAULT_PATH",
         "NO_PACKAGE_ROOT_PATH",
@@ -279,7 +275,7 @@ class FindPathCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
-class FindProgramCommandDumper(ArgumentAwareCommandInvocationDumper):
+class FindProgram(ArgumentAwareCommandInvocationDumper):
     options = [
         "NAMES_PER_DIR",
         "NO_DEFAULT_PATH",
@@ -296,20 +292,20 @@ class FindProgramCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
-class ForeachCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Foreach(ArgumentAwareCommandInvocationDumper):
     options = ["IN"]
     multi_value_keywords = ["RANGE", "LISTS", "ITEMS"]
 
 
-class FunctionCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Function(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class GetDirectoryPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
+class GetDirectoryProperty(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["DIRECTORY", "DEFINITION"]
 
 
-class GetFilenameComponentCommandDumper(ArgumentAwareCommandInvocationDumper):
+class GetFilenameComponent(ArgumentAwareCommandInvocationDumper):
     options = [
         "DIRECTORY",
         "NAME",
@@ -324,7 +320,7 @@ class GetFilenameComponentCommandDumper(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["BASE_DIR", "PROGRAM_ARGS"]
 
 
-class GetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
+class GetProperty(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
     one_value_keywords = [
         "TARGET",
@@ -337,12 +333,12 @@ class GetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["DIRECTORY"]
 
 
-class IncludeCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Include(ArgumentAwareCommandInvocationDumper):
     options = ["OPTIONAL", "NO_POLICY_SCOPE"]
     one_value_keywords = ["RESULT_VARIABLE"]
 
 
-class ListCommandDumper(MultipleSignatureCommandInvocationDumper):
+class List(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Modification
         "FILTER": dict(
@@ -367,20 +363,20 @@ class ListCommandDumper(MultipleSignatureCommandInvocationDumper):
     }
 
 
-class MacroCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Macro(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class MarkAsAdvancedCommandDumper(ArgumentAwareCommandInvocationDumper):
+class MarkAsAdvanced(ArgumentAwareCommandInvocationDumper):
     options = ["CLEAR", "FORCE"]
 
 
-class MathCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Math(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["OUTPUT_FORMAT"]
     multi_value_keywords = ["EXPR"]
 
 
-class MessageCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Message(ArgumentAwareCommandInvocationDumper):
     options = [
         "FATAL_ERROR",
         "SEND_ERROR",
@@ -395,17 +391,17 @@ class MessageCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class SeparateArgumentsCommandDumper(ArgumentAwareCommandInvocationDumper):
+class SeparateArguments(ArgumentAwareCommandInvocationDumper):
     pass
 
 
-class SetPropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
+class SetProperty(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "APPEND", "APPEND_STRING"]
     one_value_keywords = ["DIRECTORY"]
     multi_value_keywords = ["TARGET", "SOURCE", "INSTALL", "TEST", "CACHE", "PROPERTY"]
 
 
-class StringCommandDumper(MultipleSignatureCommandInvocationDumper):
+class String(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Search and Replace
         "FIND": dict(options=["REVERSE"], multi_value_keywords=["FIND"],),
@@ -424,40 +420,47 @@ class StringCommandDumper(MultipleSignatureCommandInvocationDumper):
     }
 
 
+class SetDirectoryProperties(
+    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
+):
+    multi_value_keywords = ["PROPERTIES"]
+    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
+
+
 scripting_command_mapping = {
-    "cmake_host_system_information": CMakeHostSysteInformationCommandDumper,
-    "cmake_parse_arguments": CMakeParseArgumentsCommandDumper,
-    "configure_file": ConfigureFileCommandDumper,
+    "cmake_host_system_information": CMakeHostSysteInformation,
+    "cmake_parse_arguments": CMakeParseArguments,
+    "configure_file": ConfigureFile,
     "elseif": ConditionSyntaxCommandInvocationDumper,
     "else": ConditionSyntaxCommandInvocationDumper,
     "endif": ConditionSyntaxCommandInvocationDumper,
-    "endforeach": EndForeachCommandDumper,
-    "endfunction": EndFunctionCommandDumper,
-    "endmacro": EndMacroCommandDumper,
+    "endforeach": EndForeach,
+    "endfunction": EndFunction,
+    "endmacro": EndMacro,
     "endwhile": ConditionSyntaxCommandInvocationDumper,
-    "execute_process": ExecuteProcessCommandDumper,
-    "file": FileCommandDumper,
-    "find_file": FindFileCommandDumper,
-    "find_library": FindLibraryCommandDumper,
-    "find_package": FindPackageCommandDumper,
-    "find_path": FindPathCommandDumper,
-    "find_program": FindProgramCommandDumper,
-    "foreach": ForeachCommandDumper,
-    "function": FunctionCommandDumper,
-    "get_directory_property": GetDirectoryPropertyCommandDumper,
-    "get_filename_component": GetFilenameComponentCommandDumper,
-    "get_property": GetPropertyCommandDumper,
+    "execute_process": ExecuteProcess,
+    "file": File,
+    "find_file": FindFile,
+    "find_library": FindLibrary,
+    "find_package": FindPackage,
+    "find_path": FindPath,
+    "find_program": FindProgram,
+    "foreach": Foreach,
+    "function": Function,
+    "get_directory_property": GetDirectoryProperty,
+    "get_filename_component": GetFilenameComponent,
+    "get_property": GetProperty,
     "if": ConditionSyntaxCommandInvocationDumper,
-    "include": IncludeCommandDumper,
-    "list": ListCommandDumper,
-    "macro": MacroCommandDumper,
-    "mark_as_advanced": MarkAsAdvancedCommandDumper,
-    "math": MathCommandDumper,
-    "message": MessageCommandDumper,
-    "separate_arguments": SeparateArgumentsCommandDumper,
-    "set_directory_properties": CommandWithPropertyValuePairsDumper,
-    "set_property": SetPropertyCommandDumper,
-    "set": SetCommandDumper,
-    "string": StringCommandDumper,
+    "include": Include,
+    "list": List,
+    "macro": Macro,
+    "mark_as_advanced": MarkAsAdvanced,
+    "math": Math,
+    "message": Message,
+    "separate_arguments": SeparateArguments,
+    "set_directory_properties": SetDirectoryProperties,
+    "set_property": SetProperty,
+    "set": Set,
+    "string": String,
     "while": ConditionSyntaxCommandInvocationDumper,
 }

@@ -40,7 +40,7 @@ class IsolateIncludeDestinationsKeyword(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-class InstallCommandDumper(MultipleSignatureCommandInvocationDumper):
+class Install(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "TARGETS": dict(
             options=[

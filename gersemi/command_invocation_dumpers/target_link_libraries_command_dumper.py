@@ -27,7 +27,7 @@ class IsolateConfigurationTypeAndItem(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-class TargetLinkLibrariesCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetLinkLibraries(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = [
         "INTERFACE",
         "PUBLIC",

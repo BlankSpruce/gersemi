@@ -4,6 +4,9 @@ from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.command_invocation_dumpers.ctest_command_dumpers import (
     ctest_command_mapping,
 )
+from gersemi.command_invocation_dumpers.module_command_dumpers import (
+    module_command_mapping,
+)
 from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
     scripting_command_mapping,
 )
@@ -22,6 +25,7 @@ class CommandInvocationDumper(
         **scripting_command_mapping,
         **project_command_mapping,
         **ctest_command_mapping,
+        **module_command_mapping,
     }
 
     @contextmanager

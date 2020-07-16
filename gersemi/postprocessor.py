@@ -29,8 +29,10 @@ class SimplifyParseTree(Transformer_InPlace):
 
 def get_builtin_commands():
     HERE = os.path.dirname(os.path.realpath(__file__))
+    is_not_comment_or_empty = lambda s: not (s.startswith("#") or len(s) == 0)
+
     with open(os.path.join(HERE, "builtin_commands"), "r") as f:
-        return set(f.read().splitlines())
+        return set(filter(is_not_comment_or_empty, f.read().splitlines()))
 
 
 class PreserveCustomCommandFormatting(Transformer_InPlace):

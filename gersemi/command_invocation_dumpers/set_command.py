@@ -21,7 +21,7 @@ def is_cache_type(children):
     return any(map(is_cache, children))
 
 
-class SetCommandDumper(BaseCommandInvocationDumper):
+class Set(BaseCommandInvocationDumper):
     def _format_cache_part(self, children):
         result = self._try_to_format_into_single_line(children, separator=" ")
         if result is not None:

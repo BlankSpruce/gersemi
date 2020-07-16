@@ -1,20 +1,16 @@
 from gersemi.command_line_formatter import CommandLineFormatter
+from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-from .command_with_property_value_pairs_dumper import (
-    CommandWithPropertyValuePairsDumper,
-)
-from .install_command_dumper import InstallCommandDumper
+from .install_command_dumper import Install
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
-from .target_link_libraries_command_dumper import TargetLinkLibrariesCommandDumper
+from .target_link_libraries_command_dumper import TargetLinkLibraries
 
 
-class AddCustomCommandCommandDumper(
-    CommandLineFormatter, MultipleSignatureCommandInvocationDumper
-):
+class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "OUTPUT": dict(
             options=["VERBATIM", "APPEND", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"],
@@ -50,31 +46,29 @@ class AddCustomCommandCommandDumper(
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class AddCustomTargetCommandDumper(
-    CommandLineFormatter, ArgumentAwareCommandInvocationDumper
-):
+class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
     options = ["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["WORKING_DIRECTORY", "COMMENT", "JOB_POOL"]
     multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class AddTestCommandDumper(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
+class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
     options = ["COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["NAME", "WORKING_DIRECTORY"]
     multi_value_keywords = ["COMMAND", "CONFIGURATIONS"]
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class BuildCommandCommandDumper(ArgumentAwareCommandInvocationDumper):
+class BuildCommand(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME"]
 
 
-class CreateTestSourcelistCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CreateTestSourcelist(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["EXTRA_INCLUDE", "FUNCTION"]
 
 
-class DefinePropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
+class DefineProperty(ArgumentAwareCommandInvocationDumper):
     options = [
         "GLOBAL",
         "DIRECTORY",
@@ -89,7 +83,7 @@ class DefinePropertyCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["BRIEF_DOCS", "FULL_DOCS"]
 
 
-class ExportCommandDumper(MultipleSignatureCommandInvocationDumper):
+class Export(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "EXPORT": dict(one_value_keywords=["EXPORT", "NAMESPACE", "FILE"]),
         "TARGETS": dict(
@@ -101,67 +95,67 @@ class ExportCommandDumper(MultipleSignatureCommandInvocationDumper):
     }
 
 
-class IncludeExternalMsProjectCommandDumper(ArgumentAwareCommandInvocationDumper):
+class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
 
 
-class LinkLibrariesCommandDumper(ArgumentAwareCommandInvocationDumper):
+class LinkLibraries(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["debug", "optimized", "general"]
 
 
-class LoadCacheCommandDumper(ArgumentAwareCommandInvocationDumper):
+class LoadCache(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["READ_WITH_PREFIX"]
     multi_value_keywords = ["EXCLUDE", "INCLUDE_INTERNALS"]
 
 
-class ProjectCommandDumper(ArgumentAwareCommandInvocationDumper):
+class Project(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["VERSION", "DESCRIPTION", "HOMEPAGE_URL"]
     multi_value_keywords = ["LANGUAGES"]
 
 
-class SourceGroupCommandDumper(ArgumentAwareCommandInvocationDumper):
+class SourceGroup(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["REGULAR_EXPRESSION", "TREE", "PREFIX"]
     multi_value_keywords = ["FILES"]
 
 
-class TargetCompileDefinitionsCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetCompileDefinitions(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetCompileFeaturesCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetCompileFeatures(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetCompileOptionsCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetCompileOptions(ArgumentAwareCommandInvocationDumper):
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetIncludeDirectoriesCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetIncludeDirectories(ArgumentAwareCommandInvocationDumper):
     options = ["BEFORE", "SYSTEM"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetLinkDirectoriesCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetLinkDirectories(ArgumentAwareCommandInvocationDumper):
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetLinkOptionsCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetLinkOptions(ArgumentAwareCommandInvocationDumper):
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetPrecompileHeadersCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetPrecompileHeaders(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["REUSE_FROM"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetSourcesCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TargetSources(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TryCompileCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TryCompile(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = [
         "OUTPUT_VARIABLE",
         "COPY_FILE",
@@ -191,7 +185,7 @@ class TryCompileCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class TryRunCommandDumper(ArgumentAwareCommandInvocationDumper):
+class TryRun(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = [
         "COMPILE_OUTPUT_VARIABLE",
         "RUN_OUTPUT_VARIABLE",
@@ -206,32 +200,53 @@ class TryRunCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
+class SetSourceFilesProperties(
+    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
+):
+    multi_value_keywords = ["PROPERTIES"]
+    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
+
+
+class SetTargetProperties(
+    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
+):
+    multi_value_keywords = ["PROPERTIES"]
+    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
+
+
+class SetTestsProperties(
+    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
+):
+    multi_value_keywords = ["PROPERTIES"]
+    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
+
+
 project_command_mapping = {
-    "add_custom_command": AddCustomCommandCommandDumper,
-    "add_custom_target": AddCustomTargetCommandDumper,
-    "add_test": AddTestCommandDumper,
-    "build_command": BuildCommandCommandDumper,
-    "create_test_sourcelist": CreateTestSourcelistCommandDumper,
-    "define_property": DefinePropertyCommandDumper,
-    "export": ExportCommandDumper,
-    "include_external_msproject": IncludeExternalMsProjectCommandDumper,
-    "install": InstallCommandDumper,
-    "link_libraries": LinkLibrariesCommandDumper,
-    "load_cache": LoadCacheCommandDumper,
-    "project": ProjectCommandDumper,
-    "source_group": SourceGroupCommandDumper,
-    "set_source_files_properties": CommandWithPropertyValuePairsDumper,
-    "set_target_properties": CommandWithPropertyValuePairsDumper,
-    "set_tests_properties": CommandWithPropertyValuePairsDumper,
-    "target_compile_definitions": TargetCompileDefinitionsCommandDumper,
-    "target_compile_features": TargetCompileFeaturesCommandDumper,
-    "target_compile_options": TargetCompileOptionsCommandDumper,
-    "target_include_directories": TargetIncludeDirectoriesCommandDumper,
-    "target_link_directories": TargetLinkDirectoriesCommandDumper,
-    "target_link_libraries": TargetLinkLibrariesCommandDumper,
-    "target_link_options": TargetLinkOptionsCommandDumper,
-    "target_precompile_headers": TargetPrecompileHeadersCommandDumper,
-    "target_sources": TargetSourcesCommandDumper,
-    "try_compile": TryCompileCommandDumper,
-    "try_run": TryRunCommandDumper,
+    "add_custom_command": AddCustomCommand,
+    "add_custom_target": AddCustomTarget,
+    "add_test": AddTest,
+    "build_command": BuildCommand,
+    "create_test_sourcelist": CreateTestSourcelist,
+    "define_property": DefineProperty,
+    "export": Export,
+    "include_external_msproject": IncludeExternalMsProject,
+    "install": Install,
+    "link_libraries": LinkLibraries,
+    "load_cache": LoadCache,
+    "project": Project,
+    "source_group": SourceGroup,
+    "set_source_files_properties": SetSourceFilesProperties,
+    "set_target_properties": SetTargetProperties,
+    "set_tests_properties": SetTestsProperties,
+    "target_compile_definitions": TargetCompileDefinitions,
+    "target_compile_features": TargetCompileFeatures,
+    "target_compile_options": TargetCompileOptions,
+    "target_include_directories": TargetIncludeDirectories,
+    "target_link_directories": TargetLinkDirectories,
+    "target_link_libraries": TargetLinkLibraries,
+    "target_link_options": TargetLinkOptions,
+    "target_precompile_headers": TargetPrecompileHeaders,
+    "target_sources": TargetSources,
+    "try_compile": TryCompile,
+    "try_run": TryRun,
 }

@@ -3,7 +3,7 @@ from .argument_aware_command_invocation_dumper import (
 )
 
 
-class CTestBuildCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestBuild(ArgumentAwareCommandInvocationDumper):
     options = ["APPEND", "QUIET"]
     one_value_keywords = [
         "BUILD",
@@ -18,7 +18,7 @@ class CTestBuildCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class CTestConfigureCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestConfigure(ArgumentAwareCommandInvocationDumper):
     options = ["APPEND", "QUIET"]
     one_value_keywords = [
         "BUILD",
@@ -29,13 +29,13 @@ class CTestConfigureCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class CTestCoverageCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestCoverage(ArgumentAwareCommandInvocationDumper):
     options = ["APPEND", "QUIET"]
     one_value_keywords = ["BUILD", "RETURN_VALUE", "CAPTURE_CMAKE_ERROR"]
     multi_value_keywords = ["LABELS"]
 
 
-class CTestMemcheckCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestMemcheck(ArgumentAwareCommandInvocationDumper):
     options = ["APPEND", "QUIET"]
     one_value_keywords = [
         "BUILD",
@@ -58,16 +58,16 @@ class CTestMemcheckCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class CTestRunScriptCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestRunScript(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["RETURN_VALUE"]
 
 
-class CTestStartCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestStart(ArgumentAwareCommandInvocationDumper):
     options = ["APPEND", "QUIET"]
     one_value_keywords = ["GROUP"]
 
 
-class CTestSubmitCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestSubmit(ArgumentAwareCommandInvocationDumper):
     options = ["QUIET"]
     one_value_keywords = [
         "SUBMIT_URL",
@@ -83,7 +83,7 @@ class CTestSubmitCommandDumper(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["PARTS", "FILES"]
 
 
-class CTestTestCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestTest(ArgumentAwareCommandInvocationDumper):
     options = ["APPEND", "QUIET"]
     one_value_keywords = [
         "BUILD",
@@ -107,26 +107,26 @@ class CTestTestCommandDumper(ArgumentAwareCommandInvocationDumper):
     ]
 
 
-class CTestUpdateCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestUpdate(ArgumentAwareCommandInvocationDumper):
     options = ["QUIET"]
     one_value_keywords = ["SOURCE", "RETURN_VALUE", "CAPTURE_CMAKE_ERROR"]
 
 
-class CTestUploadCommandDumper(ArgumentAwareCommandInvocationDumper):
+class CTestUpload(ArgumentAwareCommandInvocationDumper):
     options = ["QUIET"]
     one_value_keywords = ["CAPTURE_CMAKE_ERROR"]
     multi_value_keywords = ["FILES"]
 
 
 ctest_command_mapping = {
-    "ctest_build": CTestBuildCommandDumper,
-    "ctest_configure": CTestConfigureCommandDumper,
-    "ctest_coverage": CTestCoverageCommandDumper,
-    "ctest_memcheck": CTestMemcheckCommandDumper,
-    "ctest_run_script": CTestRunScriptCommandDumper,
-    "ctest_start": CTestStartCommandDumper,
-    "ctest_submit": CTestSubmitCommandDumper,
-    "ctest_test": CTestTestCommandDumper,
-    "ctest_update": CTestUpdateCommandDumper,
-    "ctest_upload": CTestUploadCommandDumper,
+    "ctest_build": CTestBuild,
+    "ctest_configure": CTestConfigure,
+    "ctest_coverage": CTestCoverage,
+    "ctest_memcheck": CTestMemcheck,
+    "ctest_run_script": CTestRunScript,
+    "ctest_start": CTestStart,
+    "ctest_submit": CTestSubmit,
+    "ctest_test": CTestTest,
+    "ctest_update": CTestUpdate,
+    "ctest_upload": CTestUpload,
 }
