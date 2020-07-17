@@ -49,7 +49,7 @@ The key goal is for the tool to "just work" and to have as little configuration 
 ### Let's make a deal
 
 It's possible to provide reasonable formatting for custom commands. However on language level there are no hints available about supported keywords for given command so `gersemi` has to generate specialized formatter. To do that custom command definition is necessary which should be provided with `--definitions`. There are limitations though since it'd probably require full-blown CMake language interpreter to do it in every case so let's make a deal: if your custom command definition (function or macro) uses `cmake_parse_arguments` and does it in obvious manner such specialized formatter will be generated. For instance this definition is okay (you can find other examples in `tests/custom_command_formatting/`):
-```
+```cmake
 function(SEVEN_SAMURAI some standalone arguments)
     set(options KAMBEI KATSUSHIRO)
     set(oneValueArgs GOROBEI HEIHACHI KYUZO)
@@ -68,7 +68,7 @@ endfunction()
 ```
 
 With this definition available it's possible to format code like so:
-```
+```cmake
 seven_samurai(
     three
     standalone
@@ -84,6 +84,54 @@ seven_samurai(
 ```
 
 Otherwise `gersemi` will fallback to only fixing indentation and preserving original formatting. If you find these limitations too strict let me know about your case.
+
+### How to disable reformatting
+
+Gersemi can be disallowed to format block of code using pair of comments `# gersemi: off`/`# gersemi: on`. Example:
+
+```cmake
+the_hobbit(
+    BURGLAR "Bilbo Baggins"
+    WIZARD Gandalf
+    DWARVES
+        "Thorin Oakenshield"
+        Fili
+        Kili
+        Balin
+        Dwalin
+        Oin
+        Gloin
+        Dori
+        Nori
+        Ori
+        Bifur
+        Bofur
+        Bombur
+)
+
+# gersemi: off
+the_fellowship_of_the_ring     (
+    RING_BEARER Frodo GARDENER Samwise
+    Merry Pippin Aragon
+            Boromir
+            Gimli
+       Legolas
+       Gandalf
+       )
+# gersemi: on
+```
+
+Pair of comments should be in the same scope, so the following is not supported:
+```cmake
+# gersemi: off
+the_godfather()
+
+function(how_to_make_a_successful_movie args)
+step_one_have_a_good_scenario()
+# gersemi: on
+step_two_make_the_movie()
+endfunction()
+```
 
 ## Contributing
 
