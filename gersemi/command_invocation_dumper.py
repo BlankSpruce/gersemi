@@ -18,16 +18,18 @@ from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper imp
 )
 
 
-class CommandInvocationDumper(
-    PreservingCommandInvocationDumper, BaseCommandInvocationDumper
-):
-    known_command_mapping = {
+def get_builtin_command_mapping():
+    return {
         **scripting_command_mapping,
         **project_command_mapping,
         **ctest_command_mapping,
         **module_command_mapping,
     }
 
+
+class CommandInvocationDumper(
+    PreservingCommandInvocationDumper, BaseCommandInvocationDumper
+):
     @contextmanager
     def patched(self, patch):
         old_class = self.__class__

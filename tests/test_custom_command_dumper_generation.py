@@ -36,8 +36,8 @@ def test_custom_command_generated_dumper(
     parsed_function_def = parser_with_postprocessing.parse(case.content)
     parsed_function = parser_with_postprocessing.parse(custom_command_to_format)
 
-    formatters = find_custom_command_definitions(parsed_function_def)
-    dumper = create_dumper(formatters)
+    definitions = find_custom_command_definitions(parsed_function_def)
+    dumper = create_dumper(definitions)
 
     custom_command_formatted = dumper.visit(parsed_function)
 

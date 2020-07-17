@@ -85,6 +85,33 @@ seven_samurai(
 
 Otherwise `gersemi` will fallback to only fixing indentation and preserving original formatting. If you find these limitations too strict let me know about your case.
 
+If your definition should be ignored for purposes of generating specialized formatter you can use `# gersemi: ignore` at the beginning of the custom command:
+```cmake
+function(harry_potter_and_the_philosophers_stone some standalone arguments)
+    # gersemi: ignore
+    set(options HARRY)
+    set(oneValueArgs HERMIONE)
+    set(multiValueArgs RON)
+
+    cmake_parse_arguments(
+        THIS_FUNCTION_PREFIX
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+
+    # rest of the definition...
+endfunction()
+
+# no reformatting
+harry_potter_and_the_philosophers_stone(HARRY
+    HERMIONE foo
+              RON foo bar baz)
+```
+
+It should be still preferred simply to not provide that definition instead.
+
 ### How to disable reformatting
 
 Gersemi can be disallowed to format block of code using pair of comments `# gersemi: off`/`# gersemi: on`. Example:

@@ -4,14 +4,26 @@ from gersemi.ast_helpers import is_keyword
 from gersemi.keywords import Keywords
 
 
+class IgnoreThisDefinition:  # pylint: disable=too-few-public-methods
+    pass
+
+
 class DropIrrelevantElements(Transformer):  # pylint: disable=too-few-public-methods
     def _discard(self, _):
         raise Discard
 
+    def non_command_element(self, children):
+        if len(children) == 1 and isinstance(children[0], IgnoreThisDefinition):
+            return children[0]
+        raise Discard
+
+    def line_comment(self, children):
+        if children[0].strip() == "gersemi: ignore":
+            return IgnoreThisDefinition()
+        raise Discard
+
     NEWLINE = _discard
-    line_comment = _discard
     bracket_comment = _discard
-    non_command_element = _discard
 
 
 is_parse_argv = is_keyword("PARSE_ARGV")
@@ -61,7 +73,14 @@ class CMakeInterpreter(Interpreter):
         self.visit_children(tree)
         return self.found_commands
 
+    def _should_definition_be_ignored(self, block):
+        _, body, _ = block.children
+        return isinstance(body.children[0], IgnoreThisDefinition)
+
     def block(self, tree):
+        if self._should_definition_be_ignored(tree):
+            return
+
         subinterpreter = self._inner_scope
         block_begin, *body, _ = subinterpreter.visit_children(tree)
         name, *_ = block_begin
@@ -71,6 +90,8 @@ class CMakeInterpreter(Interpreter):
         keywords, *_ = body
         if len(keywords) > 0:
             self.found_commands[name.lower()] = keywords[0]
+        else:
+            self.found_commands[name.lower()] = Keywords()
 
     def block_body(self, tree):
         return [
