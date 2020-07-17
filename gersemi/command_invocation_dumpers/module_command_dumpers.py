@@ -622,7 +622,136 @@ class WriteBasicPackageVersionFile(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["VERSION", "COMPATIBILITY"]
 
 
+class BisonTarget(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["COMPILE_FLAGS", "DEFINES_FILES", "VERBOSE", "REPORT_FILE"]
+
+
+class DoxygenAddDocs(ArgumentAwareCommandInvocationDumper):
+    options = ["ALL", "USE_STAMP_FILE"]
+    one_value_keywords = ["WORKING_DIRECTORY", "COMMENT"]
+
+
+class EnvModule(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["OUTPUT_VARIABLE", "RESULT_VARIABLE"]
+    multi_value_keywords = ["COMMAND"]
+    keyword_formatters = {"COMMAND": "_format_command_line"}
+
+
+class EnvModuleSwap(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["OUTPUT_VARIABLE", "RESULT_VARIABLE"]
+
+
+class FlexTarget(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["COMPILE_FLAGS", "DEFINES_FILES"]
+
+
+class GettextCreateTranslations(ArgumentAwareCommandInvocationDumper):
+    options = ["ALL"]
+
+
+class GettextProcessPotFile(ArgumentAwareCommandInvocationDumper):
+    options = ["ALL"]
+    one_value_keywords = ["INSTALL_DESTINATION"]
+    multi_value_keywords = ["LANGUAGES"]
+
+
+class GettextProcessPoFiles(ArgumentAwareCommandInvocationDumper):
+    options = ["ALL"]
+    one_value_keywords = ["INSTALL_DESTINATION"]
+    multi_value_keywords = ["PO_FILES"]
+
+
+class MatlabAddUnitTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
+    options = ["NO_UNITTEST_FRAMEWORK"]
+    one_value_keywords = [
+        "NAME",
+        "UNITTEST_FILE",
+        "CUSTOM_TEST_COMMAND",
+        "UNITTEST_PRECOMMAND",
+        "TIMEOUT",
+    ]
+    multi_value_keywords = [
+        "ADDITIONAL_PATH",
+        "MATLAB_ADDITIONAL_STARTUP_OPTIONS",
+        "TEST_ARGS",
+    ]
+    keyword_formatters = {"MATLAB_ADDITIONAL_STARTUP_OPTIONS": "_format_command_line"}
+
+
+class MatlabAddMex(ArgumentAwareCommandInvocationDumper):
+    options = ["EXECUTABLE", "MODULE", "SHARED", "R2017b", "R2018a", "EXCLUDE_FROM_ALL"]
+    one_value_keywords = ["NAME", "OUTPUT_NAME", "DOCUMENTATION"]
+    multi_value_keywords = ["SRC", "LINK_TO"]
+
+
+class PkgCheckModules(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "REQUIRED",
+        "QUIET",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "IMPORTED_TARGET",
+        "GLOBAL",
+    ]
+
+
+class PkgSearchModule(ArgumentAwareCommandInvocationDumper):
+    options = [
+        "REQUIRED",
+        "QUIET",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "IMPORTED_TARGET",
+        "GLOBAL",
+    ]
+
+
+class ProtobufGenerateCpp(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["DESCRIPTORS", "EXPORT_MACRO"]
+
+
+class Qt4WrapCpp(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["TARGET"]
+    multi_value_keywords = ["OPTIONS"]
+
+
+class Qt4WrapUi(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["OPTIONS"]
+
+
+class Qt4AddResources(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["OPTIONS"]
+
+
+class Qt4GenerateMoc(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["TARGET"]
+
+
+class Qt4GenerateDbusInterface(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["OPTIONS"]
+
+
+class Qt4CreateTranslation(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["OPTIONS"]
+
+
+class Qt4Automoc(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["TARGET"]
+
+
+class SquishAddTest(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = [
+        "AUT",
+        "SUITE",
+        "TEST",
+        "SETTINGSGROUP",
+        "PRE_COMMAND",
+        "POST_COMMAND",
+    ]
+
+
 module_command_mapping = {
+    # Utility Modules
     "android_add_test_data": AndroidAddTestData,
     "check_c_source_compiles": CheckCSourceCompiles,
     "check_cxx_source_compiles": CheckCXXSourceCompiles,
@@ -670,4 +799,26 @@ module_command_mapping = {
     "swig_add_library": SwigAddLibrary,
     "write_compiler_detection_header": WriteCompilerDetectionHeader,
     "write_basic_package_version_file": WriteBasicPackageVersionFile,
+    # Find Modules
+    "bison_target": BisonTarget,
+    "doxygen_add_docs": DoxygenAddDocs,
+    "env_module": EnvModule,
+    "env_module_swap": EnvModuleSwap,
+    "flex_target": FlexTarget,
+    "gettext_create_translations": GettextCreateTranslations,
+    "gettext_process_pot_file": GettextProcessPotFile,
+    "gettext_process_po_files": GettextProcessPoFiles,
+    "matlab_add_unit_test": MatlabAddUnitTest,
+    "matlab_add_mex": MatlabAddMex,
+    "pkg_check_modules": PkgCheckModules,
+    "pkg_search_module": PkgSearchModule,
+    "protobuf_generate_cpp": ProtobufGenerateCpp,
+    "qt4_wrap_cpp": Qt4WrapCpp,
+    "qt4_wrap_ui": Qt4WrapUi,
+    "qt4_add_resources": Qt4AddResources,
+    "qt4_generate_moc": Qt4GenerateMoc,
+    "qt4_generate_dbus_interface": Qt4GenerateDbusInterface,
+    "qt4_create_translation": Qt4CreateTranslation,
+    "qt4_automoc": Qt4Automoc,
+    "squish_add_test": SquishAddTest,
 }
