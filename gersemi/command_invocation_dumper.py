@@ -16,15 +16,16 @@ from gersemi.command_invocation_dumpers.project_command_dumpers import (
 from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
+from gersemi.command_invocation_dumpers.specialized_dumpers import (
+    create_specialized_dumper,
+)
 
-
-def get_builtin_command_mapping():
-    return {
-        **scripting_command_mapping,
-        **project_command_mapping,
-        **ctest_command_mapping,
-        **module_command_mapping,
-    }
+BUILTIN_COMMAND_MAPPING = {
+    **scripting_command_mapping,
+    **project_command_mapping,
+    **ctest_command_mapping,
+    **module_command_mapping,
+}
 
 
 class CommandInvocationDumper(
@@ -44,7 +45,14 @@ class CommandInvocationDumper(
             self.__class__ = old_class
 
     def _get_patch(self, command_name):
-        return self.known_command_mapping.get(command_name, None)
+        if command_name in BUILTIN_COMMAND_MAPPING:
+            return BUILTIN_COMMAND_MAPPING[command_name]
+
+        if command_name in self.custom_command_definitions:
+            keywords = self.custom_command_definitions[command_name]
+            return create_specialized_dumper(keywords)
+
+        return None
 
     def command_invocation(self, tree):
         command_name, _ = tree.children
@@ -56,6 +64,6 @@ class CommandInvocationDumper(
 
     def custom_command(self, tree):
         _, command_name, arguments, *_ = tree.children
-        if command_name in self.known_command_mapping:
+        if command_name in self.custom_command_definitions:
             return self.visit(Tree("command_invocation", [command_name, arguments]))
         return super().custom_command(tree)
