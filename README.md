@@ -15,7 +15,7 @@ $ pip3 install gersemi
 
 ```
 usage: gersemi [-h] [-c] [-i] [-l INTEGER] [--definitions src [src ...]]
-               [--diff] [--unsafe] [--version]
+               [--diff] [--unsafe] [--version] [-q]
                [src [src ...]]
 
 A formatter to make your CMake code the real treasure.
@@ -40,6 +40,7 @@ optional arguments:
   --diff                Show diff on stdout for each formatted file instead
   --unsafe              Skip default sanity checks
   --version             Show version.
+  -q, --quiet           Skip printing non-error messages to stderr
 ```
 
 ## Formatting
