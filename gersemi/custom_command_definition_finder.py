@@ -18,7 +18,7 @@ class DropIrrelevantElements(Transformer):  # pylint: disable=too-few-public-met
         raise Discard
 
     def line_comment(self, children):
-        if children[0].strip() == "gersemi: ignore":
+        if len(children) > 0 and children[0].strip() == "gersemi: ignore":
             return IgnoreThisDefinition()
         raise Discard
 
@@ -74,8 +74,13 @@ class CMakeInterpreter(Interpreter):
         return self.found_commands
 
     def _should_definition_be_ignored(self, block):
-        _, body, _ = block.children
-        return isinstance(body.children[0], IgnoreThisDefinition)
+        _, *maybe_body, _ = block.children
+        if maybe_body:
+            body, *_ = maybe_body
+            return len(body.children) > 0 and isinstance(
+                body.children[0], IgnoreThisDefinition
+            )
+        return False
 
     def block(self, tree):
         if self._should_definition_be_ignored(tree):

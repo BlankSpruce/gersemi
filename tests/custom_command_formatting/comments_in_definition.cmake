@@ -7,6 +7,9 @@ function(SEVEN_SAMURAI some standalone arguments)
     #[[more comments]]
     set(multiValueArgs SHICHIROJI KIKUCHIYO)
 
+    # and some empty line comments
+    #
+
     cmake_parse_arguments(
         THIS_FUNCTION_PREFIX
         "${options}"
