@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0] 2020-07-18
+
+### Added
+- utilize multiple cores if avaiable through `multiprocessing` module
+- use `--quiet` to suppress non-error message on stderr
+- support for commands from `cmake-modules` section of CMake documentation
+- support formatting of custom commands without keyworded arguments
+- custom command definitions can be marked now with `# gersemi: ignore` to suppress generating specialized formatter for these commands
+
+### Changed
+- commands with `PROPERTIES` keyword such as `set_directory_properties` now are formatted in uniform way as other commands with keyworded arguments
+
+### Fixed
+- idempotence of preserving formatting of unknown custom commands
+
 ## [0.2.2] 2020-06-23
 
 ### Fixed
