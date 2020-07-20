@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1] 2020-07-20
+
+### Fixed
+- line comments in unknown custom commands are preserved in their original form
+
 ## [0.3.0] 2020-07-18
 
 ### Added
