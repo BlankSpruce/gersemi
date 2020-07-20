@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 from lark.exceptions import VisitError as LarkVisitError
-from gersemi.exceptions import ParsingError
+from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.formatter import Formatter
 from gersemi.utils import smart_open
 
@@ -53,5 +53,5 @@ def format_file_impl(path: Path, formatter: Formatter) -> FormattedFile:
 def format_file(path: Path, formatter: Formatter) -> Result:
     try:
         return format_file_impl(path, formatter)
-    except (UnicodeError, ParsingError, LarkVisitError) as exception:
+    except (UnicodeError, ParsingError, LarkVisitError, ASTMismatch) as exception:
         return Error(exception, path)

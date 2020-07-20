@@ -4,6 +4,7 @@
 
 ### Fixed
 - line comments in unknown custom commands are preserved in their original form
+- fail-safe for AST mismatch (between before and after reformatting) now properly reports file where the problem occured
 
 ## [0.3.0] 2020-07-18
 
