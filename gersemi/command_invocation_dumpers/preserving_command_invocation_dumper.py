@@ -5,6 +5,8 @@ from gersemi.base_dumper import BaseDumper
 
 BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
 QUOTED_ARGUMENT_REGEX = r'("(?:[^\\\"]|\n|(?:\\(?:[^A-Za-z0-9]|[nrt]))|\\\n)*")'
+LINE_COMMENT_BEGIN = "#"
+BRACKET_COMMENT_BEGIN = "#["
 
 
 def split_by_bracket_arguments(string):
@@ -43,12 +45,31 @@ def strip_empty_lines_from_edges(s):
     return "\n".join(lines)
 
 
+def find_line_comment_begin(s):
+    start = 0
+    while True:
+        index = s.rfind(LINE_COMMENT_BEGIN, start)
+        if index == -1:
+            return index
+
+        if index == s.rfind(BRACKET_COMMENT_BEGIN, start):
+            start = index + 1
+        else:
+            return index
+
+
+def ends_with_line_comment(s):
+    return find_line_comment_begin(s) != -1
+
+
 class PreservingCommandInvocationDumper(BaseDumper):
     def _preprocess_content(self, content):
         begin = "\n" if content.startswith("\n") else ""
         end = "\n" if content.endswith("\n") else ""
         stripped_content = strip_empty_lines_from_edges(content)
 
+        if ends_with_line_comment(stripped_content):
+            return f"{begin}{stripped_content}{end}"
         return f"{begin}{stripped_content.rstrip()}{end}"
 
     def custom_command(self, tree):
@@ -69,7 +90,7 @@ class PreservingCommandInvocationDumper(BaseDumper):
             self._preprocess_content(content), self.alignment - len(indentation)
         )
         if not content.startswith("\n"):
-            body = body.strip(" ")
+            body = body.lstrip(" ")
 
         if "\n" not in body:
             end = ")"
