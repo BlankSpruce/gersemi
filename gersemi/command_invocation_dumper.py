@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from functools import lru_cache
 from lark import Tree
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.command_invocation_dumpers.ctest_command_dumpers import (
@@ -28,18 +29,22 @@ BUILTIN_COMMAND_MAPPING = {
 }
 
 
+@lru_cache(maxsize=None)
+def create_patch(patch, old_class):
+    class Impl(patch, old_class):  # pylint: disable=too-few-public-methods
+        pass
+
+    return Impl
+
+
 class CommandInvocationDumper(
     PreservingCommandInvocationDumper, BaseCommandInvocationDumper
 ):
     @contextmanager
     def patched(self, patch):
         old_class = self.__class__
-
-        class Impl(patch, old_class):  # pylint: disable=too-few-public-methods
-            pass
-
         try:
-            self.__class__ = Impl
+            self.__class__ = create_patch(patch, old_class)
             yield self
         finally:
             self.__class__ = old_class
