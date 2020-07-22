@@ -1,9 +1,6 @@
 import os
-from lark import Lark, UnexpectedInput
-from lark.grammar import Rule
-from lark.lark import LarkOptions
-from lark.lexer import TerminalDef
-from lark.utils import SerializeMemoizer
+import packaging.version as pv
+from lark import Lark, UnexpectedInput, __version__ as lark_version
 from gersemi.exceptions import (
     GenericParsingError,
     UnbalancedParentheses,
@@ -12,8 +9,13 @@ from gersemi.exceptions import (
 from gersemi.parsing_transformer import ParsingTransformer
 from gersemi.postprocessor import PostProcessor
 
+if pv.parse(lark_version) < pv.parse("0.8.6"):
+    from gersemi.parser_picklers import PickleBeforeLark0dot8dot6 as PickleLarkParser
+else:
+    from gersemi.parser_picklers import PickleAfterLark0dot8dot6 as PickleLarkParser  # type: ignore
 
-class Parser:  # pylint: disable=too-few-public-methods
+
+class Parser(PickleLarkParser):  # pylint: disable=too-few-public-methods
     examples = {
         UnbalancedBrackets: [
             "foo(foo [[foo]=]",
@@ -62,35 +64,6 @@ class Parser:  # pylint: disable=too-few-public-methods
             return self.lark_parser.parse(code)
         except UnexpectedInput as u:
             self._match_parsing_error(code, u)
-
-    # similar function available since lark 0.8.6
-    def _recreate_lark_parser(self, data, memo):
-        # pylint: disable=protected-access
-        deserialized_memo = SerializeMemoizer.deserialize(
-            memo, {"Rule": Rule, "TerminalDef": TerminalDef}, {}
-        )
-        instance = Lark.__new__(Lark)
-        options = dict(data["options"])
-        options["transformer"] = ParsingTransformer()
-        instance.options = LarkOptions.deserialize(options, deserialized_memo)
-        instance.rules = [
-            Rule.deserialize(rule, deserialized_memo) for rule in data["rules"]
-        ]
-        instance._prepare_callbacks()
-        instance.parser = instance.parser_class.deserialize(
-            data["parser"],
-            deserialized_memo,
-            instance._callbacks,
-            instance.options.postlex,
-        )
-        return instance
-
-    def __getstate__(self):
-        return self.lark_parser.memo_serialize([TerminalDef, Rule])
-
-    def __setstate__(self, state):
-        data, memo = state
-        self.lark_parser = self._recreate_lark_parser(data, memo)
 
 
 class ParserWithPostProcessing:  # pylint: disable=too-few-public-methods
