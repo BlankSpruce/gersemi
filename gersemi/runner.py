@@ -5,11 +5,13 @@ import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
-from typing import Callable
+from typing import Callable, Iterable
 from lark.exceptions import VisitError as LarkVisitError
+from gersemi.configuration import Configuration
 from gersemi.custom_command_definition_finder import find_custom_command_definitions
 from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.formatter import create_formatter, Formatter
+from gersemi.mode import Mode
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
 from gersemi.task_result import TaskResult
@@ -85,16 +87,15 @@ def find_all_custom_command_definitions(bare_parser, paths, pool):
     return result
 
 
-def select_task(args):
-    if args.show_diff:
-        return show_diff
-    if args.check_formatting:
-        if args.quiet:
-            return quiet_check_formatting
-        return check_formatting
-    if args.in_place:
-        return rewrite_in_place
-    return forward_to_stdout
+def select_task(mode: Mode, configuration: Configuration):
+    return {
+        Mode.ForwardToStdout: lambda _: forward_to_stdout,
+        Mode.RewriteInPlace: lambda _: rewrite_in_place,
+        Mode.CheckFormatting: lambda config: quiet_check_formatting
+        if config.quiet
+        else check_formatting,
+        Mode.ShowDiff: lambda _: show_diff,
+    }[mode](configuration)
 
 
 ERROR_MESSAGE_TEMPLATES = {
@@ -112,7 +113,7 @@ def get_error_message(error: Error) -> str:
         if isinstance(exception, exception_type):
             message = template
             break
-    return message.format(path=path, exception=exception)
+    return message.format(path=fromfile(path), exception=exception)
 
 
 def apply(
@@ -148,19 +149,19 @@ def create_pool(is_stdin_in_sources):
     return mp.Pool(processes=mp.cpu_count())
 
 
-def run(args):
+def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
     bare_parser = create_parser()
-    files_to_format = list(get_files(args.sources))
-    task = select_task(args)
+    files_to_format = list(get_files(sources))
+    task = select_task(mode, configuration)
 
     with create_pool(Path("-") in files_to_format) as pool:
         custom_command_definitions = find_all_custom_command_definitions(
-            bare_parser, args.definitions, pool
+            bare_parser, configuration.definitions, pool
         )
         formatter = create_formatter(
             bare_parser,
-            args.format_safely,
-            args.line_length,
+            not configuration.unsafe,
+            configuration.line_length,
             custom_command_definitions,
         )
         execute = partial(run_task, formatter=formatter, task=task)

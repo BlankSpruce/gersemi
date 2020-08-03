@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import yaml
 
 
 def gersemi(*gersemi_args, **subprocess_kwargs):
@@ -63,6 +64,17 @@ def compare_directories(left, right):
         "diff_files": comparison.diff_files,
         "funny_files": comparison.funny_files,
     }
+
+
+@contextmanager
+def create_dot_gersemirc(where, **kwargs):
+    p = os.path.join(where, ".gersemirc")
+    try:
+        with open(p, "w") as f:
+            f.write(yaml.dump(kwargs))
+        yield
+    finally:
+        os.remove(p)
 
 
 def assert_that_directories_differ(left, right):
@@ -376,3 +388,118 @@ def test_empty_stderr_when_files_are_not_formatted_but_quiet_is_supplied():
     )
     assert completed_process.returncode == 1
     assert completed_process.stderr == ""
+
+
+def test_project_with_dot_gersemirc_will_use_configuration_defined_in_file():
+    case_ = lambda dirname: case("custom_project/" + dirname)
+
+    with ExitStack() as stack:
+        not_formatted, formatted = [
+            stack.enter_context(temporary_dir_copy(case_(d)))
+            for d in ["not_formatted", "formatted_with_line_length_100"]
+        ]
+
+        assert_that_directories_differ(not_formatted, formatted)
+
+        with ExitStack() as configuration_files:
+            for dirname in [not_formatted, formatted]:
+                configuration_files.enter_context(
+                    create_dot_gersemirc(
+                        where=dirname, line_length=100, definitions=[dirname]
+                    )
+                )
+
+            assert_success("--check", formatted)
+            assert_fail("--check", not_formatted)
+            assert_success("--in-place", not_formatted)
+
+        assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+
+def test_line_length_from_command_line_takes_precedence_over_configuration_file():
+    with temporary_dir_copy(
+        case("custom_project/formatted_with_line_length_100")
+    ) as formatted:
+        # without configuration file
+        assert_fail("--check", formatted, "--definitions", formatted)
+        assert_success(
+            "--line-length", "100", "--check", formatted, "--definitions", formatted
+        )
+        assert_fail(
+            "--line-length", "80", "--check", formatted, "--definitions", formatted
+        )
+
+        # with configuration file
+        with create_dot_gersemirc(where=formatted, line_length=100):
+            assert_success("--check", formatted, "--definitions", formatted)
+            assert_success(
+                "--line-length", "100", "--check", formatted, "--definitions", formatted
+            )
+            assert_fail(
+                "--line-length", "80", "--check", formatted, "--definitions", formatted
+            )
+
+        # and without configuration file again
+        assert_fail("--check", formatted, "--definitions", formatted)
+
+        assert_success(
+            "--line-length", "100", "--check", formatted, "--definitions", formatted
+        )
+        assert_fail(
+            "--line-length", "80", "--check", formatted, "--definitions", formatted
+        )
+
+
+def test_definitions_from_command_line_take_precedence_over_configuration_file():
+    case_ = lambda dirname: case("custom_project/" + dirname)
+
+    with ExitStack() as stack:
+        not_formatted, formatted = [
+            stack.enter_context(temporary_dir_copy(case_(d)))
+            for d in ["not_formatted", "formatted"]
+        ]
+        assert_that_directories_differ(not_formatted, formatted)
+        assert_success("--check", formatted, "--definitions", formatted)
+        assert_fail(
+            "--check", not_formatted, "--definitions", not_formatted,
+        )
+        assert_success(
+            "--in-place", not_formatted, "--definitions", not_formatted,
+        )
+        assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+    # missing definitions in configuration file
+    with ExitStack() as stack:
+        not_formatted, formatted = [
+            stack.enter_context(temporary_dir_copy(case_(d)))
+            for d in ["not_formatted", "formatted"]
+        ]
+        assert_that_directories_differ(not_formatted, formatted)
+
+        with ExitStack() as configuration_files:
+            for dirname in [not_formatted, formatted]:
+                configuration_files.enter_context(create_dot_gersemirc(where=dirname))
+
+            assert_success("--check", formatted)
+            assert_fail("--check", not_formatted)
+            assert_success("--in-place", not_formatted)
+
+        assert_that_directories_differ(not_formatted, formatted)
+
+    # missing definitions in configuration file but provided from command line
+    with ExitStack() as stack:
+        not_formatted, formatted = [
+            stack.enter_context(temporary_dir_copy(case_(d)))
+            for d in ["not_formatted", "formatted"]
+        ]
+        assert_that_directories_differ(not_formatted, formatted)
+
+        with ExitStack() as configuration_files:
+            for dirname in [not_formatted, formatted]:
+                configuration_files.enter_context(create_dot_gersemirc(where=dirname))
+
+            assert_success("--check", formatted, "--definitions", formatted)
+            assert_fail("--check", not_formatted, "--definitions", not_formatted)
+            assert_success("--in-place", not_formatted, "--definitions", not_formatted)
+
+        assert_that_directories_have_the_same_content(not_formatted, formatted)

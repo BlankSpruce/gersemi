@@ -2,6 +2,8 @@ import argparse
 import pathlib
 import sys
 from lark import __version__ as lark_version
+from gersemi.configuration import make_configuration
+from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
 from gersemi.runner import run, print_to_stderr
 from gersemi.__version__ import __title__, __version__
@@ -16,7 +18,6 @@ def create_argparser():
         "-c",
         "--check",
         dest="check_formatting",
-        default=False,
         action="store_true",
         help=f"Check if files require reformatting. "
         f"Return {SUCCESS} when there's nothing to reformat, "
@@ -26,7 +27,6 @@ def create_argparser():
         "-i",
         "--in-place",
         dest="in_place",
-        default=False,
         action="store_true",
         help="Format files in-place",
     )
@@ -35,7 +35,6 @@ def create_argparser():
         "--line-length",
         metavar="INTEGER",
         dest="line_length",
-        default=80,
         type=int,
         help="Maximum line length in characters",
     )
@@ -52,15 +51,13 @@ def create_argparser():
     parser.add_argument(
         "--diff",
         dest="show_diff",
-        default=False,
         action="store_true",
         help="Show diff on stdout for each formatted file instead",
     )
     parser.add_argument(
         "--unsafe",
-        dest="format_safely",
-        default=True,
-        action="store_false",
+        dest="unsafe",
+        action="store_true",
         help="Skip default sanity checks",
     )
     parser.add_argument(
@@ -72,17 +69,12 @@ def create_argparser():
         "If only - is provided input is taken from stdin instead",
     )
     parser.add_argument(
-        "--version",
-        dest="show_version",
-        default=False,
-        action="store_true",
-        help="Show version.",
+        "--version", dest="show_version", action="store_true", help="Show version.",
     )
     parser.add_argument(
         "-q",
         "--quiet",
         dest="quiet",
-        default=False,
         action="store_true",
         help="Skip printing non-error messages to stderr",
     )
@@ -114,7 +106,10 @@ def main():
     if len(args.sources) < 1:
         sys.exit(SUCCESS)
 
-    sys.exit(run(args))
+    configuration = make_configuration(args)
+    mode = get_mode(args)
+
+    sys.exit(run(mode, configuration, args.sources))
 
 
 if __name__ == "__main__":
