@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from itertools import chain
 import os
 from pathlib import Path
@@ -11,6 +11,7 @@ class Configuration:
     line_length: int = 80
     unsafe: bool = False
     quiet: bool = False
+    color: bool = False
     definitions: Iterable[Path] = tuple()
 
 
@@ -42,14 +43,11 @@ def load_configuration_from_file(configuration_file_path: Path) -> Configuration
 def override_configuration_with_args(
     configuration: Configuration, args
 ) -> Configuration:
-    if args.line_length:
-        configuration.line_length = args.line_length
-    if args.unsafe:
-        configuration.unsafe = args.unsafe
-    if args.quiet:
-        configuration.quiet = args.quiet
-    if args.definitions:
-        configuration.definitions = args.definitions
+    parameters = [field.name for field in fields(Configuration)]
+    for param in parameters:
+        value = getattr(args, param)
+        if value:
+            setattr(configuration, param, value)
     return configuration
 
 

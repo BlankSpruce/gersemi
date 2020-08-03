@@ -78,6 +78,12 @@ def create_argparser():
         action="store_true",
         help="Skip printing non-error messages to stderr",
     )
+    parser.add_argument(
+        "--color",
+        dest="color",
+        action="store_true",
+        help="If --diff is selected showed diff is colorized",
+    )
     return parser
 
 

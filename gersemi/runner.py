@@ -19,7 +19,7 @@ from gersemi.tasks.check_formatting import check_formatting, quiet_check_formatt
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.format_file import format_file, Error, FormattedFile, Result
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
-from gersemi.tasks.show_diff import show_diff
+from gersemi.tasks.show_diff import show_colorized_diff, show_diff
 from gersemi.utils import fromfile, smart_open
 
 
@@ -94,7 +94,9 @@ def select_task(mode: Mode, configuration: Configuration):
         Mode.CheckFormatting: lambda config: quiet_check_formatting
         if config.quiet
         else check_formatting,
-        Mode.ShowDiff: lambda _: show_diff,
+        Mode.ShowDiff: lambda config: show_colorized_diff
+        if config.color
+        else show_diff,
     }[mode](configuration)
 
 
