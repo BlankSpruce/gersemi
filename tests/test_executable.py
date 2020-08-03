@@ -97,6 +97,17 @@ def create_dot_gersemirc(where, **kwargs):
         os.remove(p)
 
 
+@contextmanager
+def create_fake_definitions(where, name):
+    p = os.path.join(where, name)
+    try:
+        with open(os.path.join(where, name), "w") as f:
+            f.write("\n")
+        yield p
+    finally:
+        os.remove(p)
+
+
 def assert_that_directories_differ(left, right):
     comparison = compare_directories(left, right)
     for value in comparison.values():
@@ -492,3 +503,39 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
             assert_success("--in-place", not_formatted, "--definitions", not_formatted)
 
         assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+    # best definitions are in configuration file but they are overriden by command line
+    with temporary_dir_copies(directories) as (not_formatted, formatted):
+        assert_that_directories_differ(not_formatted, formatted)
+
+        with ExitStack() as configuration_files:
+            for dirname in [not_formatted, formatted]:
+                configuration_files.enter_context(
+                    create_dot_gersemirc(where=dirname, definitions=[dirname])
+                )
+
+            with ExitStack() as fake_definitions:
+                fake_definitions_in_not_formatted, fake_definitions_in_formatted = [
+                    fake_definitions.enter_context(
+                        create_fake_definitions(where=dirname, name="definitions.cmake")
+                    )
+                    for dirname in [not_formatted, formatted]
+                ]
+
+                assert_success(
+                    "--check", formatted, "--definitions", fake_definitions_in_formatted
+                )
+                assert_fail(
+                    "--check",
+                    not_formatted,
+                    "--definitions",
+                    fake_definitions_in_not_formatted,
+                )
+                assert_success(
+                    "--in-place",
+                    not_formatted,
+                    "--definitions",
+                    fake_definitions_in_not_formatted,
+                )
+
+        assert_that_directories_differ(not_formatted, formatted)
