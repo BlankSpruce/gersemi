@@ -37,6 +37,16 @@ def temporary_copy(original):
 
 
 @contextmanager
+def temporary_copies(file_paths):
+    with ExitStack() as stack:
+        copies = [stack.enter_context(temporary_copy(p)) for p in file_paths]
+        try:
+            yield copies
+        finally:
+            pass
+
+
+@contextmanager
 def temporary_dir_copy(original):
     temp_directory = tempfile.gettempdir()
     original_base = os.path.basename(original)
@@ -46,6 +56,16 @@ def temporary_dir_copy(original):
         yield temp_path
     finally:
         shutil.rmtree(temp_path)
+
+
+@contextmanager
+def temporary_dir_copies(directory_paths):
+    with ExitStack() as stack:
+        copies = [stack.enter_context(temporary_dir_copy(p)) for p in directory_paths]
+        try:
+            yield copies
+        finally:
+            pass
 
 
 def assert_success(*args, **kwargs):
@@ -195,47 +215,38 @@ def test_check_directory_with_some_not_formatted_files():
 
 
 def test_format_in_place_multiple_formatted_files():
-    case_ = lambda filename: case("/directory_with_formatted_files/" + filename)
-    with ExitStack() as stack:
-        files = ["file1.cmake", "file2.cmake", "file3.cmake"]
-        copies = [stack.enter_context(temporary_copy(case_(f))) for f in files]
+    files = ["file1.cmake", "file2.cmake", "file3.cmake"]
+    with temporary_copies(
+        case("/directory_with_formatted_files/" + f) for f in files
+    ) as copies:
         assert_success("--check", *copies)
         gersemi("--in-place", *copies)
         assert_success("--check", *copies)
 
 
 def test_format_in_place_multiple_not_formatted_files():
-    case_ = lambda filename: case("/directory_with_not_formatted_files/" + filename)
-    with ExitStack() as stack:
-        files = ["file1.cmake", "file2.cmake", "file3.cmake"]
-        copies = [stack.enter_context(temporary_copy(case_(f))) for f in files]
+    files = ["file1.cmake", "file2.cmake", "file3.cmake"]
+    with temporary_copies(
+        case("/directory_with_not_formatted_files/" + f) for f in files
+    ) as copies:
         assert_fail("--check", *copies)
         gersemi("--in-place", *copies)
         assert_success("--check", *copies)
 
 
 def test_format_in_place_multiple_input_files_when_some_are_not_formatted():
-    case_ = lambda filename: case(
-        "/directory_with_some_not_formatted_files/" + filename
-    )
-    with ExitStack() as stack:
-        formatted_files = [
-            "formatted_file1.cmake",
-            "formatted_file2.cmake",
-            "formatted_file3.cmake",
-        ]
-        not_formatted_files = [
-            "not_formatted_file1.cmake",
-            "not_formatted_file2.cmake",
-            "not_formatted_file3.cmake",
-        ]
-        formatted_copies = [
-            stack.enter_context(temporary_copy(case_(f))) for f in formatted_files
-        ]
-        not_formatted_copies = [
-            stack.enter_context(temporary_copy(case_(f))) for f in not_formatted_files
-        ]
-
+    files = [
+        "formatted_file1.cmake",
+        "formatted_file2.cmake",
+        "formatted_file3.cmake",
+        "not_formatted_file1.cmake",
+        "not_formatted_file2.cmake",
+        "not_formatted_file3.cmake",
+    ]
+    with temporary_copies(
+        case("/directory_with_some_not_formatted_files/" + f) for f in files
+    ) as copies:
+        formatted_copies, not_formatted_copies = copies[:3], copies[3:]
         assert_success("--check", *formatted_copies)
         assert_fail("--check", *not_formatted_copies)
         gersemi("--in-place", *formatted_copies, *not_formatted_copies)
@@ -339,14 +350,12 @@ def test_check_project_with_custom_commands_but_without_definitions():
 
 
 def test_format_project_with_custom_commands():
-    case_ = lambda dirname: case("custom_project/" + dirname)
-
-    with ExitStack() as stack:
-        not_formatted, formatted = [
-            stack.enter_context(temporary_dir_copy(case_(d)))
-            for d in ["not_formatted", "formatted"]
-        ]
-
+    with temporary_dir_copies(
+        case("custom_project/" + d) for d in ["not_formatted", "formatted"]
+    ) as (
+        not_formatted,
+        formatted,
+    ):
         assert_that_directories_differ(not_formatted, formatted)
         assert_success("--check", formatted, "--definitions", formatted)
         assert_fail("--check", not_formatted, "--definitions", not_formatted)
@@ -355,14 +364,10 @@ def test_format_project_with_custom_commands():
 
 
 def test_format_project_with_custom_commands_but_without_definitions():
-    case_ = lambda dirname: case("custom_project/" + dirname)
-
-    with ExitStack() as stack:
-        not_formatted, formatted = [
-            stack.enter_context(temporary_dir_copy(case_(d)))
-            for d in ["not_formatted", "only_custom_commands_not_formatted"]
-        ]
-
+    with temporary_dir_copies(
+        case("custom_project/" + d)
+        for d in ["not_formatted", "only_custom_commands_not_formatted"]
+    ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
         assert_success("--check", formatted)
         assert_fail("--check", not_formatted)
@@ -391,14 +396,10 @@ def test_empty_stderr_when_files_are_not_formatted_but_quiet_is_supplied():
 
 
 def test_project_with_dot_gersemirc_will_use_configuration_defined_in_file():
-    case_ = lambda dirname: case("custom_project/" + dirname)
-
-    with ExitStack() as stack:
-        not_formatted, formatted = [
-            stack.enter_context(temporary_dir_copy(case_(d)))
-            for d in ["not_formatted", "formatted_with_line_length_100"]
-        ]
-
+    with temporary_dir_copies(
+        case("custom_project/" + d)
+        for d in ["not_formatted", "formatted_with_line_length_100"]
+    ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
         with ExitStack() as configuration_files:
@@ -451,13 +452,9 @@ def test_line_length_from_command_line_takes_precedence_over_configuration_file(
 
 
 def test_definitions_from_command_line_take_precedence_over_configuration_file():
-    case_ = lambda dirname: case("custom_project/" + dirname)
+    directories = [case("custom_project/" + d) for d in ["not_formatted", "formatted"]]
 
-    with ExitStack() as stack:
-        not_formatted, formatted = [
-            stack.enter_context(temporary_dir_copy(case_(d)))
-            for d in ["not_formatted", "formatted"]
-        ]
+    with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
         assert_success("--check", formatted, "--definitions", formatted)
         assert_fail(
@@ -469,11 +466,7 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
         assert_that_directories_have_the_same_content(not_formatted, formatted)
 
     # missing definitions in configuration file
-    with ExitStack() as stack:
-        not_formatted, formatted = [
-            stack.enter_context(temporary_dir_copy(case_(d)))
-            for d in ["not_formatted", "formatted"]
-        ]
+    with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
         with ExitStack() as configuration_files:
@@ -487,11 +480,7 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
         assert_that_directories_differ(not_formatted, formatted)
 
     # missing definitions in configuration file but provided from command line
-    with ExitStack() as stack:
-        not_formatted, formatted = [
-            stack.enter_context(temporary_dir_copy(case_(d)))
-            for d in ["not_formatted", "formatted"]
-        ]
+    with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
         with ExitStack() as configuration_files:
