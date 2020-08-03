@@ -123,8 +123,8 @@ find_path(
         #in-between
         #arguments
         QUX
-        #and after list
-        #of arguments
+    #and after list
+    #of arguments
     PATHS
         FOO #line comment at the end
         BAR #line comment at the end
