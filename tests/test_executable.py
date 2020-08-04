@@ -108,6 +108,19 @@ def create_fake_definitions(where, name):
         os.remove(p)
 
 
+@contextmanager
+def create_configuration_files(directories, creator):
+    with ExitStack() as stack:
+        configuration_files = [
+            stack.enter_context(create_dot_gersemirc(where=d, **creator(d)))
+            for d in directories
+        ]
+        try:
+            yield configuration_files
+        finally:
+            pass
+
+
 def assert_that_directories_differ(left, right):
     comparison = compare_directories(left, right)
     for value in comparison.values():
@@ -413,14 +426,8 @@ def test_project_with_dot_gersemirc_will_use_configuration_defined_in_file():
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        with ExitStack() as configuration_files:
-            for dirname in [not_formatted, formatted]:
-                configuration_files.enter_context(
-                    create_dot_gersemirc(
-                        where=dirname, line_length=100, definitions=[dirname]
-                    )
-                )
-
+        creator = lambda dirname: {"line_length": 100, "definitions": [dirname]}
+        with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
             assert_success("--in-place", not_formatted)
@@ -480,10 +487,8 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        with ExitStack() as configuration_files:
-            for dirname in [not_formatted, formatted]:
-                configuration_files.enter_context(create_dot_gersemirc(where=dirname))
-
+        creator = lambda _: {}
+        with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
             assert_success("--in-place", not_formatted)
@@ -494,10 +499,8 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        with ExitStack() as configuration_files:
-            for dirname in [not_formatted, formatted]:
-                configuration_files.enter_context(create_dot_gersemirc(where=dirname))
-
+        creator = lambda _: {}
+        with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted, "--definitions", formatted)
             assert_fail("--check", not_formatted, "--definitions", not_formatted)
             assert_success("--in-place", not_formatted, "--definitions", not_formatted)
@@ -508,12 +511,8 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        with ExitStack() as configuration_files:
-            for dirname in [not_formatted, formatted]:
-                configuration_files.enter_context(
-                    create_dot_gersemirc(where=dirname, definitions=[dirname])
-                )
-
+        creator = lambda dirname: {"definitions": [dirname]}
+        with create_configuration_files([not_formatted, formatted], creator):
             with ExitStack() as fake_definitions:
                 fake_definitions_in_not_formatted, fake_definitions_in_formatted = [
                     fake_definitions.enter_context(
@@ -548,19 +547,14 @@ def test_use_paths_relative_to_root_as_definitions_in_configuration_file():
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        with ExitStack() as configuration_files:
-            for dirname in [not_formatted, formatted]:
-                configuration_files.enter_context(
-                    create_dot_gersemirc(
-                        where=dirname,
-                        line_length=100,
-                        definitions=[
-                            "back_to_the_future.cmake",
-                            "./back_to_the_future_sequels.cmake",
-                        ],
-                    )
-                )
-
+        creator = lambda dirname: {
+            "line_length": 100,
+            "definitions": [
+                "back_to_the_future.cmake",
+                "./back_to_the_future_sequels.cmake",
+            ],
+        }
+        with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
             assert_success("--in-place", not_formatted)
@@ -575,19 +569,14 @@ def test_use_absolute_paths_as_definitions_in_configuration_file():
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        with ExitStack() as configuration_files:
-            for dirname in [not_formatted, formatted]:
-                configuration_files.enter_context(
-                    create_dot_gersemirc(
-                        where=dirname,
-                        line_length=100,
-                        definitions=[
-                            os.path.join(dirname, "back_to_the_future.cmake"),
-                            os.path.join(dirname, "back_to_the_future_sequels.cmake"),
-                        ],
-                    )
-                )
-
+        creator = lambda dirname: {
+            "line_length": 100,
+            "definitions": [
+                os.path.join(dirname, "back_to_the_future.cmake"),
+                os.path.join(dirname, "back_to_the_future_sequels.cmake"),
+            ],
+        }
+        with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
             assert_success("--in-place", not_formatted)
