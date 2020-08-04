@@ -20,7 +20,17 @@ def find_common_parent_path(paths: Iterable[Path]) -> Path:
     return Path(os.path.commonpath([path.absolute() for path in paths]))
 
 
+def find_in_current_directory() -> Optional[Path]:
+    maybe_found = list(Path(".").glob(".gersemirc"))
+    if maybe_found:
+        return maybe_found[0]
+    return None
+
+
 def find_dot_gersemirc(paths: Iterable[Path]) -> Optional[Path]:
+    if Path("-") in paths:
+        return find_in_current_directory()
+
     lowest_level_common_parent = find_common_parent_path(paths)
     for parent in chain(
         [lowest_level_common_parent], lowest_level_common_parent.parents

@@ -582,3 +582,21 @@ def test_use_absolute_paths_as_definitions_in_configuration_file():
             assert_success("--in-place", not_formatted)
 
         assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+
+def test_use_configuration_file_from_current_directory_when_input_is_from_stdin():
+    line_length = 30
+    inp = "set(FOO long_argument__________)"
+    outp = """set(FOO
+    long_argument__________
+)
+"""
+    assert len(inp) > line_length
+
+    with create_dot_gersemirc(where=".", line_length=30):
+        completed_process = gersemi(
+            "-", input=inp + "\n", text=True, capture_output=True,
+        )
+        assert completed_process.returncode == 0
+        assert completed_process.stdout == outp
+        assert completed_process.stderr == ""
