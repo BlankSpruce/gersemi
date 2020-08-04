@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from dataclasses import dataclass, fields
 from itertools import chain
 import os
@@ -31,12 +32,26 @@ def find_dot_gersemirc(paths: Iterable[Path]) -> Optional[Path]:
     return None
 
 
-def load_configuration_from_file(configuration_file_path: Path) -> Configuration:
-    with open(configuration_file_path, "r") as f:
-        config = yaml.safe_load(f.read())
-        if "definitions" in config:
-            config["definitions"] = [Path(d) for d in config["definitions"]]
+@contextmanager
+def enter_directory(target_directory):
+    original = Path(".").resolve()
+    try:
+        os.chdir(target_directory)
+        yield
+    finally:
+        os.chdir(original)
 
+
+def normalize_definitions(definitions):
+    return [Path(d).resolve() for d in definitions]
+
+
+def load_configuration_from_file(configuration_file_path: Path) -> Configuration:
+    with enter_directory(configuration_file_path.parent):
+        with open(configuration_file_path, "r") as f:
+            config = yaml.safe_load(f.read())
+            if "definitions" in config:
+                config["definitions"] = normalize_definitions(config["definitions"])
         return Configuration(**config)
 
 

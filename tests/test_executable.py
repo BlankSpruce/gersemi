@@ -539,3 +539,57 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
                 )
 
         assert_that_directories_differ(not_formatted, formatted)
+
+
+def test_use_paths_relative_to_root_as_definitions_in_configuration_file():
+    with temporary_dir_copies(
+        case("custom_project/" + d)
+        for d in ["not_formatted", "formatted_with_line_length_100"]
+    ) as (not_formatted, formatted):
+        assert_that_directories_differ(not_formatted, formatted)
+
+        with ExitStack() as configuration_files:
+            for dirname in [not_formatted, formatted]:
+                configuration_files.enter_context(
+                    create_dot_gersemirc(
+                        where=dirname,
+                        line_length=100,
+                        definitions=[
+                            "back_to_the_future.cmake",
+                            "./back_to_the_future_sequels.cmake",
+                        ],
+                    )
+                )
+
+            assert_success("--check", formatted)
+            assert_fail("--check", not_formatted)
+            assert_success("--in-place", not_formatted)
+
+        assert_that_directories_have_the_same_content(not_formatted, formatted)
+
+
+def test_use_absolute_paths_as_definitions_in_configuration_file():
+    with temporary_dir_copies(
+        case("custom_project/" + d)
+        for d in ["not_formatted", "formatted_with_line_length_100"]
+    ) as (not_formatted, formatted):
+        assert_that_directories_differ(not_formatted, formatted)
+
+        with ExitStack() as configuration_files:
+            for dirname in [not_formatted, formatted]:
+                configuration_files.enter_context(
+                    create_dot_gersemirc(
+                        where=dirname,
+                        line_length=100,
+                        definitions=[
+                            os.path.join(dirname, "back_to_the_future.cmake"),
+                            os.path.join(dirname, "back_to_the_future_sequels.cmake"),
+                        ],
+                    )
+                )
+
+            assert_success("--check", formatted)
+            assert_fail("--check", not_formatted)
+            assert_success("--in-place", not_formatted)
+
+        assert_that_directories_have_the_same_content(not_formatted, formatted)
