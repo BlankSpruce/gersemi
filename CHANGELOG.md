@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0] 2020-08-05
+
+### Added
+- some performance improvements
+- relaxed dependency to lark so that 0.9 can be used as well
+- loading configuration from `.gersemirc` but command line arguments still take precedence
+- colorized diffs with `--color`
+
+### Fixed
+- comments no longer interfere in splitting arguments by keywords which led to undesired formatting (#1)
+
 ## [0.3.1] 2020-07-20
 
 ### Fixed
