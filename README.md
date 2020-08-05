@@ -14,33 +14,43 @@ $ pip3 install gersemi
 ## Usage
 
 ```
-usage: gersemi [-h] [-c] [-i] [-l INTEGER] [--definitions src [src ...]]
-               [--diff] [--unsafe] [--version] [-q]
+usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGER]
+               [--unsafe] [-q] [--color] [--definitions src [src ...]]
                [src [src ...]]
 
 A formatter to make your CMake code the real treasure.
 
 positional arguments:
-  src                   File or directory to format. If only - is provided
-                        input is taken from stdin instead
+  src                   File or directory to format. If only - is provided input is taken
+                        from stdin instead
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -c, --check           Check if files require reformatting. Return 0 when
-                        there's nothing to reformat, return 1 when some files
-                        would be reformatted
+modes:
+  -c, --check           Check if files require reformatting. Return 0 when there's nothing
+                        to reformat, return 1 when some files would be reformatted
   -i, --in-place        Format files in-place
-  -l INTEGER, --line-length INTEGER
-                        Maximum line length in characters
-  --definitions src [src ...]
-                        Files or directories containing custom command
-                        definitions (functions or macros). If only - is
-                        provided custom definitions, if there are any, are
-                        taken from stdin instead
   --diff                Show diff on stdout for each formatted file instead
-  --unsafe              Skip default sanity checks
+  --default-config      Generate default .gersemirc configuration file
   --version             Show version.
+  -h, --help            Show this help message and exit.
+
+configuration:
+  By default configuration is loaded from YAML formatted .gersemirc file if it's
+  available. This file should be placed in one of the common parent directories of source
+  files. For stdin only current directory is considered. Arguments from command line can
+  be used to override parts of that configuration or supply them in absence of
+  configuration file.
+
+  -l INTEGER, --line-length INTEGER
+                        Maximum line length in characters [default: 80]
+  --unsafe              Skip default sanity checks
   -q, --quiet           Skip printing non-error messages to stderr
+  --color               If --diff is selected showed diff is colorized
+  --definitions src [src ...]
+                        Files or directories containing custom command definitions
+                        (functions or macros). If only - is provided custom definitions, if
+                        there are any, are taken from stdin instead. Commands from not
+                        deprecated CMake native modules don't have to be provided (check
+                        https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html)
 ```
 
 ## Formatting
