@@ -1,11 +1,12 @@
-# pylint: disable=too-few-public-methods
 import argparse
-from dataclasses import asdict
 import pathlib
 import sys
 from lark import __version__ as lark_version
-import yaml
-from gersemi.configuration import make_configuration, Configuration
+from gersemi.configuration import (
+    make_configuration,
+    make_default_configuration_file,
+    Configuration,
+)
 from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
 from gersemi.runner import run, print_to_stderr
@@ -14,8 +15,7 @@ from gersemi.__version__ import __title__, __version__
 
 class GenerateConfigurationFile(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        default_configuration = Configuration()
-        print(yaml.safe_dump(asdict(default_configuration)))
+        print(make_default_configuration_file())
 
 
 class ShowVersion(argparse.Action):

@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from dataclasses import dataclass, fields
+from dataclasses import asdict, dataclass, fields
 from itertools import chain
 import os
 from pathlib import Path
@@ -14,6 +14,11 @@ class Configuration:
     quiet: bool = False
     color: bool = False
     definitions: Iterable[Path] = tuple()
+
+
+def make_default_configuration_file():
+    default_configuration = Configuration()
+    return yaml.safe_dump(asdict(default_configuration))
 
 
 def find_common_parent_path(paths: Iterable[Path]) -> Path:

@@ -31,7 +31,7 @@ BUILTIN_COMMAND_MAPPING = {
 
 @lru_cache(maxsize=None)
 def create_patch(patch, old_class):
-    class Impl(patch, old_class):  # pylint: disable=too-few-public-methods
+    class Impl(patch, old_class):
         pass
 
     return Impl

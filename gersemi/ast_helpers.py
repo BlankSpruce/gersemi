@@ -59,7 +59,7 @@ def is_keyword(keyword):
     return impl
 
 
-class KeywordMatcher:  # pylint: disable=too-few-public-methods
+class KeywordMatcher:
     def __init__(self, keywords):
         self.keywords = keywords
 

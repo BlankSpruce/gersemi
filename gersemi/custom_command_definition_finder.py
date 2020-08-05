@@ -4,11 +4,11 @@ from gersemi.ast_helpers import is_keyword
 from gersemi.keywords import Keywords
 
 
-class IgnoreThisDefinition:  # pylint: disable=too-few-public-methods
+class IgnoreThisDefinition:
     pass
 
 
-class DropIrrelevantElements(Transformer):  # pylint: disable=too-few-public-methods
+class DropIrrelevantElements(Transformer):
     def _discard(self, _):
         raise Discard
 

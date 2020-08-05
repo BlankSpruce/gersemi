@@ -17,7 +17,7 @@ def is_empty(sequence: Sized) -> bool:
     return len(sequence) <= 0
 
 
-class KeywordSplitter:  # pylint: disable=too-few-public-methods
+class KeywordSplitter:
     def __init__(self, options, one_value_keywords, multi_value_keywords):
         self.is_one_of_options = is_one_of_keywords(options)
         self.is_one_of_one_value_keywords = is_one_of_keywords(one_value_keywords)

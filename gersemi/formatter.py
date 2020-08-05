@@ -7,7 +7,7 @@ def noop(*_):
     pass
 
 
-class Formatter:  # pylint: disable=too-few-public-methods
+class Formatter:
     def __init__(
         self, bare_parser, sanity_checker, line_length: int, custom_command_definitions,
     ):

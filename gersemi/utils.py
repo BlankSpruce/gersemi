@@ -28,7 +28,7 @@ def tofile(path):
     return "<stdout>" if path == Path("-") else str(path)
 
 
-class StdinWrapper:  # pylint: disable=too-few-public-methods
+class StdinWrapper:
     @staticmethod
     @lru_cache(maxsize=None)
     def read():

@@ -3,7 +3,7 @@ from lark.visitors import Transformer
 from gersemi.exceptions import ASTMismatch
 
 
-class DropWhitespaces(Transformer):  # pylint: disable=too-few-public-methods
+class DropWhitespaces(Transformer):
     def _drop_node(self, _):
         raise Discard()
 

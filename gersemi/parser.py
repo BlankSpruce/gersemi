@@ -15,7 +15,7 @@ else:
     from gersemi.parser_picklers import PickleAfterLark0dot8dot6 as PickleLarkParser  # type: ignore
 
 
-class Parser(PickleLarkParser):  # pylint: disable=too-few-public-methods
+class Parser(PickleLarkParser):
     examples = {
         UnbalancedBrackets: [
             "foo(foo [[foo]=]",
@@ -66,7 +66,7 @@ class Parser(PickleLarkParser):  # pylint: disable=too-few-public-methods
             self._match_parsing_error(code, u)
 
 
-class ParserWithPostProcessing:  # pylint: disable=too-few-public-methods
+class ParserWithPostProcessing:
     def __init__(self, parser):
         self.parser = parser
 
