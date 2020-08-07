@@ -61,7 +61,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         return f"{begin}{formatted_arguments}\n{end}"
 
     def bracket_comment(self, tree):
-        return " " * self.alignment + self.__default__(tree)
+        return " " * self.alignment + "#" + self.__default__(tree)
 
     def bracket_argument(self, tree):
         return " " * self.alignment + self.__default__(tree)
