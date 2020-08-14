@@ -12,7 +12,7 @@ from gersemi.custom_command_definition_finder import find_custom_command_definit
 from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.formatter import create_formatter, Formatter
 from gersemi.mode import Mode
-from gersemi.parser import create_parser, create_parser_with_postprocessing
+from gersemi.parser import PARSER as parser
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
 from gersemi.task_result import TaskResult
 from gersemi.tasks.check_formatting import check_formatting, quiet_check_formatting
@@ -57,7 +57,7 @@ def safe_read(filepath, *args, **kwargs):
         return None
 
 
-def find_custom_command_definitions_in_file(filepath, parser):
+def find_custom_command_definitions_in_file(filepath):
     code = safe_read(filepath)
     if code is None or not has_custom_command_definition(code):
         return None
@@ -74,12 +74,11 @@ def find_custom_command_definitions_in_file(filepath, parser):
     return None
 
 
-def find_all_custom_command_definitions(bare_parser, paths, pool):
-    parser = create_parser_with_postprocessing(bare_parser)
+def find_all_custom_command_definitions(paths, pool):
     result = dict()
 
     files = list(get_files(paths))
-    find = partial(find_custom_command_definitions_in_file, parser=parser)
+    find = find_custom_command_definitions_in_file
 
     for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
         if defs is not None:
@@ -152,16 +151,14 @@ def create_pool(is_stdin_in_sources):
 
 
 def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
-    bare_parser = create_parser()
     files_to_format = list(get_files(sources))
     task = select_task(mode, configuration)
 
     with create_pool(Path("-") in files_to_format) as pool:
         custom_command_definitions = find_all_custom_command_definitions(
-            bare_parser, configuration.definitions, pool
+            configuration.definitions, pool
         )
         formatter = create_formatter(
-            bare_parser,
             not configuration.unsafe,
             configuration.line_length,
             custom_command_definitions,

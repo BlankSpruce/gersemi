@@ -1,6 +1,5 @@
 import os
-import packaging.version as pv
-from lark import Lark, UnexpectedInput, __version__ as lark_version
+from lark import Lark, UnexpectedInput
 from gersemi.exceptions import (
     GenericParsingError,
     UnbalancedParentheses,
@@ -9,13 +8,8 @@ from gersemi.exceptions import (
 from gersemi.parsing_transformer import ParsingTransformer
 from gersemi.postprocessor import PostProcessor
 
-if pv.parse(lark_version) < pv.parse("0.8.6"):
-    from gersemi.parser_picklers import PickleBeforeLark0dot8dot6 as PickleLarkParser
-else:
-    from gersemi.parser_picklers import PickleAfterLark0dot8dot6 as PickleLarkParser  # type: ignore
 
-
-class Parser(PickleLarkParser):
+class Parser:
     examples = {
         UnbalancedBrackets: [
             "foo(foo [[foo]=]",
@@ -85,3 +79,7 @@ def create_parser(grammar_filename=GRAMMAR):
 
 def create_parser_with_postprocessing(bare_parser):
     return ParserWithPostProcessing(bare_parser)
+
+
+BARE_PARSER = create_parser()
+PARSER = create_parser_with_postprocessing(BARE_PARSER)
