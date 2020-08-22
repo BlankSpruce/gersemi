@@ -140,9 +140,15 @@ def is_stdin_mixed_with_file_input(sources):
     return pathlib.Path("-") in sources and len(sources) != 1
 
 
+def postprocess_args(args):
+    args.sources = set(args.sources)
+    args.definitions = set(args.definitions)
+
+
 def main():
     argparser = create_argparser()
     args = argparser.parse_args()
+    postprocess_args(args)
 
     if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
         print_to_stderr("Don't mix stdin with file input")

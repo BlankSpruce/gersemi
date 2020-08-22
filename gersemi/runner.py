@@ -36,9 +36,11 @@ def get_files(paths):
             return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"),)
         return [path]
 
-    for path in paths:
-        for item in get_files_from_single_path(path):
-            yield item
+    return set(
+        item.resolve() if item != Path("-") else item
+        for path in paths
+        for item in get_files_from_single_path(path)
+    )
 
 
 def has_custom_command_definition(code):
@@ -77,7 +79,7 @@ def find_custom_command_definitions_in_file(filepath):
 def find_all_custom_command_definitions(paths, pool):
     result = dict()
 
-    files = list(get_files(paths))
+    files = get_files(paths)
     find = find_custom_command_definitions_in_file
 
     for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
@@ -151,12 +153,12 @@ def create_pool(is_stdin_in_sources):
 
 
 def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
-    files_to_format = list(get_files(sources))
+    files_to_format = get_files(sources)
     task = select_task(mode, configuration)
 
     with create_pool(Path("-") in files_to_format) as pool:
         custom_command_definitions = find_all_custom_command_definitions(
-            configuration.definitions, pool
+            set(configuration.definitions), pool
         )
         formatter = create_formatter(
             not configuration.unsafe,
