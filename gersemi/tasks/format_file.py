@@ -1,8 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
-from lark.exceptions import VisitError as LarkVisitError
-from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.formatter import Formatter
 from gersemi.utils import smart_open
 
@@ -13,15 +10,6 @@ class FormattedFile:
     after: str
     newlines_style: str
     path: Path
-
-
-@dataclass
-class Error:
-    exception: Exception
-    path: Path
-
-
-Result = Union[FormattedFile, Error]
 
 
 def get_newlines_style(code: str) -> str:
@@ -36,7 +24,7 @@ def translate_newlines_to_line_feed(code: str) -> str:
     return code.replace("\r\n", "\n").replace("\r", "\n")
 
 
-def format_file_impl(path: Path, formatter: Formatter) -> FormattedFile:
+def format_file(path: Path, formatter: Formatter) -> FormattedFile:
     with smart_open(path, "r", newline="") as f:
         code = f.read()
 
@@ -48,10 +36,3 @@ def format_file_impl(path: Path, formatter: Formatter) -> FormattedFile:
         newlines_style=newlines_style,
         path=path,
     )
-
-
-def format_file(path: Path, formatter: Formatter) -> Result:
-    try:
-        return format_file_impl(path, formatter)
-    except (UnicodeError, ParsingError, LarkVisitError, ASTMismatch) as exception:
-        return Error(exception, path)

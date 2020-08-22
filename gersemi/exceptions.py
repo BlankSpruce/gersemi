@@ -7,7 +7,7 @@ class ParsingError(SyntaxError):
 
     def __str__(self):
         context, line, column = self.args  # pylint: disable=unbalanced-tuple-unpacking
-        return f":{line}:{column}: {self.description}\n{context}"
+        return f"{line}:{column}: {self.description}\n{context}"
 
 
 class GenericParsingError(ParsingError):
