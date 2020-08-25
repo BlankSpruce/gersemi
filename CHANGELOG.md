@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0] 2020-08-25
+
+### Added
+- minor performance improvements
+- support for Python 3.6
+
+### Changed
+- files are taken as input only once even if provided multiple times
+- files are no longer overwritten if reformatting wouldn't lead to change of content
+- dependency to `packaging`
+
 ## [0.4.0] 2020-08-05
 
 ### Added

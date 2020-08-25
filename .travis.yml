@@ -2,7 +2,7 @@ cache: false
 
 _tox: &tox
   install:
-    - pip3 install tox
+    - pip3 install tox tox-travis
   script:
     - tox
 
@@ -16,6 +16,11 @@ jobs:
         - sudo apt-get install -qq emacs25
       script:
         - cd editors/emacs && emacs -batch -l ert -l gersemi.el -l gersemi-tests.el -f ert-run-tests-batch-and-exit
+
+    - language: python
+      os: linux
+      python: "3.6"
+      <<: *tox
 
     - language: python
       os: linux

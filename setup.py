@@ -22,9 +22,9 @@ setup(
     url=about["__url__"],
     packages=find_packages(include=["gersemi", "gersemi.*"]),
     package_data={"gersemi": ["cmake.lark", "builtin_commands"]},
-    install_requires=["lark-parser>=0.8,<0.10", "pyyaml>=5,<6"],
+    install_requires=["dataclasses", "lark-parser>=0.8,<0.10", "pyyaml>=5,<6"],
     extras_requires=["colorama>=0.4"],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     entry_points={"console_scripts": ["gersemi = gersemi.__main__:main"]},
     license=about["__license__"],
     classifiers=[

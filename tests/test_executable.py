@@ -13,6 +13,9 @@ def gersemi(*gersemi_args, **subprocess_kwargs):
     return subprocess.run(
         [sys.executable, "-m", "gersemi", *gersemi_args],
         check=False,
+        encoding="utf8",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         **subprocess_kwargs,
     )
 
@@ -161,18 +164,18 @@ def test_format_file_in_place():
 def test_check_formatted_input_from_stdin():
     inp = """set(FOO BAR)
 """
-    assert_success("--check", "-", input=inp, text=True)
+    assert_success("--check", "-", input=inp)
 
 
 def test_check_not_formatted_input_from_stdin():
     inp = """set(FOO BAR)"""  # missing newline at the end
-    assert_fail("--check", "-", input=inp, text=True)
+    assert_fail("--check", "-", input=inp)
 
 
 def test_format_formatted_input_from_stdin():
     inp = """set(FOO BAR)
 """
-    completed_process = gersemi("-", input=inp, text=True, capture_output=True)
+    completed_process = gersemi("-", input=inp)
     assert completed_process.returncode == 0
     assert completed_process.stdout == inp
     assert completed_process.stderr == ""
@@ -181,7 +184,7 @@ def test_format_formatted_input_from_stdin():
 def test_format_not_formatted_input_from_stdin():
     inp = "set(FOO BAR)"  # missing newline at the end
 
-    completed_process = gersemi("-", input=inp, text=True, capture_output=True)
+    completed_process = gersemi("-", input=inp)
     assert completed_process.returncode == 0
     assert completed_process.stdout == inp + "\n"
     assert completed_process.stderr == ""
@@ -302,7 +305,7 @@ def test_format_with_default_line_length():
     inp = "set(FOO long_argument__________________________________________________________)"
     outp = inp + "\n"
     assert len(inp) == 80
-    completed_process = gersemi("-", input=inp + "\n", text=True, capture_output=True)
+    completed_process = gersemi("-", input=inp + "\n")
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp
     assert completed_process.stderr == ""
@@ -313,7 +316,7 @@ def test_format_with_default_line_length():
 )
 """
     assert len(inp2) > 80
-    completed_process = gersemi("-", input=inp2 + "\n", text=True, capture_output=True)
+    completed_process = gersemi("-", input=inp2 + "\n")
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp2
     assert completed_process.stderr == ""
@@ -329,8 +332,7 @@ def test_format_with_non_default_line_length():
         str(line_length),
         "-",
         input=inp + "\n",
-        text=True,
-        capture_output=True,
+        universal_newlines=True,
     )
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp
@@ -347,8 +349,7 @@ def test_format_with_non_default_line_length():
         str(line_length),
         "-",
         input=inp2 + "\n",
-        text=True,
-        capture_output=True,
+        universal_newlines=True,
     )
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp2
@@ -400,9 +401,7 @@ def test_format_project_with_custom_commands_but_without_definitions():
 
 
 def test_non_empty_stderr_when_files_are_not_formatted():
-    completed_process = gersemi(
-        "--check", case("custom_project/not_formatted"), text=True, capture_output=True,
-    )
+    completed_process = gersemi("--check", case("custom_project/not_formatted"))
     assert completed_process.returncode == 1
     assert completed_process.stderr != ""
 
@@ -412,8 +411,7 @@ def test_empty_stderr_when_files_are_not_formatted_but_quiet_is_supplied():
         "--check",
         case("custom_project/not_formatted"),
         "--quiet",
-        text=True,
-        capture_output=True,
+        universal_newlines=True,
     )
     assert completed_process.returncode == 1
     assert completed_process.stderr == ""
@@ -594,9 +592,7 @@ def test_use_configuration_file_from_current_directory_when_input_is_from_stdin(
     assert len(inp) > line_length
 
     with create_dot_gersemirc(where=".", line_length=30):
-        completed_process = gersemi(
-            "-", input=inp + "\n", text=True, capture_output=True,
-        )
+        completed_process = gersemi("-", input=inp + "\n")
         assert completed_process.returncode == 0
         assert completed_process.stdout == outp
         assert completed_process.stderr == ""
