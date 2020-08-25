@@ -2,7 +2,7 @@ cache: false
 
 _tox: &tox
   install:
-    - pip3 install tox tox-travis
+    - pip3 install tox
   script:
     - tox
 

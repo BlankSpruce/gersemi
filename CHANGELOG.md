@@ -9,7 +9,7 @@
 ### Changed
 - files are taken as input only once even if provided multiple times
 - files are no longer overwritten if reformatting wouldn't lead to change of content
-- dependency to `packaging`
+- removed dependency to `packaging`
 
 ## [0.4.0] 2020-08-05
 
