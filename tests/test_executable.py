@@ -203,14 +203,14 @@ def test_dont_mix_stdin_and_file_input():
 def test_check_multiple_formatted_input_files():
     case_ = lambda filename: case("/directory_with_formatted_files/" + filename)
     assert_success(
-        "--check", case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake"),
+        "--check", case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")
     )
 
 
 def test_check_multiple_not_formatted_input_files():
     case_ = lambda filename: case("/directory_with_not_formatted_files/" + filename)
     assert_fail(
-        "--check", case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake"),
+        "--check", case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")
     )
 
 
@@ -473,12 +473,8 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
         assert_success("--check", formatted, "--definitions", formatted)
-        assert_fail(
-            "--check", not_formatted, "--definitions", not_formatted,
-        )
-        assert_success(
-            "--in-place", not_formatted, "--definitions", not_formatted,
-        )
+        assert_fail("--check", not_formatted, "--definitions", not_formatted)
+        assert_success("--in-place", not_formatted, "--definitions", not_formatted)
         assert_that_directories_have_the_same_content(not_formatted, formatted)
 
     # missing definitions in configuration file

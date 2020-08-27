@@ -24,5 +24,5 @@ def test_abstract_syntax_tree_equivalence(parser, parser_with_simple_grammar, ca
 
 
 pytest_generate_tests = generate_input_output_tests(
-    where="formatter", input_extension=".in.cmake", output_extension=".out.cmake",
+    where="formatter", input_extension=".in.cmake", output_extension=".out.cmake"
 )

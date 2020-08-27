@@ -8,9 +8,7 @@ def noop(*_):
 
 
 class Formatter:
-    def __init__(
-        self, sanity_checker, line_length: int, custom_command_definitions,
-    ):
+    def __init__(self, sanity_checker, line_length: int, custom_command_definitions):
         self.sanity_checker = sanity_checker
         self.line_length = line_length
         self.custom_command_definitions = custom_command_definitions

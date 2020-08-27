@@ -98,7 +98,7 @@ class IsolateNotExpressions(IsolateUnaryOperators):
 
 def IsolateConditions() -> Transformer:
     return TransformerChain(
-        IsolateUnaryTests(), IsolateBinaryTests(), IsolateNotExpressions(),
+        IsolateUnaryTests(), IsolateBinaryTests(), IsolateNotExpressions()
     )
 
 

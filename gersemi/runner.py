@@ -33,7 +33,7 @@ print_to_stderr = partial(print, file=sys.stderr)
 def get_files(paths: Iterable[Path]) -> Iterable[Path]:
     def get_files_from_single_path(path):
         if path.is_dir():
-            return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"),)
+            return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"))
         return [path]
 
     return set(

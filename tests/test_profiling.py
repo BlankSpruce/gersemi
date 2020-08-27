@@ -12,5 +12,5 @@ def test_profile_parser_with_postprocessing(parser_with_postprocessing, case):
 
 
 pytest_generate_tests = generate_input_only_tests(
-    where="formatter", input_extension=".in.cmake",
+    where="formatter", input_extension=".in.cmake"
 )

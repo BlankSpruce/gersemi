@@ -52,6 +52,6 @@ class CleanUpNewlines(Transformer):
 
 
 class ParsingTransformer(
-    DowncaseIdentifiers, FlattenBracketComment, CleanUpComplexArgument, CleanUpNewlines,
+    DowncaseIdentifiers, FlattenBracketComment, CleanUpComplexArgument, CleanUpNewlines
 ):
     pass

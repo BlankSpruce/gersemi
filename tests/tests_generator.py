@@ -38,7 +38,7 @@ def create_tests_generator(cases):
     def tests_generator(metafunc):
         if "case" in metafunc.fixturenames:
             metafunc.parametrize(
-                argnames="case", argvalues=cases, ids=[case.name for case in cases],
+                argnames="case", argvalues=cases, ids=[case.name for case in cases]
             )
 
     return tests_generator

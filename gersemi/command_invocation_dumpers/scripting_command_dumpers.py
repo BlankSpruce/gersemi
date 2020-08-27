@@ -342,9 +342,9 @@ class List(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Modification
         "FILTER": dict(
-            options=["INCLUDE", "EXCLUDE"], one_value_keywords=["FILTER", "REGEX"],
+            options=["INCLUDE", "EXCLUDE"], one_value_keywords=["FILTER", "REGEX"]
         ),
-        "REMOVE_DUPLICATES": dict(one_value_keywords=["REMOVE_DUPLICATES"],),
+        "REMOVE_DUPLICATES": dict(one_value_keywords=["REMOVE_DUPLICATES"]),
         "TRANSFORM": dict(
             one_value_keywords=["OUTPUT_VARIABLE"],
             multi_value_keywords=[
@@ -359,7 +359,7 @@ class List(MultipleSignatureCommandInvocationDumper):
             ],
         ),
         # Ordering
-        "SORT": dict(one_value_keywords=["SORT", "COMPARE", "CASE", "ORDER"],),
+        "SORT": dict(one_value_keywords=["SORT", "COMPARE", "CASE", "ORDER"]),
     }
 
 
@@ -404,18 +404,18 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
 class String(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Search and Replace
-        "FIND": dict(options=["REVERSE"], multi_value_keywords=["FIND"],),
+        "FIND": dict(options=["REVERSE"], multi_value_keywords=["FIND"]),
         # Regular Expressions
-        "REGEX": dict(one_value_keywords=["REGEX"],),
+        "REGEX": dict(one_value_keywords=["REGEX"]),
         # Comparison
-        "COMPARE": dict(one_value_keywords=["COMPARE"],),
+        "COMPARE": dict(one_value_keywords=["COMPARE"]),
         # Generation
         "CONFIGURE": dict(
-            options=["@ONLY", "ESCAPE_QUOTES"], multi_value_keywords=["CONFIGURE"],
+            options=["@ONLY", "ESCAPE_QUOTES"], multi_value_keywords=["CONFIGURE"]
         ),
-        "RANDOM": dict(one_value_keywords=["LENGTH", "ALPHABET", "RANDOM_SEED"],),
+        "RANDOM": dict(one_value_keywords=["LENGTH", "ALPHABET", "RANDOM_SEED"]),
         "UUID": dict(
-            options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"],
+            options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"]
         ),
     }
 

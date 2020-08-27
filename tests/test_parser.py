@@ -39,5 +39,5 @@ def test_invalid_code_parsing_error(parser, invalid_code, expected_exception):
 
 
 pytest_generate_tests = generate_input_only_tests(
-    where="parser", input_extension=".cmake",
+    where="parser", input_extension=".cmake"
 )
