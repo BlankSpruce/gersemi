@@ -9,8 +9,17 @@ LINE_COMMENT_BEGIN = "#"
 BRACKET_COMMENT_BEGIN = "#["
 
 
+def flat_split(pattern, string):
+    m = re.search(pattern, string)
+    if m is None:
+        return (string,)
+
+    begin, end = m.span()
+    return string[:begin], string[begin:end], string[end:]
+
+
 def split_by_bracket_arguments(string):
-    return re.split(BRACKET_ARGUMENT_REGEX, string)
+    return flat_split(BRACKET_ARGUMENT_REGEX, string)
 
 
 def split_by_quoted_arguments(string):
@@ -68,11 +77,12 @@ class PreservingCommandInvocationDumper(BaseDumper):
             return ""
 
         begin = "\n" if content.startswith("\n") else ""
-        end = "\n" if content.endswith("\n") else ""
         stripped_content = strip_empty_lines_from_edges(content)
-
         if ends_with_line_comment(stripped_content):
+            end = "\n"
             return f"{begin}{stripped_content}{end}"
+
+        end = "\n" if content.endswith("\n") else ""
         return f"{begin}{stripped_content.rstrip()}{end}"
 
     def custom_command(self, tree):

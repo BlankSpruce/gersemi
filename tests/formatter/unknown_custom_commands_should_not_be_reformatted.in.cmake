@@ -223,3 +223,16 @@ some_custom_command(
 
      some_custom_command(     
     )
+
+# no arguments and comments
+some_custom_command(#[[foobar]]
+    )
+
+some_custom_command(#[=[foobar]=]
+    )
+
+some_custom_command(#[=====[foobar]=====]
+    )
+
+some_custom_command(#foobar
+    )
