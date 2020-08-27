@@ -194,3 +194,14 @@ which \" shouldn't have
 its \\-content changed"
     )
 endif()
+
+# no arguments but unusual placement of parens
+some_custom_command()
+
+some_custom_command()
+
+some_custom_command()
+
+some_custom_command()
+
+some_custom_command()

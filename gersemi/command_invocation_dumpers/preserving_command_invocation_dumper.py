@@ -64,6 +64,9 @@ def ends_with_line_comment(s):
 
 class PreservingCommandInvocationDumper(BaseDumper):
     def _preprocess_content(self, content):
+        if content.strip() == "":
+            return ""
+
         begin = "\n" if content.startswith("\n") else ""
         end = "\n" if content.endswith("\n") else ""
         stripped_content = strip_empty_lines_from_edges(content)
