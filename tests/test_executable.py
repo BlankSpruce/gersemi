@@ -1,23 +1,43 @@
 from contextlib import contextmanager, ExitStack
 import filecmp
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
 import uuid
 import yaml
+from tests.cache_inspector import inspect_cache
 
 
-def gersemi(*gersemi_args, **subprocess_kwargs):
+def gersemi_with_cache_path(cache_path, *gersemi_args, **subprocess_kwargs):
+    subprocess_kwargs["input"] = cache_path + "\n" + subprocess_kwargs.get("input", "")
     return subprocess.run(
-        [sys.executable, "-m", "gersemi", *gersemi_args],
+        [sys.executable, "-m", "tests.patched_gersemi", *gersemi_args],
         check=False,
         encoding="utf8",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         **subprocess_kwargs,
     )
+
+
+@contextmanager
+def make_temporary_cache():
+    with tempfile.TemporaryDirectory() as directory:
+        temporary_cache = str(Path(directory) / "temporary_cache.db")
+        try:
+            yield temporary_cache
+        finally:
+            pass
+
+
+def gersemi(*gersemi_args, **subprocess_kwargs):
+    with make_temporary_cache() as temporary_cache:
+        return gersemi_with_cache_path(
+            temporary_cache, *gersemi_args, **subprocess_kwargs
+        )
 
 
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -592,3 +612,117 @@ def test_use_configuration_file_from_current_directory_when_input_is_from_stdin(
         assert completed_process.returncode == 0
         assert completed_process.stdout == outp
         assert completed_process.stderr == ""
+
+
+@contextmanager
+def cache_tests(files_to_format):
+    with ExitStack() as stack:
+        copy, temporary_cache = [
+            stack.enter_context(temporary_dir_copy(files_to_format)),
+            stack.enter_context(make_temporary_cache()),
+        ]
+        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
+            temporary_cache, *args, **kwargs
+        )
+        inspector = stack.enter_context(inspect_cache(temporary_cache))
+
+        try:
+            yield copy, gersemi_, inspector
+        finally:
+            pass
+
+
+def test_formatted_files_are_stored_in_cache_on_check():
+    with cache_tests(case("custom_project/formatted")) as (copy, gersemi_, inspector):
+        assert inspector.get_tables() == []
+
+        gersemi_("--check", copy, "--definitions", copy)
+
+        assert inspector.get_tables() == ["files"]
+        assert len(inspector.get_files()) > 0
+
+
+def test_not_formatted_files_are_not_stored_in_cache_on_check():
+    with cache_tests(case("custom_project/not_formatted")) as (
+        copy,
+        gersemi_,
+        inspector,
+    ):
+        assert inspector.get_tables() == []
+
+        gersemi_("--check", copy, "--definitions", copy)
+
+        assert inspector.get_tables() == ["files"]
+        assert len(inspector.get_files()) == 0
+
+
+def test_not_formatted_files_are_stored_in_cache_after_formatting():
+    with cache_tests(case("custom_project/not_formatted")) as (
+        copy,
+        gersemi_,
+        inspector,
+    ):
+        assert inspector.get_tables() == []
+
+        gersemi_("--in-place", copy, "--definitions", copy)
+
+        assert inspector.get_tables() == ["files"]
+        assert len(inspector.get_files()) > 0
+
+
+def test_files_in_cache_dont_get_updated_on_subsequent_run():
+    with cache_tests(case("custom_project/not_formatted")) as (
+        copy,
+        gersemi_,
+        inspector,
+    ):
+        assert inspector.get_tables() == []
+
+        gersemi_("--in-place", copy, "--definitions", copy)
+        assert inspector.get_tables() == ["files"]
+        files_after_first_run = inspector.get_files()
+        assert len(files_after_first_run) > 0
+
+        gersemi_("--in-place", copy, "--definitions", copy)
+        assert inspector.get_tables() == ["files"]
+        files_after_second_run = inspector.get_files()
+        assert len(files_after_first_run) > 0
+
+        assert files_after_first_run == files_after_second_run
+
+
+def test_different_configuration_leads_to_overriding_data_stored_in_cache():
+    with cache_tests(case("custom_project/not_formatted")) as (
+        copy,
+        gersemi_,
+        inspector,
+    ):
+        assert inspector.get_tables() == []
+
+        gersemi_("--in-place", copy, "--definitions", copy)
+        assert inspector.get_tables() == ["files"]
+        files_after_first_run = inspector.get_files()
+        assert len(files_after_first_run) > 0
+
+        gersemi_("--in-place", copy, "--definitions", copy, "--line-length", "100")
+        assert inspector.get_tables() == ["files"]
+        files_after_second_run = inspector.get_files()
+        assert len(files_after_first_run) > 0
+
+        only_paths_from_first_run = [path for (path, *_) in files_after_first_run]
+        only_paths_from_second_run = [path for (path, *_) in files_after_second_run]
+
+        assert only_paths_from_first_run == only_paths_from_second_run
+        assert files_after_first_run != files_after_second_run
+
+
+def test_no_files_are_stored_in_cache_on_diff():
+    with cache_tests(case("custom_project/not_formatted")) as (
+        copy,
+        gersemi_,
+        inspector,
+    ):
+        assert inspector.get_tables() == []
+        gersemi_("--diff", copy, "--definitions", copy)
+        assert inspector.get_tables() == ["files"]
+        assert len(inspector.get_files()) == 0

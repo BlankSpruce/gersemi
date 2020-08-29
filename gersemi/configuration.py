@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, fields
+from hashlib import sha1
 from itertools import chain
 import os
 from pathlib import Path
@@ -14,6 +15,11 @@ class Configuration:
     quiet: bool = False
     color: bool = False
     definitions: Iterable[Path] = tuple()
+
+    def summary(self):
+        hasher = sha1()
+        hasher.update(repr(self).encode("utf-8"))
+        return hasher.hexdigest()
 
 
 def make_default_configuration_file():

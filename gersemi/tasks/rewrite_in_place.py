@@ -10,4 +10,4 @@ def rewrite_in_place(formatted_file: FormattedFile) -> TaskResult:
             formatted_file.path, "w", newline=formatted_file.newlines_style
         ) as f:
             print(formatted_file.after, file=f, end="")
-    return TaskResult(return_code=SUCCESS)
+    return TaskResult(path=formatted_file.path, return_code=SUCCESS)

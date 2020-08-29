@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 from dataclasses import astuple
 from functools import partial
 from itertools import chain
@@ -5,7 +6,8 @@ import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict, Iterable, Tuple
+from gersemi.cache import create_cache
 from gersemi.configuration import Configuration
 from gersemi.custom_command_definition_finder import find_custom_command_definitions
 from gersemi.formatter import create_formatter, Formatter
@@ -21,7 +23,6 @@ from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_colorized_diff, show_diff
 from gersemi.utils import smart_open
 from gersemi.keywords import Keywords
-
 
 CHUNKSIZE = 16
 
@@ -101,18 +102,20 @@ def run_task(
     formatted_file: Result[FormattedFile] = apply(format_file, path, formatter)
     if isinstance(formatted_file, Error):
         return TaskResult(
-            return_code=INTERNAL_ERROR, to_stderr=get_error_message(formatted_file)
+            path=path,
+            return_code=INTERNAL_ERROR,
+            to_stderr=get_error_message(formatted_file),
         )
     return task(formatted_file)
 
 
-def consume_task_result(task_result: TaskResult) -> int:
-    return_code, to_stdout, to_stderr = astuple(task_result)
+def consume_task_result(task_result: TaskResult) -> Tuple[Path, int]:
+    path, return_code, to_stdout, to_stderr = astuple(task_result)
     if to_stdout != "":
         print_to_stdout(to_stdout)
     if to_stderr != "":
         print_to_stderr(to_stderr)
-    return return_code
+    return path, return_code
 
 
 def create_pool(is_stdin_in_sources):
@@ -121,11 +124,40 @@ def create_pool(is_stdin_in_sources):
     return mp.Pool(processes=mp.cpu_count())
 
 
+def filter_already_formatted_files(
+    cache, configuration_summary: str, files: Iterable[Path]
+):
+    known_files = cache.get_files()
+    for f in files:
+        if f not in known_files:
+            yield f
+        else:
+            s = f.stat()
+            if (s.st_size, s.st_mtime_ns, configuration_summary) != known_files[f]:
+                yield f
+
+
+def store_files_in_cache(
+    mode: Mode, cache, configuration_summary: str, files: Iterable[Path]
+) -> None:
+    if mode in [Mode.CheckFormatting, Mode.RewriteInPlace]:
+        cache.store_files(configuration_summary, files)
+
+
 def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
-    files_to_format = get_files(sources)
+    configuration_summary = configuration.summary()
+    requested_files = get_files(sources)
     task = select_task(mode, configuration)
 
-    with create_pool(Path("-") in files_to_format) as pool:
+    with ExitStack() as stack:
+        cache = stack.enter_context(create_cache())
+        pool = stack.enter_context(create_pool(Path("-") in requested_files))
+
+        files_to_format = list(
+            filter_already_formatted_files(
+                cache, configuration_summary, requested_files
+            )
+        )
         custom_command_definitions = find_all_custom_command_definitions(
             set(configuration.definitions), pool
         )
@@ -136,10 +168,17 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
         )
         execute = partial(run_task, formatter=formatter, task=task)
 
-        return max(
-            map(
-                consume_task_result,
-                pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE),
-            ),
-            default=SUCCESS,
+        results = [
+            consume_task_result(result)
+            for result in pool.imap_unordered(
+                execute, files_to_format, chunksize=CHUNKSIZE
+            )
+        ]
+        store_files_in_cache(
+            mode,
+            cache,
+            configuration_summary,
+            (path for path, code in results if code == SUCCESS and path != Path("-")),
         )
+
+        return max((code for _, code in results), default=SUCCESS)

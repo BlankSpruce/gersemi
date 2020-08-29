@@ -41,10 +41,16 @@ def get_diff(formatted_file: FormattedFile) -> Iterator[str]:
 
 
 def show_diff(formatted_file: FormattedFile) -> TaskResult:
-    return TaskResult(return_code=SUCCESS, to_stdout="".join(get_diff(formatted_file)))
+    return TaskResult(
+        path=formatted_file.path,
+        return_code=SUCCESS,
+        to_stdout="".join(get_diff(formatted_file)),
+    )
 
 
 def show_colorized_diff(formatted_file: FormattedFile) -> TaskResult:
     return TaskResult(
-        return_code=SUCCESS, to_stdout="".join(colorize(get_diff(formatted_file)))
+        path=formatted_file.path,
+        return_code=SUCCESS,
+        to_stdout="".join(colorize(get_diff(formatted_file))),
     )
