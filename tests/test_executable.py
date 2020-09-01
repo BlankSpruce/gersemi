@@ -28,10 +28,7 @@ def gersemi_with_cache_path(cache_path, *gersemi_args, **subprocess_kwargs):
 def make_temporary_cache():
     with tempfile.TemporaryDirectory() as directory:
         temporary_cache = str(Path(directory) / "temporary_cache.db")
-        try:
-            yield temporary_cache
-        finally:
-            pass
+        yield temporary_cache
 
 
 def gersemi(*gersemi_args, **subprocess_kwargs):
@@ -64,10 +61,7 @@ def temporary_copy(original):
 def temporary_copies(file_paths):
     with ExitStack() as stack:
         copies = [stack.enter_context(temporary_copy(p)) for p in file_paths]
-        try:
-            yield copies
-        finally:
-            pass
+        yield copies
 
 
 @contextmanager
@@ -86,10 +80,7 @@ def temporary_dir_copy(original):
 def temporary_dir_copies(directory_paths):
     with ExitStack() as stack:
         copies = [stack.enter_context(temporary_dir_copy(p)) for p in directory_paths]
-        try:
-            yield copies
-        finally:
-            pass
+        yield copies
 
 
 def assert_success(*args, **kwargs):
@@ -139,10 +130,7 @@ def create_configuration_files(directories, creator):
             stack.enter_context(create_dot_gersemirc(where=d, **creator(d)))
             for d in directories
         ]
-        try:
-            yield configuration_files
-        finally:
-            pass
+        yield configuration_files
 
 
 def assert_that_directories_differ(left, right):
@@ -626,11 +614,7 @@ def cache_tests(files_to_format):
             temporary_cache, *args, **kwargs
         )
         inspector = stack.enter_context(inspect_cache(temporary_cache))
-
-        try:
-            yield copy, gersemi_, inspector
-        finally:
-            pass
+        yield copy, gersemi_, inspector
 
 
 def test_formatted_files_are_stored_in_cache_on_check():
@@ -732,23 +716,17 @@ def test_no_files_are_stored_in_cache_on_diff():
 def test_when_cache_cant_be_modified_it_is_ignored():
     with temporary_dir_copy(
         case("custom_project/formatted")
-    ) as copy, tempfile.NamedTemporaryFile(mode="r") as cache_path, inspect_cache(
-        cache_path.name
-    ) as inspector:
+    ) as copy, tempfile.NamedTemporaryFile(mode="r") as cache_path:
         os.chmod(cache_path.name, S_IREAD | S_IRGRP | S_IROTH)
 
         gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
             cache_path.name, *args, **kwargs
         )
 
-        assert inspector.get_tables() == []
-
         completed_process = gersemi_("--check", copy, "--definitions", copy)
         assert completed_process.returncode == 0
         assert completed_process.stdout == ""
         assert completed_process.stderr == ""
-
-        assert inspector.get_tables() == []
 
 
 def test_when_cache_is_malformed_it_is_ignored():

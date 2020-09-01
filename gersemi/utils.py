@@ -44,10 +44,7 @@ def standard_stream_open(mode):
 @contextmanager
 def smart_open(filename, mode, *args, **kwargs):
     if filename == Path("-"):
-        try:
-            yield standard_stream_open(mode)
-        finally:
-            pass
+        yield standard_stream_open(mode)
     else:
         try:
             fh = open(filename, mode, *args, **kwargs)
