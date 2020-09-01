@@ -3,6 +3,7 @@ import filecmp
 import os
 from pathlib import Path
 import shutil
+from stat import S_IREAD, S_IRGRP, S_IROTH
 import subprocess
 import sys
 import tempfile
@@ -726,3 +727,42 @@ def test_no_files_are_stored_in_cache_on_diff():
         gersemi_("--diff", copy, "--definitions", copy)
         assert inspector.get_tables() == ["files"]
         assert len(inspector.get_files()) == 0
+
+
+def test_when_cache_cant_be_modified_it_is_ignored():
+    with temporary_dir_copy(
+        case("custom_project/formatted")
+    ) as copy, tempfile.NamedTemporaryFile(mode="r") as cache_path, inspect_cache(
+        cache_path.name
+    ) as inspector:
+        os.chmod(cache_path.name, S_IREAD | S_IRGRP | S_IROTH)
+
+        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
+            cache_path.name, *args, **kwargs
+        )
+
+        assert inspector.get_tables() == []
+
+        completed_process = gersemi_("--check", copy, "--definitions", copy)
+        assert completed_process.returncode == 0
+        assert completed_process.stdout == ""
+        assert completed_process.stderr == ""
+
+        assert inspector.get_tables() == []
+
+
+def test_when_cache_is_malformed_it_is_ignored():
+    with temporary_dir_copy(
+        case("custom_project/formatted")
+    ) as copy, tempfile.NamedTemporaryFile() as cache_path:
+        cache_path.write("foobarbaz1231212312312312313".encode("ascii"))
+        cache_path.flush()
+
+        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
+            cache_path.name, *args, **kwargs
+        )
+
+        completed_process = gersemi_("--check", copy, "--definitions", copy)
+        assert completed_process.returncode == 0
+        assert completed_process.stdout == ""
+        assert completed_process.stderr == ""

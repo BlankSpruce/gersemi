@@ -63,10 +63,18 @@ class Cache:
         }
 
 
+class DummyCache:
+    def store_files(self, *args, **kwargs) -> None:
+        pass
+
+    def get_files(self) -> Dict[Path, Tuple[int, int, str]]:
+        return {}
+
+
 @contextmanager
 def create_cache():
-    with database_cursor(cache_path()) as cursor:
-        try:
+    try:
+        with database_cursor(cache_path()) as cursor:
             yield Cache(cursor)
-        finally:
-            pass
+    except sqlite3.Error:
+        yield DummyCache()
