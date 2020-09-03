@@ -7,7 +7,6 @@ from stat import S_IREAD, S_IRGRP, S_IROTH
 import subprocess
 import sys
 import tempfile
-import uuid
 import yaml
 from tests.cache_inspector import inspect_cache
 
@@ -47,14 +46,14 @@ def case(filepath):
 
 @contextmanager
 def temporary_copy(original):
-    temp_directory = tempfile.gettempdir()
-    original_base = os.path.basename(original)
-    temp_path = os.path.join(temp_directory, uuid.uuid4().hex + original_base)
-    try:
-        shutil.copy2(original, temp_path)
-        yield temp_path
-    finally:
-        os.remove(temp_path)
+    with tempfile.TemporaryDirectory() as temp_directory:
+        original_base = os.path.basename(original)
+        temp_path = os.path.join(temp_directory, original_base)
+        try:
+            shutil.copy2(original, temp_path)
+            yield temp_path
+        finally:
+            os.remove(temp_path)
 
 
 @contextmanager
@@ -66,14 +65,14 @@ def temporary_copies(file_paths):
 
 @contextmanager
 def temporary_dir_copy(original):
-    temp_directory = tempfile.gettempdir()
-    original_base = os.path.basename(original)
-    temp_path = os.path.join(temp_directory, uuid.uuid4().hex + original_base)
-    try:
-        shutil.copytree(original, temp_path)
-        yield temp_path
-    finally:
-        shutil.rmtree(temp_path)
+    with tempfile.TemporaryDirectory() as temp_directory:
+        original_base = os.path.basename(original)
+        temp_path = os.path.join(temp_directory, original_base)
+        try:
+            shutil.copytree(original, temp_path)
+            yield temp_path
+        finally:
+            shutil.rmtree(temp_path)
 
 
 @contextmanager
@@ -744,3 +743,23 @@ def test_when_cache_is_malformed_it_is_ignored():
         assert completed_process.returncode == 0
         assert completed_process.stdout == ""
         assert completed_process.stderr == ""
+
+
+def test_cache_is_not_updated_when_input_is_from_stdin():
+    inp = """set(FOO BAR)
+"""
+    with make_temporary_cache() as cache_path, inspect_cache(cache_path) as inspector:
+        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
+            cache_path, *args, **kwargs
+        )
+
+        assert inspector.get_tables() == []
+        gersemi_("--check", "-", input=inp)
+
+        # first use initialized tables in cache
+        assert inspector.get_tables() == ["files"]
+        assert inspector.get_files() == []
+
+        gersemi_("--check", "-", input=inp)
+        assert inspector.get_tables() == ["files"]
+        assert inspector.get_files() == []

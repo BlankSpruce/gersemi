@@ -1,4 +1,3 @@
-from contextlib import ExitStack
 from dataclasses import astuple
 from functools import partial
 from itertools import chain
@@ -149,10 +148,7 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
     requested_files = get_files(sources)
     task = select_task(mode, configuration)
 
-    with ExitStack() as stack:
-        cache = stack.enter_context(create_cache())
-        pool = stack.enter_context(create_pool(Path("-") in requested_files))
-
+    with create_cache() as cache, create_pool(Path("-") in requested_files) as pool:
         files_to_format = list(
             filter_already_formatted_files(
                 cache, configuration_summary, requested_files
