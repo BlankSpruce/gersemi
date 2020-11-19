@@ -2,6 +2,7 @@
 ## Scripting Commands
 break
 cmake_host_system_information
+cmake_language
 cmake_minimum_required
 cmake_parse_arguments
 cmake_policy

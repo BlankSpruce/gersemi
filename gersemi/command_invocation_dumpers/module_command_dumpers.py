@@ -400,6 +400,7 @@ class FetchContentDeclare(CommandLineFormatter, ArgumentAwareCommandInvocationDu
         "CVS_REPOSITORY",
         "CVS_MODULE",
         "CVS_TAG",
+        "SOURCE_SUBDIR",
         # Update/Patch Step
         "UPDATE_DISCONNECTED",
     ]
@@ -486,6 +487,11 @@ class FindPackageHandleStandardArgs(ArgumentAwareCommandInvocationDumper):
         "FAIL_MESSAGE",
     ]
     multi_value_keywords = ["REQUIRED_VARS"]
+
+
+class FindPackageCheckVersion(ArgumentAwareCommandInvocationDumper):
+    options = ["HANDLE_VERSION_RANGE"]
+    one_value_keywords = ["RESULT_MESSAGE_VARIABLE"]
 
 
 class FortranCInterfaceHeader(ArgumentAwareCommandInvocationDumper):
@@ -784,6 +790,7 @@ module_command_mapping = {
     "fetchcontent_populate": FetchContentPopulate,
     "fetchcontent_getproperties": FetchContentGetProperties,
     "find_package_handle_standard_args": FindPackageHandleStandardArgs,
+    "find_package_check_version": FindPackageCheckVersion,
     "fortrancinterface_header": FortranCInterfaceHeader,
     "generate_export_header": GenerateExportHeader,
     "gtest_add_tests": GTestAddTests,

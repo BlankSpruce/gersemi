@@ -17,12 +17,18 @@ class CMakeHostSysteInformation(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["QUERY"]
 
 
+class CMakeLanguage(ArgumentAwareCommandInvocationDumper):
+    options = ["DEFER", "EVAL"]
+    one_value_keywords = ["DIRECTORY", "ID", "ID_VAR", "GET_CALL_IDS", "GET_CALL"]
+    multi_value_keywords = ["CALL", "CANCEL_CALL"]
+
+
 class CMakeParseArguments(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["PARSE_ARGV"]
 
 
 class ConfigureFile(ArgumentAwareCommandInvocationDumper):
-    options = ["COPYONLY", "ESCAPE_QUOTES", "@ONLY"]
+    options = ["COPYONLY", "ESCAPE_QUOTES", "@ONLY", "NO_SOURCE_PERMISSIONS"]
     one_value_keywords = ["NEWLINE_STYLE"]
 
 
@@ -44,6 +50,8 @@ class ExecuteProcess(CommandLineFormatter, ArgumentAwareCommandInvocationDumper)
         "ERROR_QUIET",
         "OUTPUT_STRIP_TRAILING_WHITESPACE",
         "ERROR_STRIP_TRAILING_WHITESPACE",
+        "ECHO_OUTPUT_VARIABLE",
+        "ECHO_ERROR_VARIABLE",
     ]
     one_value_keywords = [
         "WORKING_DIRECTORY",
@@ -57,6 +65,7 @@ class ExecuteProcess(CommandLineFormatter, ArgumentAwareCommandInvocationDumper)
         "ERROR_FILE",
         "COMMAND_ECHO",
         "ENCODING",
+        "COMMAND_ERROR_IS_FATAL",
     ]
     multi_value_keywords = ["COMMAND"]
     keyword_formatters = {"COMMAND": "_format_command_line"}
@@ -103,8 +112,11 @@ class File(MultipleSignatureCommandInvocationDumper):
         ),
         # Writing
         "GENERATE": dict(
-            one_value_keywords=["INPUT", "CONTENT", "CONDITION"],
-            multi_value_keywords=["GENERATE"],
+            one_value_keywords=["INPUT", "CONTENT", "CONDITION", "OUTPUT", "TARGET"],
+        ),
+        "CONFIGURE": dict(
+            options=["ESCAPE_QUOTES", "@ONLY"],
+            one_value_keywords=["OUTPUT", "CONTENT", "NEWLINE_STYLE"],
         ),
         # Filesystem
         "GLOB": dict(
@@ -152,6 +164,22 @@ class File(MultipleSignatureCommandInvocationDumper):
             one_value_keywords=["RESULT"],
             multi_value_keywords=["CREATE_LINK"],
         ),
+        "CHMOD": dict(
+            multi_value_keywords=[
+                "PERMISSIONS",
+                "FILE_PERMISSIONS",
+                "DIRECTORY_PERMISSIONS",
+            ]
+        ),
+        "CHMOD_RECURSE": dict(
+            multi_value_keywords=[
+                "PERMISSIONS",
+                "FILE_PERMISSIONS",
+                "DIRECTORY_PERMISSIONS",
+            ]
+        ),
+        # Path Conversion
+        "REAL_PATH": dict(one_value_keywords=["BASE_DIRECTORY"]),
         # Transfer
         "DOWNLOAD": dict(
             options=["SHOW_PROGRESS"],
@@ -182,6 +210,8 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "HTTPHEADER",
                 "NETRC",
                 "NETRC_FILE",
+                "TLS_VERIFY",
+                "TLS_CAINFO",
             ],
             multi_value_keywords=["UPLOAD"],
         ),
@@ -189,6 +219,23 @@ class File(MultipleSignatureCommandInvocationDumper):
         "LOCK": dict(
             options=["DIRECTORY", "RELEASE"],
             one_value_keywords=["LOCK", "GUARD", "RESULT_VARIABLE", "TIMEOUT"],
+        ),
+        # Archiving
+        "ARCHIVE_CREATE": dict(
+            options=["VERBOSE"],
+            one_value_keywords=[
+                "OUTPUT",
+                "FORMAT",
+                "COMPRESSION",
+                "COMPRESSION_LEVEL",
+                "MTIME",
+            ],
+            multi_value_keywords=["PATHS"],
+        ),
+        "ARCHIVE_EXTRACT": dict(
+            options=["LIST_ONLY", "VERBOSE"],
+            one_value_keywords=["INPUT", "DESTINATION"],
+            multi_value_keywords=["PATTERNS"],
         ),
     }
 
@@ -204,6 +251,7 @@ class FindFile(ArgumentAwareCommandInvocationDumper):
         "CMAKE_FIND_ROOT_PATH_BOTH",
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
+        "REQUIRED",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -221,6 +269,7 @@ class FindLibrary(ArgumentAwareCommandInvocationDumper):
         "CMAKE_FIND_ROOT_PATH_BOTH",
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
+        "REQUIRED",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -270,6 +319,7 @@ class FindPath(ArgumentAwareCommandInvocationDumper):
         "CMAKE_FIND_ROOT_PATH_BOTH",
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
+        "REQUIRED",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -287,6 +337,7 @@ class FindProgram(ArgumentAwareCommandInvocationDumper):
         "CMAKE_FIND_ROOT_PATH_BOTH",
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
+        "REQUIRED",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -294,7 +345,7 @@ class FindProgram(ArgumentAwareCommandInvocationDumper):
 
 class Foreach(ArgumentAwareCommandInvocationDumper):
     options = ["IN"]
-    multi_value_keywords = ["RANGE", "LISTS", "ITEMS"]
+    multi_value_keywords = ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"]
 
 
 class Function(ArgumentAwareCommandInvocationDumper):
@@ -322,15 +373,12 @@ class GetFilenameComponent(ArgumentAwareCommandInvocationDumper):
 
 class GetProperty(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
-    one_value_keywords = [
-        "TARGET",
-        "SOURCE",
-        "INSTALL",
-        "TEST",
-        "CACHE",
-        "PROPERTY",
-    ]
-    multi_value_keywords = ["DIRECTORY"]
+    one_value_keywords = ["TARGET", "INSTALL", "TEST", "CACHE", "PROPERTY"]
+    multi_value_keywords = ["DIRECTORY", "SOURCE"]
+
+
+class GetSourceFileProperty(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["DIRECTORY", "TARGET_DIRECTORY"]
 
 
 class Include(ArgumentAwareCommandInvocationDumper):
@@ -388,11 +436,14 @@ class Message(ArgumentAwareCommandInvocationDumper):
         "VERBOSE",
         "DEBUG",
         "TRACE",
+        "CHECK_START",
+        "CHECK_PASS",
+        "CHECK_FAIL",
     ]
 
 
 class SeparateArguments(ArgumentAwareCommandInvocationDumper):
-    pass
+    options = ["PROGRAM", "SEPARATE_ARGS"]
 
 
 class SetProperty(ArgumentAwareCommandInvocationDumper):
@@ -417,6 +468,19 @@ class String(MultipleSignatureCommandInvocationDumper):
         "UUID": dict(
             options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"]
         ),
+        # JSON
+        "JSON": dict(
+            one_value_keywords=[
+                "ERROR_VARIABLE",
+                "GET",
+                "TYPE",
+                "MEMBER",
+                "LENGTH",
+                "REMOVE",
+                "SET",
+            ],
+            multi_value_keywords=["EQUAL"],
+        ),
     }
 
 
@@ -429,6 +493,7 @@ class SetDirectoryProperties(
 
 scripting_command_mapping = {
     "cmake_host_system_information": CMakeHostSysteInformation,
+    "cmake_language": CMakeLanguage,
     "cmake_parse_arguments": CMakeParseArguments,
     "configure_file": ConfigureFile,
     "elseif": ConditionSyntaxCommandInvocationDumper,
@@ -450,6 +515,7 @@ scripting_command_mapping = {
     "get_directory_property": GetDirectoryProperty,
     "get_filename_component": GetFilenameComponent,
     "get_property": GetProperty,
+    "get_source_file_property": GetSourceFileProperty,
     "if": ConditionSyntaxCommandInvocationDumper,
     "include": Include,
     "list": List,

@@ -117,7 +117,8 @@ file(GENERATE OUTPUT foo INPUT bar CONDITION baz)
 file(GENERATE OUTPUT foo CONTENT bar CONDITION baz)
 
 file(
-    GENERATE OUTPUT long_filename__________________________
+    GENERATE
+    OUTPUT long_filename__________________________
     INPUT long_filename__________________________
     CONDITION long_condition__________________________
 )
