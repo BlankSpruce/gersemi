@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.0] 2020-11-19
+
+### Added
+- information about formatted files is cached so that subsequent runs can avoid processing already formatted files
+- support for commands introduced between 3.16 and 3.19 releases of CMake
+
+### Changed
+- minor change to how OUTPUT argument in file(GENERATE) is formatted
+
 ## [0.5.0] 2020-08-25
 
 ### Added
