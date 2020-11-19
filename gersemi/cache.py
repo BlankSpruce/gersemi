@@ -20,8 +20,15 @@ def create_tables(cursor: sqlite3.Cursor):
         CREATE TABLE IF NOT EXISTS files (
             path TEXT PRIMARY KEY,
             size INTEGER NOT NULL,
-            modification_time INTEGER NOT NULL,
-            configuration_summary TEXT NOT NULL
+            modification_time INTEGER NOT NULL
+        )"""
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS formatted (
+            path TEXT PRIMARY KEY,
+            configuration_summary TEXT NOT NULL,
+            FOREIGN KEY (path) REFERENCES files (path)
         )"""
     )
 
@@ -29,6 +36,7 @@ def create_tables(cursor: sqlite3.Cursor):
 @contextmanager
 def database_cursor(path):
     connection = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
+    connection.execute("PRAGMA foreign_keys = 1")
     try:
         cursor = connection.cursor()
         create_tables(cursor)
@@ -38,10 +46,9 @@ def database_cursor(path):
         connection.close()
 
 
-def create_cache_entries(configuration_summary: str, paths: Iterable[Path]):
-    for path in paths:
-        s = path.stat()
-        yield str(path), s.st_size, s.st_mtime_ns, configuration_summary
+def create_file_entry(path: Path):
+    s = path.stat()
+    return str(path), s.st_size, s.st_mtime_ns
 
 
 class Cache:
@@ -49,16 +56,29 @@ class Cache:
         self.cursor = cursor
 
     def store_files(self, configuration_summary: str, files: Iterable[Path]) -> None:
+        f = list(files)
         self.cursor.executemany(
-            "INSERT OR REPLACE INTO files VALUES (?, ?, ?, ?)",
-            create_cache_entries(configuration_summary, files),
+            "INSERT OR REPLACE INTO files VALUES (?, ?, ?)",
+            map(create_file_entry, f),
+        )
+        self.cursor.executemany(
+            "INSERT OR REPLACE INTO formatted VALUES (?, ?)",
+            [(str(path), configuration_summary) for path in f],
         )
 
-    def get_files(self) -> Dict[Path, Tuple[int, int, str]]:
+    def get_files(self, configuration_summary: str) -> Dict[Path, Tuple[int, int]]:
         return {
-            Path(path): (size, modification_time, configuration_summary)
-            for path, size, modification_time, configuration_summary in self.cursor.execute(
-                "SELECT * FROM files"
+            Path(path): (size, modification_time)
+            for path, size, modification_time in self.cursor.execute(
+                """
+                SELECT *
+                FROM files
+                WHERE files.path IN (
+                    SELECT formatted.path
+                    FROM formatted
+                    WHERE formatted.configuration_summary = (?)
+                )""",
+                (configuration_summary,),
             )
         }
 
@@ -67,7 +87,7 @@ class DummyCache:
     def store_files(self, *args, **kwargs) -> None:
         pass
 
-    def get_files(self) -> Dict[Path, Tuple[int, int, str]]:
+    def get_files(self, _) -> Dict[Path, Tuple[int, int, str]]:
         return {}
 
 

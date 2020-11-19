@@ -618,12 +618,14 @@ def cache_tests(files_to_format):
 
 def test_formatted_files_are_stored_in_cache_on_check():
     with cache_tests(case("custom_project/formatted")) as (copy, gersemi_, inspector):
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
 
         gersemi_("--check", copy, "--definitions", copy)
 
-        assert inspector.get_tables() == ["files"]
+        inspector.assert_that_has_initialized_tables()
+
         assert len(inspector.get_files()) > 0
+        assert len(inspector.get_formatted()) > 0
 
 
 def test_not_formatted_files_are_not_stored_in_cache_on_check():
@@ -632,12 +634,13 @@ def test_not_formatted_files_are_not_stored_in_cache_on_check():
         gersemi_,
         inspector,
     ):
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
 
         gersemi_("--check", copy, "--definitions", copy)
 
-        assert inspector.get_tables() == ["files"]
+        inspector.assert_that_has_initialized_tables()
         assert len(inspector.get_files()) == 0
+        assert len(inspector.get_formatted()) == 0
 
 
 def test_not_formatted_files_are_stored_in_cache_after_formatting():
@@ -646,33 +649,36 @@ def test_not_formatted_files_are_stored_in_cache_after_formatting():
         gersemi_,
         inspector,
     ):
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
 
         gersemi_("--in-place", copy, "--definitions", copy)
 
-        assert inspector.get_tables() == ["files"]
+        inspector.assert_that_has_initialized_tables()
         assert len(inspector.get_files()) > 0
+        assert len(inspector.get_formatted()) > 0
 
 
-def test_files_in_cache_dont_get_updated_on_subsequent_run():
+def test_formatted_files_in_cache_dont_get_updated_on_subsequent_run():
     with cache_tests(case("custom_project/not_formatted")) as (
         copy,
         gersemi_,
         inspector,
     ):
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
 
         gersemi_("--in-place", copy, "--definitions", copy)
-        assert inspector.get_tables() == ["files"]
-        files_after_first_run = inspector.get_files()
-        assert len(files_after_first_run) > 0
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) > 0
+        formatted_after_first_run = inspector.get_formatted()
+        assert len(formatted_after_first_run) > 0
 
         gersemi_("--in-place", copy, "--definitions", copy)
-        assert inspector.get_tables() == ["files"]
-        files_after_second_run = inspector.get_files()
-        assert len(files_after_first_run) > 0
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) > 0
+        formatted_after_second_run = inspector.get_formatted()
+        assert len(formatted_after_second_run) > 0
 
-        assert files_after_first_run == files_after_second_run
+        assert formatted_after_first_run == formatted_after_second_run
 
 
 def test_different_configuration_leads_to_overriding_data_stored_in_cache():
@@ -681,23 +687,25 @@ def test_different_configuration_leads_to_overriding_data_stored_in_cache():
         gersemi_,
         inspector,
     ):
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
 
         gersemi_("--in-place", copy, "--definitions", copy)
-        assert inspector.get_tables() == ["files"]
-        files_after_first_run = inspector.get_files()
-        assert len(files_after_first_run) > 0
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) > 0
+        formatted_after_first_run = inspector.get_formatted()
+        assert len(formatted_after_first_run) > 0
 
         gersemi_("--in-place", copy, "--definitions", copy, "--line-length", "100")
-        assert inspector.get_tables() == ["files"]
-        files_after_second_run = inspector.get_files()
-        assert len(files_after_first_run) > 0
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) > 0
+        formatted_after_second_run = inspector.get_formatted()
+        assert len(formatted_after_first_run) > 0
 
-        only_paths_from_first_run = [path for (path, *_) in files_after_first_run]
-        only_paths_from_second_run = [path for (path, *_) in files_after_second_run]
+        only_paths_from_first_run = [path for (path, *_) in formatted_after_first_run]
+        only_paths_from_second_run = [path for (path, *_) in formatted_after_second_run]
 
         assert only_paths_from_first_run == only_paths_from_second_run
-        assert files_after_first_run != files_after_second_run
+        assert formatted_after_first_run != formatted_after_second_run
 
 
 def test_no_files_are_stored_in_cache_on_diff():
@@ -706,10 +714,11 @@ def test_no_files_are_stored_in_cache_on_diff():
         gersemi_,
         inspector,
     ):
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
         gersemi_("--diff", copy, "--definitions", copy)
-        assert inspector.get_tables() == ["files"]
+        inspector.assert_that_has_initialized_tables()
         assert len(inspector.get_files()) == 0
+        assert len(inspector.get_formatted()) == 0
 
 
 def test_when_cache_cant_be_modified_it_is_ignored():
@@ -753,13 +762,15 @@ def test_cache_is_not_updated_when_input_is_from_stdin():
             cache_path, *args, **kwargs
         )
 
-        assert inspector.get_tables() == []
+        inspector.assert_that_has_no_tables()
         gersemi_("--check", "-", input=inp)
 
         # first use initialized tables in cache
-        assert inspector.get_tables() == ["files"]
-        assert inspector.get_files() == []
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) == 0
+        assert len(inspector.get_formatted()) == 0
 
         gersemi_("--check", "-", input=inp)
-        assert inspector.get_tables() == ["files"]
-        assert inspector.get_files() == []
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) == 0
+        assert len(inspector.get_formatted()) == 0

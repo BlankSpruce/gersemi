@@ -6,7 +6,7 @@ class CacheInspector:
     def __init__(self, cursor):
         self.cursor = cursor
 
-    def get_tables(self):
+    def _get_tables(self):
         return list(
             name
             for (name,) in self.cursor.execute(
@@ -18,8 +18,17 @@ class CacheInspector:
             )
         )
 
+    def assert_that_has_no_tables(self):
+        assert len(self._get_tables()) == 0
+
+    def assert_that_has_initialized_tables(self):
+        assert self._get_tables() == ["files", "formatted"]
+
     def get_files(self):
         return list(fields for fields in self.cursor.execute("SELECT * FROM files"))
+
+    def get_formatted(self):
+        return list(fields for fields in self.cursor.execute("SELECT * FROM formatted"))
 
 
 @contextmanager

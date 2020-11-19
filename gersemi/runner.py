@@ -126,13 +126,13 @@ def create_pool(is_stdin_in_sources):
 def filter_already_formatted_files(
     cache, configuration_summary: str, files: Iterable[Path]
 ):
-    known_files = cache.get_files()
+    known_files = cache.get_files(configuration_summary)
     for f in files:
         if f not in known_files:
             yield f
         else:
             s = f.stat()
-            if (s.st_size, s.st_mtime_ns, configuration_summary) != known_files[f]:
+            if (s.st_size, s.st_mtime_ns) != known_files[f]:
                 yield f
 
 
