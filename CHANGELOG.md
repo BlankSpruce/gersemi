@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.1] 2020-12-29
+
+### Fixed
+- on Python 3.6 sqlite related TypeError isn't raised anymore
+
 ## [0.6.0] 2020-11-19
 
 ### Added

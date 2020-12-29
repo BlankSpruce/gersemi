@@ -35,7 +35,7 @@ def create_tables(cursor: sqlite3.Cursor):
 
 @contextmanager
 def database_cursor(path):
-    connection = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
+    connection = sqlite3.connect(str(path), detect_types=sqlite3.PARSE_DECLTYPES)
     connection.execute("PRAGMA foreign_keys = 1")
     try:
         cursor = connection.cursor()
