@@ -1,0 +1,22 @@
+name: Emacs module tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Emacs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq emacs25
+
+      - name: Run ERT
+        run: |
+          cd editors/emacs && emacs -batch -l ert -l gersemi.el -l gersemi-tests.el -f ert-run-tests-batch-and-exit
