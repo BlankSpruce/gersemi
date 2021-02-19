@@ -155,11 +155,13 @@ def test_help_just_works():
 
 
 def test_check_on_formatted_file_should_return_zero():
-    assert_success("--check", case("formatted_file.cmake"))
+    with temporary_copy(case("formatted_file.cmake")) as copy:
+        assert_success("--check", copy)
 
 
 def test_check_on_not_formatted_file_should_return_one():
-    assert_fail("--check", case("not_formatted_file.cmake"))
+    with temporary_copy(case("not_formatted_file.cmake")) as copy:
+        assert_fail("--check", copy)
 
 
 def test_format_file_in_place():
@@ -210,43 +212,50 @@ def test_dont_mix_stdin_and_file_input():
 
 def test_check_multiple_formatted_input_files():
     case_ = lambda filename: case("/directory_with_formatted_files/" + filename)
-    assert_success(
-        "--check", case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")
-    )
+    with temporary_copies(
+        [case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")]
+    ) as copies:
+        assert_success("--check", *copies)
 
 
 def test_check_multiple_not_formatted_input_files():
     case_ = lambda filename: case("/directory_with_not_formatted_files/" + filename)
-    assert_fail(
-        "--check", case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")
-    )
+    with temporary_copies(
+        [case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")]
+    ) as copies:
+        assert_fail("--check", *copies)
 
 
 def test_check_multiple_input_files_when_some_are_not_formatted():
     case_ = lambda filename: case(
         "/directory_with_some_not_formatted_files/" + filename
     )
-    assert_fail(
-        "--check",
-        case_("formatted_file1.cmake"),
-        case_("formatted_file2.cmake"),
-        case_("formatted_file3.cmake"),
-        case_("not_formatted_file1.cmake"),
-        case_("not_formatted_file2.cmake"),
-        case_("not_formatted_file3.cmake"),
-    )
+    with temporary_copies(
+        [
+            case_("formatted_file1.cmake"),
+            case_("formatted_file2.cmake"),
+            case_("formatted_file3.cmake"),
+            case_("not_formatted_file1.cmake"),
+            case_("not_formatted_file2.cmake"),
+            case_("not_formatted_file3.cmake"),
+        ]
+    ) as copies:
+        assert_fail("--check", *copies)
 
 
 def test_check_directory_with_formatted_files():
-    assert_success("--check", case("directory_with_formatted_files"))
+    with temporary_dir_copy(case("directory_with_formatted_files")) as copy:
+        assert_success("--check", copy)
 
 
 def test_check_directory_with_not_formatted_files():
-    assert_fail("--check", case("directory_with_not_formatted_files"))
+    with temporary_dir_copy(case("directory_with_not_formatted_files")) as copy:
+        assert_fail("--check", copy)
 
 
 def test_check_directory_with_some_not_formatted_files():
-    assert_fail("--check", case("directory_with_some_not_formatted_files"))
+    with temporary_dir_copy(case("directory_with_some_not_formatted_files")) as copy:
+        assert_fail("--check", copy)
 
 
 def test_format_in_place_multiple_formatted_files():
