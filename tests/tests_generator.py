@@ -3,8 +3,10 @@ import os
 import pathlib
 
 
-InputOnlyCase = collections.namedtuple("Case", ["name", "content"])
-InputOutputCase = collections.namedtuple("Case", ["name", "given", "expected"])
+InputOnlyCase = collections.namedtuple("InputOnlyCase", ["name", "content"])
+InputOutputCase = collections.namedtuple(
+    "InputOutputCase", ["name", "given", "expected"]
+)
 
 
 def has_extension(expected_extension):

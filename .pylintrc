@@ -21,4 +21,6 @@ disable=
     no-self-use,
 
     too-few-public-methods,
-    too-many-ancestors
+    too-many-ancestors,
+
+    unsubscriptable-object # false positives
