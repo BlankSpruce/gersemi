@@ -16,7 +16,7 @@ $ pip3 install gersemi
 ```
 usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGER]
                [--unsafe] [-q] [--color] [--definitions src [src ...]]
-               [src [src ...]]
+               [src ...]
 
 A formatter to make your CMake code the real treasure.
 
@@ -36,9 +36,8 @@ modes:
 configuration:
   By default configuration is loaded from YAML formatted .gersemirc file if it's
   available. This file should be placed in one of the common parent directories of source
-  files. For stdin only current directory is considered. Arguments from command line can
-  be used to override parts of that configuration or supply them in absence of
-  configuration file.
+  files. Arguments from command line can be used to override parts of that configuration
+  or supply them in absence of configuration file.
 
   -l INTEGER, --line-length INTEGER
                         Maximum line length in characters [default: 80]

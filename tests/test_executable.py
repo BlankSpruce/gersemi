@@ -12,9 +12,10 @@ from tests.cache_inspector import inspect_cache
 
 
 def gersemi_with_cache_path(cache_path, *gersemi_args, **subprocess_kwargs):
+    this_file_dir = os.path.dirname(os.path.realpath(__file__))
     subprocess_kwargs["input"] = cache_path + "\n" + subprocess_kwargs.get("input", "")
     return subprocess.run(
-        [sys.executable, "-m", "tests.patched_gersemi", *gersemi_args],
+        [sys.executable, f"{this_file_dir}/patched_gersemi", *gersemi_args],
         check=False,
         encoding="utf8",
         stdout=subprocess.PIPE,
@@ -318,11 +319,11 @@ def test_format_in_place_directory_with_some_not_formatted_files():
         assert_success("--check", copy)
 
 
-def test_format_with_default_line_length():
+def test_format_with_default_line_length(tmpdir):
     inp = "set(FOO long_argument__________________________________________________________)"
     outp = inp + "\n"
     assert len(inp) == 80
-    completed_process = gersemi("-", input=inp + "\n")
+    completed_process = gersemi("-", input=inp + "\n", cwd=tmpdir)
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp
     assert completed_process.stderr == ""
@@ -333,13 +334,13 @@ def test_format_with_default_line_length():
 )
 """
     assert len(inp2) > 80
-    completed_process = gersemi("-", input=inp2 + "\n")
+    completed_process = gersemi("-", input=inp2 + "\n", cwd=tmpdir)
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp2
     assert completed_process.stderr == ""
 
 
-def test_format_with_non_default_line_length():
+def test_format_with_non_default_line_length(tmpdir):
     line_length = 30
     inp = "set(FOO long_argument________)"
     outp = inp + "\n"
@@ -350,6 +351,7 @@ def test_format_with_non_default_line_length():
         "-",
         input=inp + "\n",
         universal_newlines=True,
+        cwd=tmpdir,
     )
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp
@@ -367,6 +369,7 @@ def test_format_with_non_default_line_length():
         "-",
         input=inp2 + "\n",
         universal_newlines=True,
+        cwd=tmpdir,
     )
     assert completed_process.returncode == 0
     assert completed_process.stdout == outp2
@@ -595,7 +598,7 @@ def test_use_absolute_paths_as_definitions_in_configuration_file():
         assert_that_directories_have_the_same_content(not_formatted, formatted)
 
 
-def test_use_configuration_file_from_current_directory_when_input_is_from_stdin():
+def test_use_configuration_file_from_current_directory_when_input_is_from_stdin(tmpdir):
     line_length = 30
     inp = "set(FOO long_argument__________)"
     outp = """set(FOO
@@ -604,8 +607,25 @@ def test_use_configuration_file_from_current_directory_when_input_is_from_stdin(
 """
     assert len(inp) > line_length
 
-    with create_dot_gersemirc(where=".", line_length=30):
-        completed_process = gersemi("-", input=inp + "\n")
+    with create_dot_gersemirc(where=tmpdir, line_length=30):
+        completed_process = gersemi("-", input=inp + "\n", cwd=tmpdir)
+        assert completed_process.returncode == 0
+        assert completed_process.stdout == outp
+        assert completed_process.stderr == ""
+
+
+def test_use_configuration_file_from_parent_directory_when_input_is_from_stdin(tmpdir):
+    line_length = 30
+    inp = "set(FOO long_argument__________)"
+    outp = """set(FOO
+    long_argument__________
+)
+"""
+    assert len(inp) > line_length
+
+    with create_dot_gersemirc(where=tmpdir, line_length=30):
+        nested_directory = tmpdir.mkdir("foo").mkdir("bar")
+        completed_process = gersemi("-", input=inp + "\n", cwd=nested_directory)
         assert completed_process.returncode == 0
         assert completed_process.stdout == outp
         assert completed_process.stderr == ""

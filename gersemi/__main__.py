@@ -80,7 +80,6 @@ def create_argparser():
         description="By default configuration is loaded from YAML formatted .gersemirc "
         "file if it's available. "
         "This file should be placed in one of the common parent directories of source files. "
-        "For stdin only current directory is considered. "
         "Arguments from command line can be used to override parts of that configuration "
         "or supply them in absence of configuration file.",
     )

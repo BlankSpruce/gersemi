@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.0] 2021-02-19
+
+###  Changed
+- when input is provided through stdin `gersemi` will look for configuration file in current or any of the parent directories instead of only current directory
+
 ## [0.6.1] 2020-12-29
 
 ### Fixed
