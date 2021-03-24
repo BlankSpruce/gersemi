@@ -28,8 +28,15 @@ class CMakeParseArguments(ArgumentAwareCommandInvocationDumper):
 
 
 class ConfigureFile(ArgumentAwareCommandInvocationDumper):
-    options = ["COPYONLY", "ESCAPE_QUOTES", "@ONLY", "NO_SOURCE_PERMISSIONS"]
+    options = [
+        "COPYONLY",
+        "ESCAPE_QUOTES",
+        "@ONLY",
+        "NO_SOURCE_PERMISSIONS",
+        "USE_SOURCE_PERMISSIONS",
+    ]
     one_value_keywords = ["NEWLINE_STYLE"]
+    multi_value_keywords = ["FILE_PERMISSIONS"]
 
 
 class EndForeach(ArgumentAwareCommandInvocationDumper):
@@ -112,7 +119,16 @@ class File(MultipleSignatureCommandInvocationDumper):
         ),
         # Writing
         "GENERATE": dict(
-            one_value_keywords=["INPUT", "CONTENT", "CONDITION", "OUTPUT", "TARGET"],
+            options=["NO_SOURCE_PERMISSIONS", "USE_SOURCE_PERMISSIONS"],
+            one_value_keywords=[
+                "INPUT",
+                "CONTENT",
+                "CONDITION",
+                "OUTPUT",
+                "TARGET",
+                "NEWLINE_STYLE",
+            ],
+            multi_value_keywords=["FILE_PERMISSIONS"],
         ),
         "CONFIGURE": dict(
             options=["ESCAPE_QUOTES", "@ONLY"],

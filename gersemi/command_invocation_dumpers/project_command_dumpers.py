@@ -132,7 +132,7 @@ class TargetCompileOptions(ArgumentAwareCommandInvocationDumper):
 
 
 class TargetIncludeDirectories(ArgumentAwareCommandInvocationDumper):
-    options = ["BEFORE", "SYSTEM"]
+    options = ["BEFORE", "SYSTEM", "AFTER"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
@@ -190,6 +190,7 @@ class TryRun(ArgumentAwareCommandInvocationDumper):
         "COMPILE_OUTPUT_VARIABLE",
         "RUN_OUTPUT_VARIABLE",
         "OUTPUT_VARIABLE",
+        "WORKING_DIRECTORY",
     ]
     multi_value_keywords = [
         "CMAKE_FLAGS",

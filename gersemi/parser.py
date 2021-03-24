@@ -53,7 +53,7 @@ class Parser:
             exception.get_context(code), exception.line, exception.column
         )
 
-    def parse(self, code):
+    def parse(self, code):  # pylint: disable=inconsistent-return-statements
         try:
             return self.lark_parser.parse(code)
         except UnexpectedInput as u:

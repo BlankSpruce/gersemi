@@ -253,6 +253,7 @@ class ExternalProjectAdd(CommandLineFormatter, ArgumentAwareCommandInvocationDum
         "CMAKE_GENERATOR_TOOLSET",
         "CMAKE_GENERATOR_INSTANCE",
         "SOURCE_SUBDIR",
+        "CONFIGURE_HANDLED_BY_BUILD",
         # Build Step
         "BUILD_IN_SOURCE",
         "BUILD_ALWAYS",
@@ -557,6 +558,7 @@ class AddJar(ArgumentAwareCommandInvocationDumper):
         "OUTPUT_DIR",
         "GENERATE_NATIVE_HEADERS",
         "DESTINATION",
+        "BUILD",
     ]
     multi_value_keywords = ["SOURCES", "INCLUDE_JARS"]
 
@@ -756,6 +758,10 @@ class SquishAddTest(ArgumentAwareCommandInvocationDumper):
     ]
 
 
+class ExternalDataAddTarget(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["SHOW_PROGRESS"]
+
+
 module_command_mapping = {
     # Utility Modules
     "android_add_test_data": AndroidAddTestData,
@@ -784,6 +790,7 @@ module_command_mapping = {
     "ctest_coverage_collect_gcov": CTestCoverageCollectGCOV,
     "externalproject_add": ExternalProjectAdd,
     "externalproject_add_step": ExternalProjectAddStep,
+    "externaldata_add_target": ExternalDataAddTarget,
     "feature_summary": FeatureSummary,
     "set_package_properties": SetPackageProperties,
     "fetchcontent_declare": FetchContentDeclare,
