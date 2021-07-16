@@ -16,8 +16,11 @@ class Parser:
             "foo([=[foo bar]])",
             "foo([=[foo bar ]==])",
             "foo(foo [=[foo bar ]==] foo)",
+            "foo(foo foo [==[foo]===] foo)",
         ],
         UnbalancedParentheses: [
+            "foo(foo foo",
+            "foo(foo foo # )",
             "foo(bar",
             "foo(bar\n",
             "foo(BAR (BAZ)",
