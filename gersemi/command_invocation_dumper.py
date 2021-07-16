@@ -47,7 +47,7 @@ class CommandInvocationDumper(
             self.__class__ = create_patch(patch, old_class)
             yield self
         finally:
-            self.__class__ = old_class
+            self.__class__ = old_class  # pylint: disable=invalid-class-object
 
     def _get_patch(self, command_name):
         if command_name in BUILTIN_COMMAND_MAPPING:
