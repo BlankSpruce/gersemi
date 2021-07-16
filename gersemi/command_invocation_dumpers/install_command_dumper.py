@@ -63,12 +63,14 @@ class Install(MultipleSignatureCommandInvocationDumper):
                 "DESTINATION",
                 "COMPONENT",
                 "NAMELINK_COMPONENT",
+                "RUNTIME_DEPENDENCY_SET",
             ],
             multi_value_keywords=[
                 "TARGETS",
                 "PERMISSIONS",
                 "CONFIGURATIONS",
                 "INCLUDES DESTINATION",
+                "RUNTIME_DEPENDENCIES",
             ],
         ),
         "FILES": dict(
@@ -100,10 +102,12 @@ class Install(MultipleSignatureCommandInvocationDumper):
             ],
         ),
         "SCRIPT": dict(
-            options=["EXCLUDE_FROM_ALL"], one_value_keywords=["SCRIPT", "COMPONENT"]
+            options=["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
+            one_value_keywords=["SCRIPT", "COMPONENT"],
         ),
         "CODE": dict(
-            options=["EXCLUDE_FROM_ALL"], one_value_keywords=["CODE", "COMPONENT"]
+            options=["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
+            one_value_keywords=["CODE", "COMPONENT"],
         ),
         "EXPORT": dict(
             options=["EXPORT_LINK_INTERFACE_LIBRARIES", "EXCLUDE_FROM_ALL"],
@@ -126,6 +130,33 @@ class Install(MultipleSignatureCommandInvocationDumper):
                 "COMPONENT",
             ],
             multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "IMPORTED_RUNTIME_ARTIFACTS": dict(
+            options=[
+                "LIBRARY",
+                "RUNTIME",
+                "FRAMEWORK",
+                "BUNDLE",
+                "OPTIONAL",
+                "EXCLUDE_FROM_ALL",
+            ],
+            one_value_keywords=["RUNTIME_DEPENDENCY_SET", "DESTINATION", "COMPONENT"],
+            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "RUNTIME_DEPENDENCY_SET": dict(
+            options=["LIBRARY", "RUNTIME", "FRAMEWORK", "OPTIONAL", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=["DESTINATION", "COMPONENT", "NAMELINK_COMPONENT"],
+            multi_value_keywords=[
+                "PERMISSIONS",
+                "CONFIGURATIONS",
+                "PRE_INCLUDE_REGEXES",
+                "PRE_EXCLUDE_REGEXES",
+                "POST_INCLUDE_REGEXES",
+                "POST_EXCLUDE_REGEXES",
+                "POST_INCLUDE_FILES",
+                "POST_EXCLUDE_FILES",
+                "DIRECTORIES",
+            ],
         ),
     }
 

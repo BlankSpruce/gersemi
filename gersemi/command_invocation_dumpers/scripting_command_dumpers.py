@@ -115,6 +115,8 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "PRE_EXCLUDE_REGEXES",
                 "POST_INCLUDE_REGEXES",
                 "POST_EXCLUDE_REGEXES",
+                "POST_INCLUDE_FILES",
+                "POST_EXCLUDE_FILES",
             ],
         ),
         # Writing
@@ -159,6 +161,7 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "PERMISSIONS",
             ],
         ),
+        "COPY_FILE": dict(options=["ONLY_IF_DIFFERENT"], one_value_keywords=["RESULT"]),
         "INSTALL": dict(
             options=[
                 "NO_SOURCE_PERMISSIONS",
@@ -194,8 +197,11 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "DIRECTORY_PERMISSIONS",
             ]
         ),
+        "RENAME": dict(options=["NO_REPLACE"], one_value_keywords=["RESULT"]),
         # Path Conversion
-        "REAL_PATH": dict(one_value_keywords=["BASE_DIRECTORY"]),
+        "REAL_PATH": dict(
+            options=["EXPAND_TILDE"], one_value_keywords=["BASE_DIRECTORY"]
+        ),
         # Transfer
         "DOWNLOAD": dict(
             options=["SHOW_PROGRESS"],

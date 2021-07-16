@@ -61,7 +61,7 @@ class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
 
 
 class BuildCommand(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME"]
+    one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME", "PARALLEL_LEVEL"]
 
 
 class CreateTestSourcelist(ArgumentAwareCommandInvocationDumper):

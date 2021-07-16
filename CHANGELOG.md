@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.2] 2021-07-16
+
+### Added
+- support for new keywords in native commands available in CMake 3.21
+- relaxed lark version dependency
+
 ## [0.7.1] 2021-03-25
 
 ### Added

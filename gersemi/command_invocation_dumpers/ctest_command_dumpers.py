@@ -15,6 +15,7 @@ class CTestBuild(ArgumentAwareCommandInvocationDumper):
         "NUMBER_WARNINGS",
         "RETURN_VALUE",
         "CAPTURE_CMAKE_ERROR",
+        "PARALLEL_LEVEL",
     ]
 
 

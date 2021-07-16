@@ -551,6 +551,7 @@ class GTestDiscoverTests(
 
 
 class AddJar(ArgumentAwareCommandInvocationDumper):
+    options = ["RESOURCES"]
     one_value_keywords = [
         "ENTRY_POINT",
         "VERSION",
@@ -560,7 +561,7 @@ class AddJar(ArgumentAwareCommandInvocationDumper):
         "DESTINATION",
         "BUILD",
     ]
-    multi_value_keywords = ["SOURCES", "INCLUDE_JARS"]
+    multi_value_keywords = ["SOURCES", "INCLUDE_JARS", "NAMESPACE"]
 
 
 class InstallJar(ArgumentAwareCommandInvocationDumper):
