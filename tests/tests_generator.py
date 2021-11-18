@@ -54,7 +54,7 @@ def discover_input_only_cases(where, input_extension):
 
 
 def get_matching_output_filename(input_filename, output_extension):
-    return "{}{}".format(remove_extension(input_filename), output_extension)
+    return f"{remove_extension(input_filename)}{output_extension}"
 
 
 def make_input_output_case(input_filename, output_extension, where):
@@ -73,7 +73,7 @@ def discover_input_output_cases(where, input_extension, output_extension):
         matching_output_file = get_matching_output_filename(inp, output_extension)
         assert (
             matching_output_file in output_files
-        ), "Incomplete input-output pair, missing {}".format(matching_output_file)
+        ), f"Incomplete input-output pair, missing {matching_output_file}"
 
     return [make_input_output_case(inp, output_extension, where) for inp in input_files]
 

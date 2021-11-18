@@ -12,9 +12,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         ):
             return "".join([self._indent(begin), formatted_arguments, end])
 
-        return "{}{}\n{}".format(
-            self._indent(begin), formatted_arguments, self._indent(end)
-        )
+        return f"{self._indent(begin)}{formatted_arguments}\n{self._indent(end)}"
 
     def _format_command_with_long_name(self, begin, arguments, end):
         with self.indented():

@@ -9,7 +9,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         super().__init__(width)
 
     def file(self, tree):
-        result = "{}".format(self.__default__(tree))
+        result = self.__default__(tree)
         if result.endswith("\n"):
             return result
         return result + "\n"
@@ -36,7 +36,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         return " ".join(self.visit(child) for child in tree.children)
 
     def line_comment(self, tree):
-        return self._indent("#{}".format("".join(tree.children)))
+        return self._indent(f"#{''.join(tree.children)}")
 
     def preformatted_block(self, tree):
         disable_formatter, *body, enable_formatter = tree.children

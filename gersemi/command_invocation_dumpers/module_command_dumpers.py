@@ -542,6 +542,7 @@ class GTestDiscoverTests(
         "DISCOVERY_TIMEOUT",
         "XML_OUTPUT_DIR",
         "DISCOVERY_MODE",
+        "TEST_FILTER",
     ]
     multi_value_keywords = ["EXTRA_ARGS", "PROPERTIES"]
     keyword_formatters = {

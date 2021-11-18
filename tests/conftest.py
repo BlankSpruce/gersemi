@@ -24,5 +24,5 @@ def parser_with_postprocessing(parser):  # pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
 def formatter():
     return create_formatter(
-        do_sanity_check=False, line_length=80, custom_command_definitions=dict()
+        do_sanity_check=False, line_length=80, custom_command_definitions={}
     )

@@ -54,7 +54,7 @@ def find_custom_command_definitions_in_file_impl(filepath: Path) -> Dict[str, Ke
     with smart_open(filepath, "r") as f:
         code = f.read()
     if not has_custom_command_definition(code):
-        return dict()
+        return {}
 
     parse_tree = parser.parse(code)
     return find_custom_command_definitions(parse_tree)
@@ -69,7 +69,7 @@ def find_custom_command_definitions_in_file(
 def find_all_custom_command_definitions(
     paths: Iterable[Path], pool
 ) -> Dict[str, Keywords]:
-    result = dict()
+    result = {}
 
     files = get_files(paths)
     find = find_custom_command_definitions_in_file

@@ -31,8 +31,8 @@ is_parse_argv = is_keyword("PARSE_ARGV")
 
 class CMakeInterpreter(Interpreter):
     def __init__(self, stack=None):
-        self.stack = dict() if stack is None else stack
-        self.found_commands = dict()
+        self.stack = {} if stack is None else stack
+        self.found_commands = {}
 
     @property
     def _inner_scope(self):
