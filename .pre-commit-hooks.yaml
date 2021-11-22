@@ -1,0 +1,8 @@
+-   id: gersemi
+    name: gersemi
+    description: Gersemi - A formatter to make your CMake code the real treasure.
+    entry: gersemi
+    args: ["-i"]
+    require_serial: true
+    language: python
+    types: [cmake]
