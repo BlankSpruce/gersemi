@@ -23,6 +23,4 @@ disable=
     too-few-public-methods,
     too-many-ancestors,
 
-    unspecified-encoding,
-
     unsubscriptable-object # false positives

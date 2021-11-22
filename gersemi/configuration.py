@@ -59,7 +59,7 @@ def normalize_definitions(definitions):
 
 def load_configuration_from_file(configuration_file_path: Path) -> Configuration:
     with enter_directory(configuration_file_path.parent):
-        with open(configuration_file_path, "r") as f:
+        with open(configuration_file_path, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f.read())
             if "definitions" in config:
                 config["definitions"] = normalize_definitions(config["definitions"])

@@ -4,11 +4,11 @@ from setuptools import setup, find_packages
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
-with open("README.md", "r") as f:
+with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
 about = {}
-with open(os.path.join(HERE, "gersemi", "__version__.py"), "r") as f:
+with open(os.path.join(HERE, "gersemi", "__version__.py"), "r", encoding="utf-8") as f:
     exec(f.read(), about)  # pylint: disable=exec-used
 
 setup(

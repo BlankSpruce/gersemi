@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.4] 2021-11-22
+
+### Added
+- [pre-commit](https://pre-commit.com/) hook
+
 ## [0.7.3] 2021-11-19
 
 ### Added

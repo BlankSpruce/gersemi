@@ -47,7 +47,7 @@ def smart_open(filename, mode, *args, **kwargs):
         yield standard_stream_open(mode)
     else:
         try:
-            fh = open(filename, mode, *args, **kwargs)
+            fh = open(filename, mode, *args, **kwargs, encoding="utf-8")
             yield fh
         finally:
             fh.close()
