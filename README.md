@@ -52,6 +52,19 @@ configuration:
                         https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html)
 ```
 
+### [pre-commit](https://pre-commit.com/) hook
+
+You can use gersemi with a pre-commit hook by adding the following to `.pre-commit-config.yaml` of your repository:
+```yaml
+repos:
+- repo: https://github.com/BlankSpruce/gersemi
+  rev: 0.7.3
+  hooks:
+  - id: gersemi
+```
+
+Update `rev` to relevant version used in your repository. For more details refer to https://pre-commit.com/#using-the-latest-version-for-a-repository
+
 ## Formatting
 
 The key goal is for the tool to "just work" and to have as little configuration as possible so that you don't have to worry about fine-tuning formatter to your needs - as long as you embrace the `gersemi` style of formatting, similarly as `black` or `gofmt` do their job. Currently only line length can be changed with `80` as default value - this default might be subject to change as project progresses. Currently the basic assumption is that code to format is valid CMake language code - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon. Be warned though it's not production ready so the changes to code might be destructive and you should always have a backup (version control helps a lot).
