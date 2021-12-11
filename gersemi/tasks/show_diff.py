@@ -23,7 +23,6 @@ try:
             else:
                 yield line
 
-
 except ImportError:
 
     def colorize(diff):
