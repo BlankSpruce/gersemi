@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.5] 2021-12-11
+
+### Fixed
+- specialized dumper for commands with multiple signatures like `file` no longer leaks keywords (#6)
+
 ## [0.7.4] 2021-11-22
 
 ### Added
