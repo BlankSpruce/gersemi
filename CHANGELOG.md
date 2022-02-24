@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.6] 2022-02-24
+### Added
+- support for new keywords in native commands available in CMake 3.23
+- support Python 3.10
+
 ## [0.7.5] 2021-12-11
 
 ### Fixed

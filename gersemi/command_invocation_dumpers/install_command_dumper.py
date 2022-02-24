@@ -64,6 +64,7 @@ class Install(MultipleSignatureCommandInvocationDumper):
                 "COMPONENT",
                 "NAMELINK_COMPONENT",
                 "RUNTIME_DEPENDENCY_SET",
+                "FILE_SET",
             ],
             multi_value_keywords=[
                 "TARGETS",

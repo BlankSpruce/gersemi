@@ -7,6 +7,7 @@ from .install_command_dumper import Install
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
+from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
 from .target_link_libraries_command_dumper import TargetLinkLibraries
 
 
@@ -79,7 +80,7 @@ class DefineProperty(ArgumentAwareCommandInvocationDumper):
         "CACHED_VARIABLE",
         "INHERITED",
     ]
-    one_value_keywords = ["PROPERTY"]
+    one_value_keywords = ["PROPERTY", "INITIALIZE_FROM_VARIABLE"]
     multi_value_keywords = ["BRIEF_DOCS", "FULL_DOCS"]
 
 
@@ -151,8 +152,22 @@ class TargetPrecompileHeaders(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
-class TargetSources(ArgumentAwareCommandInvocationDumper):
+class TargetSources(SectionAwareCommandInvocationDumper):
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+    sections = {
+        "INTERFACE": {
+            "one_value_keywords": ["FILE_SET", "TYPE"],
+            "multi_value_keywords": ["BASE_DIRS", "FILES"],
+        },
+        "PUBLIC": {
+            "one_value_keywords": ["FILE_SET", "TYPE"],
+            "multi_value_keywords": ["BASE_DIRS", "FILES"],
+        },
+        "PRIVATE": {
+            "one_value_keywords": ["FILE_SET", "TYPE"],
+            "multi_value_keywords": ["BASE_DIRS", "FILES"],
+        },
+    }
 
 
 class TryCompile(ArgumentAwareCommandInvocationDumper):

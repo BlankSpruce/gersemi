@@ -275,6 +275,7 @@ class ExternalProjectAdd(CommandLineFormatter, ArgumentAwareCommandInvocationDum
         # Terminal Access
         "USES_TERMINAL_DOWNLOAD",
         "USES_TERMINAL_UPDATE",
+        "USES_TERMINAL_PATCH",
         "USES_TERMINAL_CONFIGURE",
         "USES_TERMINAL_BUILD",
         "USES_TERMINAL_INSTALL",
