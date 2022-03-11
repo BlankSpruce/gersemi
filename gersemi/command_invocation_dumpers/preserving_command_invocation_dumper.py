@@ -18,6 +18,10 @@ def flat_split(pattern, string):
     return string[:begin], string[begin:end], string[end:]
 
 
+def split_by_line_comment(string):
+    return flat_split(LINE_COMMENT_BEGIN, string)
+
+
 def split_by_bracket_arguments(string):
     return flat_split(BRACKET_ARGUMENT_REGEX, string)
 
@@ -27,8 +31,11 @@ def split_by_quoted_arguments(string):
 
 
 def split_into_segments(string):
-    segments = split_by_bracket_arguments(string)
+    head, *comment = split_by_line_comment(string)
+    line_comment = "".join(comment)
+    segments = split_by_bracket_arguments(head)
     result = [split_by_quoted_arguments(segment) for segment in segments]
+    result += [[line_comment]]
     return [item for segment in result for item in segment if item != ""]
 
 

@@ -1,9 +1,15 @@
 # Changelog
 
-## [0.7.6] 2022-02-24
+## [0.8.0] 2022-02-24
 ### Added
 - support for new keywords in native commands available in CMake 3.23
 - support Python 3.10
+
+### Changed
+- required version of lark has to be at least 1.0
+
+### Fixed
+- AST mismatch issue when reformatting unknown commands with comment inside arguments list
 
 ## [0.7.5] 2021-12-11
 
