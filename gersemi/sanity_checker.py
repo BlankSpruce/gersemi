@@ -5,11 +5,11 @@ from gersemi.exceptions import ASTMismatch
 
 class DropWhitespaces(Transformer):
     def _drop_node(self, _):
-        raise Discard()
+        return Discard
 
     def non_command_element(self, children):
         if len(children) == 0:
-            raise Discard()
+            return Discard
         return Tree("non_command_element", children)
 
     NEWLINE = _drop_node

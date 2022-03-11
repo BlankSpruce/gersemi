@@ -9,7 +9,7 @@ class DowncaseIdentifiers(Transformer):
         return Token(
             "IDENTIFIER",
             token.lower(),
-            pos_in_stream=token.pos_in_stream,
+            start_pos=token.start_pos,
             line=token.line,
             column=token.column,
             end_line=token.end_line,

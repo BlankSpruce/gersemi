@@ -95,8 +95,7 @@ _separation         : _separation_atom+
 _separation_atom    : bracket_comment
                     | [line_comment] NEWLINE
 
-?commented_argument : argument [line_comment NEWLINE]
-                    | argument [bracket_comment]
+?commented_argument : argument [(line_comment NEWLINE | bracket_comment)]
 
 ?argument : bracket_argument
           | quoted_argument

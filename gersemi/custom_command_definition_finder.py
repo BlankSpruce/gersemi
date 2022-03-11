@@ -10,17 +10,17 @@ class IgnoreThisDefinition:
 
 class DropIrrelevantElements(Transformer):
     def _discard(self, _):
-        raise Discard
+        return Discard
 
     def non_command_element(self, children):
         if len(children) == 1 and isinstance(children[0], IgnoreThisDefinition):
             return children[0]
-        raise Discard
+        return Discard
 
     def line_comment(self, children):
         if len(children) > 0 and children[0].strip() == "gersemi: ignore":
             return IgnoreThisDefinition()
-        raise Discard
+        return Discard
 
     NEWLINE = _discard
     bracket_comment = _discard

@@ -21,9 +21,9 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
 
 
 class SimplifyParseTree(Transformer_InPlace):
-    def non_command_element(self, children: Nodes) -> Tree:
+    def non_command_element(self, children: Nodes):
         if len(children) == 0:
-            raise Discard
+            return Discard
         return Tree("non_command_element", children)
 
 
@@ -43,12 +43,12 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         self.code = code
 
     def _get_original_formatting(self, lparen, rparen):
-        start, end = lparen.end_pos, rparen.pos_in_stream
+        start, end = lparen.end_pos, rparen.start_pos
         content = self.code[start:end]
         return Tree("formatted_node", [content])
 
     def _get_indentation(self, identifier):
-        end = identifier.pos_in_stream
+        end = identifier.start_pos
         start = end - identifier.column + 1
         return self.code[start:end]
 

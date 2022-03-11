@@ -25,7 +25,7 @@ setup(
     install_requires=[
         "appdirs",
         "dataclasses",
-        "lark-parser>=0.8,<0.12",
+        "lark>=1.0",
         "pyyaml>=5,<6",
     ],
     extras_requires=["colorama>=0.4"],
