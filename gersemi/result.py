@@ -5,7 +5,7 @@ from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.utils import fromfile
 
 
-T = TypeVar("T", covariant=True)
+T_co = TypeVar("T_co", covariant=True)
 
 
 @dataclass
@@ -14,10 +14,10 @@ class Error:
     path: Path
 
 
-Result = Union[T, Error]
+Result = Union[T_co, Error]
 
 
-def apply(function: Callable[..., T], path: Path, *args, **kwargs) -> Result[T]:
+def apply(function: Callable[..., T_co], path: Path, *args, **kwargs) -> Result[T_co]:
     try:
         return function(path, *args, **kwargs)
     except Exception as exception:  # pylint: disable=broad-except

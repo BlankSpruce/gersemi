@@ -34,8 +34,8 @@ class BaseDumper(Interpreter):
 
     @contextmanager
     def aligned_to(self, alignment):
+        old_alignment = self.alignment
         try:
-            old_alignment = self.alignment
             self.alignment = alignment
             yield self
         finally:

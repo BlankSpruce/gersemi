@@ -20,7 +20,9 @@ is_block = is_tree("block")
 
 is_newline = is_token("NEWLINE")
 
-is_comment = lambda element: is_bracket_comment(element) or is_line_comment(element)
+
+def is_comment(element):
+    return is_bracket_comment(element) or is_line_comment(element)
 
 
 class ContainsLineComment(Interpreter):
@@ -31,8 +33,7 @@ class ContainsLineComment(Interpreter):
         return True
 
     def _visit(self, tree: Tree) -> bool:
-        is_subtree = lambda node: isinstance(node, Tree)
-        subtrees = filter(is_subtree, tree.children)
+        subtrees = filter(lambda node: isinstance(node, Tree), tree.children)
         return any(map(self.visit, subtrees))
 
     arguments = _visit
@@ -41,8 +42,7 @@ class ContainsLineComment(Interpreter):
 
 def contains_line_comment(nodes) -> bool:
     visit = ContainsLineComment().visit
-    check_node = lambda node: isinstance(node, Tree) and visit(node)
-    return any(map(check_node, nodes))
+    return any(map(lambda node: isinstance(node, Tree) and visit(node), nodes))
 
 
 def is_commented_unquoted_argument(node):

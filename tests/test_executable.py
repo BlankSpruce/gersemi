@@ -1,3 +1,4 @@
+# pylint: disable=unnecessary-lambda-assignment
 from contextlib import contextmanager, ExitStack
 import filecmp
 import os

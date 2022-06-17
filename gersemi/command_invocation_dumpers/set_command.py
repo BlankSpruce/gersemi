@@ -7,8 +7,11 @@ def can_be_formatted_into_single_line(children):
     return len(just_values(children)) <= 4
 
 
+def is_not_keyword(child):
+    return not is_cache(child) and not is_parent_scope(child)
+
+
 def just_values(children):
-    is_not_keyword = lambda child: not is_cache(child) and not is_parent_scope(child)
     return list(takewhile(is_not_keyword, children[1:]))
 
 
@@ -43,6 +46,7 @@ class Set(BaseCommandInvocationDumper):
             *begin, force = tree.children
         else:
             begin, force = tree.children, None
+        # pylint: disable=unnecessary-lambda-assignment
         is_not_cache = lambda child: not is_cache(child)
         name_and_values = [*takewhile(is_not_cache, begin)]
         cache_part = [*dropwhile(is_not_cache, begin)]

@@ -6,8 +6,6 @@ max-complexity=10
 
 [MESSAGES CONTROL]
 disable=
-    bad-continuation,
-
     duplicate-code,
 
     fixme,
@@ -17,8 +15,6 @@ disable=
     missing-class-docstring,
     missing-function-docstring,
     missing-module-docstring,
-
-    no-self-use,
 
     too-few-public-methods,
     too-many-ancestors,
