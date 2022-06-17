@@ -19,8 +19,15 @@ class CMakeHostSysteInformation(ArgumentAwareCommandInvocationDumper):
 
 class CMakeLanguage(ArgumentAwareCommandInvocationDumper):
     options = ["DEFER", "EVAL"]
-    one_value_keywords = ["DIRECTORY", "ID", "ID_VAR", "GET_CALL_IDS", "GET_CALL"]
-    multi_value_keywords = ["CALL", "CANCEL_CALL"]
+    one_value_keywords = [
+        "DIRECTORY",
+        "ID",
+        "ID_VAR",
+        "GET_CALL_IDS",
+        "GET_CALL",
+        "SET_DEPENDENCY_PROVIDER",
+    ]
+    multi_value_keywords = ["CALL", "CANCEL_CALL", "SUPPORTED_METHODS"]
 
 
 class CMakeParseArguments(ArgumentAwareCommandInvocationDumper):
@@ -218,6 +225,8 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "EXPECTED_MD5",
                 "TLS_VERIFY",
                 "TLS_CAINFO",
+                "RANGE_START",
+                "RANGE_END",
             ],
             multi_value_keywords=["DOWNLOAD"],
         ),
@@ -274,6 +283,7 @@ class FindFile(ArgumentAwareCommandInvocationDumper):
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
         "REQUIRED",
+        "NO_CMAKE_INSTALL_PREFIX",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -292,6 +302,7 @@ class FindLibrary(ArgumentAwareCommandInvocationDumper):
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
         "REQUIRED",
+        "NO_CMAKE_INSTALL_PREFIX",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -317,6 +328,8 @@ class FindPackage(ArgumentAwareCommandInvocationDumper):
         "CMAKE_FIND_ROOT_PATH_BOTH",
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_INSTALL_PREFIX",
+        "GLOBAL",
     ]
     multi_value_keywords = [
         "REQUIRED",
@@ -342,6 +355,7 @@ class FindPath(ArgumentAwareCommandInvocationDumper):
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
         "REQUIRED",
+        "NO_CMAKE_INSTALL_PREFIX",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
@@ -360,6 +374,7 @@ class FindProgram(ArgumentAwareCommandInvocationDumper):
         "ONLY_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_FIND_ROOT_PATH",
         "REQUIRED",
+        "NO_CMAKE_INSTALL_PREFIX",
     ]
     one_value_keywords = ["DOC", "ENV"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]

@@ -66,6 +66,7 @@ class IsolateBinaryTests(Transformer_InPlace):
         "VERSION_LESS_EQUAL",
         "VERSION_GREATER_EQUAL",
         "IN_LIST",
+        "PATH_EQUAL",
     ]
 
     def arguments(self, children: Nodes) -> Tree:

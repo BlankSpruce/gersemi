@@ -244,6 +244,7 @@ class ExternalProjectAdd(CommandLineFormatter, ArgumentAwareCommandInvocationDum
         "CVS_REPOSITORY",
         "CVS_MODULE",
         "CVS_TAG",
+        "DOWNLOAD_EXTRACT_TIMESTAMP",
         # Update/Patch Step
         "UPDATE_DISCONNECTED",
         # Configure Step
@@ -690,7 +691,15 @@ class MatlabAddUnitTest(CommandLineFormatter, ArgumentAwareCommandInvocationDump
 
 
 class MatlabAddMex(ArgumentAwareCommandInvocationDumper):
-    options = ["EXECUTABLE", "MODULE", "SHARED", "R2017b", "R2018a", "EXCLUDE_FROM_ALL"]
+    options = [
+        "EXECUTABLE",
+        "MODULE",
+        "SHARED",
+        "R2017b",
+        "R2018a",
+        "EXCLUDE_FROM_ALL",
+        "NO_IMPLICIT_LINK_TO_MATLAB_LIBRARIES",
+    ]
     one_value_keywords = ["NAME", "OUTPUT_NAME", "DOCUMENTATION"]
     multi_value_keywords = ["SRC", "LINK_TO"]
 
@@ -703,6 +712,7 @@ class PkgCheckModules(ArgumentAwareCommandInvocationDumper):
         "NO_CMAKE_ENVIRONMENT_PATH",
         "IMPORTED_TARGET",
         "GLOBAL",
+        "STATIC_TARGET",
     ]
 
 

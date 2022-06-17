@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.1] 2022-06-17
+### Added
+- support for new keywords in native commands available in CMake 3.24
+
 ## [0.8.0] 2022-02-24
 ### Added
 - support for new keywords in native commands available in CMake 3.23
