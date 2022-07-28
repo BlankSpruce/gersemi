@@ -153,7 +153,7 @@ INPUT-BUFFER, OUTPUT-BUFFER and ERROR-BUFFER serve as stdin, stdout and stderr r
   (gersemi-region (point-min) (point-max))
   )
 
-(define-minor-mode gersemi-mode ()
+(define-minor-mode gersemi-mode
   "Run gersemi before saving buffer"
   :lighter " gersemi"
   (if gersemi-mode
