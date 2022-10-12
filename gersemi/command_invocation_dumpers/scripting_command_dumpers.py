@@ -31,6 +31,7 @@ class CMakeLanguage(ArgumentAwareCommandInvocationDumper):
         "GET_CALL_IDS",
         "GET_CALL",
         "SET_DEPENDENCY_PROVIDER",
+        "GET_MESSAGE_LOG_LEVEL",
     ]
     multi_value_keywords = ["CALL", "CANCEL_CALL", "SUPPORTED_METHODS"]
 
@@ -294,7 +295,7 @@ class FindFile(ArgumentAwareCommandInvocationDumper):
         "REQUIRED",
         "NO_CMAKE_INSTALL_PREFIX",
     ]
-    one_value_keywords = ["DOC", "ENV"]
+    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
@@ -313,7 +314,7 @@ class FindLibrary(ArgumentAwareCommandInvocationDumper):
         "REQUIRED",
         "NO_CMAKE_INSTALL_PREFIX",
     ]
-    one_value_keywords = ["DOC", "ENV"]
+    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
@@ -366,7 +367,7 @@ class FindPath(ArgumentAwareCommandInvocationDumper):
         "REQUIRED",
         "NO_CMAKE_INSTALL_PREFIX",
     ]
-    one_value_keywords = ["DOC", "ENV"]
+    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
@@ -385,7 +386,7 @@ class FindProgram(ArgumentAwareCommandInvocationDumper):
         "REQUIRED",
         "NO_CMAKE_INSTALL_PREFIX",
     ]
-    one_value_keywords = ["DOC", "ENV"]
+    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
     multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
 
 
@@ -488,6 +489,10 @@ class Message(ArgumentAwareCommandInvocationDumper):
     ]
 
 
+class Return(ArgumentAwareCommandInvocationDumper):
+    multi_value_keywords = ["PROPAGATE"]
+
+
 class SeparateArguments(ArgumentAwareCommandInvocationDumper):
     options = ["PROGRAM", "SEPARATE_ARGS"]
 
@@ -571,6 +576,7 @@ scripting_command_mapping = {
     "mark_as_advanced": MarkAsAdvanced,
     "math": Math,
     "message": Message,
+    "return": Return,
     "separate_arguments": SeparateArguments,
     "set_directory_properties": SetDirectoryProperties,
     "set_property": SetProperty,

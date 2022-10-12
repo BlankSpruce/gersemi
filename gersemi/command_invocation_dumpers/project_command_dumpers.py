@@ -171,6 +171,7 @@ class TargetSources(SectionAwareCommandInvocationDumper):
 
 
 class TryCompile(ArgumentAwareCommandInvocationDumper):
+    option = ["NO_CACHE"]
     one_value_keywords = [
         "OUTPUT_VARIABLE",
         "COPY_FILE",
@@ -190,6 +191,10 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
         "CUDA_STANDARD",
         "CUDA_STANDARD_REQUIRED",
         "CUDA_EXTENSIONS",
+        "PROJECT",
+        "SOURCE_DIR",
+        "BINARY_DIR",
+        "TARGET",
     ]
     multi_value_keywords = [
         "SOURCES",
@@ -197,15 +202,39 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
         "COMPILE_DEFINITIONS",
         "LINK_OPTIONS",
         "LINK_LIBRARIES",
+        "SOURCE_FROM_CONTENT",
+        "SOURCE_FROM_VAR",
+        "SOURCE_FROM_FILE",
     ]
 
 
 class TryRun(ArgumentAwareCommandInvocationDumper):
+    options = ["NO_CACHE"]
     one_value_keywords = [
         "COMPILE_OUTPUT_VARIABLE",
         "RUN_OUTPUT_VARIABLE",
         "OUTPUT_VARIABLE",
         "WORKING_DIRECTORY",
+        "COPY_FILE",
+        "COPY_FILE_ERROR",
+        "C_STANDARD",
+        "C_STANDARD_REQUIRED",
+        "C_EXTENSIONS",
+        "CXX_STANDARD",
+        "CXX_STANDARD_REQUIRED",
+        "CXX_EXTENSIONS",
+        "OBJC_STANDARD",
+        "OBJC_STANDARD_REQUIRED",
+        "OBJC_EXTENSIONS",
+        "OBJCXX_STANDARD",
+        "OBJCXX_STANDARD_REQUIRED",
+        "OBJCXX_EXTENSIONS",
+        "CUDA_STANDARD",
+        "CUDA_STANDARD_REQUIRED",
+        "CUDA_EXTENSIONS",
+        "RUN_OUTPUT_VARIABLE",
+        "RUN_OUTPUT_STDOUT_VARIABLE",
+        "RUN_OUTPUT_STDERR_VARIABLE",
     ]
     multi_value_keywords = [
         "CMAKE_FLAGS",
@@ -213,6 +242,10 @@ class TryRun(ArgumentAwareCommandInvocationDumper):
         "LINK_OPTIONS",
         "LINK_LIBRARIES",
         "ARGS",
+        "SOURCES",
+        "SOURCE_FROM_CONTENT",
+        "SOURCE_FROM_VAR",
+        "SOURCE_FROM_FILE",
     ]
 
 

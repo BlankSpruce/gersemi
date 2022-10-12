@@ -373,6 +373,7 @@ class SetPackageProperties(ArgumentAwareCommandInvocationDumper):
 
 
 class FetchContentDeclare(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
+    options = ["SYSTEM", "OVERRIDE_FIND_PACKAGE"]
     one_value_keywords = [
         # Download Step
         "URL_HASH",
@@ -408,6 +409,7 @@ class FetchContentDeclare(CommandLineFormatter, ArgumentAwareCommandInvocationDu
         "UPDATE_DISCONNECTED",
     ]
     multi_value_keywords = [
+        "FIND_PACKAGE_ARGS",
         # Download Step
         "DOWNLOAD_COMMAND",
         "URL",
