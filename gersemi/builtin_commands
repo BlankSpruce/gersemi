@@ -1,5 +1,6 @@
 # cmake-commands
 ## Scripting Commands
+block
 break
 cmake_host_system_information
 cmake_language
@@ -10,6 +11,7 @@ configure_file
 continue
 else
 elseif
+endblock
 endforeach
 endfunction
 endif

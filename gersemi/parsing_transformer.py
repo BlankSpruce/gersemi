@@ -16,20 +16,8 @@ class DowncaseIdentifiers(Transformer):
             end_column=token.end_column,
         )
 
-    def else_term(self, token):
+    def terminal_as_rule(self, token):
         return self.IDENTIFIER(token[0])
-
-    elseif = else_term
-    endforeach = else_term
-    endfunction = else_term
-    endif = else_term
-    endmacro = else_term
-    endwhile = else_term
-    foreach = else_term
-    function = else_term
-    if_term = else_term
-    macro = else_term
-    while_term = else_term
 
 
 class FlattenBracketComment(Transformer):

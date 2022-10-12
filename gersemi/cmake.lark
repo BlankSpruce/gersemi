@@ -22,60 +22,30 @@ block      : _foreach_block
            | _if_block
            | _macro_block
            | _while_block
+           | _block_block
 block_body : (newline_or_gap _file_element)* newline_or_gap
 
-_foreach_block  : foreach_element  block_body endforeach_element
-_function_block : function_element block_body endfunction_element
+terminal_as_rule{term}: term
+command_template{term}: terminal_as_rule{term} _invocation_part -> command_invocation
+element_template{term}: command_template{term} [line_comment] -> command_element
 
-_if_block       : if_element       block_body [_alternatives] endif_element
+_block_template{start_term, end_term}: element_template{start_term} block_body element_template{end_term}
+_block_block    : _block_template{BLOCK, ENDBLOCK}
+_foreach_block  : _block_template{FOREACH, ENDFOREACH}
+_function_block : _block_template{FUNCTION, ENDFUNCTION}
+
+_if_block       : element_template{IF}     block_body [_alternatives] element_template{ENDIF}
 _alternatives   : _elseif_clause* [_else_clause]
-_elseif_clause  : elseif_element   block_body
-_else_clause    : else_element     block_body
+_elseif_clause  : element_template{ELSEIF} block_body
+_else_clause    : element_template{ELSE}   block_body
 
-_macro_block    : macro_element    block_body endmacro_element
-_while_block    : while_element    block_body endwhile_element
+_macro_block    : _block_template{MACRO, ENDMACRO}
+_while_block    : _block_template{WHILE, ENDWHILE}
 
-else_element        : else_command        [line_comment] -> command_element
-elseif_element      : elseif_command      [line_comment] -> command_element
-endforeach_element  : endforeach_command  [line_comment] -> command_element
-endfunction_element : endfunction_command [line_comment] -> command_element
-endif_element       : endif_command       [line_comment] -> command_element
-endmacro_element    : endmacro_command    [line_comment] -> command_element
-endwhile_element    : endwhile_command    [line_comment] -> command_element
-foreach_element     : foreach_command     [line_comment] -> command_element
-function_element    : function_command    [line_comment] -> command_element
-if_element          : if_command          [line_comment] -> command_element
-macro_element       : macro_command       [line_comment] -> command_element
-while_element       : while_command       [line_comment] -> command_element
-
-else_command        : else_term   _invocation_part -> command_invocation
-elseif_command      : elseif      _invocation_part -> command_invocation
-endforeach_command  : endforeach  _invocation_part -> command_invocation
-endfunction_command : endfunction _invocation_part -> command_invocation
-endif_command       : endif       _invocation_part -> command_invocation
-endmacro_command    : endmacro    _invocation_part -> command_invocation
-endwhile_command    : endwhile    _invocation_part -> command_invocation
-foreach_command     : foreach     _invocation_part -> command_invocation
-function_command    : function    _invocation_part -> command_invocation
-if_command          : if_term     _invocation_part -> command_invocation
-macro_command       : macro       _invocation_part -> command_invocation
-while_command       : while_term  _invocation_part -> command_invocation
-
-else_term   : ELSE
-elseif      : ELSEIF
-endforeach  : ENDFOREACH
-endfunction : ENDFUNCTION
-endif       : ENDIF
-endmacro    : ENDMACRO
-endwhile    : ENDWHILE
-foreach     : FOREACH
-function    : FUNCTION
-if_term     : IF
-macro       : MACRO
-while_term  : WHILE
-
+BLOCK       : "block"i
 ELSE        : "else"i
 ELSEIF      : "elseif"i
+ENDBLOCK    : "endblock"i
 ENDFOREACH  : "endforeach"i
 ENDFUNCTION : "endfunction"i
 ENDIF       : "endif"i

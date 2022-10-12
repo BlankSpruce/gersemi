@@ -12,6 +12,11 @@ from .multiple_signature_command_invocation_dumper import (
 from .set_command import Set
 
 
+class Block(ArgumentAwareCommandInvocationDumper):
+    one_value_keywords = ["SCOPE_FOR"]
+    multi_value_keywords = ["PROPAGATE"]
+
+
 class CMakeHostSysteInformation(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["RESULT"]
     multi_value_keywords = ["QUERY"]
@@ -44,6 +49,10 @@ class ConfigureFile(ArgumentAwareCommandInvocationDumper):
     ]
     one_value_keywords = ["NEWLINE_STYLE"]
     multi_value_keywords = ["FILE_PERMISSIONS"]
+
+
+class EndBlock(ArgumentAwareCommandInvocationDumper):
+    pass
 
 
 class EndForeach(ArgumentAwareCommandInvocationDumper):
@@ -529,6 +538,7 @@ class SetDirectoryProperties(
 
 
 scripting_command_mapping = {
+    "block": Block,
     "cmake_host_system_information": CMakeHostSysteInformation,
     "cmake_language": CMakeLanguage,
     "cmake_parse_arguments": CMakeParseArguments,
@@ -536,6 +546,7 @@ scripting_command_mapping = {
     "elseif": ConditionSyntaxCommandInvocationDumper,
     "else": ConditionSyntaxCommandInvocationDumper,
     "endif": ConditionSyntaxCommandInvocationDumper,
+    "endblock": EndBlock,
     "endforeach": EndForeach,
     "endfunction": EndFunction,
     "endmacro": EndMacro,
