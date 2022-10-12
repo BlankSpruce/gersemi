@@ -46,8 +46,5 @@ def smart_open(filename, mode, *args, **kwargs):
     if filename == Path("-"):
         yield standard_stream_open(mode)
     else:
-        try:
-            fh = open(filename, mode, *args, **kwargs, encoding="utf-8")
+        with open(filename, mode, *args, **kwargs, encoding="utf-8") as fh:
             yield fh
-        finally:
-            fh.close()
