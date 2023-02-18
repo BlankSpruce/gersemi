@@ -6,6 +6,8 @@ max-complexity=10
 
 [MESSAGES CONTROL]
 disable=
+    use-dict-literal,
+
     duplicate-code,
 
     fixme,

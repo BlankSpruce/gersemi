@@ -486,6 +486,7 @@ class Message(ArgumentAwareCommandInvocationDumper):
         "CHECK_START",
         "CHECK_PASS",
         "CHECK_FAIL",
+        "CONFIGURE_LOG",
     ]
 
 

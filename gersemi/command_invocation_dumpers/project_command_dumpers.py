@@ -171,7 +171,7 @@ class TargetSources(SectionAwareCommandInvocationDumper):
 
 
 class TryCompile(ArgumentAwareCommandInvocationDumper):
-    option = ["NO_CACHE"]
+    option = ["NO_CACHE", "NO_LOG"]
     one_value_keywords = [
         "OUTPUT_VARIABLE",
         "COPY_FILE",
@@ -195,6 +195,7 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
         "SOURCE_DIR",
         "BINARY_DIR",
         "TARGET",
+        "LOG_DESCRIPTION",
     ]
     multi_value_keywords = [
         "SOURCES",
@@ -209,7 +210,7 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
 
 
 class TryRun(ArgumentAwareCommandInvocationDumper):
-    options = ["NO_CACHE"]
+    options = ["NO_CACHE", "NO_LOG"]
     one_value_keywords = [
         "COMPILE_OUTPUT_VARIABLE",
         "RUN_OUTPUT_VARIABLE",
@@ -235,6 +236,7 @@ class TryRun(ArgumentAwareCommandInvocationDumper):
         "RUN_OUTPUT_VARIABLE",
         "RUN_OUTPUT_STDOUT_VARIABLE",
         "RUN_OUTPUT_STDERR_VARIABLE",
+        "LOG_DESCRIPTION",
     ]
     multi_value_keywords = [
         "CMAKE_FLAGS",

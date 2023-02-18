@@ -306,6 +306,7 @@ class ExternalProjectAdd(CommandLineFormatter, ArgumentAwareCommandInvocationDum
         "BUILD_BYPRODUCTS",
         # Install Step
         "INSTALL_COMMAND",
+        "INSTALL_BYPRODUCTS",
         # Test Step
         "TEST_COMMAND",
         # Output Logging
