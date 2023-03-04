@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.3] 2023-03-04
+###
+- support for new keywords in native commands available in CMake 3.26
+
 ## [0.8.2] 2022-10-12
 ### Added
 - support for block/endblock pair
