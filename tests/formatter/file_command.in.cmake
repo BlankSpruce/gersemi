@@ -10,9 +10,9 @@ file(STRINGS long_filename__________________________ long_variable_name_________
 
 file(STRINGS long_filename__________________________ long_variable_name_________________________ LENGTH_MAXIMUM 100 LENGTH_MINIMUM 100 LIMIT_COUNT 100 LIMIT_OUTPUT 100 NEWLINE_CONSUME NO_HEX_CONVERSION REGEX regex ENCODING UTF-8)
 
-file(<HASH> foo bar)
+file(MD5 foo bar)
 
-file(<HASH> long_filename__________________________ long_variable_name_________________________)
+file(MD5 long_filename__________________________ long_variable_name_________________________)
 
 file(TIMESTAMP foo bar format UTC)
 

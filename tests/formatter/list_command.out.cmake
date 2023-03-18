@@ -66,7 +66,8 @@ list(FILTER FOO INCLUDE REGEX regex)
 list(FILTER FOO EXCLUDE REGEX regex)
 
 list(
-    FILTER long_list_name_________________________
+    FILTER
+    long_list_name_________________________
     INCLUDE
     REGEX long_regex_________________________
 )
@@ -150,12 +151,12 @@ list(REMOVE_DUPLICATES FOO)
 
 list(
     REMOVE_DUPLICATES
-        long_list_name____________________________________________________________
+    long_list_name____________________________________________________________
 )
 
 list(
     TRANSFORM
-        long_list_name____________________________________________________________
+    long_list_name____________________________________________________________
     APPEND value1 value2 value3 value4 long_value_________________________
 )
 
@@ -175,7 +176,7 @@ list(TRANSFORM FOO REPLACE bar baz)
 
 list(
     TRANSFORM
-        long_list_name____________________________________________________________
+    long_list_name____________________________________________________________
     REPLACE regex replace1 long_replace_________________________
 )
 
@@ -185,7 +186,7 @@ list(SORT FOO COMPARE STRING CASE SENSITIVE ORDER ASCENDING)
 
 list(
     SORT
-        long_list_name____________________________________________________________
+    long_list_name____________________________________________________________
     COMPARE FILE_BASENAME
     CASE INSENSITIVE
     ORDER DESCENDING

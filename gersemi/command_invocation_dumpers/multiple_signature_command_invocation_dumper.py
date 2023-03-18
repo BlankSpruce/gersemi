@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from itertools import filterfalse
 from typing import Dict, List, Optional, Union
 from gersemi.ast_helpers import is_comment, is_unquoted_argument
+from gersemi.types import Nodes
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -36,6 +37,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
 
     def format_command(self, tree):
         _, arguments = tree.children
+        arguments = self._preprocess_arguments(arguments)
         arguments_only = filterfalse(is_comment, arguments.children)
         first_argument = next(arguments_only, None)
         if first_argument is None or not is_unquoted_argument(first_argument):
@@ -47,3 +49,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
 
         with self._update_signature_characteristics(signature):
             return super().format_command(tree)
+
+    def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
+        signature_node, *rest = arguments
+        return [[signature_node], *super()._split_arguments(rest)]

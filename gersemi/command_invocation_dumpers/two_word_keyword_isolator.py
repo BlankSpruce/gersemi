@@ -49,8 +49,8 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
 class TwoWordKeywordIsolator(BaseCommandInvocationDumper):
     two_words_keywords: Sequence[Tuple[str, str]] = []
 
-    def arguments(self, tree):
-        preprocessed = tree
+    def _preprocess_arguments(self, arguments):
+        preprocessed = arguments
         for lhs, rhs in self.two_words_keywords:
             preprocessed = IsolateTwoWordKeywords(lhs, rhs).transform(preprocessed)
-        return super().arguments(preprocessed)
+        return preprocessed

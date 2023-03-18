@@ -64,6 +64,7 @@ class CTestRunScript(ArgumentAwareCommandInvocationDumper):
 
 
 class CTestStart(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<model>", "<source>", "<binary>"]
     options = ["APPEND", "QUIET"]
     one_value_keywords = ["GROUP"]
 

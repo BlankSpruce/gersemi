@@ -6,6 +6,7 @@ cmake_host_system_information
 cmake_language
 cmake_minimum_required
 cmake_parse_arguments
+cmake_path
 cmake_policy
 configure_file
 continue

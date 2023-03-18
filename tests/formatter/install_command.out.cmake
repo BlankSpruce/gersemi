@@ -7,7 +7,8 @@ install(TARGETS FOO EXPORT BAR ARCHIVE)
 install(TARGETS FOO LIBRARY DESTINATION BAR PERMISSIONS OWNER_READ OWNER_WRITE)
 
 install(
-    TARGETS FOO
+    TARGETS
+    FOO
     RUNTIME
     PERMISSIONS
         OWNER_READ
@@ -25,7 +26,8 @@ install(
 )
 
 install(
-    TARGETS FOO
+    TARGETS
+    FOO
     EXPORT BAR
     OBJECTS
     DESTINATION BAZ
@@ -40,7 +42,10 @@ install(
 )
 
 install(
-    TARGETS FOO BAR BAZ
+    TARGETS
+    FOO
+    BAR
+    BAZ
     EXPORT BAR
     FRAMEWORK
     DESTINATION BAZ
@@ -55,24 +60,27 @@ install(
 )
 
 install(
-    TARGETS long_arg____________________________________________________________
+    TARGETS
+    long_arg____________________________________________________________
 )
 
 install(
     TARGETS
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
 )
 
 install(
-    TARGETS long_arg____________________________________________________________
+    TARGETS
+    long_arg____________________________________________________________
     EXPORT long_arg____________________________________________________________
     ARCHIVE
 )
 
 install(
-    TARGETS long_arg____________________________________________________________
+    TARGETS
+    long_arg____________________________________________________________
     BUNDLE
     DESTINATION
         long_arg____________________________________________________________
@@ -80,7 +88,8 @@ install(
 )
 
 install(
-    TARGETS long_arg____________________________________________________________
+    TARGETS
+    long_arg____________________________________________________________
     PRIVATE_HEADER
     PERMISSIONS
         OWNER_READ
@@ -97,7 +106,8 @@ install(
 )
 
 install(
-    TARGETS long_arg____________________________________________________________
+    TARGETS
+    long_arg____________________________________________________________
     EXPORT long_arg____________________________________________________________
     PUBLIC_HEADER
     DESTINATION
@@ -117,9 +127,9 @@ install(
 
 install(
     TARGETS
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
     EXPORT long_arg____________________________________________________________
     RESOURCE
     DESTINATION
@@ -146,7 +156,8 @@ install(FILES FOO TYPE BAR PERMISSIONS OWNER_READ)
 install(FILES FOO DESTINATION BAR CONFIGURATIONS BAZ COMPONENT FOO)
 
 install(
-    FILES FOO
+    FILES
+    FOO
     DESTINATION BAR
     PERMISSIONS OWNER_READ
     CONFIGURATIONS Debug
@@ -157,7 +168,10 @@ install(
 )
 
 install(
-    FILES FOO BAR BAZ
+    FILES
+    FOO
+    BAR
+    BAZ
     DESTINATION FOO
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
     CONFIGURATIONS Debug
@@ -168,17 +182,20 @@ install(
 )
 
 install(
-    FILES long_arg____________________________________________________________
+    FILES
+    long_arg____________________________________________________________
 )
 
 install(
-    FILES long_arg____________________________________________________________
+    FILES
+    long_arg____________________________________________________________
     TYPE long_arg____________________________________________________________
     PERMISSIONS OWNER_READ
 )
 
 install(
-    FILES long_arg____________________________________________________________
+    FILES
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     CONFIGURATIONS
@@ -188,7 +205,8 @@ install(
 )
 
 install(
-    FILES long_arg____________________________________________________________
+    FILES
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     PERMISSIONS OWNER_READ
@@ -202,9 +220,9 @@ install(
 
 install(
     FILES
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -223,7 +241,8 @@ install(PROGRAMS FOO TYPE BAR PERMISSIONS OWNER_READ)
 install(PROGRAMS FOO DESTINATION BAR CONFIGURATIONS BAZ COMPONENT FOO)
 
 install(
-    PROGRAMS FOO
+    PROGRAMS
+    FOO
     DESTINATION BAR
     PERMISSIONS OWNER_READ
     CONFIGURATIONS Debug
@@ -234,7 +253,10 @@ install(
 )
 
 install(
-    PROGRAMS FOO BAR BAZ
+    PROGRAMS
+    FOO
+    BAR
+    BAZ
     DESTINATION FOO
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
     CONFIGURATIONS Debug
@@ -246,19 +268,19 @@ install(
 
 install(
     PROGRAMS
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
 )
 
 install(
     PROGRAMS
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     TYPE long_arg____________________________________________________________
     PERMISSIONS OWNER_READ
 )
 
 install(
     PROGRAMS
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     CONFIGURATIONS
@@ -269,7 +291,7 @@ install(
 
 install(
     PROGRAMS
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     PERMISSIONS OWNER_READ
@@ -283,9 +305,9 @@ install(
 
 install(
     PROGRAMS
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -302,7 +324,8 @@ install(DIRECTORY FOO TYPE BAR)
 install(DIRECTORY FOO DESTINATION BAR FILE_PERMISSIONS OWNER_READ)
 
 install(
-    DIRECTORY FOO
+    DIRECTORY
+    FOO
     DESTINATION BAR
     FILE_PERMISSIONS OWNER_READ
     DIRECTORY_PERMISSIONS OWNER_READ
@@ -319,7 +342,10 @@ install(
 )
 
 install(
-    DIRECTORY FOO BAR BAZ
+    DIRECTORY
+    FOO
+    BAR
+    BAZ
     DESTINATION BAR
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
     DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -337,13 +363,13 @@ install(
 
 install(
     DIRECTORY
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     TYPE long_arg____________________________________________________________
 )
 
 install(
     DIRECTORY
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     FILE_PERMISSIONS OWNER_READ
@@ -351,7 +377,7 @@ install(
 
 install(
     DIRECTORY
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     FILE_PERMISSIONS OWNER_READ
@@ -371,9 +397,9 @@ install(
 
 install(
     DIRECTORY
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -398,51 +424,60 @@ install(SCRIPT FOO COMPONENT BAR)
 install(SCRIPT FOO COMPONENT BAR EXCLUDE_FROM_ALL)
 
 install(
-    SCRIPT long_arg____________________________________________________________
+    SCRIPT
+    long_arg____________________________________________________________
 )
 
 install(
-    SCRIPT long_arg____________________________________________________________
+    SCRIPT
+    long_arg____________________________________________________________
     COMPONENT
         long_arg____________________________________________________________
 )
 
 install(
-    SCRIPT long_arg____________________________________________________________
-    COMPONENT
-        long_arg____________________________________________________________
-    EXCLUDE_FROM_ALL
-)
-
-install(
-    CODE long_arg____________________________________________________________
-)
-
-install(
-    CODE long_arg____________________________________________________________
-    COMPONENT
-        long_arg____________________________________________________________
-)
-
-install(
-    CODE long_arg____________________________________________________________
+    SCRIPT
+    long_arg____________________________________________________________
     COMPONENT
         long_arg____________________________________________________________
     EXCLUDE_FROM_ALL
 )
 
 install(
-    CODE long_arg____________________________________________________________
+    CODE
+    long_arg____________________________________________________________
 )
 
 install(
-    CODE long_arg____________________________________________________________
+    CODE
+    long_arg____________________________________________________________
     COMPONENT
         long_arg____________________________________________________________
 )
 
 install(
-    CODE long_arg____________________________________________________________
+    CODE
+    long_arg____________________________________________________________
+    COMPONENT
+        long_arg____________________________________________________________
+    EXCLUDE_FROM_ALL
+)
+
+install(
+    CODE
+    long_arg____________________________________________________________
+)
+
+install(
+    CODE
+    long_arg____________________________________________________________
+    COMPONENT
+        long_arg____________________________________________________________
+)
+
+install(
+    CODE
+    long_arg____________________________________________________________
     COMPONENT
         long_arg____________________________________________________________
     EXCLUDE_FROM_ALL
@@ -453,7 +488,8 @@ install(EXPORT FOO DESTINATION BAR)
 install(EXPORT FOO DESTINATION BAR NAMESPACE FOO FILE BAR)
 
 install(
-    EXPORT FOO
+    EXPORT
+    FOO
     DESTINATION BAR
     NAMESPACE FOO
     FILE BAR
@@ -465,7 +501,8 @@ install(
 )
 
 install(
-    EXPORT FOO
+    EXPORT
+    FOO
     DESTINATION BAR
     NAMESPACE FOO
     FILE BAR
@@ -477,13 +514,15 @@ install(
 )
 
 install(
-    EXPORT long_arg____________________________________________________________
+    EXPORT
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
 )
 
 install(
-    EXPORT long_arg____________________________________________________________
+    EXPORT
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     NAMESPACE
@@ -492,7 +531,8 @@ install(
 )
 
 install(
-    EXPORT long_arg____________________________________________________________
+    EXPORT
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     NAMESPACE
@@ -507,7 +547,8 @@ install(
 )
 
 install(
-    EXPORT long_arg____________________________________________________________
+    EXPORT
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     NAMESPACE
@@ -526,7 +567,8 @@ install(EXPORT_ANDROID_MK FOO DESTINATION BAR)
 install(EXPORT_ANDROID_MK FOO DESTINATION BAR NAMESPACE FOO FILE BAR)
 
 install(
-    EXPORT_ANDROID_MK FOO
+    EXPORT_ANDROID_MK
+    FOO
     DESTINATION BAR
     NAMESPACE FOO
     FILE BAR
@@ -538,7 +580,8 @@ install(
 )
 
 install(
-    EXPORT_ANDROID_MK FOO
+    EXPORT_ANDROID_MK
+    FOO
     DESTINATION BAR
     NAMESPACE FOO
     FILE BAR
@@ -551,14 +594,14 @@ install(
 
 install(
     EXPORT_ANDROID_MK
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
 )
 
 install(
     EXPORT_ANDROID_MK
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     NAMESPACE
@@ -568,7 +611,7 @@ install(
 
 install(
     EXPORT_ANDROID_MK
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     NAMESPACE
@@ -584,7 +627,7 @@ install(
 
 install(
     EXPORT_ANDROID_MK
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
     DESTINATION
         long_arg____________________________________________________________
     NAMESPACE

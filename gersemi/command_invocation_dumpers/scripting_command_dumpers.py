@@ -13,8 +13,7 @@ from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
 class Block(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["SCOPE_FOR"]
-    multi_value_keywords = ["PROPAGATE"]
+    multi_value_keywords = ["SCOPE_FOR", "PROPAGATE"]
 
 
 class CMakeHostSysteInformation(
@@ -34,8 +33,8 @@ class CMakeHostSysteInformation(
     multi_value_keywords = ["QUERY"]
 
 
-class CMakeLanguage(ArgumentAwareCommandInvocationDumper):
-    options = ["DEFER", "EVAL"]
+class CMakeLanguage(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
+    two_words_keywords = [("EVAL", "CODE")]
     one_value_keywords = [
         "DIRECTORY",
         "ID",
@@ -45,7 +44,13 @@ class CMakeLanguage(ArgumentAwareCommandInvocationDumper):
         "SET_DEPENDENCY_PROVIDER",
         "GET_MESSAGE_LOG_LEVEL",
     ]
-    multi_value_keywords = ["CALL", "CANCEL_CALL", "SUPPORTED_METHODS"]
+    multi_value_keywords = [
+        "DEFER",
+        "CALL",
+        "CANCEL_CALL",
+        "SUPPORTED_METHODS",
+        "EVAL CODE",
+    ]
 
 
 class CMakeParseArguments(MultipleSignatureCommandInvocationDumper):
@@ -67,6 +72,112 @@ class CMakeParseArguments(MultipleSignatureCommandInvocationDumper):
                 "<multi_value_keywords>",
             ]
         ),
+    }
+
+
+class CMakePath(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
+    two_words_keywords = [("EXTENSION", "LAST_ONLY"), ("STEM", "LAST_ONLY")]
+    customized_signatures = {
+        # Decomposition
+        "GET": {
+            "front_positional_arguments": ["<path-var>"],
+            "one_value_keywords": [
+                "ROOT_NAME",
+                "ROOT_DIRECTORY",
+                "ROOT_PATH",
+                "FILENAME",
+                "EXTENSION",
+                "EXTENSION LAST_ONLY",
+                "STEM",
+                "STEM LAST_ONLY",
+                "RELATIVE_PART",
+                "PARENT_PATH",
+            ],
+        },
+        # Query
+        "HAS_ROOT_NAME": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "HAS_ROOT_DIRECTORY": {
+            "front_positional_arguments": ["<path-var>", "<out-var>"]
+        },
+        "HAS_ROOT_PATH": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "HAS_FILENAME": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "HAS_EXTENSION": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "HAS_STEM": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "HAS_RELATIVE_PATH": {
+            "front_positional_arguments": ["<path-var>", "<out-var>"]
+        },
+        "HAS_PARENT_PATH": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "IS_ABSOLUTE": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "IS_RELATIVE": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
+        "IS_PREFIX": {
+            "front_positional_arguments": ["<path-var>", "<out-var>"],
+            "back_positional_arguments": ["<out-var>"],
+            "options": ["NORMALIZE"],
+        },
+        "COMPARE": {
+            "front_positional_arguments": ["<input1>", "<OP>", "<input2>", "<out-var>"]
+        },
+        # Modification
+        "SET": {
+            "front_positional_arguments": ["<path-var>"],
+            "back_positional_arguments": ["<input>"],
+            "options": ["NORMALIZE"],
+        },
+        "APPEND": {
+            "front_positional_arguments": ["<path-var>"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        "APPEND_STRING": {
+            "front_positional_arguments": ["<path-var>"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        "REMOVE_FILENAME": {
+            "front_positional_arguments": ["<path-var>"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        "REPLACE_FILENAME": {
+            "front_positional_arguments": ["<path-var>", "<input>"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        "REMOVE_EXTENSION": {
+            "front_positional_arguments": ["<path-var>"],
+            "options": ["LAST_ONLY"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        "REPLACE_EXTENSION": {
+            "front_positional_arguments": ["<path-var>"],
+            "options": ["LAST_ONLY"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        # Generation
+        "NORMAL_PATH": {
+            "front_positional_arguments": ["<path-var>"],
+            "one_value_keywords": ["OUTPUT_VARIABLE"],
+        },
+        "RELATIVE_PATH": {
+            "front_positional_arguments": ["<path-var>"],
+            "one_value_keywords": ["BASE_DIRECTORY", "OUTPUT_VARIABLE"],
+        },
+        "ABSOLUTE_PATH": {
+            "front_positional_arguments": ["<path-var>"],
+            "options": ["NORMALIZE"],
+            "one_value_keywords": ["BASE_DIRECTORY", "OUTPUT_VARIABLE"],
+        },
+        # Native Conversion
+        "NATIVE_PATH": {
+            "front_positional_arguments": ["<path-var>"],
+            "back_positional_arguments": ["<out-var>"],
+            "options": ["NORMALIZE"],
+        },
+        "CONVERT": {
+            "front_positional_arguments": ["<input>"],
+            "options": ["NORMALIZE"],
+            "one_value_keywords": ["TO_CMAKE_PATH_LIST", "TO_NATIVE_PATH_LIST"],
+        },
+        # Hashing
+        "HASH": {
+            "front_positional_arguments": ["<path-var>", "<out-var>"],
+        },
     }
 
 
@@ -126,15 +237,17 @@ class ExecuteProcess(CommandLineFormatter, ArgumentAwareCommandInvocationDumper)
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
-class File(MultipleSignatureCommandInvocationDumper):
+class File(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
+    two_words_keywords = [("GENERATE", "OUTPUT")]
     customized_signatures = {
         # Reading
         "READ": dict(
+            front_positional_arguments=["<filename>", "<variable>"],
             options=["HEX"],
             one_value_keywords=["OFFSET", "LIMIT"],
-            multi_value_keywords=["READ"],
         ),
         "STRINGS": dict(
+            front_positional_arguments=["<filename>", "<variable>"],
             options=["NEWLINE_CONSUME", "NO_HEX_CONVERSION"],
             one_value_keywords=[
                 "LENGTH_MAXIMUM",
@@ -145,9 +258,17 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "REGEX",
                 "ENCODING",
             ],
-            multi_value_keywords=["STRINGS"],
         ),
-        "MD5": dict(),  # TODO,
+        "MD5": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA1": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA224": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA256": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA384": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA512": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_224": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_256": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_384": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_512": dict(front_positional_arguments=["<output_variable>", "<input>"]),
         "TIMESTAMP": dict(
             front_positional_arguments=["<filename>", "<variable>", "<format>"],
             options=["UTC"],
@@ -173,13 +294,15 @@ class File(MultipleSignatureCommandInvocationDumper):
             ],
         ),
         # Writing
-        "GENERATE": dict(
+        "WRITE": dict(front_positional_arguments=["<filename>"]),
+        "APPEND": dict(front_positional_arguments=["<filename>"]),
+        "GENERATE OUTPUT": dict(
+            front_positional_arguments=["output-file"],
             options=["NO_SOURCE_PERMISSIONS", "USE_SOURCE_PERMISSIONS"],
             one_value_keywords=[
                 "INPUT",
                 "CONTENT",
                 "CONDITION",
-                "OUTPUT",
                 "TARGET",
                 "NEWLINE_STYLE",
             ],
@@ -191,12 +314,19 @@ class File(MultipleSignatureCommandInvocationDumper):
         ),
         # Filesystem
         "GLOB": dict(
+            front_positional_arguments=["<variable>"],
             options=["CONFIGURE_DEPENDS"],
             one_value_keywords=["GLOB", "LIST_DIRECTORIES", "RELATIVE"],
         ),
         "GLOB_RECURSE": dict(
-            options=["CONFIGURE_DEPENDS"],
+            front_positional_arguments=["<variable>"],
+            options=["CONFIGURE_DEPENDS", "FOLLOW_SYMLINKS"],
             one_value_keywords=["GLOB_RECURSE", "LIST_DIRECTORIES", "RELATIVE"],
+        ),
+        "RENAME": dict(
+            front_positional_arguments=["<oldname>", "<newname>"],
+            options=["NO_REPLACE"],
+            one_value_keywords=["RESULT"],
         ),
         "COPY": dict(
             options=[
@@ -214,7 +344,11 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "PERMISSIONS",
             ],
         ),
-        "COPY_FILE": dict(options=["ONLY_IF_DIFFERENT"], one_value_keywords=["RESULT"]),
+        "COPY_FILE": dict(
+            front_positional_arguments=["<oldname>", "<newname>"],
+            options=["ONLY_IF_DIFFERENT"],
+            one_value_keywords=["RESULT"],
+        ),
         "INSTALL": dict(
             options=[
                 "NO_SOURCE_PERMISSIONS",
@@ -231,7 +365,10 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "PERMISSIONS",
             ],
         ),
+        "SIZE": dict(front_positional_arguments=["<filename>", "<variable>"]),
+        "READ_SYMLINK": dict(front_positional_arguments=["<linkname>", "<variable>"]),
         "CREATE_LINK": dict(
+            front_positional_arguments=["<original>", "<linkname>"],
             options=["COPY_ON_ERROR", "SYMBOLIC"],
             one_value_keywords=["RESULT"],
             multi_value_keywords=["CREATE_LINK"],
@@ -250,13 +387,20 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "DIRECTORY_PERMISSIONS",
             ]
         ),
-        "RENAME": dict(options=["NO_REPLACE"], one_value_keywords=["RESULT"]),
         # Path Conversion
         "REAL_PATH": dict(
-            options=["EXPAND_TILDE"], one_value_keywords=["BASE_DIRECTORY"]
+            front_positional_arguments=["<path>", "<out-var>"],
+            options=["EXPAND_TILDE"],
+            one_value_keywords=["BASE_DIRECTORY"],
         ),
+        "RELATIVE_PATH": dict(
+            front_positional_arguments=["<variable>", "<directory>", "<file>"]
+        ),
+        "TO_CMAKE_PATH": dict(front_positional_arguments=["<path>", "<variable>"]),
+        "TO_NATIVE_PATH": dict(front_positional_arguments=["<path>", "<variable>"]),
         # Transfer
         "DOWNLOAD": dict(
+            front_positional_arguments=["<url>", "<file>"],
             options=["SHOW_PROGRESS"],
             one_value_keywords=[
                 "INACTIVITY_TIMEOUT",
@@ -277,6 +421,7 @@ class File(MultipleSignatureCommandInvocationDumper):
             multi_value_keywords=["DOWNLOAD"],
         ),
         "UPLOAD": dict(
+            front_positional_arguments=["<file>", "<url>"],
             options=["SHOW_PROGRESS"],
             one_value_keywords=[
                 "INACTIVITY_TIMEOUT",
@@ -294,6 +439,7 @@ class File(MultipleSignatureCommandInvocationDumper):
         ),
         # Locking
         "LOCK": dict(
+            front_positional_arguments=["<path>"],
             options=["DIRECTORY", "RELEASE"],
             one_value_keywords=["LOCK", "GUARD", "RESULT_VARIABLE", "TIMEOUT"],
         ),
@@ -441,7 +587,12 @@ class Function(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<name>"]
 
 
+class GetCMakeProperty(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<var>", "<property>"]
+
+
 class GetDirectoryProperty(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>"]
     one_value_keywords = ["DIRECTORY", "DEFINITION"]
 
 
@@ -466,6 +617,7 @@ class GetFilenameComponent(ArgumentAwareCommandInvocationDumper):
 
 
 class GetProperty(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>"]
     options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
     one_value_keywords = ["TARGET", "INSTALL", "TEST", "CACHE", "PROPERTY"]
     multi_value_keywords = ["DIRECTORY", "SOURCE"]
@@ -476,6 +628,7 @@ class GetSourceFileProperty(ArgumentAwareCommandInvocationDumper):
 
 
 class Include(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<file|module>"]
     options = ["OPTIONAL", "NO_POLICY_SCOPE"]
     one_value_keywords = ["RESULT_VARIABLE"]
 
@@ -483,6 +636,14 @@ class Include(ArgumentAwareCommandInvocationDumper):
 class List(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Reading
+        "LENGTH": dict(front_positional_arguments=["<list>", "<output variable>"]),
+        "GET": dict(
+            front_positional_arguments=["<list>"],
+            back_positional_arguments=["<output variable>"],
+        ),
+        "JOIN": dict(
+            front_positional_arguments=["<list>", "<glue", "<output variable>"]
+        ),
         "SUBLIST": dict(
             front_positional_arguments=[
                 "<list>",
@@ -491,18 +652,24 @@ class List(MultipleSignatureCommandInvocationDumper):
                 "<out-var>",
             ],
         ),
+        # Search
+        "FIND": dict(
+            front_positional_arguments=["<list>", "<value>", "<output variable>"]
+        ),
         # Modification
+        "APPEND": dict(front_positional_arguments=["<list>"]),
         "FILTER": dict(
             options=["INCLUDE", "EXCLUDE"], one_value_keywords=["FILTER", "REGEX"]
         ),
-        "REMOVE_AT": dict(
-            front_positional_arguments=[
-                "REMOVE_AT",
-                "<list>",
-            ]
-        ),
-        "REMOVE_DUPLICATES": dict(one_value_keywords=["REMOVE_DUPLICATES"]),
+        "INSERT": dict(front_positional_arguments=["<list>", "<element_index>"]),
+        "POP_BACK": dict(front_positional_arguments=["<list>"]),
+        "POP_FRONT": dict(front_positional_arguments=["<list>"]),
+        "PREPEND": dict(front_positional_arguments=["<list>"]),
+        "REMOVE_ITEM": dict(front_positional_arguments=["<list>"]),
+        "REMOVE_AT": dict(front_positional_arguments=["<list>"]),
+        "REMOVE_DUPLICATES": dict(front_positional_arguments=["<list>"]),
         "TRANSFORM": dict(
+            front_positional_arguments=["<list>"],
             one_value_keywords=["OUTPUT_VARIABLE"],
             multi_value_keywords=[
                 "TRANSFORM",
@@ -516,6 +683,7 @@ class List(MultipleSignatureCommandInvocationDumper):
             ],
         ),
         # Ordering
+        "REVERSE": dict(front_positional_arguments=["<list>"]),
         "SORT": dict(one_value_keywords=["SORT", "COMPARE", "CASE", "ORDER"]),
     }
 
@@ -552,6 +720,10 @@ class Message(ArgumentAwareCommandInvocationDumper):
     ]
 
 
+class Option(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>", "<help_text>", "<value>"]
+
+
 class Return(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["PROPAGATE"]
 
@@ -573,10 +745,25 @@ class Set(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["CACHE"]
 
 
-class String(MultipleSignatureCommandInvocationDumper):
+class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
+    two_words_keywords = [
+        ("REGEX", "MATCH"),
+        ("REGEX", "MATCHALL"),
+        ("REGEX", "REPLACE"),
+        ("COMPARE", "LESS"),
+        ("COMPARE", "GREATER"),
+        ("COMPARE", "EQUAL"),
+        ("COMPARE", "NOTEQUAL"),
+        ("COMPARE", "LESS_EQUAL"),
+        ("COMPARE", "GREATER_EQUAL"),
+    ]
     customized_signatures = {
         # Search and Replace
-        "FIND": dict(options=["REVERSE"], multi_value_keywords=["FIND"]),
+        "FIND": dict(
+            front_positional_arguments=["<string>", "<substring>", "<output variable>"],
+            options=["REVERSE"],
+            multi_value_keywords=["FIND"],
+        ),
         "REPLACE": dict(
             front_positional_arguments=[
                 "<match_string>",
@@ -585,8 +772,27 @@ class String(MultipleSignatureCommandInvocationDumper):
             ]
         ),
         # Regular Expressions
-        "REGEX": dict(one_value_keywords=["REGEX"]),
+        "REGEX MATCH": dict(
+            front_positional_arguments=["<regular_expression>", "<output_variable>"]
+        ),
+        "REGEX MATCHALL": dict(
+            front_positional_arguments=["<regular_expression>", "<output_variable>"]
+        ),
+        "REGEX REPLACE": dict(
+            front_positional_arguments=[
+                "<regular_expression>",
+                "<replacement_expression>",
+                "<output_variable>",
+            ]
+        ),
         # Manipulation
+        "APPEND": dict(front_positional_arguments=["<string_variable>"]),
+        "PREPEND": dict(front_positional_arguments=["<string_variable>"]),
+        "CONCAT": dict(front_positional_arguments=["<output_variable>"]),
+        "JOIN": dict(front_positional_arguments=["<glue>", "<output_variable>"]),
+        "TOLOWER": dict(front_positional_arguments=["<string>", "<output_variable>"]),
+        "TOUPPER": dict(front_positional_arguments=["<string>", "<output_variable>"]),
+        "LENGTH": dict(front_positional_arguments=["<string>", "<output_variable>"]),
         "SUBSTRING": dict(
             front_positional_arguments=[
                 "<string>",
@@ -595,21 +801,68 @@ class String(MultipleSignatureCommandInvocationDumper):
                 "<output_variable>",
             ]
         ),
+        "STRIP": dict(front_positional_arguments=["<string>", "<output_variable>"]),
+        "GENEX_STRIP": dict(
+            front_positional_arguments=["<string>", "<output_variable>"]
+        ),
+        "REPEAT": dict(
+            front_positional_arguments=["<string>", "<count>", "<output_variable>"]
+        ),
         # Comparison
-        "COMPARE": dict(one_value_keywords=["COMPARE"]),
+        "COMPARE LESS": dict(
+            front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
+        ),
+        "COMPARE GREATER": dict(
+            front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
+        ),
+        "COMPARE EQUAL": dict(
+            front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
+        ),
+        "COMPARE NOTEQUAL": dict(
+            front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
+        ),
+        "COMPARE LESS_EQUAL": dict(
+            front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
+        ),
+        "COMPARE GREATER_EQUAL": dict(
+            front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
+        ),
+        # Hashing
+        "MD5": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA1": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA224": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA256": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA384": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA512": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_224": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_256": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_384": dict(front_positional_arguments=["<output_variable>", "<input>"]),
+        "SHA3_512": dict(front_positional_arguments=["<output_variable>", "<input>"]),
         # Generation
         "ASCII": dict(
             back_positional_arguments=["<output_variable>"],
         ),
+        "HEX": dict(front_positional_arguments=["<string>", "<output_variable>"]),
         "CONFIGURE": dict(
-            options=["@ONLY", "ESCAPE_QUOTES"], multi_value_keywords=["CONFIGURE"]
+            front_positional_arguments=["<string>", "<output_variable>"],
+            options=["@ONLY", "ESCAPE_QUOTES"],
+        ),
+        "MAKE_C_IDENTIFIER": dict(
+            front_positional_arguments=["<string>", "<output_variable>"]
         ),
         "RANDOM": dict(one_value_keywords=["LENGTH", "ALPHABET", "RANDOM_SEED"]),
+        "TIMESTAMP": dict(
+            front_positional_arguments=["<filename>", "<variable>", "<format>"],
+            options=["UTC"],
+        ),
         "UUID": dict(
-            options=["UPPER"], one_value_keywords=["UUID", "NAMESPACE", "NAME", "TYPE"]
+            front_positional_arguments=["<output_variable>"],
+            options=["UPPER"],
+            one_value_keywords=["NAMESPACE", "NAME", "TYPE"],
         ),
         # JSON
         "JSON": dict(
+            front_positional_arguments=["<out-var>"],
             one_value_keywords=[
                 "ERROR_VARIABLE",
                 "GET",
@@ -631,11 +884,17 @@ class SetDirectoryProperties(
     keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
 
 
+class Unset(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>"]
+    options = ["CACHE", "PARENT_SCOPE"]
+
+
 scripting_command_mapping = {
     "block": Block,
     "cmake_host_system_information": CMakeHostSysteInformation,
     "cmake_language": CMakeLanguage,
     "cmake_parse_arguments": CMakeParseArguments,
+    "cmake_path": CMakePath,
     "configure_file": ConfigureFile,
     "elseif": ConditionSyntaxCommandInvocationDumper,
     "else": ConditionSyntaxCommandInvocationDumper,
@@ -654,6 +913,7 @@ scripting_command_mapping = {
     "find_program": FindProgram,
     "foreach": Foreach,
     "function": Function,
+    "get_cmake_property": GetCMakeProperty,
     "get_directory_property": GetDirectoryProperty,
     "get_filename_component": GetFilenameComponent,
     "get_property": GetProperty,
@@ -665,11 +925,13 @@ scripting_command_mapping = {
     "mark_as_advanced": MarkAsAdvanced,
     "math": Math,
     "message": Message,
+    "option": Option,
     "return": Return,
     "separate_arguments": SeparateArguments,
     "set_directory_properties": SetDirectoryProperties,
     "set_property": SetProperty,
     "set": Set,
     "string": String,
+    "unset": Unset,
     "while": ConditionSyntaxCommandInvocationDumper,
 }

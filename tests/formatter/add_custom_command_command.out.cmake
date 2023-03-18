@@ -5,19 +5,22 @@ add_custom_command(OUTPUT FOO COMMAND BAR BAZ)
 add_custom_command(OUTPUT FOO COMMAND BAR ARGS BAZ QUX)
 
 add_custom_command(
-    OUTPUT long_arg____________________________________________________________
+    OUTPUT
+    long_arg____________________________________________________________
     COMMAND long_arg____________________________________________________________
 )
 
 add_custom_command(
-    OUTPUT long_arg____________________________________________________________
+    OUTPUT
+    long_arg____________________________________________________________
     COMMAND
         long_arg____________________________________________________________
         long_arg____________________________________________________________
 )
 
 add_custom_command(
-    OUTPUT long_arg____________________________________________________________
+    OUTPUT
+    long_arg____________________________________________________________
     COMMAND long_arg____________________________________________________________
     ARGS
         long_arg____________________________________________________________
@@ -25,7 +28,10 @@ add_custom_command(
 )
 
 add_custom_command(
-    OUTPUT FOO BAR BAZ
+    OUTPUT
+    FOO
+    BAR
+    BAZ
     COMMAND FOO BAR BAZ
     COMMAND FOO BAR BAZ
     COMMAND FOO BAR BAZ
@@ -45,9 +51,9 @@ add_custom_command(
 
 add_custom_command(
     OUTPUT
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
-        long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
+    long_arg____________________________________________________________
     COMMAND
         long_arg____________________________________________________________
         long_arg____________________________________________________________
@@ -96,13 +102,15 @@ add_custom_command(TARGET FOO PRE_BUILD COMMAND BAR BAZ)
 add_custom_command(TARGET FOO PRE_BUILD COMMAND BAR ARGS BAZ QUX)
 
 add_custom_command(
-    TARGET long_arg____________________________________________________________
+    TARGET
+    long_arg____________________________________________________________
     PRE_LINK
     COMMAND long_arg____________________________________________________________
 )
 
 add_custom_command(
-    TARGET long_arg____________________________________________________________
+    TARGET
+    long_arg____________________________________________________________
     PRE_LINK
     COMMAND
         long_arg____________________________________________________________
@@ -110,7 +118,8 @@ add_custom_command(
 )
 
 add_custom_command(
-    TARGET long_arg____________________________________________________________
+    TARGET
+    long_arg____________________________________________________________
     PRE_LINK
     COMMAND long_arg____________________________________________________________
     ARGS
@@ -119,7 +128,8 @@ add_custom_command(
 )
 
 add_custom_command(
-    TARGET FOO
+    TARGET
+    FOO
     POST_BUILD
     COMMAND FOO BAR BAZ
     COMMAND FOO BAR BAZ
@@ -133,7 +143,8 @@ add_custom_command(
 )
 
 add_custom_command(
-    TARGET long_arg____________________________________________________________
+    TARGET
+    long_arg____________________________________________________________
     POST_BUILD
     COMMAND
         long_arg____________________________________________________________
@@ -160,14 +171,16 @@ add_custom_command(
 )
 
 add_custom_command(
-    OUTPUT FOOBAR
+    OUTPUT
+    FOOBAR
     COMMAND
         clang-format -length=1000 -sort-includes -style=some_kind_of_style
         -verbose -output-replacements-xml
 )
 
 add_custom_command(
-    OUTPUT FOOBAR
+    OUTPUT
+    FOOBAR
     COMMAND
         clang-format -length=1000 -sort-includes -style=some_kind_of_style
         -verbose -output-replacements-xml
@@ -178,14 +191,16 @@ string"
 
 if(TRUE)
     add_custom_command(
-        OUTPUT FOOBAR
+        OUTPUT
+        FOOBAR
         COMMAND
             clang-format -length=1000 -sort-includes -style=some_kind_of_style
             -verbose -output-replacements-xml
     )
 
     add_custom_command(
-        OUTPUT FOOBAR
+        OUTPUT
+        FOOBAR
         COMMAND
             clang-format -length=1000 -sort-includes -style=some_kind_of_style
             -verbose -output-replacements-xml
@@ -197,11 +212,11 @@ endif()
 
 add_custom_command(
     OUTPUT
-        FOO
-        # first line comment
-        # second line comment
-        some_other_output
-        another_output
+    FOO
+    # first line comment
+    # second line comment
+    some_other_output
+    another_output
     COMMAND
         FOO
         # first line comment

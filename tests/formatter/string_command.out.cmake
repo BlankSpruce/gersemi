@@ -4,16 +4,16 @@ string(FIND foo bar baz REVERSE)
 
 string(
     FIND
-        long_string_________________________
-        long_substring_________________________
-        long_output_variable_________________________
+    long_string_________________________
+    long_substring_________________________
+    long_output_variable_________________________
 )
 
 string(
     FIND
-        long_string_________________________
-        long_substring_________________________
-        long_output_variable_________________________
+    long_string_________________________
+    long_substring_________________________
+    long_output_variable_________________________
     REVERSE
 )
 
@@ -210,8 +210,8 @@ string(CONFIGURE foo bar @ONLY ESCAPE_QUOTES)
 
 string(
     CONFIGURE
-        long_argument______________________________________________________________
-        long_argument______________________________________________________________
+    long_argument______________________________________________________________
+    long_argument______________________________________________________________
     @ONLY
     ESCAPE_QUOTES
 )
@@ -248,7 +248,7 @@ string(UUID foo NAMESPACE bar NAME baz TYPE MD5 UPPER)
 
 string(
     UUID
-        long_argument______________________________________________________________
+    long_argument______________________________________________________________
     NAMESPACE
         long_argument______________________________________________________________
     NAME

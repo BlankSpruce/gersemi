@@ -29,6 +29,7 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def format_command(self, tree):
         identifier, arguments = tree.children
+        arguments = self._preprocess_arguments(arguments)
         begin = f"{identifier}("
         end = ")"
         groups = self._split_arguments(arguments.children)
@@ -80,3 +81,6 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def unquoted_argument(self, tree):
         return self._indent(self.__default__(tree))
+
+    def _preprocess_arguments(self, arguments):
+        return arguments
