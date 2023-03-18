@@ -2,7 +2,14 @@ project(FOO)
 
 project(FOO CXX FORTRAN)
 
-project(FOO CXX FORTRAN FOO BAR BAZ)
+project(
+    FOO
+    CXX
+    FORTRAN
+    FOO
+    BAR
+    BAZ
+)
 
 project(long_arg____________________________________________________________)
 

@@ -1,3 +1,5 @@
+cmake_parse_arguments(FOO BAR BAZ QUX)
+
 cmake_parse_arguments(FOO BAR BAZ QUX some_argument)
 
 cmake_parse_arguments(
@@ -31,7 +33,8 @@ cmake_parse_arguments(
 )
 
 cmake_parse_arguments(
-    PARSE_ARGV 42
+    PARSE_ARGV
+    42
     FOO
     LONG_WORD________________________________________________
     BAZ
@@ -39,6 +42,8 @@ cmake_parse_arguments(
 )
 
 if(TRUE)
+    cmake_parse_arguments(FOO BAR BAZ QUX)
+
     cmake_parse_arguments(FOO BAR BAZ QUX some_argument)
 
     cmake_parse_arguments(PARSE_ARGV 42 FOO BAR BAZ QUX)
@@ -52,7 +57,8 @@ if(TRUE)
     )
 
     cmake_parse_arguments(
-        PARSE_ARGV 42
+        PARSE_ARGV
+        42
         FOO
         LONG_WORD________________________________________________
         BAZ

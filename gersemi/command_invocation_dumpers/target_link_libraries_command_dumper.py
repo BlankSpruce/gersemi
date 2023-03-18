@@ -28,6 +28,7 @@ class IsolateConfigurationTypeAndItem(Transformer_InPlace):
 
 
 class TargetLinkLibraries(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     multi_value_keywords = [
         "INTERFACE",
         "PUBLIC",
@@ -43,6 +44,12 @@ class TargetLinkLibraries(ArgumentAwareCommandInvocationDumper):
         with self.not_indented():
             formatted_item = self.visit(item)
         return f"{formatted_specifier} {formatted_item}"
+
+    def _split_arguments(self, arguments):
+        preprocessed = IsolateConfigurationTypeAndItem().transform(
+            Tree("arguments", arguments)
+        )
+        return super()._split_arguments(preprocessed.children)
 
     def arguments(self, tree):
         preprocessed = IsolateConfigurationTypeAndItem().transform(tree)

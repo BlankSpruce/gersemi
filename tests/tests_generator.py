@@ -1,11 +1,12 @@
 import collections
 import os
 import pathlib
+import yaml
 
 
 InputOnlyCase = collections.namedtuple("InputOnlyCase", ["name", "content"])
 InputOutputCase = collections.namedtuple(
-    "InputOutputCase", ["name", "given", "expected"]
+    "InputOutputCase", ["name", "given", "expected", "config"]
 )
 
 
@@ -59,10 +60,20 @@ def get_matching_output_filename(input_filename, output_extension):
 
 def make_input_output_case(input_filename, output_extension, where):
     output_filename = get_matching_output_filename(input_filename, output_extension)
+    given = get_content(input_filename, directory=where)
+    if given.startswith("###"):
+        head, *rest = given.splitlines()
+        given = "\n".join(rest)
+
+        config = yaml.safe_load(head[3:])
+    else:
+        config = dict()
+
     return InputOutputCase(
         remove_extension(input_filename),
-        get_content(input_filename, directory=where),
+        given,
         get_content(output_filename, directory=where),
+        config,
     )
 
 

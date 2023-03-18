@@ -134,7 +134,17 @@ list(
 
 list(REMOVE_AT FOO 1)
 
-list(REMOVE_AT FOO 1 2 3 4 5)
+list(REMOVE_AT FOO 1 2 3 4)
+
+list(
+    REMOVE_AT
+    FOO
+    1
+    2
+    3
+    4
+    5
+)
 
 list(REMOVE_DUPLICATES FOO)
 

@@ -85,7 +85,8 @@ def temporary_dir_copies(directory_paths):
 
 
 def assert_success(*args, **kwargs):
-    assert gersemi(*args, **kwargs).returncode == 0
+    process = gersemi(*args, **kwargs)
+    assert process.returncode == 0, (process.stdout, process.stderr)
 
 
 def assert_fail(*args, **kwargs):

@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, Iterable, List, Optional, Sized, Tuple
+from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Sized, Tuple
 from gersemi.ast_helpers import is_one_of_keywords, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Nodes
@@ -68,7 +68,13 @@ class KeywordSplitter:
         return filter(is_non_empty, self.groups), tail
 
 
+class PositionalArguments(list):
+    pass
+
+
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
+    front_positional_arguments: Sequence[str] = []
+    back_positional_arguments: Sequence[str] = []
     options: Iterable[str] = []
     one_value_keywords: Iterable[str] = []
     multi_value_keywords: Iterable[str] = []
@@ -77,7 +83,13 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
 
+    def _format_positional_arguments_group(self, group) -> str:
+        return "\n".join(map(self.visit, group))
+
     def _format_group(self, group) -> str:
+        if isinstance(group, PositionalArguments):
+            return self._format_positional_arguments_group(group)
+
         result = self._try_to_format_into_single_line(group, separator=" ")
         if result is not None:
             return result
@@ -96,43 +108,72 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             formatted_values = formatter(values)
         return f"{begin}\n{formatted_values}"
 
+    def _split_positional_arguments(self, arguments: Nodes, positional_arguments):
+        last_index = min(len(arguments), len(positional_arguments))
+        result = []
+        for i in range(last_index):
+            result.append(PositionalArguments([arguments[i]]))
+
+        rest = arguments[last_index:]
+        if len(rest) > 0:
+            result.append(PositionalArguments(rest))
+        return result
+
     def _separate_front(self, arguments: Nodes) -> Tuple[List[Nodes], Nodes]:
-        is_one_of_keywords_with_values = is_one_of_keywords(
-            list(self.one_value_keywords) + list(self.multi_value_keywords)
+        is_keyword = is_one_of_keywords(
+            list(self.options)
+            + list(self.one_value_keywords)
+            + list(self.multi_value_keywords)
         )
         for index, argument in enumerate(arguments):
-            if is_one_of_keywords_with_values(argument):
+            if is_keyword(argument):
                 pivot = index
                 break
         else:
-            return to_list_of_single_item_lists(arguments), []
-        return to_list_of_single_item_lists(arguments[:pivot]), arguments[pivot:]
+            return (
+                self._split_positional_arguments(
+                    arguments, self.front_positional_arguments
+                ),
+                [],
+            )
+        return (
+            self._split_positional_arguments(
+                arguments[:pivot], self.front_positional_arguments
+            ),
+            arguments[pivot:],
+        )
 
     def _split_by_keywords(self, arguments: Nodes) -> Tuple[Iterator[Nodes], Nodes]:
         splitter = KeywordSplitter(
-            self.options, self.one_value_keywords, self.multi_value_keywords
+            self.options,
+            self.one_value_keywords,
+            self.multi_value_keywords,
         )
         return splitter.split(arguments)
 
     def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
+        if len(self.back_positional_arguments) > 0:
+            arguments, back = (
+                arguments[: -len(self.back_positional_arguments)],
+                to_list_of_single_item_lists(
+                    arguments[-len(self.back_positional_arguments) :]
+                ),
+            )
+        else:
+            back = []
         front, tail = self._separate_front(arguments)
         keyworded_arguments, tail = self._split_by_keywords(tail)
-        back = to_list_of_single_item_lists(tail)
-        return [*front, *keyworded_arguments, *back]
+        return [
+            *front,
+            *keyworded_arguments,
+            *back,
+            *to_list_of_single_item_lists(tail),
+        ]
 
-    def format_command(self, tree):
-        identifier, arguments = tree.children
-        result = self._try_to_format_into_single_line(
-            arguments.children, separator=" ", prefix=f"{identifier}(", postfix=")"
-        )
-        if result is not None:
-            return result
-
-        begin = self._indent(f"{identifier}(")
-        with self.indented():
-            formatted_arguments = self.visit(arguments)
-        end = self._indent(")")
-        return f"{begin}\n{formatted_arguments}\n{end}"
+    def group_size(self, group):
+        if isinstance(group, PositionalArguments):
+            return len(group)
+        return max(0, len(group) - 1)
 
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)

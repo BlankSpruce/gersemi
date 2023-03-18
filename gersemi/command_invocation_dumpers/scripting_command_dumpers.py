@@ -9,7 +9,6 @@ from .condition_syntax_command_invocation_dumper import (
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
-from .set_command import Set
 
 
 class Block(ArgumentAwareCommandInvocationDumper):
@@ -36,11 +35,30 @@ class CMakeLanguage(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["CALL", "CANCEL_CALL", "SUPPORTED_METHODS"]
 
 
-class CMakeParseArguments(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["PARSE_ARGV"]
+class CMakeParseArguments(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        "PARSE_ARGV": dict(
+            front_positional_arguments=[
+                "<N>",
+                "<prefix>",
+                "<options>",
+                "<one_value_keywords>",
+                "<multi_value_keywords>",
+            ]
+        ),
+        None: dict(
+            front_positional_arguments=[
+                "<prefix>",
+                "<options>",
+                "<one_value_keywords>",
+                "<multi_value_keywords>",
+            ]
+        ),
+    }
 
 
 class ConfigureFile(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<input>", "<output>"]
     options = [
         "COPYONLY",
         "ESCAPE_QUOTES",
@@ -115,6 +133,11 @@ class File(MultipleSignatureCommandInvocationDumper):
                 "ENCODING",
             ],
             multi_value_keywords=["STRINGS"],
+        ),
+        "MD5": dict(),  # TODO,
+        "TIMESTAMP": dict(
+            front_positional_arguments=["<filename>", "<variable>", "<format>"],
+            options=["UTC"],
         ),
         "GET_RUNTIME_DEPENDENCIES": dict(
             one_value_keywords=[
@@ -282,6 +305,7 @@ class File(MultipleSignatureCommandInvocationDumper):
 
 
 class FindFile(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<VAR>", "name"]
     options = [
         "NO_DEFAULT_PATH",
         "NO_PACKAGE_ROOT_PATH",
@@ -300,6 +324,7 @@ class FindFile(ArgumentAwareCommandInvocationDumper):
 
 
 class FindLibrary(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<VAR>", "name"]
     options = [
         "NAMES_PER_DIR",
         "NO_DEFAULT_PATH",
@@ -319,6 +344,7 @@ class FindLibrary(ArgumentAwareCommandInvocationDumper):
 
 
 class FindPackage(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<PackageName>", "<version>"]
     options = [
         "EXACT",
         "QUIET",
@@ -354,6 +380,7 @@ class FindPackage(ArgumentAwareCommandInvocationDumper):
 
 
 class FindPath(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<VAR>", "name"]
     options = [
         "NO_DEFAULT_PATH",
         "NO_PACKAGE_ROOT_PATH",
@@ -372,6 +399,7 @@ class FindPath(ArgumentAwareCommandInvocationDumper):
 
 
 class FindProgram(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<VAR>", "name"]
     options = [
         "NAMES_PER_DIR",
         "NO_DEFAULT_PATH",
@@ -391,12 +419,13 @@ class FindProgram(ArgumentAwareCommandInvocationDumper):
 
 
 class Foreach(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<loop_var>"]
     options = ["IN"]
     multi_value_keywords = ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"]
 
 
 class Function(ArgumentAwareCommandInvocationDumper):
-    pass
+    front_positional_arguments = ["<name>"]
 
 
 class GetDirectoryProperty(ArgumentAwareCommandInvocationDumper):
@@ -404,6 +433,11 @@ class GetDirectoryProperty(ArgumentAwareCommandInvocationDumper):
 
 
 class GetFilenameComponent(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = [
+        "<var>",
+        "<FileName>",
+        "<mode>",
+    ]
     options = [
         "DIRECTORY",
         "NAME",
@@ -435,9 +469,24 @@ class Include(ArgumentAwareCommandInvocationDumper):
 
 class List(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
+        # Reading
+        "SUBLIST": dict(
+            front_positional_arguments=[
+                "<list>",
+                "<begin>",
+                "<length>",
+                "<out-var>",
+            ],
+        ),
         # Modification
         "FILTER": dict(
             options=["INCLUDE", "EXCLUDE"], one_value_keywords=["FILTER", "REGEX"]
+        ),
+        "REMOVE_AT": dict(
+            front_positional_arguments=[
+                "REMOVE_AT",
+                "<list>",
+            ]
         ),
         "REMOVE_DUPLICATES": dict(one_value_keywords=["REMOVE_DUPLICATES"]),
         "TRANSFORM": dict(
@@ -459,7 +508,7 @@ class List(MultipleSignatureCommandInvocationDumper):
 
 
 class Macro(ArgumentAwareCommandInvocationDumper):
-    pass
+    front_positional_arguments = ["<name>"]
 
 
 class MarkAsAdvanced(ArgumentAwareCommandInvocationDumper):
@@ -495,6 +544,7 @@ class Return(ArgumentAwareCommandInvocationDumper):
 
 
 class SeparateArguments(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>", "<mode>"]
     options = ["PROGRAM", "SEPARATE_ARGS"]
 
 
@@ -504,15 +554,40 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["TARGET", "SOURCE", "INSTALL", "TEST", "CACHE", "PROPERTY"]
 
 
+class Set(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>"]
+    options = ["PARENT_SCOPE"]
+    multi_value_keywords = ["CACHE"]
+
+
 class String(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Search and Replace
         "FIND": dict(options=["REVERSE"], multi_value_keywords=["FIND"]),
+        "REPLACE": dict(
+            front_positional_arguments=[
+                "<match_string>",
+                "<replace_string>",
+                "<output_variable>",
+            ]
+        ),
         # Regular Expressions
         "REGEX": dict(one_value_keywords=["REGEX"]),
+        # Manipulation
+        "SUBSTRING": dict(
+            front_positional_arguments=[
+                "<string>",
+                "<begin>",
+                "<length>",
+                "<output_variable>",
+            ]
+        ),
         # Comparison
         "COMPARE": dict(one_value_keywords=["COMPARE"]),
         # Generation
+        "ASCII": dict(
+            back_positional_arguments=["<output_variable>"],
+        ),
         "CONFIGURE": dict(
             options=["@ONLY", "ESCAPE_QUOTES"], multi_value_keywords=["CONFIGURE"]
         ),

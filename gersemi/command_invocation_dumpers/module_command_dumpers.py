@@ -84,6 +84,7 @@ class CMakePrintProprties(ArgumentAwareCommandInvocationDumper):
 
 
 class ConfigurePackageConfigFile(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<input>", "<output>"]
     options = ["NO_SET_AND_CHECK_MACRO", "NO_CHECK_REQUIRED_COMPONENTS_MACRO"]
     one_value_keywords = ["INSTALL_DESTINATION", "INSTALL_PREFIX"]
     multi_value_keywords = ["PATH_VARS"]
@@ -538,6 +539,7 @@ class GTestDiscoverTests(
     KeywordWithPairsFormatter,
     ArgumentAwareCommandInvocationDumper,
 ):
+    front_positional_arguments = ["<target>"]
     options = ["NO_PRETTY_TYPES", "NO_PRETTY_VALUES"]
     one_value_keywords = [
         "WORKING_DIRECTORY",

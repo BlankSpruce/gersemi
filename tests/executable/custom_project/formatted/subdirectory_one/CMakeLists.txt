@@ -1,4 +1,11 @@
-function(the_fellowship_of_the_ring some unnamed not keyworded arguments)
+function(
+    the_fellowship_of_the_ring
+    some
+    unnamed
+    not
+    keyworded
+    arguments
+)
     set(option_keywords FRODO SAM MERRY PIPPIN)
     set(one_value_keywords ARAGORN BOROMIR GIMLI LEGOLAS)
     set(multi_value_keywords GANDALF_THE_GREY)
@@ -106,7 +113,14 @@ the_two_towers(
 # going to Mordor
 the_two_towers(FRODO SAM GOLLUM)
 
-function(the_return_of_the_king some unnamed not keyworded arguments)
+function(
+    the_return_of_the_king
+    some
+    unnamed
+    not
+    keyworded
+    arguments
+)
     set(in_mordor FRODO SAM GOLLUM)
     set(the_king ARAGORN)
     set(helping_the_king

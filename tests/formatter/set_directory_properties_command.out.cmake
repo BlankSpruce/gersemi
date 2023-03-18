@@ -4,7 +4,9 @@ set_directory_properties(PROPERTIES prop1 value1)
 
 set_directory_properties(PROPERTIES prop1 value1 prop2 value2)
 
-set_directory_properties(PROPERTIES prop1 value1 prop2 value2 prop3 value3)
+set_directory_properties(
+    PROPERTIES prop1 value1 prop2 value2 prop3 value3
+)
 
 set_directory_properties(
     PROPERTIES prop1 value1 prop2 value2 prop3 value3 prop4 value4

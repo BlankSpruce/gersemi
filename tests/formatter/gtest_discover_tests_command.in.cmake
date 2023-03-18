@@ -1,5 +1,7 @@
 gtest_discover_tests(FOOBAR)
 
+gtest_discover_tests(FOOBAR EXTRA_ARGS arg1 arg2 arg3 arg4)
+
 gtest_discover_tests(FOOBAR EXTRA_ARGS arg1 arg2 arg3 arg4 arg5)
 
 gtest_discover_tests(FOOBAR EXTRA_ARGS arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10)

@@ -147,3 +147,17 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
     def arguments(self, tree):
         preprocessed = IsolateConditions().transform(tree)
         return super().arguments(preprocessed)
+
+    def complex_argument(self, tree):
+        arguments, *_ = tree.children
+        result = self._try_to_format_into_single_line(
+            arguments.children, separator=" ", prefix="(", postfix=")"
+        )
+        if result is not None:
+            return result
+
+        begin = self._indent("(\n")
+        with self.indented():
+            formatted_arguments = self.visit(arguments)
+        end = self._indent(")")
+        return f"{begin}{formatted_arguments}\n{end}"

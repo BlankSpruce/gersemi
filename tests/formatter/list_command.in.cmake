@@ -50,6 +50,8 @@ list(REMOVE_ITEM long_list_name_________________________ value1 value2 value3 va
 
 list(REMOVE_AT FOO 1)
 
+list(REMOVE_AT FOO 1 2 3 4)
+
 list(REMOVE_AT FOO 1 2 3 4 5)
 
 list(REMOVE_DUPLICATES FOO)

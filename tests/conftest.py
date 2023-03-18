@@ -22,7 +22,12 @@ def parser_with_postprocessing(parser):  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(scope="module")
-def formatter():
-    return create_formatter(
-        do_sanity_check=False, line_length=80, custom_command_definitions={}
-    )
+def formatter_creator():
+    def creator(config):
+        return create_formatter(
+            do_sanity_check=False,
+            line_length=config.get("line_length", 80),
+            custom_command_definitions={},
+        )
+
+    return creator

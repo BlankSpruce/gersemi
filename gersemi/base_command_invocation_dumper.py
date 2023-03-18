@@ -1,5 +1,7 @@
+from typing import List
 from gersemi.ast_helpers import contains_line_comment
 from gersemi.base_dumper import BaseDumper
+from gersemi.types import Nodes
 
 
 class BaseCommandInvocationDumper(BaseDumper):
@@ -19,18 +21,26 @@ class BaseCommandInvocationDumper(BaseDumper):
             formatted_arguments = self.visit(arguments)
         return "\n".join([self._indent(begin), formatted_arguments, self._indent(end)])
 
+    def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
+        return [arguments]
+
+    def group_size(self, group):
+        return len(group)
+
     def format_command(self, tree):
         identifier, arguments = tree.children
         begin = f"{identifier}("
         end = ")"
-        if len(arguments.children) <= 4:
+        groups = self._split_arguments(arguments.children)
+        group_sizes = list(map(self.group_size, groups))
+        if all(size <= 4 for size in group_sizes):
             result = self._try_to_format_into_single_line(
                 arguments.children, separator=" ", prefix=begin, postfix=end
             )
             if result is not None:
                 return result
 
-        if len(begin) <= self.indent_size:
+        if len(begin) == self.indent_size:
             return self.format_command_with_short_name(begin, arguments, end)
         return self._format_command_with_long_name(begin, arguments, end)
 
@@ -46,11 +56,12 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children
-        result = self._try_to_format_into_single_line(
-            arguments.children, separator=" ", prefix="(", postfix=")"
-        )
-        if result is not None:
-            return result
+        if len(arguments.children) <= 4:
+            result = self._try_to_format_into_single_line(
+                arguments.children, separator=" ", prefix="(", postfix=")"
+            )
+            if result is not None:
+                return result
 
         begin = self._indent("(\n")
         with self.indented():

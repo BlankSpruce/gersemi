@@ -48,10 +48,18 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
 
 
 class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
-    options = ["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
+    front_positional_arguments = ["Name", "ALL"]
+    options = ["VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["WORKING_DIRECTORY", "COMMENT", "JOB_POOL"]
     multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
     keyword_formatters = {"COMMAND": "_format_command_line"}
+
+    def _format_positional_arguments_group(self, group):
+        if len(group) > 1:
+            if group[0].children[0] == "ALL":
+                first, *rest = group
+                return f"{self.visit(first)}\n{super()._format_command_line(rest)}"
+        return super()._format_command_line(group)
 
 
 class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
@@ -66,6 +74,7 @@ class BuildCommand(ArgumentAwareCommandInvocationDumper):
 
 
 class CreateTestSourcelist(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["sourceListName", "driverName"]
     one_value_keywords = ["EXTRA_INCLUDE", "FUNCTION"]
 
 
@@ -110,6 +119,7 @@ class LoadCache(ArgumentAwareCommandInvocationDumper):
 
 
 class Project(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<PROJECT-NAME>"]
     one_value_keywords = ["VERSION", "DESCRIPTION", "HOMEPAGE_URL"]
     multi_value_keywords = ["LANGUAGES"]
 
@@ -171,6 +181,13 @@ class TargetSources(SectionAwareCommandInvocationDumper):
 
 
 class TryCompile(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = [
+        "<compileResultVar>",
+        "<bindir>",
+        "<srcdir>",  # or "<srcfile>"
+        "<projectName>",
+        "<targetName>",
+    ]
     option = ["NO_CACHE", "NO_LOG"]
     one_value_keywords = [
         "OUTPUT_VARIABLE",
@@ -210,6 +227,12 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
 
 
 class TryRun(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = [
+        "<runResultVar>",
+        "<compileResultVar>",
+        "<bindir>",
+        "<srcfile>",
+    ]
     options = ["NO_CACHE", "NO_LOG"]
     one_value_keywords = [
         "COMPILE_OUTPUT_VARIABLE",

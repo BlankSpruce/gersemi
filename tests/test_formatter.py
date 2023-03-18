@@ -4,11 +4,13 @@ from gersemi.sanity_checker import check_code_equivalence
 from .tests_generator import generate_input_output_tests
 
 
-def test_formatter(formatter, case):
+def test_formatter(formatter_creator, case):
+    formatter = formatter_creator(case.config)
     assert formatter.format(case.given) == case.expected
 
 
-def test_formatter_idempotence(formatter, case):
+def test_formatter_idempotence(formatter_creator, case):
+    formatter = formatter_creator(case.config)
     formatted_once = formatter.format(case.given)
     formatted_twice = formatter.format(formatted_once)
     assert formatted_once == formatted_twice

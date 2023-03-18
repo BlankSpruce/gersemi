@@ -54,8 +54,8 @@ class CommandInvocationDumper(
             return BUILTIN_COMMAND_MAPPING[command_name]
 
         if command_name in self.custom_command_definitions:
-            keywords = self.custom_command_definitions[command_name]
-            return create_specialized_dumper(keywords)
+            arguments = self.custom_command_definitions[command_name]
+            return create_specialized_dumper(*arguments)
 
         return None
 

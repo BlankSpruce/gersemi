@@ -52,7 +52,10 @@ class CMakeInterpreter(Interpreter):
     def _new_command(self, arguments):
         if len(arguments.children) > 0:
             name = arguments.children[0]
-            return self.visit(name)
+            positional_arguments = arguments.children[1:]
+            return self.visit(name), list(
+                map(str, map(self.visit, positional_arguments))
+            )
         raise RuntimeError
 
     def _cmake_parse_arguments(self, arguments):
@@ -88,15 +91,16 @@ class CMakeInterpreter(Interpreter):
 
         subinterpreter = self._inner_scope
         block_begin, *body, _ = subinterpreter.visit_children(tree)
-        name, *_ = block_begin
-        if name is None:
+        command_node, *_ = block_begin
+        if command_node is None:
             return
+        name, positional_arguments = command_node
 
         keywords, *_ = body
         if len(keywords) > 0:
-            self.found_commands[name.lower()] = keywords[0]
+            self.found_commands[name.lower()] = positional_arguments, keywords[0]
         else:
-            self.found_commands[name.lower()] = Keywords()
+            self.found_commands[name.lower()] = positional_arguments, Keywords()
 
     def block_body(self, tree):
         return [
