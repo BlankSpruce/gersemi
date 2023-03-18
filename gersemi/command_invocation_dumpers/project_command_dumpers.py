@@ -3,12 +3,12 @@ from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-from .install_command_dumper import Install
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
 from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
 from .target_link_libraries_command_dumper import TargetLinkLibraries
+from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
 class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationDumper):
@@ -107,6 +107,130 @@ class Export(MultipleSignatureCommandInvocationDumper):
 
 class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
+
+
+class Install(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
+    two_words_keywords = [("INCLUDES", "DESTINATION")]
+
+    customized_signatures = {
+        "TARGETS": dict(
+            options=[
+                "ARCHIVE",
+                "LIBRARY",
+                "RUNTIME",
+                "OBJECTS",
+                "FRAMEWORK",
+                "BUNDLE",
+                "PRIVATE_HEADER",
+                "PUBLIC_HEADER",
+                "RESOURCE",
+                "OPTIONAL",
+                "EXCLUDE_FROM_ALL",
+                "NAMELINK_ONLY",
+                "NAMELINK_SKIP",
+            ],
+            one_value_keywords=[
+                "EXPORT",
+                "DESTINATION",
+                "COMPONENT",
+                "NAMELINK_COMPONENT",
+                "RUNTIME_DEPENDENCY_SET",
+                "FILE_SET",
+            ],
+            multi_value_keywords=[
+                "TARGETS",
+                "PERMISSIONS",
+                "CONFIGURATIONS",
+                "INCLUDES DESTINATION",
+                "RUNTIME_DEPENDENCIES",
+            ],
+        ),
+        "FILES": dict(
+            options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT", "RENAME"],
+            multi_value_keywords=["FILES", "PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "PROGRAMS": dict(
+            options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT", "RENAME"],
+            multi_value_keywords=["PROGRAMS", "PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "DIRECTORY": dict(
+            options=[
+                "USE_SOURCE_PERMISSIONS",
+                "OPTIONAL",
+                "MESSAGE_NEVER",
+                "EXCLUDE_FROM_ALL",
+                "FILES_MATCHING",
+                "EXCLUDE",
+            ],
+            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT", "PATTERN", "REGEX"],
+            multi_value_keywords=[
+                "DIRECTORY",
+                "FILE_PERMISSIONS",
+                "DIRECTORY_PERMISSIONS",
+                "CONFIGURATIONS",
+                "PERMISSIONS",
+            ],
+        ),
+        "SCRIPT": dict(
+            options=["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
+            one_value_keywords=["SCRIPT", "COMPONENT"],
+        ),
+        "CODE": dict(
+            options=["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
+            one_value_keywords=["CODE", "COMPONENT"],
+        ),
+        "EXPORT": dict(
+            options=["EXPORT_LINK_INTERFACE_LIBRARIES", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=[
+                "EXPORT",
+                "DESTINATION",
+                "NAMESPACE",
+                "FILE",
+                "COMPONENT",
+            ],
+            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "EXPORT_ANDROID_MK": dict(
+            options=["EXPORT_LINK_INTERFACE_LIBRARIES", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=[
+                "EXPORT_ANDROID_MK",
+                "DESTINATION",
+                "NAMESPACE",
+                "FILE",
+                "COMPONENT",
+            ],
+            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "IMPORTED_RUNTIME_ARTIFACTS": dict(
+            options=[
+                "LIBRARY",
+                "RUNTIME",
+                "FRAMEWORK",
+                "BUNDLE",
+                "OPTIONAL",
+                "EXCLUDE_FROM_ALL",
+            ],
+            one_value_keywords=["RUNTIME_DEPENDENCY_SET", "DESTINATION", "COMPONENT"],
+            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+        ),
+        "RUNTIME_DEPENDENCY_SET": dict(
+            options=["LIBRARY", "RUNTIME", "FRAMEWORK", "OPTIONAL", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=["DESTINATION", "COMPONENT", "NAMELINK_COMPONENT"],
+            multi_value_keywords=[
+                "PERMISSIONS",
+                "CONFIGURATIONS",
+                "PRE_INCLUDE_REGEXES",
+                "PRE_EXCLUDE_REGEXES",
+                "POST_INCLUDE_REGEXES",
+                "POST_EXCLUDE_REGEXES",
+                "POST_INCLUDE_FILES",
+                "POST_EXCLUDE_FILES",
+                "DIRECTORIES",
+            ],
+        ),
+    }
 
 
 class LinkLibraries(ArgumentAwareCommandInvocationDumper):

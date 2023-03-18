@@ -9,6 +9,7 @@ from .condition_syntax_command_invocation_dumper import (
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
+from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
 class Block(ArgumentAwareCommandInvocationDumper):
@@ -16,8 +17,20 @@ class Block(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["PROPAGATE"]
 
 
-class CMakeHostSysteInformation(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["RESULT"]
+class CMakeHostSysteInformation(
+    TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper
+):
+    two_words_keywords = [("QUERY", "WINDOWS_REGISTRY")]
+    one_value_keywords = [
+        "RESULT",
+        "QUERY WINDOWS_REGISTRY",
+        "VALUE_NAMES",
+        "SUBKEYS",
+        "VALUE",
+        "VIEW",
+        "SEPARATOR",
+        "ERROR_VARIABLE",
+    ]
     multi_value_keywords = ["QUERY"]
 
 
