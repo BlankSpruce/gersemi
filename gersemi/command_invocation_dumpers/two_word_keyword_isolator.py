@@ -31,6 +31,9 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
         return PrependLhs(self.lhs).transform(node)
 
     def arguments(self, children):
+        if len(children) <= 1:
+            return Tree("arguments", children)
+
         new_children = []
         iterator = zip(children, children[1:])
         for one_behind, current in iterator:

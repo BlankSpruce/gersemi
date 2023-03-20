@@ -42,12 +42,15 @@ add_definitions(
 
 add_dependencies(TARGET)
 
+add_dependencies(TARGET FOO BAR BAZ BAX)
+
 add_dependencies(
     TARGET
     FOO
     BAR
     BAZ
     BAX
+    QUX
 )
 
 add_dependencies(
@@ -101,13 +104,7 @@ enable_testing()
 
 fltk_wrap_ui(LIB_NAME source1)
 
-fltk_wrap_ui(
-    LIB_NAME
-    source1
-    source2
-    source3
-    source4
-)
+fltk_wrap_ui(LIB_NAME source1 source2 source3 source4)
 
 fltk_wrap_ui(
     long_arg____________________________________________________________

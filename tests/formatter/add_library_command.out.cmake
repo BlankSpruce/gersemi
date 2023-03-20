@@ -4,12 +4,17 @@ add_library(FOO BAR)
 
 add_library(FOO BAR BAZ)
 
+add_library(FOO STATIC EXCLUDE_FROM_ALL BAR BAZ)
+
 add_library(
     FOO
     STATIC
     EXCLUDE_FROM_ALL
     BAR
     BAZ
+    QUX
+    FOO
+    BAR
 )
 
 add_library(
@@ -50,19 +55,12 @@ add_library(
 add_library(
     long_arg____________________________________________________________
     OBJECT
-    IMPORTED
-    GLOBAL
+    IMPORTED GLOBAL
 )
 
 add_library(FOO OBJECT BAR)
 
-add_library(
-    FOO
-    OBJECT
-    BAR
-    BAZ
-    QUX
-)
+add_library(FOO OBJECT BAR BAZ QUX)
 
 add_library(
     long_arg____________________________________________________________
@@ -82,8 +80,7 @@ add_library(FOO ALIAS BAR)
 
 add_library(
     long_arg____________________________________________________________
-    ALIAS
-    long_arg____________________________________________________________
+    ALIAS long_arg____________________________________________________________
 )
 
 add_library(FOO INTERFACE)
@@ -106,6 +103,5 @@ add_library(
 add_library(
     long_arg____________________________________________________________
     INTERFACE
-    IMPORTED
-    GLOBAL
+    IMPORTED GLOBAL
 )

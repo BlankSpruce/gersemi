@@ -6,6 +6,8 @@ add_library(FOO BAR BAZ)
 
 add_library(FOO STATIC EXCLUDE_FROM_ALL BAR BAZ)
 
+add_library(FOO STATIC EXCLUDE_FROM_ALL BAR BAZ QUX FOO BAR)
+
 add_library(long_arg____________________________________________________________)
 
 add_library(long_arg____________________________________________________________ long_arg____________________________________________________________)

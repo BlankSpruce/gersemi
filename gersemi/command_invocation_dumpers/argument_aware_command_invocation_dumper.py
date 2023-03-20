@@ -151,24 +151,24 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         )
         return splitter.split(arguments)
 
-    def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
+    def _split_arguments(self, arguments):
         if len(self.back_positional_arguments) > 0:
             arguments, back = (
                 arguments[: -len(self.back_positional_arguments)],
-                to_list_of_single_item_lists(
-                    arguments[-len(self.back_positional_arguments) :]
-                ),
+                [
+                    PositionalArguments(
+                        arguments[-len(self.back_positional_arguments) :]
+                    )
+                ],
             )
         else:
             back = []
         front, tail = self._separate_front(arguments)
         keyworded_arguments, tail = self._split_by_keywords(tail)
-        return [
-            *front,
-            *keyworded_arguments,
-            *back,
-            *to_list_of_single_item_lists(tail),
-        ]
+        if len(tail) > 0:
+            tail = [PositionalArguments(tail)]
+
+        return [*front, *keyworded_arguments, *back, *tail]
 
     def group_size(self, group):
         if isinstance(group, PositionalArguments):
@@ -177,4 +177,4 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
 
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)
-        return "\n".join(map(self._format_group, groups))
+        return "\n".join(map(self._format_group, filter(None, groups)))

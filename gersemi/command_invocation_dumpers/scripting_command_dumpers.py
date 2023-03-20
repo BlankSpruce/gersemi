@@ -181,6 +181,16 @@ class CMakePath(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper
     }
 
 
+class CMakePolicy(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        "VERSION": dict(front_positional_arguments=["<min>...<max>"]),
+        "SET": dict(options=["OLD", "NEW"]),
+        "GET": dict(back_positional_arguments=["<variable>"]),
+        "PUSH": dict(),
+        "POP": dict(),
+    }
+
+
 class ConfigureFile(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<input>", "<output>"]
     options = [
@@ -895,6 +905,7 @@ scripting_command_mapping = {
     "cmake_language": CMakeLanguage,
     "cmake_parse_arguments": CMakeParseArguments,
     "cmake_path": CMakePath,
+    "cmake_policy": CMakePolicy,
     "configure_file": ConfigureFile,
     "elseif": ConditionSyntaxCommandInvocationDumper,
     "else": ConditionSyntaxCommandInvocationDumper,

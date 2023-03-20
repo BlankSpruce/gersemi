@@ -26,6 +26,8 @@ add_dependencies(TARGET)
 
 add_dependencies(TARGET FOO BAR BAZ BAX)
 
+add_dependencies(TARGET FOO BAR BAZ BAX QUX)
+
 add_dependencies(long_arg____________________________________________________________)
 
 add_dependencies(long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________)

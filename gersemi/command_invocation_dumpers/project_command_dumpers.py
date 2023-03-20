@@ -62,7 +62,47 @@ class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper
         return super()._format_command_line(group)
 
 
+class AddDependencies(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
+
+
+class AddExecutable(ArgumentAwareCommandInvocationDumper):
+    two_words_keywords = [("IMPORTED", "GLOBAL")]
+    front_positional_arguments = ["<name>"]
+    options = [
+        "WIN32",
+        "MACOSX_BUNDLE",
+        "EXCLUDE_FROM_ALL",
+        "IMPORTED",
+        "IMPORTED GLOBAL",
+    ]
+    one_value_keywords = ["ALIAS"]
+
+
+class AddLibrary(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
+    two_words_keywords = [("IMPORTED", "GLOBAL")]
+    front_positional_arguments = ["<name>"]
+    options = [
+        "STATIC",
+        "SHARED",
+        "MODULE",
+        "EXCLUDE_FROM_ALL",
+        "OBJECT",
+        "IMPORTED",
+        "IMPORTED GLOBAL",
+        "UNKNOWN",
+    ]
+    one_value_keywords = ["ALIAS"]
+    multi_value_keywords = ["INTERFACE"]
+
+
+class AddSubdirectory(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["source_dir", "binary_dir"]
+    options = ["EXCLUDE_FROM_ALL", "SYSTEM"]
+
+
 class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<name>", "<command>"]
     options = ["COMMAND_EXPAND_LISTS"]
     one_value_keywords = ["NAME", "WORKING_DIRECTORY"]
     multi_value_keywords = ["COMMAND", "CONFIGURATIONS"]
@@ -70,6 +110,7 @@ class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
 
 
 class BuildCommand(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>"]
     one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME", "PARALLEL_LEVEL"]
 
 
@@ -105,7 +146,30 @@ class Export(MultipleSignatureCommandInvocationDumper):
     }
 
 
+class FtlkWrapUi(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["resultingLibraryName"]
+
+
+class GetSourceFileProperty(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<variable>", "<file>"]
+    back_positional_arguments = ["<property>"]
+    one_value_keywords = ["DIRECTORY", "TARGET_DIRECTORY"]
+
+
+class GetTargetProperty(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<VAR>", "target", "property"]
+
+
+class GetTestProperty(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<VAR>", "target", "property"]
+
+
+class IncludeDirectories(ArgumentAwareCommandInvocationDumper):
+    options = ["AFTER", "BEFORE", "SYSTEM"]
+
+
 class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["projectname", "location"]
     one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
 
 
@@ -233,11 +297,16 @@ class Install(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
     }
 
 
+class LinkDirectories(ArgumentAwareCommandInvocationDumper):
+    options = ["AFTER", "BEFORE"]
+
+
 class LinkLibraries(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["debug", "optimized", "general"]
 
 
 class LoadCache(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["pathToBuildDirectory"]
     one_value_keywords = ["READ_WITH_PREFIX"]
     multi_value_keywords = ["EXCLUDE", "INCLUDE_INTERNALS"]
 
@@ -249,44 +318,53 @@ class Project(ArgumentAwareCommandInvocationDumper):
 
 
 class SourceGroup(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<name>"]
     one_value_keywords = ["REGULAR_EXPRESSION", "TREE", "PREFIX"]
     multi_value_keywords = ["FILES"]
 
 
 class TargetCompileDefinitions(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetCompileFeatures(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetCompileOptions(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetIncludeDirectories(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     options = ["BEFORE", "SYSTEM", "AFTER"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetLinkDirectories(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetLinkOptions(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetPrecompileHeaders(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     one_value_keywords = ["REUSE_FROM"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
 
 
 class TargetSources(SectionAwareCommandInvocationDumper):
+    front_positional_arguments = ["<target>"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
     sections = {
         "INTERFACE": {
@@ -401,7 +479,7 @@ class TryRun(ArgumentAwareCommandInvocationDumper):
 class SetSourceFilesProperties(
     KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
 ):
-    multi_value_keywords = ["PROPERTIES"]
+    multi_value_keywords = ["PROPERTIES", "DIRECTORY", "TARGET_DIRECTORY"]
     keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
 
 
@@ -422,13 +500,23 @@ class SetTestsProperties(
 project_command_mapping = {
     "add_custom_command": AddCustomCommand,
     "add_custom_target": AddCustomTarget,
+    "add_dependencies": AddDependencies,
+    "add_executable": AddExecutable,
+    "add_library": AddLibrary,
+    "add_subdirectory": AddSubdirectory,
     "add_test": AddTest,
     "build_command": BuildCommand,
     "create_test_sourcelist": CreateTestSourcelist,
     "define_property": DefineProperty,
     "export": Export,
+    "fltk_wrap_ui": FtlkWrapUi,
+    "get_source_file_property": GetSourceFileProperty,
+    "get_target_property": GetTargetProperty,
+    "get_test_property": GetTestProperty,
+    "include_directories": IncludeDirectories,
     "include_external_msproject": IncludeExternalMsProject,
     "install": Install,
+    "link_directories": LinkDirectories,
     "link_libraries": LinkLibraries,
     "load_cache": LoadCache,
     "project": Project,
