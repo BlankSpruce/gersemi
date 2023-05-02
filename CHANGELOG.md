@@ -1,7 +1,11 @@
 # Changelog
 
+## [0.9.0] 2023-05-02
+### Added
+- Support for alternative style that favours list expansion for multi-value arguments (keyworded or standalone) through `--list-expansion=favour-expansion` command line argument or `list_expansion: favour-expansion` entry in `.gersemirc`. The explanation of the new style is available in the README. The original formatting style will be still the default one but it can be set explicitly through `--list-expansion=favour-inlining` or `list_expansion: favour-inlining`.
+
 ## [0.8.3] 2023-03-04
-###
+### Added
 - support for new keywords in native commands available in CMake 3.26
 
 ## [0.8.2] 2022-10-12
