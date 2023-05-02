@@ -13,6 +13,7 @@ from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
 class Block(ArgumentAwareCommandInvocationDumper):
+    inhibit_favour_expansion = True
     multi_value_keywords = ["SCOPE_FOR", "PROPAGATE"]
 
 
@@ -51,6 +52,11 @@ class CMakeLanguage(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper
         "SUPPORTED_METHODS",
         "EVAL CODE",
     ]
+
+
+class CMakeMinimumRequired(ArgumentAwareCommandInvocationDumper):
+    options = ["FATAL_ERROR"]
+    one_value_keywords = ["VERSION"]
 
 
 class CMakeParseArguments(MultipleSignatureCommandInvocationDumper):
@@ -535,9 +541,9 @@ class FindPackage(ArgumentAwareCommandInvocationDumper):
         "NO_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_INSTALL_PREFIX",
         "GLOBAL",
+        "REQUIRED",
     ]
     multi_value_keywords = [
-        "REQUIRED",
         "COMPONENTS",
         "OPTIONAL_COMPONENTS",
         "NAMES",
@@ -588,12 +594,14 @@ class FindProgram(ArgumentAwareCommandInvocationDumper):
 
 
 class Foreach(ArgumentAwareCommandInvocationDumper):
+    inhibit_favour_expansion = True
     front_positional_arguments = ["<loop_var>"]
     options = ["IN"]
     multi_value_keywords = ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"]
 
 
 class Function(ArgumentAwareCommandInvocationDumper):
+    inhibit_favour_expansion = True
     front_positional_arguments = ["<name>"]
 
 
@@ -680,9 +688,8 @@ class List(MultipleSignatureCommandInvocationDumper):
         "REMOVE_DUPLICATES": dict(front_positional_arguments=["<list>"]),
         "TRANSFORM": dict(
             front_positional_arguments=["<list>"],
-            one_value_keywords=["OUTPUT_VARIABLE"],
+            one_value_keywords=["OUTPUT_VARIABLE", "TRANSFORM"],
             multi_value_keywords=[
-                "TRANSFORM",
                 "APPEND",
                 "PREPEND",
                 "TOLOWER",
@@ -699,6 +706,7 @@ class List(MultipleSignatureCommandInvocationDumper):
 
 
 class Macro(ArgumentAwareCommandInvocationDumper):
+    inhibit_favour_expansion = True
     front_positional_arguments = ["<name>"]
 
 
@@ -707,8 +715,8 @@ class MarkAsAdvanced(ArgumentAwareCommandInvocationDumper):
 
 
 class Math(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["EXPR", "<variable>", "<expression>"]
     one_value_keywords = ["OUTPUT_FORMAT"]
-    multi_value_keywords = ["EXPR"]
 
 
 class Message(ArgumentAwareCommandInvocationDumper):
@@ -747,12 +755,25 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "APPEND", "APPEND_STRING"]
     one_value_keywords = ["DIRECTORY"]
     multi_value_keywords = ["TARGET", "SOURCE", "INSTALL", "TEST", "CACHE", "PROPERTY"]
+    keyword_formatters = {"PROPERTY": "_format_property"}
+
+    def _format_property(self, args):
+        result = self._try_to_format_into_single_line(
+            args, separator=" ", prefix="(", postfix=")"
+        )
+        if result is not None:
+            return result
+
+        name, *rest = args
+        with self.indented():
+            formatted_rest = "\n".join(map(self.visit, rest))
+        return f"{self.visit(name)}\n{formatted_rest}"
 
 
 class Set(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<variable>"]
-    options = ["PARENT_SCOPE"]
-    multi_value_keywords = ["CACHE"]
+    options = ["PARENT_SCOPE", "FORCE"]
+    one_value_keywords = ["CACHE"]
 
 
 class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
@@ -772,7 +793,6 @@ class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
         "FIND": dict(
             front_positional_arguments=["<string>", "<substring>", "<output variable>"],
             options=["REVERSE"],
-            multi_value_keywords=["FIND"],
         ),
         "REPLACE": dict(
             front_positional_arguments=[
@@ -903,6 +923,7 @@ scripting_command_mapping = {
     "block": Block,
     "cmake_host_system_information": CMakeHostSysteInformation,
     "cmake_language": CMakeLanguage,
+    "cmake_minimum_required": CMakeMinimumRequired,
     "cmake_parse_arguments": CMakeParseArguments,
     "cmake_path": CMakePath,
     "cmake_policy": CMakePolicy,

@@ -67,3 +67,9 @@ some_arg_to_foo_command
 another_arg_to_foo_command
 COMMAND BAZ
 )
+
+add_custom_command(
+OUTPUT FOOBAR
+COMMAND clang-format ARGS -length=1000 -sort-includes -style=some_kind_of_style -verbose -output-replacements-xml "multiline
+string" -some-flag with_argument -another
+)

@@ -1,11 +1,18 @@
 from itertools import chain
 from gersemi.base_dumper import BaseDumper
 from gersemi.command_invocation_dumper import CommandInvocationDumper
+from gersemi.configuration import ListExpansion
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
-    def __init__(self, width, custom_command_definitions):
+    def __init__(
+        self,
+        width,
+        custom_command_definitions,
+        list_expansion=ListExpansion.FavourInlining,
+    ):
         self.custom_command_definitions = custom_command_definitions
+        self.list_expansion = list_expansion
         super().__init__(width)
 
     def file(self, tree):

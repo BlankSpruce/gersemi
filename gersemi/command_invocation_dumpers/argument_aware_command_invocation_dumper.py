@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Sized, Tuple
+from typing import Dict, Iterator, Iterable, List, Sequence, Sized, Tuple
 from gersemi.ast_helpers import is_one_of_keywords, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Nodes
@@ -17,6 +17,10 @@ def is_empty(sequence: Sized) -> bool:
     return len(sequence) <= 0
 
 
+class PositionalArguments(list):
+    pass
+
+
 class KeywordSplitter:
     def __init__(self, options, one_value_keywords, multi_value_keywords):
         self.is_one_of_options = is_one_of_keywords(options)
@@ -28,7 +32,10 @@ class KeywordSplitter:
 
     def _flush_accumulators(self):
         each_comment_in_its_own_group = [[c] for c in pop_all(self.comment_accumulator)]
-        argument_group = pop_all(self.accumulator)
+        if isinstance(self.accumulator, PositionalArguments):
+            argument_group = PositionalArguments(pop_all(self.accumulator))
+        else:
+            argument_group = pop_all(self.accumulator)
         self.groups += [argument_group, *each_comment_in_its_own_group]
 
     def _append_option_group(self, argument):
@@ -37,15 +44,15 @@ class KeywordSplitter:
 
     def _append_one_value_group(self, argument, iterator):
         self._flush_accumulators()
-        next_argument = next(iterator, None)
-        if next_argument is None:
-            self.groups += [[argument]]
-        else:
-            self.groups += [[argument, next_argument]]
+        group = [argument]
+        for n in iterator:
+            group.append(n)
+            if not is_comment(n):
+                break
+        self.groups.append(group)
 
-    def split(self, arguments: Nodes) -> Tuple[Iterator[Nodes], Nodes]:
+    def split(self, arguments: Nodes) -> Iterator[Nodes]:
         iterator = iter(arguments)
-        tail: Optional[Nodes] = None
         for argument in iterator:
             if is_comment(argument):
                 self.comment_accumulator += [argument]
@@ -59,20 +66,16 @@ class KeywordSplitter:
             elif is_non_empty(self.accumulator):
                 self.accumulator += [*pop_all(self.comment_accumulator), argument]
             else:
-                tail = [argument, *iterator]
-                break
+                if not isinstance(self.accumulator, PositionalArguments):
+                    self.accumulator = PositionalArguments()
+                self.accumulator += [*pop_all(self.comment_accumulator), argument]
 
         self._flush_accumulators()
-        if tail is None:
-            tail = [*iterator]
-        return filter(is_non_empty, self.groups), tail
-
-
-class PositionalArguments(list):
-    pass
+        return filter(is_non_empty, self.groups)
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
+    inhibit_favour_expansion: bool = False
     front_positional_arguments: Sequence[str] = []
     back_positional_arguments: Sequence[str] = []
     options: Iterable[str] = []
@@ -95,11 +98,23 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             return result
 
         keyword, *values = group
+        keyword_as_value = keyword.children[0] if len(keyword.children) > 0 else None
+
+        can_be_inlined = (not self.favour_expansion) or (
+            self.favour_expansion
+            and keyword is not None
+            and keyword_as_value not in self.multi_value_keywords
+        )
+        if can_be_inlined:
+            with self.select_inlining_strategy():
+                result = self._try_to_format_into_single_line(group, separator=" ")
+                if result is not None:
+                    return result
+
         begin = self.visit(keyword)
         if len(values) == 0:
             return begin
 
-        keyword_as_value = keyword.children[0]
         with self.indented():
             formatter = getattr(
                 self,
@@ -143,7 +158,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             arguments[pivot:],
         )
 
-    def _split_by_keywords(self, arguments: Nodes) -> Tuple[Iterator[Nodes], Nodes]:
+    def _split_by_keywords(self, arguments: Nodes) -> Iterator[Nodes]:
         splitter = KeywordSplitter(
             self.options,
             self.one_value_keywords,
@@ -164,11 +179,9 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         else:
             back = []
         front, tail = self._separate_front(arguments)
-        keyworded_arguments, tail = self._split_by_keywords(tail)
-        if len(tail) > 0:
-            tail = [PositionalArguments(tail)]
+        keyworded_arguments = self._split_by_keywords(tail)
 
-        return [*front, *keyworded_arguments, *back, *tail]
+        return [*front, *keyworded_arguments, *back]
 
     def group_size(self, group):
         if isinstance(group, PositionalArguments):

@@ -128,8 +128,7 @@ file(
 file(GLOB foo LIST_DIRECTORIES true RELATIVE bar CONFIGURE_DEPENDS glob)
 
 file(
-    GLOB
-    long_variable_name_________________________
+    GLOB long_variable_name_________________________
     LIST_DIRECTORIES true
     RELATIVE bar
     CONFIGURE_DEPENDS
@@ -139,8 +138,7 @@ file(
 file(GLOB_RECURSE foo LIST_DIRECTORIES true RELATIVE bar CONFIGURE_DEPENDS glob)
 
 file(
-    GLOB_RECURSE
-    long_variable_name_________________________
+    GLOB_RECURSE long_variable_name_________________________
     LIST_DIRECTORIES true
     RELATIVE bar
     CONFIGURE_DEPENDS
@@ -174,9 +172,7 @@ file(
 file(COPY foo bar DESTINATION baz)
 
 file(
-    COPY
-    foo
-    bar
+    COPY foo bar
     DESTINATION baz
     FILE_PERMISSIONS qux
     DIRECTORY_PERMISSIONS qux
@@ -193,9 +189,7 @@ file(
 file(INSTALL foo bar DESTINATION baz)
 
 file(
-    INSTALL
-    foo
-    bar
+    INSTALL foo bar
     DESTINATION baz
     FILE_PERMISSIONS qux
     DIRECTORY_PERMISSIONS qux
@@ -231,8 +225,8 @@ file(CREATE_LINK foo bar RESULT result COPY_ON_ERROR SYMBOLIC)
 
 file(
     CREATE_LINK
-    long_filename__________________________
-    long_filename__________________________
+        long_filename__________________________
+        long_filename__________________________
     RESULT result
     COPY_ON_ERROR
     SYMBOLIC
@@ -266,9 +260,7 @@ file(
 file(DOWNLOAD url file)
 
 file(
-    DOWNLOAD
-    url
-    file
+    DOWNLOAD url file
     INACTIVITY_TIMEOUT 100
     LOG foo
     SHOW_PROGRESS
@@ -287,9 +279,7 @@ file(
 file(UPLOAD url file)
 
 file(
-    UPLOAD
-    url
-    file
+    UPLOAD url file
     INACTIVITY_TIMEOUT 100
     LOG foo
     SHOW_PROGRESS
@@ -306,8 +296,7 @@ file(LOCK foo)
 file(LOCK foo DIRECTORY RELEASE GUARD FUNCTION RESULT_VARIABLE bar TIMEOUT 100)
 
 file(
-    LOCK
-    long_filename__________________________
+    LOCK long_filename__________________________
     DIRECTORY
     RELEASE
     GUARD FUNCTION

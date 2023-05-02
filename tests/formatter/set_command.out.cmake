@@ -108,7 +108,8 @@ set(FOO
     item3
     item4
     item5
-    CACHE INTERNAL "short docstring"
+    CACHE INTERNAL
+    "short docstring"
 )
 
 # with long content and FORCE
@@ -118,16 +119,17 @@ set(FOO
     item3
     item4
     item5
-    CACHE INTERNAL "short docstring" FORCE
+    CACHE INTERNAL
+    "short docstring"
+    FORCE
 )
 
 # with long docstring
 set(FOO
     item1
-    CACHE
-        INTERNAL
-        "long                                                                                 docstring"
-        FORCE
+    CACHE INTERNAL
+    "long                                                                                 docstring"
+    FORCE
 )
 
 # with long content and long docstring
@@ -137,9 +139,8 @@ set(FOO
     item3
     item4
     item5
-    CACHE
-        INTERNAL
-        "long                                                                                 docstring"
+    CACHE INTERNAL
+    "long                                                                                 docstring"
 )
 
 # with long content, long docstring and FORCE
@@ -149,10 +150,9 @@ set(FOO
     item3
     item4
     item5
-    CACHE
-        INTERNAL
-        "long                                                                                 docstring"
-        FORCE
+    CACHE INTERNAL
+    "long                                                                                 docstring"
+    FORCE
 )
 
 # Set environment variable

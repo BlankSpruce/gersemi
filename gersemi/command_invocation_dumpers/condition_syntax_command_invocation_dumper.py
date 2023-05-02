@@ -2,11 +2,9 @@ from typing import List
 from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
 from gersemi.ast_helpers import contains_line_comment, is_one_of_keywords
+from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Nodes
 from gersemi.utils import advance
-from .argument_aware_command_invocation_dumper import (
-    ArgumentAwareCommandInvocationDumper,
-)
 
 
 class IsolateUnaryOperators(Transformer_InPlace):
@@ -97,29 +95,26 @@ class IsolateNotExpressions(IsolateUnaryOperators):
     unary_operators: List[str] = ["NOT"]
 
 
+class IsolateAndExpressions(IsolateUnaryOperators):
+    unary_operators: List[str] = ["AND"]
+
+
+class IsolateOrExpressions(IsolateUnaryOperators):
+    unary_operators: List[str] = ["OR"]
+
+
 def IsolateConditions() -> Transformer:
     return TransformerChain(
-        IsolateUnaryTests(), IsolateBinaryTests(), IsolateNotExpressions()
+        IsolateUnaryTests(),
+        IsolateBinaryTests(),
+        IsolateNotExpressions(),
+        IsolateAndExpressions(),
+        IsolateOrExpressions(),
     )
 
 
-class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["AND", "OR"]
-
-    def _format_group(self, group: Nodes) -> str:
-        result = self._try_to_format_into_single_line(group, separator=" ")
-        if result is not None:
-            return result
-
-        keyword, *values = group
-        begin = self.visit(keyword)
-        if len(values) == 0:
-            return begin
-
-        formatted_keys = "\n".join(self.visit(value) for value in values)
-        if contains_line_comment([keyword]):
-            return f"{begin}\n{self._indent(formatted_keys)}"
-        return f"{begin} {formatted_keys.lstrip()}"
+class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
+    inhibit_favour_expansion = True
 
     def unary_operation(self, tree):
         result = self._try_to_format_into_single_line(tree.children, separator=" ")
@@ -128,6 +123,12 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
 
         operation, arg = tree.children
         formatted_operation = self.visit(operation)
+
+        if (not contains_line_comment([operation])) and (
+            len(formatted_operation.strip()) < self.indent_size
+        ):
+            return f"{formatted_operation} {self.visit(arg).lstrip()}"
+
         with self.indented():
             formatted_arg = self.visit(arg)
         return f"{formatted_operation}\n{formatted_arg}"
@@ -147,6 +148,16 @@ class ConditionSyntaxCommandInvocationDumper(ArgumentAwareCommandInvocationDumpe
     def arguments(self, tree):
         preprocessed = IsolateConditions().transform(tree)
         return super().arguments(preprocessed)
+
+    def _preprocess_arguments(self, arguments):
+        return IsolateConditions().transform(arguments)
+
+    def _split_arguments(self, arguments):
+        if len(arguments) < 1:
+            return arguments
+
+        head, *tail = arguments
+        return [[head], tail]
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children

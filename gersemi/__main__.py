@@ -122,6 +122,17 @@ def create_argparser():
         "Commands from not deprecated CMake native modules don't have to be provided "
         "(check https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html)",
     )
+    configuration_group.add_argument(
+        "--list-expansion",
+        dest="list_expansion",
+        choices=["favour-inlining", "favour-expansion"],
+        help="Switch controls how code is expanded into multiple lines when it's not possible "
+        "to keep it formatted in one line. With 'favour-inlining' (default) the list of entities "
+        "will be formatted in such way that sublists might still be formatted into single line "
+        "as long as it's possible. With 'favour-expansion' the list of entities will be formatted "
+        "in such way that sublists will be completely expanded once expansion becomes necessary "
+        "at all.",
+    )
 
     parser.add_argument(
         dest="sources",

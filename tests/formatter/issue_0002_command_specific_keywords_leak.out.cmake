@@ -23,8 +23,7 @@ configure_package_config_file(
 )
 
 file(
-    GLOB
-    foo
+    GLOB foo
     long_globbing_pattern_________________________________________________________
 )
 

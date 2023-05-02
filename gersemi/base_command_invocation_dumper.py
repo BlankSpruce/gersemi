@@ -1,6 +1,7 @@
 from typing import List
 from gersemi.ast_helpers import contains_line_comment
 from gersemi.base_dumper import BaseDumper
+from gersemi.configuration import ListExpansion
 from gersemi.types import Nodes
 
 
@@ -27,23 +28,32 @@ class BaseCommandInvocationDumper(BaseDumper):
     def group_size(self, group):
         return len(group)
 
+    def _inlining_condition(self, arguments):
+        groups = self._split_arguments(arguments.children)
+        group_sizes = list(map(self.group_size, groups))
+        if (
+            self.list_expansion == ListExpansion.FavourExpansion
+            and not self.inhibit_favour_expansion
+        ):
+            return all(size < 2 for size in group_sizes)
+        return all(size <= 4 for size in group_sizes)
+
     def format_command(self, tree):
         identifier, arguments = tree.children
         arguments = self._preprocess_arguments(arguments)
         begin = f"{identifier}("
         end = ")"
-        groups = self._split_arguments(arguments.children)
-        group_sizes = list(map(self.group_size, groups))
-        if all(size <= 4 for size in group_sizes):
+        if self._inlining_condition(arguments):
             result = self._try_to_format_into_single_line(
-                arguments.children, separator=" ", prefix=begin, postfix=end
+                arguments.children, separator=" ", prefix=f"{identifier}(", postfix=")"
             )
             if result is not None:
                 return result
 
-        if len(begin) == self.indent_size:
-            return self.format_command_with_short_name(begin, arguments, end)
-        return self._format_command_with_long_name(begin, arguments, end)
+        with self.select_expansion_strategy():
+            if len(begin) == self.indent_size:
+                return self.format_command_with_short_name(begin, arguments, end)
+            return self._format_command_with_long_name(begin, arguments, end)
 
     def arguments(self, tree):
         return "\n".join(self.visit_children(tree))

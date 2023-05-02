@@ -162,6 +162,7 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
             not configuration.unsafe,
             configuration.line_length,
             custom_command_definitions,
+            configuration.list_expansion,
         )
         execute = partial(run_task, formatter=formatter, task=task)
 

@@ -45,3 +45,7 @@ set_property(GLOBAL PROPERTY BAR VALUE)
 
 set_property(GLOBAL PROPERTY LONG_PROPERTY_NAME_______________________________ VALUE1 VALUE2 VALUE3 VALUE4 VALUE5 VALUE6 VALUE7 VALUE8 VALUE9 VALUE10 VALUE11)
 endif()
+
+set_property(GLOBAL PROPERTY BAR_____________________________________________________________80 VALUE)
+
+set_property(GLOBAL PROPERTY BAR______________________________________________________________81 VALUE)

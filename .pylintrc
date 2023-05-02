@@ -21,4 +21,6 @@ disable=
     too-few-public-methods,
     too-many-ancestors,
 
-    unsubscriptable-object # false positives
+    unsubscriptable-object, # false positives
+
+    use-dict-literal

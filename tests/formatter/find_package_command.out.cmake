@@ -10,7 +10,9 @@ find_package(
     EXACT
     QUIET
     MODULE
-    REQUIRED foo bar
+    REQUIRED
+    foo
+    bar
     OPTIONAL_COMPONENTS foo bar
     NO_POLICY_SCOPE
 )
@@ -32,7 +34,9 @@ find_package(
     1.23
     EXACT
     QUIET
-    REQUIRED foo bar
+    REQUIRED
+    foo
+    bar
     OPTIONAL_COMPONENTS foo bar
     CONFIG
     NO_POLICY_SCOPE
@@ -85,8 +89,8 @@ find_package(
     QUIET
     MODULE
     REQUIRED
-        long_arg__________________________________________________
-        long_arg__________________________________________________
+    long_arg__________________________________________________
+    long_arg__________________________________________________
     OPTIONAL_COMPONENTS
         long_arg__________________________________________________
         long_arg__________________________________________________
@@ -115,8 +119,8 @@ find_package(
     EXACT
     QUIET
     REQUIRED
-        long_arg__________________________________________________
-        long_arg__________________________________________________
+    long_arg__________________________________________________
+    long_arg__________________________________________________
     OPTIONAL_COMPONENTS
         long_arg__________________________________________________
         long_arg__________________________________________________

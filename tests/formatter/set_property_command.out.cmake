@@ -30,17 +30,17 @@ set_property(
     GLOBAL
     PROPERTY
         BAZ
-        VALUE1
-        VALUE2
-        VALUE3
-        VALUE4
-        VALUE5
-        VALUE6
-        VALUE7
-        VALUE8
-        VALUE9
-        VALUE10
-        VALUE11
+            VALUE1
+            VALUE2
+            VALUE3
+            VALUE4
+            VALUE5
+            VALUE6
+            VALUE7
+            VALUE8
+            VALUE9
+            VALUE10
+            VALUE11
 )
 
 set_property(GLOBAL APPEND PROPERTY BAZ VALUE)
@@ -56,41 +56,41 @@ set_property(
     GLOBAL
     PROPERTY
         LONG_PROPERTY_NAME_______________________________
-        VALUE1
-        VALUE2
-        VALUE3
-        VALUE4
-        VALUE5
-        VALUE6
-        VALUE7
-        VALUE8
-        VALUE9
-        VALUE10
-        VALUE11
+            VALUE1
+            VALUE2
+            VALUE3
+            VALUE4
+            VALUE5
+            VALUE6
+            VALUE7
+            VALUE8
+            VALUE9
+            VALUE10
+            VALUE11
 )
 
 set_property(
     GLOBAL
     PROPERTY
         LONGER_PROPERTY_NAME_____________________________________________________
-        VALUE
+            VALUE
 )
 
 set_property(
     GLOBAL
     PROPERTY
         LONGER_PROPERTY_NAME_____________________________________________________
-        VALUE1
-        VALUE2
-        VALUE3
-        VALUE4
-        VALUE5
-        VALUE6
-        VALUE7
-        VALUE8
-        VALUE9
-        VALUE10
-        VALUE11
+            VALUE1
+            VALUE2
+            VALUE3
+            VALUE4
+            VALUE5
+            VALUE6
+            VALUE7
+            VALUE8
+            VALUE9
+            VALUE10
+            VALUE11
 )
 
 set_property(
@@ -109,17 +109,17 @@ set_property(
         longer_directory_name_________________________________________________
     PROPERTY
         BAR
-        VALUE1
-        VALUE2
-        VALUE3
-        VALUE4
-        VALUE5
-        VALUE6
-        VALUE7
-        VALUE8
-        VALUE9
-        VALUE10
-        VALUE11
+            VALUE1
+            VALUE2
+            VALUE3
+            VALUE4
+            VALUE5
+            VALUE6
+            VALUE7
+            VALUE8
+            VALUE9
+            VALUE10
+            VALUE11
 )
 
 set_property(
@@ -133,34 +133,6 @@ set_property(
         longer_directory_name_________________________________________________
     PROPERTY
         LONG_PROPERTY_NAME_______________________________
-        VALUE1
-        VALUE2
-        VALUE3
-        VALUE4
-        VALUE5
-        VALUE6
-        VALUE7
-        VALUE8
-        VALUE9
-        VALUE10
-        VALUE11
-)
-
-set_property(
-    DIRECTORY
-        longer_directory_name_________________________________________________
-    PROPERTY
-        LONGER_PROPERTY_NAME_____________________________________________________
-        VALUE
-)
-
-if(TRUE)
-    set_property(GLOBAL PROPERTY BAR VALUE)
-
-    set_property(
-        GLOBAL
-        PROPERTY
-            LONG_PROPERTY_NAME_______________________________
             VALUE1
             VALUE2
             VALUE3
@@ -172,5 +144,47 @@ if(TRUE)
             VALUE9
             VALUE10
             VALUE11
+)
+
+set_property(
+    DIRECTORY
+        longer_directory_name_________________________________________________
+    PROPERTY
+        LONGER_PROPERTY_NAME_____________________________________________________
+            VALUE
+)
+
+if(TRUE)
+    set_property(GLOBAL PROPERTY BAR VALUE)
+
+    set_property(
+        GLOBAL
+        PROPERTY
+            LONG_PROPERTY_NAME_______________________________
+                VALUE1
+                VALUE2
+                VALUE3
+                VALUE4
+                VALUE5
+                VALUE6
+                VALUE7
+                VALUE8
+                VALUE9
+                VALUE10
+                VALUE11
     )
 endif()
+
+set_property(
+    GLOBAL
+    PROPERTY
+        BAR_____________________________________________________________80
+            VALUE
+)
+
+set_property(
+    GLOBAL
+    PROPERTY
+        BAR______________________________________________________________81
+            VALUE
+)

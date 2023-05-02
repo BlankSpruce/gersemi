@@ -38,6 +38,8 @@ class ContainsLineComment(Interpreter):
 
     arguments = _visit
     commented_argument = _visit
+    unary_operation = _visit
+    binary_operation = _visit
 
 
 def contains_line_comment(nodes) -> bool:

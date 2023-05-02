@@ -29,6 +29,7 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
                 "DEPENDS",
                 "BYPRODUCTS",
                 "IMPLICIT_DEPENDS",
+                "OUTPUT",
             ],
         ),
         "TARGET": dict(
@@ -40,11 +41,14 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
                 "USES_TERMINAL",
                 "COMMAND_EXPAND_LISTS",
             ],
-            one_value_keywords=["TARGET", "WORKING_DIRECTORY", "COMMENT"],
+            one_value_keywords=["TARGET", "WORKING_DIRECTORY", "COMMENT", "TARGET"],
             multi_value_keywords=["COMMAND", "ARGS", "BYPRODUCTS"],
         ),
     }
-    keyword_formatters = {"COMMAND": "_format_command_line"}
+    keyword_formatters = {
+        "COMMAND": "_format_command_line",
+        "ARGS": "_format_command_line",
+    }
 
 
 class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
