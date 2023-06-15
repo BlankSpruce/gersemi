@@ -644,8 +644,9 @@ class BisonTarget(ArgumentAwareCommandInvocationDumper):
 
 
 class DoxygenAddDocs(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["targetName"]
     options = ["ALL", "USE_STAMP_FILE"]
-    one_value_keywords = ["WORKING_DIRECTORY", "COMMENT"]
+    one_value_keywords = ["WORKING_DIRECTORY", "COMMENT", "CONFIG_FILE"]
 
 
 class EnvModule(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):

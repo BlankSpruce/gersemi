@@ -65,6 +65,7 @@ add_subdirectory
 add_test
 aux_source_directory
 build_command
+cmake_file_api
 create_test_sourcelist
 define_property
 enable_language

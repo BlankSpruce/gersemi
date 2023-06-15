@@ -14,7 +14,13 @@ from .two_word_keyword_isolator import TwoWordKeywordIsolator
 class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "OUTPUT": dict(
-            options=["VERBATIM", "APPEND", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"],
+            options=[
+                "VERBATIM",
+                "APPEND",
+                "USES_TERMINAL",
+                "COMMAND_EXPAND_LISTS",
+                "DEPENDS_EXPLICIT_ONLY",
+            ],
             one_value_keywords=[
                 "MAIN_DEPENDENCY",
                 "WORKING_DIRECTORY",
@@ -116,6 +122,16 @@ class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
 class BuildCommand(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<variable>"]
     one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME", "PARALLEL_LEVEL"]
+
+
+class CMakeFileApi(MultipleSignatureCommandInvocationDumper):
+    customized_signatures = {
+        "QUERY": dict(
+            options=["QUERY"],
+            one_value_keywords=["API_VERSION"],
+            multi_value_keywords=["CODEMODEL", "CACHE", "CMAKEFILES", "TOOLCHAINS"],
+        ),
+    }
 
 
 class CreateTestSourcelist(ArgumentAwareCommandInvocationDumper):
@@ -510,6 +526,7 @@ project_command_mapping = {
     "add_subdirectory": AddSubdirectory,
     "add_test": AddTest,
     "build_command": BuildCommand,
+    "cmake_file_api": CMakeFileApi,
     "create_test_sourcelist": CreateTestSourcelist,
     "define_property": DefineProperty,
     "export": Export,
