@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.9.2] 2023-06-15
+### Changed
+- allow PyYAML version 6 as a dependency
+
 ## [0.9.1] 2023-06-15
 ### Added
 - support for new keywords in native commands available in CMake 3.27

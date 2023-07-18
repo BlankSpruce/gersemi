@@ -26,7 +26,7 @@ setup(
         "appdirs",
         "dataclasses",
         "lark>=1.0",
-        "pyyaml>=5,<6",
+        "pyyaml>=5,<7",
     ],
     extras_requires=["colorama>=0.4"],
     python_requires=">=3.6",

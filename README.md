@@ -68,7 +68,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.8.3
+  rev: 0.9.2
   hooks:
   - id: gersemi
 ```
