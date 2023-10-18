@@ -1,0 +1,5 @@
+poem(
+    LINES
+        "foo"
+        "bar"
+)

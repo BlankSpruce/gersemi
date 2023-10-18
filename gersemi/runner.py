@@ -8,7 +8,10 @@ import sys
 from typing import Callable, Dict, Iterable, Tuple
 from gersemi.cache import create_cache
 from gersemi.configuration import Configuration
-from gersemi.custom_command_definition_finder import find_custom_command_definitions
+from gersemi.custom_command_definition_finder import (
+    find_custom_command_definitions,
+    get_just_definitions,
+)
 from gersemi.formatter import create_formatter, Formatter
 from gersemi.mode import Mode
 from gersemi.parser import PARSER as parser
@@ -57,7 +60,7 @@ def find_custom_command_definitions_in_file_impl(filepath: Path) -> Dict[str, Ke
         return {}
 
     parse_tree = parser.parse(code)
-    return find_custom_command_definitions(parse_tree)
+    return find_custom_command_definitions(parse_tree, filepath)
 
 
 def find_custom_command_definitions_in_file(
@@ -66,10 +69,20 @@ def find_custom_command_definitions_in_file(
     return apply(find_custom_command_definitions_in_file_impl, filepath)
 
 
+def check_conflicting_definitions(definitions):
+    for name, info in definitions.items():
+        if len(info) > 1:
+            print_to_stderr(f"Warning: conflicting definitions for '{name}':")
+            places = sorted(where for _, where in info)
+            for index, where in enumerate(places):
+                kind = "(used)   " if index == 0 else "(ignored)"
+                print_to_stderr(f"{kind} {where}")
+
+
 def find_all_custom_command_definitions(
     paths: Iterable[Path], pool
 ) -> Dict[str, Keywords]:
-    result = {}
+    result: Dict = {}
 
     files = get_files(paths)
     find = find_custom_command_definitions_in_file
@@ -77,9 +90,16 @@ def find_all_custom_command_definitions(
     for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
         if isinstance(defs, Error):
             print_to_stderr(get_error_message(defs))
-        else:
-            result.update(defs)
-    return result
+            continue
+
+        for name, info in defs.items():
+            if name in result:
+                result[name].extend(info)
+            else:
+                result[name] = info
+
+    check_conflicting_definitions(result)
+    return get_just_definitions(result)
 
 
 def select_task(mode: Mode, configuration: Configuration):

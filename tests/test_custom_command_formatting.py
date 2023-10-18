@@ -1,5 +1,8 @@
 import pytest
-from gersemi.custom_command_definition_finder import find_custom_command_definitions
+from gersemi.custom_command_definition_finder import (
+    find_custom_command_definitions,
+    get_just_definitions,
+)
 from gersemi.dumper import Dumper
 
 
@@ -34,7 +37,7 @@ some_custom_command_without_keyworded_arguments(
 """
 
     parsed = parser_with_postprocessing.parse(given)
-    definitions = find_custom_command_definitions(parsed)
+    definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = Dumper(width=80, custom_command_definitions=definitions)
 
     formatted = dumper.visit(parsed)
@@ -71,7 +74,7 @@ some_custom_command_without_keyworded_arguments(long____________________________
 """
 
     parsed = parser_with_postprocessing.parse(given)
-    definitions = find_custom_command_definitions(parsed)
+    definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = Dumper(width=80, custom_command_definitions=definitions)
 
     formatted = dumper.visit(parsed)
@@ -104,7 +107,7 @@ endfunction()
 """
 
     parsed = parser_with_postprocessing.parse(given)
-    definitions = find_custom_command_definitions(parsed)
+    definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = Dumper(width=80, custom_command_definitions=definitions)
 
     formatted = dumper.visit(parsed)

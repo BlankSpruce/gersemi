@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.9.3] 2023-10-18
+### Fixed
+- warn about conflicting definitions for macros and functions, make usage of conflicting definitions consistent and deterministic (#11)
+
 ## [0.9.2] 2023-06-15
 ### Changed
 - allow PyYAML version 6 as a dependency

@@ -30,13 +30,14 @@ is_parse_argv = is_keyword("PARSE_ARGV")
 
 
 class CMakeInterpreter(Interpreter):
-    def __init__(self, stack=None):
+    def __init__(self, filepath, stack=None):
         self.stack = {} if stack is None else stack
         self.found_commands = {}
+        self.filepath = filepath
 
     @property
     def _inner_scope(self):
-        return type(self)(stack=self.stack.copy())
+        return type(self)(filepath=self.filepath, stack=self.stack.copy())
 
     def _eval_variables(self, arg):
         for name, value in self.stack.items():
@@ -85,6 +86,15 @@ class CMakeInterpreter(Interpreter):
             )
         return False
 
+    def _add_command(self, name, arguments):
+        key = name.lower()
+        if key not in self.found_commands:
+            self.found_commands[key] = []
+
+        self.found_commands[key].append(
+            (arguments, f"{self.filepath}:{name.line}:{name.column}")
+        )
+
     def block(self, tree):
         if self._should_definition_be_ignored(tree):
             return
@@ -98,9 +108,9 @@ class CMakeInterpreter(Interpreter):
 
         keywords, *_ = body
         if len(keywords) > 0:
-            self.found_commands[name.lower()] = positional_arguments, keywords[0]
+            self._add_command(name, (positional_arguments, keywords[0]))
         else:
-            self.found_commands[name.lower()] = positional_arguments, Keywords()
+            self._add_command(name, (positional_arguments, Keywords()))
 
     def block_body(self, tree):
         return [
@@ -134,6 +144,15 @@ class CMakeInterpreter(Interpreter):
     unquoted_argument = _extract_first
 
 
-def find_custom_command_definitions(tree):
+def find_custom_command_definitions(tree, filepath="---"):
     tree = DropIrrelevantElements(visit_tokens=True).transform(tree)
-    return CMakeInterpreter().visit(tree)
+    return CMakeInterpreter(filepath).visit(tree)
+
+
+def get_just_definitions(definitions):
+    result = {}
+    for name, info in definitions.items():
+        sorted_info = list(sorted(info, key=lambda item: item[1]))
+        arguments, _ = sorted_info[0]
+        result[name] = arguments
+    return result

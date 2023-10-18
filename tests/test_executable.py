@@ -3,6 +3,7 @@ from contextlib import contextmanager, ExitStack
 import filecmp
 import os
 from pathlib import Path
+import re
 import shutil
 from stat import S_IREAD, S_IRGRP, S_IROTH
 import subprocess
@@ -805,3 +806,51 @@ def test_cache_is_not_updated_when_input_is_from_stdin():
         inspector.assert_that_has_initialized_tables()
         assert len(inspector.get_files()) == 0
         assert len(inspector.get_formatted()) == 0
+
+
+def test_check_project_with_conflicting_command_definitions():
+    with temporary_dir_copy(case("conflicting_definitions")) as copy:
+        completed_process = gersemi("--check", copy, "--definitions", copy)
+        assert completed_process.returncode == 0
+        assert completed_process.stdout == ""
+        assert re.search(
+            f"""Warning: conflicting definitions for 'foo':
+\\(used\\)    .*foo1\\.cmake:1:10
+\\(ignored\\) .*foo2\\.cmake:1:10
+\\(ignored\\) .*foo2\\.cmake:5:10
+\\(ignored\\) .*foo2\\.cmake:9:10
+""",
+            completed_process.stderr,
+            re.MULTILINE,
+        )
+
+
+def test_format_file_with_conflicting_command_definitions():
+    with temporary_dir_copy(case("conflicting_definitions")) as copy:
+        completed_process = gersemi(
+            f"{copy}/CMakeLists.txt",
+            "--definitions",
+            copy,
+            "--list-expansion=favour-expansion",
+        )
+        assert completed_process.returncode == 0
+        assert (
+            completed_process.stdout
+            == """foo(ONE
+    TWO x
+    THREE
+        y
+        z
+)
+"""
+        )
+        assert re.search(
+            f"""Warning: conflicting definitions for 'foo':
+\\(used\\)    .*foo1\\.cmake:1:10
+\\(ignored\\) .*foo2\\.cmake:1:10
+\\(ignored\\) .*foo2\\.cmake:5:10
+\\(ignored\\) .*foo2\\.cmake:9:10
+""",
+            completed_process.stderr,
+            re.MULTILINE,
+        )
