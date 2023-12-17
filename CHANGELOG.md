@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.9.4] 2023-12-17
+### Added
+- support for new keywords in native commands available in CMake 3.28
+
 ## [0.9.3] 2023-10-18
 ### Fixed
 - warn about conflicting definitions for macros and functions, make usage of conflicting definitions consistent and deterministic (#11)

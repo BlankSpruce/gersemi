@@ -637,8 +637,16 @@ class GetFilenameComponent(ArgumentAwareCommandInvocationDumper):
 class GetProperty(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<variable>"]
     options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
-    one_value_keywords = ["TARGET", "INSTALL", "TEST", "CACHE", "PROPERTY"]
-    multi_value_keywords = ["DIRECTORY", "SOURCE"]
+    one_value_keywords = [
+        "TARGET",
+        "INSTALL",
+        "TEST",
+        "CACHE",
+        "PROPERTY",
+        "TARGET_DIRECTORY",
+        "SOURCE",
+    ]
+    multi_value_keywords = ["DIRECTORY"]
 
 
 class GetSourceFileProperty(ArgumentAwareCommandInvocationDumper):
@@ -753,8 +761,16 @@ class SeparateArguments(ArgumentAwareCommandInvocationDumper):
 
 class SetProperty(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "APPEND", "APPEND_STRING"]
-    one_value_keywords = ["DIRECTORY"]
-    multi_value_keywords = ["TARGET", "SOURCE", "INSTALL", "TEST", "CACHE", "PROPERTY"]
+    multi_value_keywords = [
+        "TARGET",
+        "SOURCE",
+        "INSTALL",
+        "TEST",
+        "CACHE",
+        "PROPERTY",
+        "TARGET_DIRECTORIES",
+        "DIRECTORY",
+    ]
     keyword_formatters = {"PROPERTY": "_format_property"}
 
     def _format_property(self, args):

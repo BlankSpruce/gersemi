@@ -55,3 +55,9 @@ get_property(FOO GLOBAL PROPERTY BAR)
 
 get_property(FOO GLOBAL PROPERTY LONG_PROPERTY_NAME_______________________________)
 endif()
+
+get_property(FOO SOURCE foo DIRECTORY qux__________________________________________________)
+
+get_property(FOO SOURCE foo TARGET_DIRECTORY qux__________________________________________________)
+
+get_property(FOO TEST foo DIRECTORY qux__________________________________________________)

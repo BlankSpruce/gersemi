@@ -27,6 +27,7 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
                 "COMMENT",
                 "DEPFILE",
                 "JOB_POOL",
+                "JOB_SERVER_AWARE",
             ],
             multi_value_keywords=[
                 "OUTPUT",
@@ -60,7 +61,12 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
 class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["Name", "ALL"]
     options = ["VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
-    one_value_keywords = ["WORKING_DIRECTORY", "COMMENT", "JOB_POOL"]
+    one_value_keywords = [
+        "WORKING_DIRECTORY",
+        "COMMENT",
+        "JOB_POOL",
+        "JOB_SERVER_AWARE",
+    ]
     multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
@@ -181,7 +187,8 @@ class GetTargetProperty(ArgumentAwareCommandInvocationDumper):
 
 
 class GetTestProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<VAR>", "target", "property"]
+    front_positional_arguments = ["test", "property"]
+    one_value_keywords = ["DIRECTORY"]
 
 
 class IncludeDirectories(ArgumentAwareCommandInvocationDumper):
@@ -513,6 +520,7 @@ class SetTargetProperties(
 class SetTestsProperties(
     KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
 ):
+    one_value_keywords = ["DIRECTORY"]
     multi_value_keywords = ["PROPERTIES"]
     keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
 

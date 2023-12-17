@@ -259,6 +259,7 @@ class ExternalProjectAdd(CommandLineFormatter, ArgumentAwareCommandInvocationDum
         # Build Step
         "BUILD_IN_SOURCE",
         "BUILD_ALWAYS",
+        "BUILD_JOB_SERVER_AWARE",
         # Install Step
         # Test Step
         "TEST_BEFORE_INSTALL",
@@ -375,7 +376,7 @@ class SetPackageProperties(ArgumentAwareCommandInvocationDumper):
 
 
 class FetchContentDeclare(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
-    options = ["SYSTEM", "OVERRIDE_FIND_PACKAGE"]
+    options = ["SYSTEM", "OVERRIDE_FIND_PACKAGE", "EXCLUDE_FROM_ALL"]
     one_value_keywords = [
         # Download Step
         "URL_HASH",
@@ -722,6 +723,11 @@ class PkgCheckModules(ArgumentAwareCommandInvocationDumper):
     ]
 
 
+class PkgGetVariable(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<resultVar>", "<moduleName>", "<varName>"]
+    multi_value_keywords = ["DEFINE_VARIABLES"]
+
+
 class PkgSearchModule(ArgumentAwareCommandInvocationDumper):
     options = [
         "REQUIRED",
@@ -844,6 +850,7 @@ module_command_mapping = {
     "matlab_add_unit_test": MatlabAddUnitTest,
     "matlab_add_mex": MatlabAddMex,
     "pkg_check_modules": PkgCheckModules,
+    "pkg_get_variable": PkgGetVariable,
     "pkg_search_module": PkgSearchModule,
     "protobuf_generate_cpp": ProtobufGenerateCpp,
     "qt4_wrap_cpp": Qt4WrapCpp,
