@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import fields
 import pathlib
 import sys
 from lark import __version__ as lark_version
@@ -6,6 +7,7 @@ from gersemi.configuration import (
     make_configuration,
     make_default_configuration_file,
     Configuration,
+    ListExpansion,
 )
 from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
@@ -37,28 +39,30 @@ def create_argparser():
         "--check",
         dest="check_formatting",
         action="store_true",
-        help=f"Check if files require reformatting. "
-        f"Return {SUCCESS} when there's nothing to reformat, "
-        f"return {FAIL} when some files would be reformatted",
+        help=f"""
+    Check if files require reformatting.
+    Return {SUCCESS} when there's nothing to reformat.
+    Return {FAIL} when some files would be reformatted.
+            """,
     )
     modes_group.add_argument(
         "-i",
         "--in-place",
         dest="in_place",
         action="store_true",
-        help="Format files in-place",
+        help="Format files in-place.",
     )
     modes_group.add_argument(
         "--diff",
         dest="show_diff",
         action="store_true",
-        help="Show diff on stdout for each formatted file instead",
+        help="Show diff on stdout for each formatted file instead.",
     )
     modes_group.add_argument(
         "--default-config",
         nargs=0,
         action=GenerateConfigurationFile,
-        help="Generate default .gersemirc configuration file",
+        help="Generate default .gersemirc configuration file.",
     )
     modes_group.add_argument(
         "--version",
@@ -75,13 +79,12 @@ def create_argparser():
         help="Show this help message and exit.",
     )
 
+    conf_doc: dict[str, str] = {
+        item.name: item.metadata["description"] for item in fields(Configuration)
+    }
+
     configuration_group = parser.add_argument_group(
-        title="configuration",
-        description="By default configuration is loaded from YAML formatted .gersemirc "
-        "file if it's available. "
-        "This file should be placed in one of the common parent directories of source files. "
-        "Arguments from command line can be used to override parts of that configuration "
-        "or supply them in absence of configuration file.",
+        title="configuration", description=Configuration.__doc__
     )
     configuration_group.add_argument(
         "-l",
@@ -89,26 +92,26 @@ def create_argparser():
         metavar="INTEGER",
         dest="line_length",
         type=int,
-        help=f"Maximum line length in characters [default: {Configuration().line_length}]",
+        help=f"{conf_doc['line_length']} [default: {Configuration.line_length}]",
     )
     configuration_group.add_argument(
         "--unsafe",
         dest="unsafe",
         action="store_true",
-        help="Skip default sanity checks",
+        help=conf_doc["unsafe"],
     )
     configuration_group.add_argument(
         "-q",
         "--quiet",
         dest="quiet",
         action="store_true",
-        help="Skip printing non-error messages to stderr",
+        help=conf_doc["quiet"],
     )
     configuration_group.add_argument(
         "--color",
         dest="color",
         action="store_true",
-        help="If --diff is selected showed diff is colorized",
+        help=conf_doc["color"],
     )
     configuration_group.add_argument(
         "--definitions",
@@ -117,21 +120,17 @@ def create_argparser():
         default=[],
         nargs="+",
         type=pathlib.Path,
-        help="Files or directories containing custom command definitions (functions or macros). "
-        "If only - is provided custom definitions, if there are any, are taken from stdin instead. "
-        "Commands from not deprecated CMake native modules don't have to be provided "
-        "(check https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html)",
+        help=conf_doc["definitions"],
     )
     configuration_group.add_argument(
         "--list-expansion",
         dest="list_expansion",
         choices=["favour-inlining", "favour-expansion"],
-        help="Switch controls how code is expanded into multiple lines when it's not possible "
-        "to keep it formatted in one line. With 'favour-inlining' (default) the list of entities "
-        "will be formatted in such way that sublists might still be formatted into single line "
-        "as long as it's possible. With 'favour-expansion' the list of entities will be formatted "
-        "in such way that sublists will be completely expanded once expansion becomes necessary "
-        "at all.",
+        help=f"""
+    {conf_doc['list_expansion']}
+    {" ".join(map(lambda attr: attr.description, ListExpansion))}
+    [default: {Configuration.list_expansion.value}]
+            """,
     )
 
     parser.add_argument(
@@ -139,8 +138,10 @@ def create_argparser():
         metavar="src",
         nargs="*",
         type=pathlib.Path,
-        help="File or directory to format. "
-        "If only - is provided input is taken from stdin instead",
+        help="""
+    File or directory to format.
+    If only `-` is provided, input is taken from stdin instead.
+            """,
     )
 
     return parser

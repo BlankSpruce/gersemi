@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "ListExpansion": {
+      "oneOf": [
+        {
+          "description": "With \"favour-inlining\" the list of entities will be formatted in such way that sublists might still be formatted into single line as long as it's possible.",
+          "enum": ["favour-inlining"],
+          "title": "Favour inlining"
+        },
+        {
+          "description": "With \"favour-expansion\" the list of entities will be formatted in such way that sublists will be completely expanded once expansion becomes necessary at all.",
+          "enum": ["favour-expansion"],
+          "title": "Favour expansion"
+        }
+      ],
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "properties": {
+    "color": {
+      "default": false,
+      "description": "If --diff is selected showed diff is colorized.",
+      "title": "Colorized diff",
+      "type": "boolean"
+    },
+    "definitions": {
+      "default": [],
+      "description": "Files or directories containing custom command definitions (functions or macros). If only - is provided custom definitions, if there are any, are taken from stdin instead. Commands from not deprecated CMake native modules don't have to be provided. See: https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html",
+      "items": { "format": "path", "type": "string" },
+      "title": "Definitions",
+      "type": "array"
+    },
+    "line_length": {
+      "default": 80,
+      "description": "Maximum line length in characters.",
+      "title": "Line length",
+      "type": "integer"
+    },
+    "list_expansion": {
+      "$ref": "#/$defs/ListExpansion",
+      "default": "favour-inlining",
+      "description": "Switch controls how code is expanded into multiple lines when it's not possible to keep it formatted in one line.",
+      "title": "List expansion"
+    },
+    "quiet": {
+      "default": false,
+      "description": "Skip printing non-error messages to stderr.",
+      "title": "Quiet",
+      "type": "boolean"
+    },
+    "unsafe": {
+      "default": false,
+      "description": "Skip default sanity checks.",
+      "title": "Unsafe",
+      "type": "boolean"
+    }
+  },
+  "title": "Configuration",
+  "type": "object"
+}

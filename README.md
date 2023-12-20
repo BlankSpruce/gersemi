@@ -7,13 +7,14 @@ A formatter to make your CMake code the real treasure.
 ## Installation
 
 You can install gersemi from PyPI:
-```
-$ pip3 install gersemi
+
+```shell
+pip3 install gersemi
 ```
 
 ## Usage
 
-```
+```plain
 usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGER]
                [--unsafe] [-q] [--color] [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}]
@@ -22,49 +23,51 @@ usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGE
 A formatter to make your CMake code the real treasure.
 
 positional arguments:
-  src                   File or directory to format. If only - is provided input is taken
-                        from stdin instead
+  src                   File or directory to format. If only `-` is provided, input is
+                        taken from stdin instead.
 
 modes:
-  -c, --check           Check if files require reformatting. Return 0 when there's nothing
-                        to reformat, return 1 when some files would be reformatted
-  -i, --in-place        Format files in-place
-  --diff                Show diff on stdout for each formatted file instead
-  --default-config      Generate default .gersemirc configuration file
+  -c, --check           Check if files require reformatting. Return 0 when there's
+                        nothing to reformat. Return 1 when some files would be
+                        reformatted.
+  -i, --in-place        Format files in-place.
+  --diff                Show diff on stdout for each formatted file instead.
+  --default-config      Generate default .gersemirc configuration file.
   --version             Show version.
   -h, --help            Show this help message and exit.
 
 configuration:
   By default configuration is loaded from YAML formatted .gersemirc file if it's
-  available. This file should be placed in one of the common parent directories of source
-  files. Arguments from command line can be used to override parts of that configuration
-  or supply them in absence of configuration file.
+  available. This file should be placed in one of the common parent directories of
+  source files. Arguments from command line can be used to override parts of that
+  configuration or supply them in absence of configuration file.
 
   -l INTEGER, --line-length INTEGER
-                        Maximum line length in characters [default: 80]
-  --unsafe              Skip default sanity checks
-  -q, --quiet           Skip printing non-error messages to stderr
-  --color               If --diff is selected showed diff is colorized
+                        Maximum line length in characters. [default: 80]
+  --unsafe              Skip default sanity checks.
+  -q, --quiet           Skip printing non-error messages to stderr.
+  --color               If --diff is selected showed diff is colorized.
   --definitions src [src ...]
                         Files or directories containing custom command definitions
-                        (functions or macros). If only - is provided custom definitions, if
-                        there are any, are taken from stdin instead. Commands from not
-                        deprecated CMake native modules don't have to be provided (check
-                        https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html)
+                        (functions or macros). If only - is provided custom definitions,
+                        if there are any, are taken from stdin instead. Commands from
+                        not deprecated CMake native modules don't have to be provided.
+                        See: https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html
   --list-expansion {favour-inlining,favour-expansion}
-                        Switch controls how code is expanded into multiple lines when it's
-                        not possible to keep it formatted in one line. With 'favour-
-                        inlining' (default) the list of entities will be formatted in such
-                        way that sublists might still be formatted into single line as long
-                        as it's possible. With 'favour-expansion' the list of entities will
-                        be formatted in such way that sublists will be completely expanded
-                        once expansion becomes necessary at all.
-
+                        Switch controls how code is expanded into multiple lines when
+                        it's not possible to keep it formatted in one line. With
+                        "favour-inlining" the list of entities will be formatted in such
+                        way that sublists might still be formatted into single line as
+                        long as it's possible. With "favour-expansion" the list of
+                        entities will be formatted in such way that sublists will be
+                        completely expanded once expansion becomes necessary at all.
+                        [default: favour-inlining]
 ```
 
 ### [pre-commit](https://pre-commit.com/) hook
 
 You can use gersemi with a pre-commit hook by adding the following to `.pre-commit-config.yaml` of your repository:
+
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi

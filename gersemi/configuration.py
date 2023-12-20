@@ -1,27 +1,115 @@
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from enum import Enum
 from hashlib import sha1
 from itertools import chain
 import os
 from pathlib import Path
+import textwrap
 from typing import Iterable, Optional
 import yaml
 
 
-class ListExpansion(Enum):
-    FavourInlining = "favour-inlining"
-    FavourExpansion = "favour-expansion"
+def doc(text: str) -> str:
+    return " ".join(textwrap.dedent(text).splitlines()).strip()
+
+
+class EnumWithMetadata(Enum):
+    def __new__(cls, data):
+        self = object.__new__(cls)
+        self._value_ = data["value"]
+        self.description = doc(data["description"])
+        self.title = data["title"]
+        return self
+
+
+class ListExpansion(EnumWithMetadata):
+    FavourInlining = dict(
+        value="favour-inlining",
+        description="""
+    With "favour-inlining" the list of entities will be formatted in such way that sublists
+    might still be formatted into single line as long as it's possible.
+        """,
+        title="Favour inlining",
+    )
+    FavourExpansion = dict(
+        value="favour-expansion",
+        description="""
+    With "favour-expansion" the list of entities will be formatted in such way that sublists
+    will be completely expanded once expansion becomes necessary at all.
+        """,
+        title="Favour expansion",
+    )
 
 
 @dataclass
 class Configuration:
-    line_length: int = 80
-    unsafe: bool = False
-    quiet: bool = False
-    color: bool = False
-    definitions: Iterable[Path] = tuple()
-    list_expansion: ListExpansion = ListExpansion.FavourInlining
+    """
+    By default configuration is loaded from YAML formatted .gersemirc file if it's available.
+    This file should be placed in one of the common parent directories of source files.
+    Arguments from command line can be used to override parts of that configuration or
+    supply them in absence of configuration file.
+    """
+
+    line_length: int = field(
+        default=80,
+        metadata=dict(
+            title="Line length",
+            description="Maximum line length in characters.",
+        ),
+    )
+
+    unsafe: bool = field(
+        default=False,
+        metadata=dict(
+            title="Unsafe",
+            description="Skip default sanity checks.",
+        ),
+    )
+
+    quiet: bool = field(
+        default=False,
+        metadata=dict(
+            title="Quiet",
+            description="Skip printing non-error messages to stderr.",
+        ),
+    )
+
+    color: bool = field(
+        default=False,
+        metadata=dict(
+            title="Colorized diff",
+            description="If --diff is selected showed diff is colorized.",
+        ),
+    )
+
+    definitions: Iterable[Path] = field(
+        default=tuple(),
+        metadata=dict(
+            title="Definitions",
+            description=doc(
+                """
+    Files or directories containing custom command definitions (functions or macros).
+    If only - is provided custom definitions, if there are any, are taken from stdin instead.
+    Commands from not deprecated CMake native modules don't have to be provided.
+    See: https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html
+                """
+            ),
+        ),
+    )
+
+    list_expansion: ListExpansion = field(
+        default=ListExpansion.FavourInlining,
+        metadata=dict(
+            title="List expansion",
+            description=doc(
+                """
+    Switch controls how code is expanded into multiple lines
+    when it's not possible to keep it formatted in one line.
+                """
+            ),
+        ),
+    )
 
     def summary(self):
         hasher = sha1()
@@ -33,7 +121,12 @@ def make_default_configuration_file():
     default_configuration = Configuration()
     d = asdict(default_configuration)
     d["list_expansion"] = d["list_expansion"].value
-    return yaml.safe_dump(d)
+    result = f"""
+# yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/master/gersemi/configuration.schema.json
+
+{yaml.safe_dump(d)}
+    """
+    return result.strip()
 
 
 def find_common_parent_path(paths: Iterable[Path]) -> Path:
