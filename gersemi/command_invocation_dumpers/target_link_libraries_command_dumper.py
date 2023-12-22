@@ -12,6 +12,9 @@ class IsolateConfigurationTypeAndItem(Transformer_InPlace):
 
     def arguments(self, children):
         new_children = []
+        if len(children) < 2:
+            return Tree("arguments", new_children)
+
         iterator = zip(children, children[1:])
         is_one_of_defined_keywords = is_one_of_keywords(self.keywords)
         for one_behind, current in iterator:

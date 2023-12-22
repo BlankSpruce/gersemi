@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.0] 2023-12-22
+### Added
+- configuration schema that can be used with yaml LSP server, see: [JSON Schema](https://json-schema.org/) and #12
+- yaml header linking to configuration schema in configuration produced by `--default-config`
+- support for Python 3.12
+
+### Fixed
+- meaningless but syntactically valid `target_link_libraries` with just library name won't crash gersemi
+
 ## [0.9.4] 2023-12-17
 ### Added
 - support for new keywords in native commands available in CMake 3.28
