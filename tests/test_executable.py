@@ -814,7 +814,7 @@ def test_check_project_with_conflicting_command_definitions():
         assert completed_process.returncode == 0
         assert completed_process.stdout == ""
         assert re.search(
-            f"""Warning: conflicting definitions for 'foo':
+            """Warning: conflicting definitions for 'foo':
 \\(used\\)    .*foo1\\.cmake:1:10
 \\(ignored\\) .*foo2\\.cmake:1:10
 \\(ignored\\) .*foo2\\.cmake:5:10
@@ -845,7 +845,7 @@ def test_format_file_with_conflicting_command_definitions():
 """
         )
         assert re.search(
-            f"""Warning: conflicting definitions for 'foo':
+            """Warning: conflicting definitions for 'foo':
 \\(used\\)    .*foo1\\.cmake:1:10
 \\(ignored\\) .*foo2\\.cmake:1:10
 \\(ignored\\) .*foo2\\.cmake:5:10
