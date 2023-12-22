@@ -1,4 +1,5 @@
-from typing import Dict, Iterator, Iterable, List, Sequence, Sized, Tuple
+from collections.abc import Sized
+from typing import Dict, Iterator, Iterable, List, Sequence, Tuple
 from gersemi.ast_helpers import is_one_of_keywords, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Nodes
