@@ -6,3 +6,4 @@ line_length: 80
 list_expansion: favour-inlining
 quiet: false
 unsafe: false
+workers: 8

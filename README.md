@@ -62,6 +62,9 @@ configuration:
                         entities will be formatted in such way that sublists will be
                         completely expanded once expansion becomes necessary at all.
                         [default: favour-inlining]
+  -w INTEGER, --workers INTEGER
+                        Number of workers used to format multiple files in parallel.
+                        [default: number of CPUs on this system]
 ```
 
 ### [pre-commit](https://pre-commit.com/) hook
@@ -71,7 +74,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.10.0
+  rev: 0.11.0
   hooks:
   - id: gersemi
 ```

@@ -132,6 +132,17 @@ def create_argparser():
     [default: {Configuration.list_expansion.value}]
             """,
     )
+    configuration_group.add_argument(
+        "-w",
+        "--workers",
+        metavar="INTEGER",
+        dest="workers",
+        type=int,
+        help=f"""
+    {conf_doc['workers']}
+    [default: number of CPUs on this system]
+        """,
+    )
 
     parser.add_argument(
         dest="sources",
@@ -171,7 +182,7 @@ def main():
     configuration = make_configuration(args)
     mode = get_mode(args)
 
-    sys.exit(run(mode, configuration, args.sources))
+    sys.exit(run(mode, configuration, args.workers, args.sources))
 
 
 if __name__ == "__main__":

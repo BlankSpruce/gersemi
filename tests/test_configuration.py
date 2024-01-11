@@ -6,7 +6,7 @@ import pytest
 from gersemi.configuration import (
     Configuration,
     ListExpansion,
-    make_default_configuration_file,
+    make_configuration_file,
 )
 
 try:
@@ -44,6 +44,10 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         }
         result["properties"]["list_expansion"]["$ref"] = "#/$defs/ListExpansion"
         del result["properties"]["list_expansion"]["allOf"]
+
+        del result["properties"]["workers"]["default"]
+        result["properties"]["workers"]["minimum"] = 1
+
         return result
 
 
@@ -65,4 +69,6 @@ def test_example_file_in_repository_is_consistent_with_configuration_definition(
     with open(example_path, "r", encoding="utf-8") as f:
         example = f.read().strip()
 
-    assert example == make_default_configuration_file()
+    configuration = Configuration()
+    configuration.workers = 8
+    assert example == make_configuration_file(configuration)

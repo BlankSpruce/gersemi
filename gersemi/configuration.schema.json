@@ -54,6 +54,12 @@
       "description": "Skip default sanity checks.",
       "title": "Unsafe",
       "type": "boolean"
+    },
+    "workers": {
+      "minimum": 1,
+      "description": "Number of workers used to format multiple files in parallel.",
+      "title": "Workers",
+      "type": "integer"
     }
   },
   "title": "Configuration",

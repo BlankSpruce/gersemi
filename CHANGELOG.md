@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.11.0] 2024-10-11
+### Added
+- Number of workers spawned for formatting multiple files can be changed with `-w/--workers`. By default it will be number of CPUs available in the system but limited to 60 for Windows machines due to [this](https://github.com/python/cpython/issues/89240).
+
 ## [0.10.0] 2023-12-22
 ### Added
 - configuration schema that can be used with yaml LSP server, see: [JSON Schema](https://json-schema.org/) and #12

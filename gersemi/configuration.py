@@ -3,11 +3,22 @@ from dataclasses import asdict, dataclass, field, fields
 from enum import Enum
 from hashlib import sha1
 from itertools import chain
+import multiprocessing
 import os
 from pathlib import Path
+import sys
 import textwrap
 from typing import Iterable, Optional
 import yaml
+
+
+def number_of_workers():
+    result = multiprocessing.cpu_count()
+    if sys.platform == "win32":
+        # https://bugs.python.org/issue26903
+        # https://github.com/python/cpython/issues/89240
+        return min(result, 60)
+    return result
 
 
 def doc(text: str) -> str:
@@ -111,15 +122,22 @@ class Configuration:
         ),
     )
 
+    workers: int = field(
+        default=number_of_workers(),
+        metadata=dict(
+            title="Workers",
+            description="Number of workers used to format multiple files in parallel.",
+        ),
+    )
+
     def summary(self):
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))
         return hasher.hexdigest()
 
 
-def make_default_configuration_file():
-    default_configuration = Configuration()
-    d = asdict(default_configuration)
+def make_configuration_file(configuration):
+    d = asdict(configuration)
     d["list_expansion"] = d["list_expansion"].value
     result = f"""
 # yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/master/gersemi/configuration.schema.json
@@ -127,6 +145,10 @@ def make_default_configuration_file():
 {yaml.safe_dump(d)}
     """
     return result.strip()
+
+
+def make_default_configuration_file():
+    return make_configuration_file(Configuration())
 
 
 def find_common_parent_path(paths: Iterable[Path]) -> Path:
@@ -168,6 +190,10 @@ def sanitize_list_expansion(list_expansion):
     )
 
 
+def sanitize_workers(workers):
+    return max(1, workers)
+
+
 def load_configuration_from_file(configuration_file_path: Path) -> Configuration:
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
@@ -178,6 +204,8 @@ def load_configuration_from_file(configuration_file_path: Path) -> Configuration
                 config["list_expansion"] = sanitize_list_expansion(
                     config["list_expansion"]
                 )
+            if "workers" in config:
+                config["workers"] = sanitize_workers(config["workers"])
         return Configuration(**config)
 
 
@@ -193,6 +221,8 @@ def override_configuration_with_args(
             value = normalize_definitions(value)
         if param == "list_expansion":
             value = sanitize_list_expansion(value)
+        if param == "workers":
+            value = sanitize_workers(value)
         setattr(configuration, param, value)
     return configuration
 

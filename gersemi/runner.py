@@ -137,10 +137,10 @@ def consume_task_result(task_result: TaskResult) -> Tuple[Path, int]:
     return path, return_code
 
 
-def create_pool(is_stdin_in_sources):
+def create_pool(is_stdin_in_sources, num_workers):
     if is_stdin_in_sources:
         return mp_dummy.Pool
-    return partial(mp.Pool, processes=mp.cpu_count())
+    return partial(mp.Pool, processes=num_workers)
 
 
 def filter_already_formatted_files(
@@ -163,12 +163,14 @@ def store_files_in_cache(
         cache.store_files(configuration_summary, files)
 
 
-def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
+def run(
+    mode: Mode, configuration: Configuration, num_workers: int, sources: Iterable[Path]
+):
     configuration_summary = configuration.summary()
     requested_files = get_files(sources)
     task = select_task(mode, configuration)
 
-    pool_cm = create_pool(Path("-") in requested_files)
+    pool_cm = create_pool(Path("-") in requested_files, num_workers)
     with create_cache() as cache, pool_cm() as pool:
         files_to_format = list(
             filter_already_formatted_files(
