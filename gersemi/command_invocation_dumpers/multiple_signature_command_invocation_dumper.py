@@ -7,10 +7,26 @@ from gersemi.types import Nodes
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
+from .section_aware_command_invocation_dumper import Sections
+
+
+def create_signature_patch(signature, old_class):
+    def get(key):
+        return signature.get(key, [])
+
+    class Impl(old_class):
+        front_positional_arguments = get("front_positional_arguments")
+        back_positional_arguments = get("back_positional_arguments")
+        options = get("options")
+        one_value_keywords = get("one_value_keywords")
+        multi_value_keywords = get("multi_value_keywords")
+        sections = get("sections")
+
+    return Impl
 
 
 class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
-    customized_signatures: Dict[Optional[str], Dict[str, Union[List, int]]] = {}
+    customized_signatures: Dict[Optional[str], Dict[str, Union[List, Sections]]] = {}
 
     @contextmanager
     def _update_signature_characteristics(self, signature):
@@ -18,23 +34,12 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
             yield
             return
 
+        old_class = type(self)
         try:
-
-            def get(key):
-                return signature.get(key, [])
-
-            self.front_positional_arguments = get("front_positional_arguments")
-            self.back_positional_arguments = get("back_positional_arguments")
-            self.options = get("options")
-            self.one_value_keywords = get("one_value_keywords")
-            self.multi_value_keywords = get("multi_value_keywords")
+            self.__class__ = create_signature_patch(signature, old_class)
             yield
         finally:
-            delattr(self, "front_positional_arguments")
-            delattr(self, "back_positional_arguments")
-            delattr(self, "options")
-            delattr(self, "one_value_keywords")
-            delattr(self, "multi_value_keywords")
+            self.__class__ = old_class
 
     def format_command(self, tree):
         _, arguments = tree.children

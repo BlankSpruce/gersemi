@@ -41,6 +41,9 @@ class IsolateUnaryTests(IsolateUnaryOperators):
         "IS_SYMLINK",
         "IS_ABSOLUTE",
         "DEFINED",
+        "IS_READABLE",
+        "IS_WRITABLE",
+        "IS_EXECUTABLE",
     ]
 
 

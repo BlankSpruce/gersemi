@@ -106,6 +106,8 @@ class CTestTest(ArgumentAwareCommandInvocationDumper):
         "STOP_TIME",
         "RETURN_VALUE",
         "CAPTURE_CMAKE_ERROR",
+        "INCLUDE_FROM_FILE",
+        "EXCLUDE_FROM_FILE",
     ]
 
 

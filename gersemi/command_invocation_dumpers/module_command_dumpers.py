@@ -507,6 +507,35 @@ class FortranCInterfaceHeader(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["SYMBOLS"]
 
 
+class GenerateAppleArchitectureSelectionFile(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<filename>"]
+    one_value_keywords = [
+        "INSTALL_DESTINATION",
+        "INSTALL_PREFIX",
+        "SINGLE_ARCHITECTURES",
+        "SINGLE_ARCHITECTURE_INCLUDE_FILES",
+        "UNIVERSAL_ARCHITECTURES",
+        "UNIVERSAL_INCLUDE_FILE",
+    ]
+
+
+class GenerateApplePlatformSelectionFile(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<filename>"]
+    one_value_keywords = [
+        "INSTALL_DESTINATION",
+        "INSTALL_PREFIX",
+        "MACOS_INCLUDE_FILE",
+        "IOS_INCLUDE_FILE",
+        "IOS_SIMULATOR_INCLUDE_FILE",
+        "TVOS_INCLUDE_FILE",
+        "TVOS_SIMULATOR_INCLUDE_FILE",
+        "WATCHOS_INCLUDE_FILE",
+        "WATCHOS_SIMULATOR_INCLUDE_FILE",
+        "VISIONOS_INCLUDE_FILE",
+        "VISIONOS_SIMULATOR_INCLUDE_FILE",
+    ]
+
+
 class GenerateExportHeader(ArgumentAwareCommandInvocationDumper):
     options = ["DEFINE_NO_DEPRECATED"]
     one_value_keywords = [
@@ -824,6 +853,8 @@ module_command_mapping = {
     "find_package_handle_standard_args": FindPackageHandleStandardArgs,
     "find_package_check_version": FindPackageCheckVersion,
     "fortrancinterface_header": FortranCInterfaceHeader,
+    "generate_apple_architecture_selection_file": GenerateAppleArchitectureSelectionFile,
+    "generate_apple_platform_selection_file": GenerateApplePlatformSelectionFile,
     "generate_export_header": GenerateExportHeader,
     "gtest_add_tests": GTestAddTests,
     "gtest_discover_tests": GTestDiscoverTests,

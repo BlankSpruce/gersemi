@@ -1,6 +1,10 @@
 # Changelog
 
-## [0.11.0] 2024-10-11
+## [0.11.1] 2024-03-04
+### Added
+- support for new keywords in native commands and new commands available in CMake 3.29
+
+## [0.11.0] 2024-01-11
 ### Added
 - Number of workers spawned for formatting multiple files can be changed with `-w/--workers`. By default it will be number of CPUs available in the system but limited to 60 for Windows machines due to [this](https://github.com/python/cpython/issues/89240).
 

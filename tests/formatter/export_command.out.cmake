@@ -93,3 +93,24 @@ export(
     ANDROID_MK
         long_arg____________________________________________________________
 )
+
+export(
+    SETUP foo
+    PACKAGE_DEPENDENCY bar ENABLED AUTO EXTRA_ARGS baz qux foo
+    TARGET bar XCFRAMEWORK_LOCATION baz
+)
+
+export(
+    SETUP foo__________________________________________________
+    PACKAGE_DEPENDENCY
+        bar__________________________________________________
+        ENABLED AUTO
+        EXTRA_ARGS
+            baz__________________________________________________
+            qux__________________________________________________
+            foo__________________________________________________
+    TARGET
+        bar__________________________________________________
+        XCFRAMEWORK_LOCATION
+            baz__________________________________________________
+)

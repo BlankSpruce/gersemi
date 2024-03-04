@@ -6,21 +6,32 @@ from .argument_aware_command_invocation_dumper import (
 )
 
 
+Sections = Dict[str, Dict[str, Iterable[str]]]
+
+
+def create_section_patch(section, old_class):
+    def get(key):
+        return section.get(key, [])
+
+    class Impl(old_class):
+        options = get("options")
+        one_value_keywords = get("one_value_keywords")
+        multi_value_keywords = get("multi_value_keywords")
+
+    return Impl
+
+
 class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
     sections: Dict[str, Dict[str, Iterable[str]]] = {}
 
     @contextmanager
     def _update_section_characteristics(self, keyword):
+        old_class = type(self)
         try:
-            section = self.sections[keyword]
-            self.options = section.get("options", [])
-            self.one_value_keywords = section.get("one_value_keywords", [])
-            self.multi_value_keywords = section.get("multi_value_keywords", [])
+            self.__class__ = create_section_patch(self.sections[keyword], old_class)
             yield
         finally:
-            delattr(self, "options")
-            delattr(self, "one_value_keywords")
-            delattr(self, "multi_value_keywords")
+            self.__class__ = old_class
 
     def _format_group(self, group) -> str:
         result = self._try_to_format_into_single_line(group, separator=" ")

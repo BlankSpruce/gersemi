@@ -160,15 +160,35 @@ class DefineProperty(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["BRIEF_DOCS", "FULL_DOCS"]
 
 
-class Export(MultipleSignatureCommandInvocationDumper):
+class Export(
+    SectionAwareCommandInvocationDumper, MultipleSignatureCommandInvocationDumper
+):
     customized_signatures = {
-        "EXPORT": dict(one_value_keywords=["EXPORT", "NAMESPACE", "FILE"]),
+        "EXPORT": dict(
+            options=["EXPORT_PACKAGE_DEPENDENCIES"],
+            one_value_keywords=["EXPORT", "NAMESPACE", "FILE"],
+        ),
         "TARGETS": dict(
             options=["APPEND", "EXPORT_LINK_INTERFACE_LIBRARIES"],
             one_value_keywords=["NAMESPACE", "FILE", "ANDROID_MK"],
             multi_value_keywords=["TARGETS"],
         ),
         "PACKAGE": dict(one_value_keywords=["PACKAGE"]),
+        "SETUP": dict(
+            one_value_keywords=["SETUP"],
+            multi_value_keywords=["PACKAGE_DEPENDENCY", "TARGET"],
+            sections=dict(
+                PACKAGE_DEPENDENCY=dict(
+                    front_positional_arguments=["<dep>"],
+                    one_value_keywords=["ENABLED"],
+                    multi_value_keywords=["EXTRA_ARGS"],
+                ),
+                TARGET=dict(
+                    front_positional_arguments=["<target>"],
+                    one_value_keywords=["XCFRAMEWORK_LOCATION"],
+                ),
+            ),
+        ),
     }
 
 
@@ -273,7 +293,11 @@ class Install(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
             one_value_keywords=["CODE", "COMPONENT"],
         ),
         "EXPORT": dict(
-            options=["EXPORT_LINK_INTERFACE_LIBRARIES", "EXCLUDE_FROM_ALL"],
+            options=[
+                "EXPORT_LINK_INTERFACE_LIBRARIES",
+                "EXCLUDE_FROM_ALL",
+                "EXPORT_PACKAGE_DEPENDENCIES",
+            ],
             one_value_keywords=[
                 "EXPORT",
                 "DESTINATION",

@@ -44,6 +44,7 @@ class CMakeLanguage(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper
         "GET_CALL",
         "SET_DEPENDENCY_PROVIDER",
         "GET_MESSAGE_LOG_LEVEL",
+        "EXIT",
     ]
     multi_value_keywords = [
         "DEFER",
