@@ -4,6 +4,9 @@
 ### Added
 - support for new keywords in native commands and new commands available in CMake 3.29
 
+### Fixed
+- fix issue with comments in `COMMAND` argument of `add_custom_command` (#16)
+
 ## [0.11.0] 2024-01-11
 ### Added
 - Number of workers spawned for formatting multiple files can be changed with `-w/--workers`. By default it will be number of CPUs available in the system but limited to 60 for Windows machines due to [this](https://github.com/python/cpython/issues/89240).
@@ -15,7 +18,7 @@
 - support for Python 3.12
 
 ### Fixed
-- meaningless but syntactically valid `target_link_libraries` with just library name won't crash gersemi
+- meaningless but syntactically valid `target_link_libraries` with just library name won't crash gersemi (#13)
 
 ## [0.9.4] 2023-12-17
 ### Added

@@ -39,7 +39,7 @@ def get_custom_command_definitions(configuration_definitions):
 def formatter_creator():
     def creator(config):
         return create_formatter(
-            do_sanity_check=False,
+            do_sanity_check=not config.get("unsafe", False),
             line_length=config.get("line_length", 80),
             custom_command_definitions=get_custom_command_definitions(
                 config.get("definitions", [])

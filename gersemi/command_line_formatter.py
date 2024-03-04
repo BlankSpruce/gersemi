@@ -1,4 +1,4 @@
-from gersemi.ast_helpers import is_line_comment
+from gersemi.ast_helpers import is_line_comment, is_commented_argument
 from gersemi.base_dumper import BaseDumper
 
 
@@ -11,6 +11,7 @@ class CommandLineFormatter(BaseDumper):
         )
 
     def _format_command_line(self, args):
+        force_next_line = False
         head, *tail = args
         lines = [self.visit(head)]
         for arg in tail:
@@ -21,8 +22,13 @@ class CommandLineFormatter(BaseDumper):
             with self.not_indented():
                 formatted_arg = self.visit(arg)
             updated_line = f"{lines[-1]} {formatted_arg}"
-            if self._should_start_new_line(updated_line, lines[-1]):
+            if force_next_line or self._should_start_new_line(updated_line, lines[-1]):
+                force_next_line = False
                 lines += [self.visit(arg)]
             else:
                 lines[-1] = updated_line
+                if is_commented_argument(arg):
+                    print(arg)
+                    force_next_line = True
+
         return "\n".join(lines)
