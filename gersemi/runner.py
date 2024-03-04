@@ -106,12 +106,12 @@ def select_task(mode: Mode, configuration: Configuration):
     return {
         Mode.ForwardToStdout: lambda _: forward_to_stdout,
         Mode.RewriteInPlace: lambda _: rewrite_in_place,
-        Mode.CheckFormatting: lambda config: quiet_check_formatting
-        if config.quiet
-        else check_formatting,
-        Mode.ShowDiff: lambda config: show_colorized_diff
-        if config.color
-        else show_diff,
+        Mode.CheckFormatting: lambda config: (
+            quiet_check_formatting if config.quiet else check_formatting
+        ),
+        Mode.ShowDiff: lambda config: (
+            show_colorized_diff if config.color else show_diff
+        ),
     }[mode](configuration)
 
 

@@ -4,6 +4,7 @@ from lark import Tree
 class Transformer:
     def __init__(self, visit_tokens: bool = ...):
         "docstring"
+
     def visit(self, tree: Tree): ...
     def __mul__(self, other: TransformerChain) -> TransformerChain: ...
 
