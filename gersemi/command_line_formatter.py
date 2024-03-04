@@ -28,7 +28,6 @@ class CommandLineFormatter(BaseDumper):
             else:
                 lines[-1] = updated_line
                 if is_commented_argument(arg):
-                    print(arg)
                     force_next_line = True
 
         return "\n".join(lines)
