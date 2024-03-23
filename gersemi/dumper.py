@@ -8,12 +8,13 @@ class Dumper(CommandInvocationDumper, BaseDumper):
     def __init__(
         self,
         width,
+        indent_size,
         custom_command_definitions,
         list_expansion=ListExpansion.FavourInlining,
     ):
         self.custom_command_definitions = custom_command_definitions
         self.list_expansion = list_expansion
-        super().__init__(width)
+        super().__init__(width, indent_size)
 
     def file(self, tree):
         result = self.__default__(tree)

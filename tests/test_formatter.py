@@ -4,16 +4,27 @@ from gersemi.sanity_checker import check_code_equivalence
 from .tests_generator import generate_input_output_tests
 
 
+def preprocess(text):
+    return (
+        text.replace("⟶", "\\⟶")
+        .replace("·", "\\·")
+        .replace("\t", "⟶")
+        .replace(" ", "·")
+    )
+
+
 def test_formatter(formatter_creator, case):
+    p = preprocess
     formatter = formatter_creator(case.config)
-    assert formatter.format(case.given) == case.expected
+    assert p(formatter.format(case.given)) == p(case.expected)
 
 
 def test_formatter_idempotence(formatter_creator, case):
+    p = preprocess
     formatter = formatter_creator(case.config)
     formatted_once = formatter.format(case.given)
     formatted_twice = formatter.format(formatted_once)
-    assert formatted_once == formatted_twice
+    assert p(formatted_once) == p(formatted_twice)
 
 
 def test_abstract_syntax_tree_equivalence(parser, parser_with_simple_grammar, case):

@@ -183,6 +183,7 @@ def run(
         formatter = create_formatter(
             not configuration.unsafe,
             configuration.line_length,
+            configuration.indent,
             custom_command_definitions,
             configuration.list_expansion,
         )

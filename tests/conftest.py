@@ -1,7 +1,7 @@
 import os
 import pathlib
 import pytest
-from gersemi.configuration import ListExpansion
+from gersemi.configuration import indent_type, ListExpansion
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.formatter import create_formatter
 from gersemi.runner import find_all_custom_command_definitions
@@ -41,6 +41,7 @@ def formatter_creator():
         return create_formatter(
             do_sanity_check=not config.get("unsafe", False),
             line_length=config.get("line_length", 80),
+            indent=indent_type(config.get("indent", 4)),
             custom_command_definitions=get_custom_command_definitions(
                 config.get("definitions", [])
             ),

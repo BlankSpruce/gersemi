@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import sys
 import textwrap
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 import yaml
 
 
@@ -34,6 +34,24 @@ class EnumWithMetadata(Enum):
         return self
 
 
+class Tabs(EnumWithMetadata):
+    Tabs = dict(
+        value="tabs",
+        description="Use tabs to indent the code.",
+        title="Tab indent",
+    )
+
+
+Spaces = int
+Indent = Union[Spaces, Tabs]
+
+
+def indent_type(thing) -> Indent:
+    if thing == Tabs.Tabs.value:
+        return Tabs.Tabs
+    return int(thing)
+
+
 class ListExpansion(EnumWithMetadata):
     FavourInlining = dict(
         value="favour-inlining",
@@ -54,7 +72,7 @@ class ListExpansion(EnumWithMetadata):
 
 
 @dataclass
-class Configuration:
+class Configuration:  # pylint: disable=too-many-instance-attributes
     """
     By default configuration is loaded from YAML formatted .gersemirc file if it's available.
     This file should be placed in one of the common parent directories of source files.
@@ -67,6 +85,14 @@ class Configuration:
         metadata=dict(
             title="Line length",
             description="Maximum line length in characters.",
+        ),
+    )
+
+    indent: Indent = field(
+        default=4,
+        metadata=dict(
+            title="Indent",
+            description="Number of spaces used to indent or 'tabs' for indenting with tabs",
         ),
     )
 
@@ -206,6 +232,8 @@ def load_configuration_from_file(configuration_file_path: Path) -> Configuration
                 )
             if "workers" in config:
                 config["workers"] = sanitize_workers(config["workers"])
+            if "indent" in config:
+                config["indent"] = indent_type(config["indent"])
         return Configuration(**config)
 
 

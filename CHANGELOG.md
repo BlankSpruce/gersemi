@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.12.0] 2024-03-23
+### Added
+- Support for different kinds of indentation, either specific number of spaces or tabs through `--indent` argument (examples: `--indent=2` or `--indent=tabs`) or `indent` entry in `.gersemirc` (examples: `indent: 2` or `indent: tabs`) (#15)
+
 ## [0.11.1] 2024-03-04
 ### Added
 - support for new keywords in native commands and new commands available in CMake 3.29

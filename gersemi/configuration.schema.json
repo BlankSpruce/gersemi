@@ -14,6 +14,16 @@
         }
       ],
       "type": "string"
+    },
+    "Tabs": {
+      "oneOf": [
+        {
+          "description": "Use tabs to indent the code.",
+          "enum": ["tabs"],
+          "title": "Tab indent"
+        }
+      ],
+      "type": "string"
     }
   },
   "$schema": "https://json-schema.org/draft-07/schema",
@@ -27,9 +37,21 @@
     "definitions": {
       "default": [],
       "description": "Files or directories containing custom command definitions (functions or macros). If only - is provided custom definitions, if there are any, are taken from stdin instead. Commands from not deprecated CMake native modules don't have to be provided. See: https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html",
-      "items": { "format": "path", "type": "string" },
+      "items": {"format": "path", "type": "string"},
       "title": "Definitions",
       "type": "array"
+    },
+    "indent": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {"$ref": "#/$defs/Tabs"}
+      ],
+      "default": 4,
+      "description": "Number of spaces used to indent or 'tabs' for indenting with tabs",
+      "title": "Indent"
     },
     "line_length": {
       "default": 80,
@@ -38,7 +60,7 @@
       "type": "integer"
     },
     "list_expansion": {
-      "$ref": "#/$defs/ListExpansion",
+      "allOf": [{"$ref": "#/$defs/ListExpansion"}],
       "default": "favour-inlining",
       "description": "Switch controls how code is expanded into multiple lines when it's not possible to keep it formatted in one line.",
       "title": "List expansion"

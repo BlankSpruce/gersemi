@@ -4,22 +4,33 @@ from typing import Optional
 from lark import Tree
 from lark.visitors import Interpreter
 from gersemi.ast_helpers import contains_line_comment
-from gersemi.configuration import ListExpansion
+from gersemi.configuration import Indent, ListExpansion, Tabs
 from gersemi.types import Nodes
 
 
+def get_indent(indent_type: Indent) -> str:
+    if isinstance(indent_type, Tabs):
+        return "\t"
+    return " " * indent_type
+
+
 class BaseDumper(Interpreter):
-    def __init__(self, width, alignment=0):
+    def __init__(self, width, indent_type):
         self.width = width
-        self.indent_size = 4
-        self.alignment = alignment
+        self.indent_type = indent_type
+        self._indent_symbol = get_indent(self.indent_type)
+        self.indent_level = 0
         self.favour_expansion = False
 
     def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))
 
+    @property
+    def indent_symbol(self):
+        return self._indent_symbol * self.indent_level
+
     def _indent(self, text: str):
-        return indent(text, " " * self.alignment)
+        return indent(text, self.indent_symbol)
 
     def _try_to_format_into_single_line(
         self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
@@ -38,19 +49,19 @@ class BaseDumper(Interpreter):
         return None
 
     @contextmanager
-    def aligned_to(self, alignment):
-        old_alignment = self.alignment
+    def with_indent_level(self, indent_level):
+        old_indent_level = self.indent_level
         try:
-            self.alignment = alignment
+            self.indent_level = indent_level
             yield self
         finally:
-            self.alignment = old_alignment
+            self.indent_level = old_indent_level
 
     def indented(self):
-        return self.aligned_to(self.alignment + self.indent_size)
+        return self.with_indent_level(self.indent_level + 1)
 
     def not_indented(self):
-        return self.aligned_to(0)
+        return self.with_indent_level(0)
 
     @contextmanager
     def select_expansion_strategy(self):

@@ -30,7 +30,9 @@ custom_command_properly_formatted = """seven_samurai(
 
 
 def create_dumper(custom_command_definitions):
-    return Dumper(width=80, custom_command_definitions=custom_command_definitions)
+    return Dumper(
+        width=80, indent_size=4, custom_command_definitions=custom_command_definitions
+    )
 
 
 def test_custom_command_generated_dumper(

@@ -1,7 +1,7 @@
 from typing import List
 from gersemi.ast_helpers import contains_line_comment
 from gersemi.base_dumper import BaseDumper
-from gersemi.configuration import ListExpansion
+from gersemi.configuration import ListExpansion, Spaces
 from gersemi.types import Nodes
 
 
@@ -51,7 +51,7 @@ class BaseCommandInvocationDumper(BaseDumper):
                 return result
 
         with self.select_expansion_strategy():
-            if len(begin) == self.indent_size:
+            if isinstance(self.indent_type, Spaces) and len(begin) == self.indent_type:
                 return self.format_command_with_short_name(begin, arguments, end)
             return self._format_command_with_long_name(begin, arguments, end)
 
@@ -81,13 +81,13 @@ class BaseCommandInvocationDumper(BaseDumper):
         return f"{begin}{formatted_arguments}\n{end}"
 
     def bracket_comment(self, tree):
-        return " " * self.alignment + "#" + self.__default__(tree)
+        return self.indent_symbol + "#" + self.__default__(tree)
 
     def bracket_argument(self, tree):
-        return " " * self.alignment + self.__default__(tree)
+        return self.indent_symbol + self.__default__(tree)
 
     def quoted_argument(self, tree):
-        return " " * self.alignment + f'"{self.__default__(tree)}"'
+        return self.indent_symbol + f'"{self.__default__(tree)}"'
 
     def unquoted_argument(self, tree):
         return self._indent(self.__default__(tree))

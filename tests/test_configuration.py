@@ -7,6 +7,7 @@ from gersemi.configuration import (
     Configuration,
     ListExpansion,
     make_configuration_file,
+    Tabs,
 )
 
 try:
@@ -21,7 +22,7 @@ except ImportError:
         pass
 
 
-def get_list_expansion_representation():
+def get_representation(represented_type):
     return {
         "oneOf": [
             {
@@ -29,7 +30,7 @@ def get_list_expansion_representation():
                 "enum": [item.value],
                 "title": item.title,
             }
-            for item in ListExpansion
+            for item in represented_type
         ],
         "type": "string",
     }
@@ -39,11 +40,10 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
     def generate(self, schema, mode=None):
         result = super().generate(schema, mode=mode)
         result["$schema"] = "https://json-schema.org/draft-07/schema"
-        result["$defs"] = {
-            "ListExpansion": get_list_expansion_representation(),
-        }
-        result["properties"]["list_expansion"]["$ref"] = "#/$defs/ListExpansion"
-        del result["properties"]["list_expansion"]["allOf"]
+        result["$defs"]["ListExpansion"] = get_representation(ListExpansion)
+        result["$defs"]["Tabs"] = get_representation(Tabs)
+
+        result["properties"]["indent"]["anyOf"][0]["minimum"] = 1
 
         del result["properties"]["workers"]["default"]
         result["properties"]["workers"]["minimum"] = 1

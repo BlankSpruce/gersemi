@@ -8,6 +8,7 @@ from gersemi.configuration import (
     make_default_configuration_file,
     Configuration,
     ListExpansion,
+    indent_type,
 )
 from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
@@ -93,6 +94,13 @@ def create_argparser():
         dest="line_length",
         type=int,
         help=f"{conf_doc['line_length']} [default: {Configuration.line_length}]",
+    )
+    configuration_group.add_argument(
+        "--indent",
+        metavar="(INTEGER | tabs)",
+        dest="indent",
+        type=indent_type,
+        help=f"{conf_doc['indent']} [default: {Configuration.indent}]",
     )
     configuration_group.add_argument(
         "--unsafe",

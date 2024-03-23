@@ -3,6 +3,7 @@ from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
 from gersemi.ast_helpers import contains_line_comment, is_one_of_keywords
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.configuration import Spaces
 from gersemi.types import Nodes
 from gersemi.utils import advance
 
@@ -127,8 +128,10 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
         operation, arg = tree.children
         formatted_operation = self.visit(operation)
 
-        if (not contains_line_comment([operation])) and (
-            len(formatted_operation.strip()) < self.indent_size
+        if (
+            (not contains_line_comment([operation]))
+            and isinstance(self.indent_type, Spaces)
+            and (len(formatted_operation.strip()) < self.indent_type)
         ):
             return f"{formatted_operation} {self.visit(arg).lstrip()}"
 

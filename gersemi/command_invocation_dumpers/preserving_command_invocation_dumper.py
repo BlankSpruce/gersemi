@@ -19,7 +19,7 @@ def flat_split(pattern, string):
 
 
 def split_by_line_comment(string):
-    return flat_split(LINE_COMMENT_BEGIN, string)
+    return flat_split(r"\s*" + LINE_COMMENT_BEGIN, string)
 
 
 def split_by_bracket_arguments(string):
@@ -39,16 +39,17 @@ def split_into_segments(string):
     return [item for segment in result for item in segment if item != ""]
 
 
-def indent_segment(segment, indent_size):
-    prefix = " " * indent_size
+def indent_segment(segment, indent_symbol):
     if segment[:1] in ["[", '"']:
-        return f"{prefix}{segment}"
-    return indent(segment, prefix)
+        return segment
+    return indent(segment, indent_symbol, lambda s: not s.startswith("\n"))
 
 
-def safe_indent(string, indent_size):
+def safe_indent(string, indent_symbol):
     segments = split_into_segments(string)
-    return "".join(map(lambda segment: indent_segment(segment, indent_size), segments))
+    return "".join(
+        map(lambda segment: indent_segment(segment, indent_symbol), segments)
+    )
 
 
 def strip_empty_lines_from_edges(s):
@@ -75,6 +76,16 @@ def find_line_comment_begin(s):
 
 def ends_with_line_comment(s):
     return find_line_comment_begin(s) != -1
+
+
+def remove_common_beginning(s, other):
+    index = 0
+    for left, right in zip(s, other):
+        if left != right:
+            break
+        index += 1
+
+    return s[index:]
 
 
 class PreservingCommandInvocationDumper(BaseDumper):
@@ -105,11 +116,13 @@ class PreservingCommandInvocationDumper(BaseDumper):
         if result is not None:
             return result
 
+        indent_symbol = remove_common_beginning(self.indent_symbol, indentation)
         body = safe_indent(
-            self._preprocess_content(content), self.alignment - len(indentation)
+            self._preprocess_content(content),
+            indent_symbol,
         )
         if not content.startswith("\n"):
-            body = body.lstrip(" ")
+            body = body.lstrip(indent_symbol)
 
         if "\n" not in body:
             end = ")"
