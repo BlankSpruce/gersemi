@@ -11,9 +11,9 @@ class CommandLineFormatter(BaseDumper):
         )
 
     def _format_command_line(self, args):
-        force_next_line = False
         head, *tail = args
         lines = [self.visit(head)]
+        force_next_line = is_commented_argument(head)
         for arg in tail:
             if is_line_comment(arg):
                 lines += [self.visit(arg)]
