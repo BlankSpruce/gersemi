@@ -220,7 +220,7 @@ class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
 
 
-_Install_artifact_kinds = [
+_Install_TARGETS_kinds = [
     "ARCHIVE",
     "LIBRARY",
     "RUNTIME",
@@ -233,23 +233,14 @@ _Install_artifact_kinds = [
     "FILE_SET.*",
     "CXX_MODULES_BMI",
 ]
-_Install_artifact_group = dict(
-    options=[
-        "OPTIONAL",
-        "EXCLUDE_FROM_ALL",
-        "NAMELINK_ONLY",
-        "NAMELINK_SKIP",
-    ],
-    one_value_keywords=[
-        "DESTINATION",
-        "COMPONENT",
-        "NAMELINK_COMPONENT",
-    ],
-    multi_value_keywords=[
-        "PERMISSIONS",
-        "CONFIGURATIONS",
-    ],
-)
+_Install_IMPORTED_RUNTIME_ARTIFACTS_kinds = [
+    "LIBRARY",
+    "RUNTIME",
+    "FRAMEWORK",
+    "BUNDLE",
+]
+_Install_DIRECTORY_kinds = ["PATTERN.*", "REGEX.*"]
+_Install_RUNTIME_DEPENDENCY_SET_kinds = ["LIBRARY", "RUNTIME", "FRAMEWORK"]
 
 
 class Install(
@@ -257,13 +248,31 @@ class Install(
     SectionAwareCommandInvocationDumper,
     MultipleSignatureCommandInvocationDumper,
 ):
-    two_words_keywords = [("INCLUDES", "DESTINATION"), ("FILE_SET", AnyMatcher())]
+    two_words_keywords = [
+        ("INCLUDES", "DESTINATION"),
+        ("FILE_SET", AnyMatcher()),
+        ("PATTERN", AnyMatcher()),
+        ("REGEX", AnyMatcher()),
+    ]
 
     customized_signatures = {
         "TARGETS": dict(
             sections={
-                artifact_kind: _Install_artifact_group
-                for artifact_kind in _Install_artifact_kinds
+                kind: dict(
+                    options=[
+                        "OPTIONAL",
+                        "EXCLUDE_FROM_ALL",
+                        "NAMELINK_ONLY",
+                        "NAMELINK_SKIP",
+                    ],
+                    one_value_keywords=[
+                        "DESTINATION",
+                        "COMPONENT",
+                        "NAMELINK_COMPONENT",
+                    ],
+                    multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+                )
+                for kind in _Install_TARGETS_kinds
             },
             one_value_keywords=[
                 "EXPORT",
@@ -273,7 +282,7 @@ class Install(
                 "TARGETS",
                 "INCLUDES DESTINATION",
                 "RUNTIME_DEPENDENCIES",
-                *_Install_artifact_kinds,
+                *_Install_TARGETS_kinds,
             ],
         ),
         "FILES": dict(
@@ -287,21 +296,24 @@ class Install(
             multi_value_keywords=["PROGRAMS", "PERMISSIONS", "CONFIGURATIONS"],
         ),
         "DIRECTORY": dict(
+            sections={
+                kind: dict(options=["EXCLUDE"], multi_value_keywords=["PERMISSIONS"])
+                for kind in _Install_DIRECTORY_kinds
+            },
             options=[
                 "USE_SOURCE_PERMISSIONS",
                 "OPTIONAL",
                 "MESSAGE_NEVER",
                 "EXCLUDE_FROM_ALL",
                 "FILES_MATCHING",
-                "EXCLUDE",
             ],
-            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT", "PATTERN", "REGEX"],
+            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT"],
             multi_value_keywords=[
                 "DIRECTORY",
                 "FILE_PERMISSIONS",
                 "DIRECTORY_PERMISSIONS",
                 "CONFIGURATIONS",
-                "PERMISSIONS",
+                *_Install_DIRECTORY_kinds,
             ],
         ),
         "SCRIPT": dict(
@@ -339,23 +351,39 @@ class Install(
             multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
         ),
         "IMPORTED_RUNTIME_ARTIFACTS": dict(
+            sections={
+                kind: dict(
+                    options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
+                    one_value_keywords=["DESTINATION", "COMPONENT"],
+                    multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+                )
+                for kind in _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds
+            },
+            one_value_keywords=["RUNTIME_DEPENDENCY_SET"],
+            multi_value_keywords=[
+                "IMPORTED_RUNTIME_ARTIFACTS",
+                *_Install_IMPORTED_RUNTIME_ARTIFACTS_kinds,
+            ],
+        ),
+        "RUNTIME_DEPENDENCY_SET": dict(
+            sections={
+                kind: dict(
+                    options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
+                    one_value_keywords=[
+                        "DESTINATION",
+                        "COMPONENT",
+                        "NAMELINK_COMPONENT",
+                    ],
+                    multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
+                )
+                for kind in _Install_RUNTIME_DEPENDENCY_SET_kinds
+            },
             options=[
                 "LIBRARY",
                 "RUNTIME",
                 "FRAMEWORK",
-                "BUNDLE",
-                "OPTIONAL",
-                "EXCLUDE_FROM_ALL",
             ],
-            one_value_keywords=["RUNTIME_DEPENDENCY_SET", "DESTINATION", "COMPONENT"],
-            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
-        ),
-        "RUNTIME_DEPENDENCY_SET": dict(
-            options=["LIBRARY", "RUNTIME", "FRAMEWORK", "OPTIONAL", "EXCLUDE_FROM_ALL"],
-            one_value_keywords=["DESTINATION", "COMPONENT", "NAMELINK_COMPONENT"],
             multi_value_keywords=[
-                "PERMISSIONS",
-                "CONFIGURATIONS",
                 "PRE_INCLUDE_REGEXES",
                 "PRE_EXCLUDE_REGEXES",
                 "POST_INCLUDE_REGEXES",
@@ -363,6 +391,7 @@ class Install(
                 "POST_INCLUDE_FILES",
                 "POST_EXCLUDE_FILES",
                 "DIRECTORIES",
+                *_Install_RUNTIME_DEPENDENCY_SET_kinds,
             ],
         ),
     }

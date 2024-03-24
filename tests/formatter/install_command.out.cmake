@@ -316,9 +316,7 @@ install(
     COMPONENT FOO
     EXCLUDE_FROM_ALL
     FILES_MATCHING
-    PATTERN FOO
-    EXCLUDE
-    PERMISSIONS OWNER_READ
+    PATTERN FOO EXCLUDE PERMISSIONS OWNER_READ
 )
 
 install(
@@ -333,9 +331,7 @@ install(
     COMPONENT FOO
     EXCLUDE_FROM_ALL
     FILES_MATCHING
-    REGEX FOO
-    EXCLUDE
-    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    REGEX FOO EXCLUDE PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 )
 
 install(
@@ -368,8 +364,8 @@ install(
     EXCLUDE_FROM_ALL
     FILES_MATCHING
     PATTERN long_arg____________________________________________________________
-    EXCLUDE
-    PERMISSIONS OWNER_READ
+        EXCLUDE
+        PERMISSIONS OWNER_READ
 )
 
 install(
@@ -390,8 +386,8 @@ install(
     EXCLUDE_FROM_ALL
     FILES_MATCHING
     REGEX long_arg____________________________________________________________
-    EXCLUDE
-    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        EXCLUDE
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 )
 
 install(SCRIPT FOO)
@@ -636,5 +632,65 @@ install(
     PUBLIC_HEADER
         DESTINATION "${include_destination}"
         COMPONENT Development
+        EXCLUDE_FROM_ALL
+)
+
+install(
+    IMPORTED_RUNTIME_ARTIFACTS
+        FOO__________________________________________________
+        BAR__________________________________________________
+        BAZ__________________________________________________
+    RUNTIME_DEPENDENCY_SET BAR__________________________________________________
+    LIBRARY
+        DESTINATION BAR__________________________________________________
+        PERMISSIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        CONFIGURATIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        COMPONENT BAR__________________________________________________
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+    RUNTIME
+        DESTINATION BAR__________________________________________________
+        PERMISSIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        CONFIGURATIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        COMPONENT BAR__________________________________________________
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+    FRAMEWORK
+        DESTINATION BAR__________________________________________________
+        PERMISSIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        CONFIGURATIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        COMPONENT BAR__________________________________________________
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+    BUNDLE
+        DESTINATION BAR__________________________________________________
+        PERMISSIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        CONFIGURATIONS
+            BAR__________________________________________________
+            BAR__________________________________________________
+            BAR__________________________________________________
+        COMPONENT BAR__________________________________________________
+        OPTIONAL
         EXCLUDE_FROM_ALL
 )
