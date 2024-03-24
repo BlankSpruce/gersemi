@@ -33,7 +33,7 @@ def split_by_quoted_arguments(string):
 def split_into_segments(string):
     head, *comment = split_by_line_comment(string)
     line_comment = "".join(comment)
-    if head.lstrip().startswith('"'):
+    if '"' in head:
         head += line_comment
         line_comment = ""
     segments = split_by_bracket_arguments(head)

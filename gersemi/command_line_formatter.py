@@ -23,7 +23,7 @@ class CommandLineFormatter(BaseDumper):
                 formatted_arg = self.visit(arg)
             updated_line = f"{lines[-1]} {formatted_arg}"
             if force_next_line or self._should_start_new_line(updated_line, lines[-1]):
-                force_next_line = False
+                force_next_line = is_commented_argument(arg)
                 lines += [self.visit(arg)]
             else:
                 lines[-1] = updated_line

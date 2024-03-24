@@ -19,3 +19,11 @@ add_custom_target(
         -a # a
         /b # b
 )
+
+add_custom_command(
+    OUTPUT ${doc_format_output}
+    COMMAND
+        foo__________________________________________________ >
+        ${doc_format_log} # log stdout, pass stderr
+        ${${format}_extra_commands}
+)

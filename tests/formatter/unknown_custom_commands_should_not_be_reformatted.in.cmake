@@ -250,5 +250,13 @@ some_custom_command(
 some_custom_command(
     "foo bar baz #foobar____________________________________________________________"
 )
+
+some_custom_command(FOO
+    "#foobar____________________________________________________________"
+)
+
+some_custom_command(FOO
+    "foo bar baz #foobar____________________________________________________________"
+)
 endif()
 endif()
