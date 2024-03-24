@@ -4,38 +4,41 @@ install(TARGETS FOO BAR BAZ)
 
 install(TARGETS FOO EXPORT BAR ARCHIVE)
 
-install(TARGETS FOO LIBRARY DESTINATION BAR PERMISSIONS OWNER_READ OWNER_WRITE)
+install(
+    TARGETS FOO
+    LIBRARY DESTINATION BAR PERMISSIONS OWNER_READ OWNER_WRITE
+)
 
 install(
     TARGETS FOO
     RUNTIME
-    PERMISSIONS
-        OWNER_READ
-        OWNER_WRITE
-        OWNER_EXECUTE
-        GROUP_READ
-        GROUP_WRITE
-        GROUP_EXECUTE
-        WORLD_READ
-        WORLD_WRITE
-        WORLD_EXECUTE
-        SETUID
-        SETGID
-    NAMELINK_SKIP
+        PERMISSIONS
+            OWNER_READ
+            OWNER_WRITE
+            OWNER_EXECUTE
+            GROUP_READ
+            GROUP_WRITE
+            GROUP_EXECUTE
+            WORLD_READ
+            WORLD_WRITE
+            WORLD_EXECUTE
+            SETUID
+            SETGID
+        NAMELINK_SKIP
 )
 
 install(
     TARGETS FOO
     EXPORT BAR
     OBJECTS
-    DESTINATION BAZ
-    PERMISSIONS OWNER_READ
-    CONFIGURATIONS Debug
-    COMPONENT FOO
-    NAMELINK_COMPONENT BAR
-    OPTIONAL
-    EXCLUDE_FROM_ALL
-    NAMELINK_ONLY
+        DESTINATION BAZ
+        PERMISSIONS OWNER_READ
+        CONFIGURATIONS Debug
+        COMPONENT FOO
+        NAMELINK_COMPONENT BAR
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+        NAMELINK_ONLY
     INCLUDES DESTINATION FOO
 )
 
@@ -43,14 +46,14 @@ install(
     TARGETS FOO BAR BAZ
     EXPORT BAR
     FRAMEWORK
-    DESTINATION BAZ
-    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    CONFIGURATIONS Debug
-    COMPONENT FOO
-    NAMELINK_COMPONENT BAR
-    OPTIONAL
-    EXCLUDE_FROM_ALL
-    NAMELINK_ONLY
+        DESTINATION BAZ
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        CONFIGURATIONS Debug
+        COMPONENT FOO
+        NAMELINK_COMPONENT BAR
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+        NAMELINK_ONLY
     INCLUDES DESTINATION FOO BAR BAZ
 )
 
@@ -74,43 +77,43 @@ install(
 install(
     TARGETS long_arg____________________________________________________________
     BUNDLE
-    DESTINATION
-        long_arg____________________________________________________________
-    PERMISSIONS OWNER_READ OWNER_WRITE
+        DESTINATION
+            long_arg____________________________________________________________
+        PERMISSIONS OWNER_READ OWNER_WRITE
 )
 
 install(
     TARGETS long_arg____________________________________________________________
     PRIVATE_HEADER
-    PERMISSIONS
-        OWNER_READ
-        OWNER_WRITE
-        OWNER_EXECUTE
-        GROUP_READ
-        GROUP_WRITE
-        GROUP_EXECUTE
-        WORLD_READ
-        WORLD_WRITE
-        WORLD_EXECUTE
-        SETUID
-        SETGID
+        PERMISSIONS
+            OWNER_READ
+            OWNER_WRITE
+            OWNER_EXECUTE
+            GROUP_READ
+            GROUP_WRITE
+            GROUP_EXECUTE
+            WORLD_READ
+            WORLD_WRITE
+            WORLD_EXECUTE
+            SETUID
+            SETGID
 )
 
 install(
     TARGETS long_arg____________________________________________________________
     EXPORT long_arg____________________________________________________________
     PUBLIC_HEADER
-    DESTINATION
-        long_arg____________________________________________________________
-    PERMISSIONS OWNER_READ
-    CONFIGURATIONS Debug
-    COMPONENT
-        long_arg____________________________________________________________
-    NAMELINK_COMPONENT
-        long_arg____________________________________________________________
-    OPTIONAL
-    EXCLUDE_FROM_ALL
-    NAMELINK_ONLY
+        DESTINATION
+            long_arg____________________________________________________________
+        PERMISSIONS OWNER_READ
+        CONFIGURATIONS Debug
+        COMPONENT
+            long_arg____________________________________________________________
+        NAMELINK_COMPONENT
+            long_arg____________________________________________________________
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+        NAMELINK_ONLY
     INCLUDES DESTINATION
         long_arg____________________________________________________________
 )
@@ -122,17 +125,17 @@ install(
         long_arg____________________________________________________________
     EXPORT long_arg____________________________________________________________
     RESOURCE
-    DESTINATION
-        long_arg____________________________________________________________
-    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    CONFIGURATIONS Debug
-    COMPONENT
-        long_arg____________________________________________________________
-    NAMELINK_COMPONENT
-        long_arg____________________________________________________________
-    OPTIONAL
-    EXCLUDE_FROM_ALL
-    NAMELINK_ONLY
+        DESTINATION
+            long_arg____________________________________________________________
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        CONFIGURATIONS Debug
+        COMPONENT
+            long_arg____________________________________________________________
+        NAMELINK_COMPONENT
+            long_arg____________________________________________________________
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+        NAMELINK_ONLY
     INCLUDES DESTINATION
         long_arg____________________________________________________________
         long_arg____________________________________________________________
@@ -596,4 +599,42 @@ install(
     COMPONENT
         long_arg____________________________________________________________
     EXCLUDE_FROM_ALL
+)
+
+install(
+    TARGETS FOO
+    EXPORT BAR
+    FILE_SET FOOBAR
+        DESTINATION BAZ
+        PERMISSIONS OWNER_READ
+        CONFIGURATIONS Debug
+        COMPONENT FOO
+        NAMELINK_ONLY
+    INCLUDES DESTINATION FOO
+)
+
+install(
+    TARGETS ${target}
+    EXPORT ${target}Targets
+    RUNTIME
+        DESTINATION "${OBS_EXECUTABLE_DESTINATION}"
+        COMPONENT Development
+        EXCLUDE_FROM_ALL
+    LIBRARY
+        DESTINATION "${OBS_LIBRARY_DESTINATION}"
+        COMPONENT Development
+        EXCLUDE_FROM_ALL
+    ARCHIVE
+        DESTINATION "${OBS_LIBRARY_DESTINATION}"
+        COMPONENT Development
+        EXCLUDE_FROM_ALL
+    FRAMEWORK
+        DESTINATION Frameworks____________________
+        COMPONENT Development
+        EXCLUDE_FROM_ALL
+    INCLUDES DESTINATION "${include_destination}"
+    PUBLIC_HEADER
+        DESTINATION "${include_destination}"
+        COMPONENT Development
+        EXCLUDE_FROM_ALL
 )

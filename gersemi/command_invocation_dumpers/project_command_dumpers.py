@@ -8,7 +8,7 @@ from .multiple_signature_command_invocation_dumper import (
 )
 from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
 from .target_link_libraries_command_dumper import TargetLinkLibraries
-from .two_word_keyword_isolator import TwoWordKeywordIsolator
+from .two_word_keyword_isolator import AnyMatcher, TwoWordKeywordIsolator
 
 
 class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationDumper):
@@ -220,40 +220,60 @@ class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
 
 
-class Install(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
-    two_words_keywords = [("INCLUDES", "DESTINATION")]
+_Install_artifact_kinds = [
+    "ARCHIVE",
+    "LIBRARY",
+    "RUNTIME",
+    "OBJECTS",
+    "FRAMEWORK",
+    "BUNDLE",
+    "PUBLIC_HEADER",
+    "PRIVATE_HEADER",
+    "RESOURCE",
+    "FILE_SET.*",
+    "CXX_MODULES_BMI",
+]
+_Install_artifact_group = dict(
+    options=[
+        "OPTIONAL",
+        "EXCLUDE_FROM_ALL",
+        "NAMELINK_ONLY",
+        "NAMELINK_SKIP",
+    ],
+    one_value_keywords=[
+        "DESTINATION",
+        "COMPONENT",
+        "NAMELINK_COMPONENT",
+    ],
+    multi_value_keywords=[
+        "PERMISSIONS",
+        "CONFIGURATIONS",
+    ],
+)
+
+
+class Install(
+    TwoWordKeywordIsolator,
+    SectionAwareCommandInvocationDumper,
+    MultipleSignatureCommandInvocationDumper,
+):
+    two_words_keywords = [("INCLUDES", "DESTINATION"), ("FILE_SET", AnyMatcher())]
 
     customized_signatures = {
         "TARGETS": dict(
-            options=[
-                "ARCHIVE",
-                "LIBRARY",
-                "RUNTIME",
-                "OBJECTS",
-                "FRAMEWORK",
-                "BUNDLE",
-                "PRIVATE_HEADER",
-                "PUBLIC_HEADER",
-                "RESOURCE",
-                "OPTIONAL",
-                "EXCLUDE_FROM_ALL",
-                "NAMELINK_ONLY",
-                "NAMELINK_SKIP",
-            ],
+            sections={
+                artifact_kind: _Install_artifact_group
+                for artifact_kind in _Install_artifact_kinds
+            },
             one_value_keywords=[
                 "EXPORT",
-                "DESTINATION",
-                "COMPONENT",
-                "NAMELINK_COMPONENT",
                 "RUNTIME_DEPENDENCY_SET",
-                "FILE_SET",
             ],
             multi_value_keywords=[
                 "TARGETS",
-                "PERMISSIONS",
-                "CONFIGURATIONS",
                 "INCLUDES DESTINATION",
                 "RUNTIME_DEPENDENCIES",
+                *_Install_artifact_kinds,
             ],
         ),
         "FILES": dict(

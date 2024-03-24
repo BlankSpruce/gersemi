@@ -2,7 +2,10 @@
 
 ## [0.12.0] 2024-03-24
 ### Added
-- Support for different kinds of indentation, either specific number of spaces or tabs through `--indent` argument (examples: `--indent=2` or `--indent=tabs`) or `indent` entry in `.gersemirc` (examples: `indent: 2` or `indent: tabs`) (#15)
+- support for different kinds of indentation, either specific number of spaces or tabs through `--indent` argument (examples: `--indent=2` or `--indent=tabs`) or `indent` entry in `.gersemirc` (examples: `indent: 2` or `indent: tabs`) (#15)
+
+### Changed
+- formatting of `install` command will now correctly recognize sections like `RUNTIME`, `ARCHIVE`, `FILE_SET` etc.
 
 ### Fixed
 - inconsistent formatting of `add_library` (#17)

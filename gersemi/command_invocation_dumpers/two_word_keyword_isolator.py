@@ -1,9 +1,14 @@
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Union
 from lark import Tree
 from lark.visitors import Transformer, Transformer_InPlace
 from gersemi.ast_helpers import is_keyword
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.utils import advance
+
+
+class AnyMatcher:
+    def __eq__(self, other):
+        return True
 
 
 class PrependLhs(Transformer):
@@ -50,7 +55,7 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
 
 
 class TwoWordKeywordIsolator(BaseCommandInvocationDumper):
-    two_words_keywords: Sequence[Tuple[str, str]] = []
+    two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
 
     def _preprocess_arguments(self, arguments):
         preprocessed = arguments
