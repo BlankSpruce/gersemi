@@ -236,3 +236,19 @@ some_custom_command(#[=====[foobar]=====]
 
 some_custom_command(#foobar
     )
+
+if(TRUE)
+if(TRUE)
+some_custom_command("#foobar____________________________________________________________")
+
+some_custom_command("foo bar baz #foobar____________________________________________________________")
+
+some_custom_command(
+    "#foobar____________________________________________________________"
+)
+
+some_custom_command(
+    "foo bar baz #foobar____________________________________________________________"
+)
+endif()
+endif()
