@@ -107,9 +107,9 @@ class AddLibrary(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
         "IMPORTED",
         "IMPORTED GLOBAL",
         "UNKNOWN",
+        "INTERFACE",
     ]
     one_value_keywords = ["ALIAS"]
-    multi_value_keywords = ["INTERFACE"]
 
 
 class AddSubdirectory(ArgumentAwareCommandInvocationDumper):
