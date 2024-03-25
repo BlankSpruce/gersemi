@@ -89,9 +89,24 @@ The key goal is for the tool to "just work" and to have as little configuration 
 
 #### Default style `favour-inlining`
 
-`gersemi` will try to format the code in a way that respects set character limit for single line and only break line whenever necessary.
+`gersemi` will try to format the code in a way that respects set character limit for single line and only break line whenever necessary with one exception. The commands that have a group of parameters that aren't attached to any specific keyword (like `set` or `list(APPEND)`) will be broken into multiple lines when there are more than 4 arguments in that group. The exception to the rule is made as a heuristic to avoid large local diff when the given command won't fit into maximum line length.
 
 Example:
+```cmake
+# Four elements in the list "Oceans_Eleven"
+set(Oceans_Eleven Danny Frank Rusty Reuben)
+
+# Five elements in the list "Oceans_Eleven"
+set(Oceans_Twelve
+    Danny
+    Frank
+    Rusty
+    Reuben
+    Tess
+)
+```
+
+`favour-inlining` style example:
 ```cmake
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(example CXX)
@@ -223,7 +238,7 @@ In this style lines are broken in one of these cases:
 
 One-value arguments (like `NAME` in `add_test`) will be inlined unless that'd violate character limit. Structure or control flow commands (`if`, `while`, `function`, `foreach` etc.) are exempted from these special rules and follow the same formatting as `favour-inlining`. This style is more merge or `git blame` friendly because usually multi-value arguments are changed one element at a time and with this style such change will be visible as one line of code per element.
 
-Example:
+`favour-expansion` style example:
 ```cmake
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(example CXX)

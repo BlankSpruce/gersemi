@@ -57,7 +57,9 @@ class ListExpansion(EnumWithMetadata):
         value="favour-inlining",
         description="""
     With "favour-inlining" the list of entities will be formatted in such way that sublists
-    might still be formatted into single line as long as it's possible.
+    might still be formatted into single line as long as it's possible or as long as it doesn't
+    break the "more than four standalone arguments" heuristic that's mostly focused on commands
+    like `set` or `list(APPEND)`.
         """,
         title="Favour inlining",
     )
