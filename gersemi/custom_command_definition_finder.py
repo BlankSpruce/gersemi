@@ -1,11 +1,21 @@
+import yaml
 from lark import Discard
 from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import is_keyword
-from gersemi.keywords import Keywords
+from gersemi.keywords import Hint, Keywords
 
 
 class IgnoreThisDefinition:
     pass
+
+
+HINTS = "gersemi: hints"
+IGNORE = "gersemi: ignore"
+
+
+class UseHint:
+    def __init__(self, value):
+        self.value = yaml.safe_load(value) or dict()
 
 
 class DropIrrelevantElements(Transformer):
@@ -13,13 +23,23 @@ class DropIrrelevantElements(Transformer):
         return Discard
 
     def non_command_element(self, children):
-        if len(children) == 1 and isinstance(children[0], IgnoreThisDefinition):
-            return children[0]
+        if len(children) == 1:
+            if any(
+                isinstance(children[0], helper_type)
+                for helper_type in [IgnoreThisDefinition, UseHint]
+            ):
+                return children[0]
         return Discard
 
     def line_comment(self, children):
-        if len(children) > 0 and children[0].strip() == "gersemi: ignore":
-            return IgnoreThisDefinition()
+        if len(children) > 0:
+            comment = children[0].strip()
+            if comment == IGNORE:
+                return IgnoreThisDefinition()
+
+            if comment.startswith(HINTS):
+                return UseHint(value=comment[len(HINTS) :])
+
         return Discard
 
     NEWLINE = _discard
@@ -95,10 +115,28 @@ class CMakeInterpreter(Interpreter):
             (arguments, f"{self.filepath}:{name.line}:{name.column}")
         )
 
+    def _get_hint(self, block):
+        _, *maybe_body, _ = block.children
+        if maybe_body:
+            body, *_ = maybe_body
+            if len(body.children) > 0 and isinstance(body.children[0], UseHint):
+                return body.children[0]
+        return None
+
+    def _add_hint(self, keywords, hint):
+        if hint is None:
+            return keywords
+
+        keywords.hints = tuple(
+            Hint(keyword, kind) for keyword, kind in hint.value.items()
+        )
+        return keywords
+
     def block(self, tree):
         if self._should_definition_be_ignored(tree):
             return
 
+        hint = self._get_hint(tree)
         subinterpreter = self._inner_scope
         block_begin, *body, _ = subinterpreter.visit_children(tree)
         command_node, *_ = block_begin
@@ -108,7 +146,9 @@ class CMakeInterpreter(Interpreter):
 
         keywords, *_ = body
         if len(keywords) > 0:
-            self._add_command(name, (positional_arguments, keywords[0]))
+            self._add_command(
+                name, (positional_arguments, self._add_hint(keywords[0], hint))
+            )
         else:
             self._add_command(name, (positional_arguments, Keywords()))
 

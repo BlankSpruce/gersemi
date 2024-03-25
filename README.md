@@ -440,8 +440,66 @@ harry_potter_and_the_philosophers_stone(HARRY
     HERMIONE foo
               RON foo bar baz)
 ```
-
 It should be still preferred simply to not provide that definition instead.
+
+If your definition has `# gersemi: hints` at the beginning then after `hints` you can provide YAML formatted pairs `<keyword>: <specialized_formatting>` to indicate how to treat specific multi-value arguments. `<specialized_formatting>` can be:
+- `pairs`: arguments after the keyword will be grouped into pairs, similar to how `set_target_properties(PROPERTIES)` is handled
+- `command_line`: arguments after the keyword will be treated like a sequence of words in command line, similar to how `add_custom_command(COMMAND)` is handled
+
+Example:
+```cmake
+function(movie_description_without_hints)
+set(options "")
+set(oneValueArgs DIRECTOR)
+set(multiValueArgs CAST SUMMARY)
+
+cmake_parse_arguments(THIS_FUNCTION_PREFIX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+endfunction()
+
+function(movie_description_with_hints)
+# gersemi: hint { CAST: pairs, SUMMARY: command_line }
+set(options "")
+set(oneValueArgs DIRECTOR)
+set(multiValueArgs CAST SUMMARY)
+
+cmake_parse_arguments(THIS_FUNCTION_PREFIX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+endfunction()
+
+movie_description_without_hints(
+    Oppenheimer
+    DIRECTOR "Christopher Nolan"
+    CAST
+        "J. Robert Oppenheimer"
+        "Cillian Murphy"
+        "Kitty Oppenheimer"
+        "Emily Blunt"
+        "General Leslie Groves"
+        "Matt Damon"
+    SUMMARY
+        Oppenheimer
+        is
+        an
+        epic
+        biographical
+        thriller
+        directed
+        by
+        Christopher
+        Nolan.
+)
+
+movie_description_with_hints(
+    Oppenheimer
+    DIRECTOR "Christopher Nolan"
+    CAST
+        "J. Robert Oppenheimer" "Cillian Murphy"
+        "Kitty Oppenheimer" "Emily Blunt"
+        "General Leslie Groves" "Matt Damon"
+    SUMMARY
+        Oppenheimer is an epic biographical thriller directed by Christopher
+        Nolan.
+)
+```
 
 ### How to disable reformatting
 
