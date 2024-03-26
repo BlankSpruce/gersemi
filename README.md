@@ -96,7 +96,7 @@ Example:
 # Four elements in the list "Oceans_Eleven"
 set(Oceans_Eleven Danny Frank Rusty Reuben)
 
-# Five elements in the list "Oceans_Eleven"
+# Five elements in the list "Oceans_Twelve"
 set(Oceans_Twelve
     Danny
     Frank
@@ -416,6 +416,7 @@ seven_samurai(
 
 Otherwise `gersemi` will fallback to only fixing indentation and preserving original formatting. If you find these limitations too strict let me know about your case.
 
+#### `gersemi: ignore`
 If your definition should be ignored for purposes of generating specialized formatter you can use `# gersemi: ignore` at the beginning of the custom command:
 ```cmake
 function(harry_potter_and_the_philosophers_stone some standalone arguments)
@@ -442,6 +443,7 @@ harry_potter_and_the_philosophers_stone(HARRY
 ```
 It should be still preferred simply to not provide that definition instead.
 
+#### `gersemi: hints`
 If your definition has `# gersemi: hints` at the beginning then after `hints` you can provide YAML formatted pairs `<keyword>: <specialized_formatting>` to indicate how to treat specific multi-value arguments. `<specialized_formatting>` can be:
 - `pairs`: arguments after the keyword will be grouped into pairs, similar to how `set_target_properties(PROPERTIES)` is handled
 - `command_line`: arguments after the keyword will be treated like a sequence of words in command line, similar to how `add_custom_command(COMMAND)` is handled

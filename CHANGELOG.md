@@ -1,17 +1,17 @@
 # Changelog
 
-## [0.12.0] 2024-03-25
+## [0.12.0] 2024-03-26
 ### Added
 - support for different kinds of indentation, either specific number of spaces or tabs through `--indent` argument (examples: `--indent=2` or `--indent=tabs`) or `indent` entry in `.gersemirc` (examples: `indent: 2` or `indent: tabs`) (#15)
 - support for hints in custom command definition for specialized formatting, currently supported are `command_line` and `pairs`
 
 ### Changed
-- formatting of `install` command will now correctly recognize sections like `RUNTIME`, `ARCHIVE`, `FILE_SET` etc.
+- formatting of `install` command will now correctly recognize sections like `RUNTIME`, `ARCHIVE`, `FILE_SET` etc. (#19)
 
 ### Fixed
 - inconsistent formatting of `add_library` (#17)
 - edge cases of comments present in `COMMAND` argument of `add_custom_command` and similar commands
-- improved README and help about heuristic used in `favour-inlining` style
+- improve README and help about heuristic used in `favour-inlining` style (#18)
 
 ## [0.11.1] 2024-03-04
 ### Added
