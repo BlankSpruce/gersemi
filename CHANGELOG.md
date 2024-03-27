@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.12.1] 2024-03-27
+- improve `find_package` formatting around `REQUIRED` keyword (#20)
+
 ## [0.12.0] 2024-03-26
 ### Added
 - support for different kinds of indentation, either specific number of spaces or tabs through `--indent` argument (examples: `--indent=2` or `--indent=tabs`) or `indent` entry in `.gersemirc` (examples: `indent: 2` or `indent: tabs`) (#15)

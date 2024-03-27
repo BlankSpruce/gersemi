@@ -542,7 +542,6 @@ class FindPackage(ArgumentAwareCommandInvocationDumper):
         "NO_CMAKE_FIND_ROOT_PATH",
         "NO_CMAKE_INSTALL_PREFIX",
         "GLOBAL",
-        "REQUIRED",
     ]
     multi_value_keywords = [
         "COMPONENTS",
@@ -552,6 +551,7 @@ class FindPackage(ArgumentAwareCommandInvocationDumper):
         "HINTS",
         "PATHS",
         "PATH_SUFFIXES",
+        "REQUIRED",
     ]
 
 

@@ -110,8 +110,8 @@ find_package(Qt5 REQUIRED Qml)
 find_package(
     Qt5
     REQUIRED
-    Qml
-    QuickCompiler
+        Qml
+        QuickCompiler
 )
 
 add_test(
