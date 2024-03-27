@@ -16,8 +16,9 @@ pip3 install gersemi
 
 ```plain
 usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGER]
-               [--unsafe] [-q] [--color] [--definitions src [src ...]]
-               [--list-expansion {favour-inlining,favour-expansion}]
+               [--indent (INTEGER | tabs)] [--unsafe] [-q] [--color]
+               [--definitions src [src ...]]
+               [--list-expansion {favour-inlining,favour-expansion}] [-w INTEGER]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -44,21 +45,26 @@ configuration:
 
   -l INTEGER, --line-length INTEGER
                         Maximum line length in characters. [default: 80]
+  --indent (INTEGER | tabs)
+                        Number of spaces used to indent or 'tabs' for indenting with tabs
+                        [default: 4]
   --unsafe              Skip default sanity checks.
   -q, --quiet           Skip printing non-error messages to stderr.
   --color               If --diff is selected showed diff is colorized.
   --definitions src [src ...]
                         Files or directories containing custom command definitions
                         (functions or macros). If only - is provided custom definitions,
-                        if there are any, are taken from stdin instead. Commands from
-                        not deprecated CMake native modules don't have to be provided.
-                        See: https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html
+                        if there are any, are taken from stdin instead. Commands from not
+                        deprecated CMake native modules don't have to be provided. See:
+                        https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html
   --list-expansion {favour-inlining,favour-expansion}
                         Switch controls how code is expanded into multiple lines when
-                        it's not possible to keep it formatted in one line. With
-                        "favour-inlining" the list of entities will be formatted in such
-                        way that sublists might still be formatted into single line as
-                        long as it's possible. With "favour-expansion" the list of
+                        it's not possible to keep it formatted in one line. With "favour-
+                        inlining" the list of entities will be formatted in such way that
+                        sublists might still be formatted into single line as long as
+                        it's possible or as long as it doesn't break the "more than four
+                        standalone arguments" heuristic that's mostly focused on commands
+                        like `set` or `list(APPEND)`. With "favour-expansion" the list of
                         entities will be formatted in such way that sublists will be
                         completely expanded once expansion becomes necessary at all.
                         [default: favour-inlining]
