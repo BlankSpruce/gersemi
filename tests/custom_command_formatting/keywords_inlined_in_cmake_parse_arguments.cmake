@@ -1,4 +1,4 @@
-function(SEVEN_SAMURAI some standalone arguments)
+function(Seven_Samurai some standalone arguments)
     cmake_parse_arguments(
         THIS_FUNCTION_PREFIX
         "KAMBEI;KATSUSHIRO"

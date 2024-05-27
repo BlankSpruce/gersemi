@@ -25,8 +25,7 @@ block      : _foreach_block
            | _block_block
 block_body : (newline_or_gap _file_element)* newline_or_gap
 
-terminal_as_rule{term}: term
-command_template{term}: terminal_as_rule{term} _invocation_part -> command_invocation
+command_template{term}: term _invocation_part -> command_invocation
 element_template{term}: command_template{term} [line_comment] -> command_element
 
 _block_template{start_term, end_term}: element_template{start_term} block_body element_template{end_term}

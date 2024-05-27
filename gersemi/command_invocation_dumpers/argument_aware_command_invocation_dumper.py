@@ -1,5 +1,5 @@
 from collections.abc import Sized
-from typing import Dict, Iterator, Iterable, List, Sequence, Tuple
+from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Tuple
 from gersemi.ast_helpers import is_one_of_keywords, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.types import Nodes
@@ -83,6 +83,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     one_value_keywords: Iterable[str] = []
     multi_value_keywords: Iterable[str] = []
     keyword_formatters: Dict[str, str] = {}
+    canonical_name: Optional[str] = None
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
@@ -192,3 +193,12 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)
         return "\n".join(map(self._format_group, filter(None, groups)))
+
+    def format_command_name(self, identifier):
+        if self.canonical_name is None:
+            return super().format_command_name(identifier)
+
+        if self.canonical_name.lower() != identifier.lower():
+            raise RuntimeError
+
+        return self.canonical_name

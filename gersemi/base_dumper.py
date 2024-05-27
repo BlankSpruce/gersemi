@@ -80,3 +80,6 @@ class BaseDumper(Interpreter):
             yield self
         finally:
             self.favour_expansion = old
+
+    def format_command_name(self, identifier):
+        return identifier.lower()

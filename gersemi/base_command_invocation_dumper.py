@@ -39,13 +39,14 @@ class BaseCommandInvocationDumper(BaseDumper):
         return all(size <= 4 for size in group_sizes)
 
     def format_command(self, tree):
-        identifier, arguments = tree.children
+        raw_identifier, arguments = tree.children
+        identifier = self.format_command_name(raw_identifier)
         arguments = self._preprocess_arguments(arguments)
         begin = f"{identifier}("
         end = ")"
         if self._inlining_condition(arguments):
             result = self._try_to_format_into_single_line(
-                arguments.children, separator=" ", prefix=f"{identifier}(", postfix=")"
+                arguments.children, separator=" ", prefix=begin, postfix=end
             )
             if result is not None:
                 return result

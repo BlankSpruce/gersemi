@@ -1,3 +1,6 @@
+#### Legend
+#### (&): canonical name used different than in the documentation
+
 # cmake-commands
 ## Scripting Commands
 block
@@ -163,6 +166,9 @@ fixup_bundle_item
 verify_bundle_prerequisites
 verify_bundle_symlinks
 
+### CheckCompilerFlag
+check_compiler_flag
+
 ### CheckCCompilerFlag
 check_c_compiler_flag
 
@@ -188,10 +194,12 @@ check_cxx_symbol_exists
 check_fortran_compiler_flag
 
 ### CheckFortranFunctionExists
+# (&)
 check_fortran_function_exists
 
 ### CheckFortranSourceCompiles
 check_fortran_source_compiles
+
 ### CheckFortranSourceRuns
 check_fortran_source_runs
 
@@ -202,18 +210,22 @@ check_function_exists
 check_ipo_supported
 
 ### CheckIncludeFileCXX
+# (&)
 check_include_file_cxx
 
 ### CheckIncludeFile
+# (&)
 check_include_file
 
 ### CheckIncludeFiles
+# (&)
 check_include_files
 
 ### CheckLanguage
 check_language
 
 ### CheckLibraryExists
+# (&)
 check_library_exists
 
 ### CheckLinkerFlag
@@ -243,7 +255,14 @@ check_pie_supported
 ### CheckPrototypeDefinition
 check_prototype_definition
 
+### CheckSourceCompiles
+check_source_compiles
+
+### CheckSourceRuns
+check_source_runs
+
 ### CheckStructHasMember
+# (&)
 check_struct_has_member
 
 ### CheckSymbolExists
@@ -253,6 +272,7 @@ check_symbol_exists
 check_type_size
 
 ### CheckVariableExists
+# (&)
 check_variable_exists
 
 ### CMakeAddFortranSubdirectory
@@ -340,37 +360,43 @@ install_qt4_plugin_path
 ### Documentation
 
 ### ExternalData
-externaldata_expand_arguments
-externaldata_add_test
-externaldata_add_target
+ExternalData_Expand_Arguments
+ExternalData_Add_Test
+ExternalData_Add_Target
 
 ### ExternalProject
-externalproject_add
-externalproject_add_step
-externalproject_add_stepdependencies
-externalproject_add_steptargets
-externalproject_get_property
+ExternalProject_Add
+ExternalProject_Add_Step
+ExternalProject_Add_Stepdependencies
+ExternalProject_Add_Steptargets
+ExternalProject_Get_Property
 
 ### FeatureSummary
-feature_summary
-set_package_properties
 add_feature_info
+feature_summary
+print_disabled_features
+print_enabled_features
+set_feature_info
+set_package_info
+set_package_properties
 
 ### FetchContent
-fetchcontent_declare
-fetchcontent_getproperties
-fetchcontent_makeavailable
-fetchcontent_populate
+FetchContent_Declare
+FetchContent_GetProperties
+FetchContent_MakeAvailable
+FetchContent_Populate
+FetchContent_SetPopulated
 
 ### FindPackageHandleStandardArgs
+find_package_check_version
 find_package_handle_standard_args
 
 ### FindPackageMessage
 find_package_message
 
 ### FortranCInterface
-fortrancinterface_header
-fortrancinterface_verify
+FortranCInterface_HEADER
+FortranCInterface_VERIFY
 
 ### GenerateExportHeader
 generate_export_header
@@ -387,7 +413,7 @@ gp_resolved_file_type
 gp_resolve_item
 
 ### GNUInstallDirs
-gnuinstalldirs_get_absolute_install_dir
+GNUInstallDirs_get_absolute_install_dir
 
 ### GoogleTest
 gtest_add_tests

@@ -4,22 +4,6 @@ from gersemi.ast_helpers import is_newline
 from gersemi.types import Nodes
 
 
-class DowncaseIdentifiers(Transformer):
-    def IDENTIFIER(self, token):
-        return Token(
-            "IDENTIFIER",
-            token.lower(),
-            start_pos=token.start_pos,
-            line=token.line,
-            column=token.column,
-            end_line=token.end_line,
-            end_column=token.end_column,
-        )
-
-    def terminal_as_rule(self, token):
-        return self.IDENTIFIER(token[0])
-
-
 class FlattenBracketComment(Transformer):
     def bracket_comment(self, children) -> Tree:
         *_, bracket_argument = children
@@ -40,6 +24,6 @@ class CleanUpNewlines(Transformer):
 
 
 class ParsingTransformer(
-    DowncaseIdentifiers, FlattenBracketComment, CleanUpComplexArgument, CleanUpNewlines
+    FlattenBracketComment, CleanUpComplexArgument, CleanUpNewlines
 ):
     pass

@@ -14,7 +14,7 @@ GOROBEI foo HEIHACHI bar KYUZO baz
 SHICHIROJI foo bar baz KIKUCHIYO bar baz foo)
 """
 
-custom_command_properly_formatted = """seven_samurai(
+custom_command_properly_formatted = """Seven_Samurai(
     three
     standalone
     arguments

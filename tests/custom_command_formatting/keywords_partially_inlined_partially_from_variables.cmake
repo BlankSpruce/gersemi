@@ -1,4 +1,4 @@
-function(SEVEN_SAMURAI some standalone arguments)
+function(Seven_Samurai some standalone arguments)
     set(options KAMBEI)
     set(oneValueArgs KYUZO)
     set(multiValueArgs SHICHIROJI KIKUCHIYO)

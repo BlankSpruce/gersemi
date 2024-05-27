@@ -23,12 +23,15 @@ def kind_to_function(kind: str) -> str:
     }[kind_enum]
 
 
-def create_specialized_dumper(positional_arguments: Sequence[str], keywords: Keywords):
+def create_specialized_dumper(
+    raw_command_name: str, positional_arguments: Sequence[str], keywords: Keywords
+):
     class Impl(
         ArgumentAwareCommandInvocationDumper,
         KeywordWithPairsFormatter,
         CommandLineFormatter,
     ):
+        canonical_name = raw_command_name
         front_positional_arguments = positional_arguments
         options = keywords.options
         one_value_keywords = keywords.one_value_keywords

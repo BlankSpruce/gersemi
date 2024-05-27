@@ -54,6 +54,17 @@ class CheckPIESupported(ArgumentAwareCommandInvocationDumper):
     multi_value_keywords = ["LANGUAGES"]
 
 
+class CheckSourceCompiles(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<lang>", "<code>", "<resultVar>"]
+    one_value_keywords = ["SRC_EXT"]
+    multi_value_keywords = ["FAIL_REGEX"]
+
+
+class CheckSourceRuns(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<lang>", "<code>", "<resultVar>"]
+    one_value_keywords = ["SRC_EXT"]
+
+
 class CheckStructHasMember(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["LANGUAGE"]
 
@@ -371,8 +382,11 @@ class FeatureSummary(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["FILENAME", "VAR", "DESCRIPTION", "WHAT"]
 
 
-class SetPackageProperties(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["URL", "DESCRIPTION", "TYPE", "PURPOSE"]
+class SetPackageProperties(
+    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
+):
+    multi_value_keywords = ["PROPERTIES"]
+    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
 
 
 class FetchContentDeclare(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
@@ -484,6 +498,11 @@ class FetchContentPopulate(ArgumentAwareCommandInvocationDumper):
 
 class FetchContentGetProperties(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["SOURCE_DIR", "BINARY_DIR", "POPULATED"]
+
+
+class FetchContentSetPopulated(ArgumentAwareCommandInvocationDumper):
+    front_positional_arguments = ["<name>"]
+    one_value_keywords = ["SOURCE_DIR", "BINARY_DIR"]
 
 
 class FindPackageHandleStandardArgs(ArgumentAwareCommandInvocationDumper):
@@ -829,6 +848,8 @@ module_command_mapping = {
     "check_objcxx_source_compiles": CheckOBJCXXSourceCompiles,
     "check_pie_supported": CheckPIESupported,
     "check_struct_has_member": CheckStructHasMember,
+    "check_source_compiles": CheckSourceCompiles,
+    "check_source_runs": CheckSourceRuns,
     "check_type_size": CheckTypeSize,
     "cmake_add_fortran_subdirectory": CMakeAddFortranSubdirectory,
     "cmake_print_properties": CMakePrintProprties,
@@ -850,6 +871,7 @@ module_command_mapping = {
     "fetchcontent_declare": FetchContentDeclare,
     "fetchcontent_populate": FetchContentPopulate,
     "fetchcontent_getproperties": FetchContentGetProperties,
+    "fetchcontent_setpopulated": FetchContentSetPopulated,
     "find_package_handle_standard_args": FindPackageHandleStandardArgs,
     "find_package_check_version": FindPackageCheckVersion,
     "fortrancinterface_header": FortranCInterfaceHeader,

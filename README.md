@@ -80,7 +80,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.12.1
+  rev: 0.13.0
   hooks:
   - id: gersemi
 ```
@@ -89,9 +89,11 @@ Update `rev` to relevant version used in your repository. For more details refer
 
 ## Formatting
 
-The key goal is for the tool to "just work" and to have as little configuration as possible so that you don't have to worry about fine-tuning formatter to your needs - as long as you embrace the `gersemi` style of formatting, similarly as `black` or `gofmt` do their job. Currently only line length can be changed with `80` as default value. Currently the basic assumption is that code to format is valid CMake language code - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon. Moreover only commands from CMake 3.0 onwards are supported and will be formatted properly - for instance [`exec_program` has been deprecated since CMake 3.0](https://cmake.org/cmake/help/latest/command/exec_program.html) so it won't be formatted. Be warned though it's not production ready so the changes to code might be destructive and you should always have a backup (version control helps a lot).
+The key goal is for the tool to "just work" and to have as little configuration as possible so that you don't have to worry about fine-tuning formatter to your needs - as long as you embrace the `gersemi` style of formatting, similarly as `black` or `gofmt` do their job. The basic assumption is that code to format is valid CMake language code - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon. Moreover only commands from CMake 3.0 onwards are supported and will be formatted properly - for instance [`exec_program` has been deprecated since CMake 3.0](https://cmake.org/cmake/help/latest/command/exec_program.html) so it won't be formatted. Changes to code might be destructive and you should always have a backup (version control helps a lot).
 
 ### Style
+
+`gersemi` in general will use canonical casing as it's defined in official CMake documentation like `FetchContent_Declare`. There are a few deliberate exceptions for which lower case name was chosen to provide broader consistency with other CMake commands. In case of unknown commands, not provided through `definitions`, lower case will be used.
 
 #### Default style `favour-inlining`
 
@@ -385,9 +387,9 @@ add_custom_command(
 
 ### Let's make a deal
 
-It's possible to provide reasonable formatting for custom commands. However on language level there are no hints available about supported keywords for given command so `gersemi` has to generate specialized formatter. To do that custom command definition is necessary which should be provided with `--definitions`. There are limitations though since it'd probably require full-blown CMake language interpreter to do it in every case so let's make a deal: if your custom command definition (function or macro) uses `cmake_parse_arguments` and does it in obvious manner such specialized formatter will be generated. For instance this definition is okay (you can find other examples in `tests/custom_command_formatting/`):
+It's possible to provide reasonable formatting for custom commands. However on language level there are no hints available about supported keywords for given command so `gersemi` has to generate specialized formatter. To do that custom command definition is necessary which should be provided with `--definitions`. There are limitations though since it'd probably require full-blown CMake language interpreter to do it in every case so let's make a deal: if your custom command definition (function or macro) uses `cmake_parse_arguments` and does it in obvious manner such specialized formatter will be generated. Name casing used in command definition will be considered canonical for custom command (in the example below canonical casing will be `Seven_Samurai`). For instance this definition is okay (you can find other examples in `tests/custom_command_formatting/`):
 ```cmake
-function(SEVEN_SAMURAI some standalone arguments)
+function(Seven_Samurai some standalone arguments)
     set(options KAMBEI KATSUSHIRO)
     set(oneValueArgs GOROBEI HEIHACHI KYUZO)
     set(multiValueArgs SHICHIROJI KIKUCHIYO)
@@ -406,7 +408,7 @@ endfunction()
 
 With this definition available it's possible to format code like so:
 ```cmake
-seven_samurai(
+Seven_Samurai(
     three
     standalone
     arguments
@@ -421,6 +423,29 @@ seven_samurai(
 ```
 
 Otherwise `gersemi` will fallback to only fixing indentation and preserving original formatting. If you find these limitations too strict let me know about your case.
+
+#### How to format custom commands for which path to definition can't be guaranteed to be stable? (e.g external dependencies not managed by CMake)
+
+You can provide stub definitions that will be used only as an input for gersemi. Example:
+```yaml
+# ./.gersemirc
+definitions: [./src/cmake/stubs, ...] # ... other paths that might contain actual definitions
+line_length: 120
+list_expansion: favour-expansion
+```
+
+```cmake
+# ./src/cmake/stubs/try_to_win_best_picture_academy_award.cmake
+# A stub for some external command out of our control
+function(try_to_win_best_picture_academy_award)
+    # gersemi: hint { CAST: pairs, SUMMARY: command_line }
+    set(options FOREIGN_LANGUAGE)
+    set(oneValueArgs GENRE YEAR)
+    set(multiValueArgs DIRECTORS CAST SUMMARY)
+
+    cmake_parse_arguments(_ "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+endfunction()
+```
 
 #### `gersemi: ignore`
 If your definition should be ignored for purposes of generating specialized formatter you can use `# gersemi: ignore` at the beginning of the custom command:

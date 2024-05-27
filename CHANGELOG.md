@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.13.0] 2024-05-24
+### Added
+- support for using canonical casing of custom commands (#21)
+
+### Changed
+- official CMake commands will be formatted with their canonical casing (like `FetchContent_Declare`) instead of lower case version with the following deliberate exceptions:
+    - `check_fortran_function_exists`
+    - `check_include_file_cxx`
+    - `check_include_file`
+    - `check_include_files`
+    - `check_library_exists`
+    - `check_struct_has_member`
+    - `check_variable_exists`
+
+### Fixed
+- use specialized formatting of some previously omitted official commands
+- improve consistency of `set_package_properties` with similar commands
+
 ## [0.12.1] 2024-03-27
 - improve `find_package` formatting around `REQUIRED` keyword (#20)
 

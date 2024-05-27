@@ -1,4 +1,4 @@
-function(SEVEN_SAMURAI some standalone arguments)
+function(Seven_Samurai some standalone arguments)
     # first comment
     set(options KAMBEI KATSUSHIRO)
     # another comment

@@ -106,7 +106,8 @@ class PreservingCommandInvocationDumper(BaseDumper):
         return f"{begin}{stripped_content.rstrip()}{end}"
 
     def custom_command(self, tree):
-        indentation, identifier, _, formatted_arguments = tree.children
+        indentation, raw_identifier, _, formatted_arguments = tree.children
+        identifier = self.format_command_name(raw_identifier)
         begin = self._indent(f"{identifier}(")
         content = formatted_arguments.children[0]
         if content == "":

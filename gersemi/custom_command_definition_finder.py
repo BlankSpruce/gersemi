@@ -112,7 +112,7 @@ class CMakeInterpreter(Interpreter):
             self.found_commands[key] = []
 
         self.found_commands[key].append(
-            (arguments, f"{self.filepath}:{name.line}:{name.column}")
+            ((name, arguments), f"{self.filepath}:{name.line}:{name.column}")
         )
 
     def _get_hint(self, block):
@@ -193,6 +193,6 @@ def get_just_definitions(definitions):
     result = {}
     for name, info in definitions.items():
         sorted_info = list(sorted(info, key=lambda item: item[1]))
-        arguments, _ = sorted_info[0]
-        result[name] = arguments
+        (canonical_name, arguments), _ = sorted_info[0]
+        result[name] = canonical_name, arguments
     return result

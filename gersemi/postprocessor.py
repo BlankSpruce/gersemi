@@ -1,9 +1,9 @@
 from itertools import dropwhile
-import os
 from typing import List
 from lark import Discard, Tree
 from lark.visitors import Transformer_InPlace
 from gersemi.ast_helpers import is_newline
+from gersemi.builtin_commands import BUILTIN_COMMANDS
 from gersemi.types import Nodes
 
 
@@ -27,20 +27,7 @@ class SimplifyParseTree(Transformer_InPlace):
         return Tree("non_command_element", children)
 
 
-def is_not_comment_or_empty(s):
-    return not (s.startswith("#") or len(s) == 0)
-
-
-def get_builtin_commands():
-    HERE = os.path.dirname(os.path.realpath(__file__))
-
-    with open(os.path.join(HERE, "builtin_commands"), "r", encoding="utf-8") as f:
-        return set(filter(is_not_comment_or_empty, f.read().splitlines()))
-
-
 class PreserveCustomCommandFormatting(Transformer_InPlace):
-    builtin_commands = get_builtin_commands()
-
     def __init__(self, code):
         super().__init__()
         self.code = code
@@ -69,7 +56,7 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         )
 
     def _is_builtin(self, identifier):
-        return identifier in self.builtin_commands
+        return identifier.lower() in BUILTIN_COMMANDS
 
     def command_invocation(self, children):
         identifier, _, arguments, _ = children
