@@ -1,7 +1,7 @@
 from typing import List
 from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
-from gersemi.ast_helpers import contains_line_comment, is_one_of_keywords
+from gersemi.ast_helpers import contains_line_comment, is_one_of_keywords, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.configuration import Spaces
 from gersemi.types import Nodes
@@ -20,7 +20,11 @@ class IsolateUnaryOperators(Transformer_InPlace):
         is_one_of_unary_operators = is_one_of_keywords(self.unary_operators)
         for one_behind, current in iterator:
             if is_one_of_unary_operators(one_behind):
-                new_children += [Tree("unary_operation", [one_behind, current])]
+                if is_comment(current):
+                    new_children += [Tree("unary_operation", [one_behind])]
+                    new_children += [current]
+                else:
+                    new_children += [Tree("unary_operation", [one_behind, current])]
                 _, current = advance(iterator, times=1, default=(None, None))
                 if current is None:
                     break
@@ -125,9 +129,12 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
         if result is not None:
             return result
 
-        operation, arg = tree.children
+        operation, *rest = tree.children
         formatted_operation = self.visit(operation)
+        if len(rest) == 0:
+            return formatted_operation
 
+        arg, *_ = rest
         if (
             (not contains_line_comment([operation]))
             and isinstance(self.indent_type, Spaces)
@@ -150,10 +157,6 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
             formatted_operation = self.visit(operation)
             formatted_rhs = self.visit(rhs)
         return f"{formatted_lhs}\n{formatted_operation}\n{formatted_rhs}"
-
-    def arguments(self, tree):
-        preprocessed = IsolateConditions().transform(tree)
-        return super().arguments(preprocessed)
 
     def _preprocess_arguments(self, arguments):
         return IsolateConditions().transform(arguments)
