@@ -62,6 +62,9 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
             return super().format_command(tree)
 
     def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
+        if len(arguments) == 0:
+            return []
+
         signature_node, *rest = arguments
         if isinstance(signature_node, Tree):
             if len(signature_node.children) > 0:
