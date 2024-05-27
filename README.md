@@ -438,7 +438,7 @@ list_expansion: favour-expansion
 # ./src/cmake/stubs/try_to_win_best_picture_academy_award.cmake
 # A stub for some external command out of our control
 function(try_to_win_best_picture_academy_award)
-    # gersemi: hint { CAST: pairs, SUMMARY: command_line }
+    # gersemi: hints { CAST: pairs, SUMMARY: command_line }
     set(options FOREIGN_LANGUAGE)
     set(oneValueArgs GENRE YEAR)
     set(multiValueArgs DIRECTORS CAST SUMMARY)
@@ -490,7 +490,7 @@ cmake_parse_arguments(THIS_FUNCTION_PREFIX "${options}" "${oneValueArgs}" "${mul
 endfunction()
 
 function(movie_description_with_hints)
-# gersemi: hint { CAST: pairs, SUMMARY: command_line }
+# gersemi: hints { CAST: pairs, SUMMARY: command_line }
 set(options "")
 set(oneValueArgs DIRECTOR)
 set(multiValueArgs CAST SUMMARY)
