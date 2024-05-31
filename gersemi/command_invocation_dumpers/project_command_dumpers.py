@@ -61,8 +61,8 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
 
 
 class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["Name", "ALL"]
-    options = ["VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
+    front_positional_arguments = ["Name"]
+    options = ["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"]
     one_value_keywords = [
         "WORKING_DIRECTORY",
         "COMMENT",

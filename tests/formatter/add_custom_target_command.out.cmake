@@ -2,7 +2,10 @@ add_custom_target(FOO)
 
 add_custom_target(FOO BAR)
 
-add_custom_target(FOO BAR BAZ FOO BAR BAZ)
+add_custom_target(
+    FOO
+    BAR BAZ FOO BAR BAZ
+)
 
 add_custom_target(FOO ALL BAR)
 
