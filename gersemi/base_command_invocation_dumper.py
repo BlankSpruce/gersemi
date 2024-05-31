@@ -1,4 +1,3 @@
-from typing import List
 from gersemi.ast_helpers import contains_line_comment
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
@@ -22,8 +21,8 @@ class BaseCommandInvocationDumper(BaseDumper):
             formatted_arguments = self.visit(arguments)
         return "\n".join([self._indent(begin), formatted_arguments, self._indent(end)])
 
-    def _split_arguments(self, arguments: Nodes) -> List[Nodes]:
-        return [arguments]
+    def _split_arguments(self, arguments: Nodes) -> Nodes:
+        return arguments
 
     def group_size(self, group):
         return len(group)

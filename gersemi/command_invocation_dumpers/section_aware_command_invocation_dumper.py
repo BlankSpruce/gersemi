@@ -1,21 +1,18 @@
 from contextlib import contextmanager
-import re
 from typing import Iterable, Mapping
-from gersemi.ast_helpers import is_commented_argument
+from lark import Tree
+from gersemi.ast_helpers import (
+    is_multi_value_argument,
+    is_one_of_keywords,
+    is_positional_arguments,
+)
+from gersemi.keywords import KeywordMatcher
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
 
 
-Sections = Mapping[str, Mapping[str, Iterable[str]]]
-
-
-class Match(str):
-    def __eq__(self, other):
-        return re.search(self, other) is not None
-
-    def __hash__(self):
-        return hash(str(self))
+Sections = Mapping[KeywordMatcher, Mapping[KeywordMatcher, Iterable[KeywordMatcher]]]
 
 
 def create_section_patch(section, old_class):
@@ -44,31 +41,50 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
 
     def _get_matcher(self, keyword):
         for item in self.sections:
-            if Match(item) == keyword:
+            matcher = is_one_of_keywords([item])
+            if matcher(keyword):
                 return item
         return None
 
-    def _format_group(self, group) -> str:
-        result = self._try_to_format_into_single_line(group, separator=" ")
+    def _split_multi_value_argument(self, tree):
+        front_node, *rest = tree.children
+
+        keyword_matcher = self._get_matcher(front_node)
+        if keyword_matcher is None:
+            return tree
+
+        with self._update_section_characteristics(keyword_matcher):
+            subarguments = [front_node]
+            for arg in self._split_arguments(rest):
+                if not is_positional_arguments(arg):
+                    subarguments.append(arg)
+                    continue
+
+                subarguments.extend(arg.children)
+
+            return Tree("section", subarguments)
+
+    def _split_arguments(self, arguments):
+        preprocessed = super()._split_arguments(arguments)
+        return [
+            (
+                self._split_multi_value_argument(child)
+                if is_multi_value_argument(child)
+                else child
+            )
+            for child in preprocessed
+        ]
+
+    def section(self, tree):
+        result = self._try_to_format_into_single_line(tree.children, separator=" ")
         if result is not None:
             return result
 
-        original_format_group = super()._format_group
-        front_node, *rest = group
-        if is_commented_argument(front_node):
-            inner, *_ = front_node.children
-            keyword, *_ = inner.children
-        else:
-            keyword, *_ = front_node.children
+        header, *rest = tree.children
+        begin = self.visit(header)
+        if len(rest) == 0:
+            return begin
 
-        keyword_matcher = self._get_matcher(keyword)
-        if keyword_matcher is None:
-            return original_format_group(group)
-
-        with self._update_section_characteristics(keyword_matcher):
-            subgroups = self._split_arguments(rest)
-            formatted_front = original_format_group([front_node])
-            with self.indented():
-                return "\n".join(
-                    [formatted_front, *map(original_format_group, subgroups)]
-                )
+        with self.indented():
+            formatted_values = "\n".join(map(self.visit, rest))
+        return f"{begin}\n{formatted_values}"

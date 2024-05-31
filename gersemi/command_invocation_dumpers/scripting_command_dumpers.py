@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
@@ -12,6 +13,21 @@ from .multiple_signature_command_invocation_dumper import (
 from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
+_COMPARE_EQUAL = ("COMPARE", "EQUAL")
+_COMPARE_GREATER = ("COMPARE", "GREATER")
+_COMPARE_GREATER_EQUAL = ("COMPARE", "GREATER_EQUAL")
+_COMPARE_LESS = ("COMPARE", "LESS")
+_COMPARE_LESS_EQUAL = ("COMPARE", "LESS_EQUAL")
+_COMPARE_NOTEQUAL = ("COMPARE", "NOTEQUAL")
+_EVAL_CODE = ("EVAL", "CODE")
+_EXTENSION_LAST_ONLY = ("EXTENSION", "LAST_ONLY")
+_QUERY_WINDOWS_REGISTRY = ("QUERY", "WINDOWS_REGISTRY")
+_REGEX_MATCH = ("REGEX", "MATCH")
+_REGEX_MATCHALL = ("REGEX", "MATCHALL")
+_REGEX_REPLACE = ("REGEX", "REPLACE")
+_STEM_LAST_ONLY = ("STEM", "LAST_ONLY")
+
+
 class Block(ArgumentAwareCommandInvocationDumper):
     inhibit_favour_expansion = True
     multi_value_keywords = ["SCOPE_FOR", "PROPAGATE"]
@@ -20,10 +36,10 @@ class Block(ArgumentAwareCommandInvocationDumper):
 class CMakeHostSysteInformation(
     TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper
 ):
-    two_words_keywords = [("QUERY", "WINDOWS_REGISTRY")]
+    two_words_keywords = [_QUERY_WINDOWS_REGISTRY]
     one_value_keywords = [
         "RESULT",
-        "QUERY WINDOWS_REGISTRY",
+        _QUERY_WINDOWS_REGISTRY,
         "VALUE_NAMES",
         "SUBKEYS",
         "VALUE",
@@ -35,7 +51,7 @@ class CMakeHostSysteInformation(
 
 
 class CMakeLanguage(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
-    two_words_keywords = [("EVAL", "CODE")]
+    two_words_keywords = [_EVAL_CODE]
     one_value_keywords = [
         "DIRECTORY",
         "ID",
@@ -51,7 +67,7 @@ class CMakeLanguage(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper
         "CALL",
         "CANCEL_CALL",
         "SUPPORTED_METHODS",
-        "EVAL CODE",
+        _EVAL_CODE,
     ]
 
 
@@ -83,7 +99,7 @@ class CMakeParseArguments(MultipleSignatureCommandInvocationDumper):
 
 
 class CMakePath(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
-    two_words_keywords = [("EXTENSION", "LAST_ONLY"), ("STEM", "LAST_ONLY")]
+    two_words_keywords = [_EXTENSION_LAST_ONLY, _STEM_LAST_ONLY]
     customized_signatures = {
         # Decomposition
         "GET": {
@@ -94,9 +110,9 @@ class CMakePath(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper
                 "ROOT_PATH",
                 "FILENAME",
                 "EXTENSION",
-                "EXTENSION LAST_ONLY",
+                _EXTENSION_LAST_ONLY,
                 "STEM",
-                "STEM LAST_ONLY",
+                _STEM_LAST_ONLY,
                 "RELATIVE_PART",
                 "PARENT_PATH",
             ],
@@ -254,8 +270,11 @@ class ExecuteProcess(CommandLineFormatter, ArgumentAwareCommandInvocationDumper)
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
+_GENERATE_OUTPUT = ("GENERATE", "OUTPUT")
+
+
 class File(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
-    two_words_keywords = [("GENERATE", "OUTPUT")]
+    two_words_keywords = [_GENERATE_OUTPUT]
     customized_signatures = {
         # Reading
         "READ": dict(
@@ -313,7 +332,7 @@ class File(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
         # Writing
         "WRITE": dict(front_positional_arguments=["<filename>"]),
         "APPEND": dict(front_positional_arguments=["<filename>"]),
-        "GENERATE OUTPUT": dict(
+        _GENERATE_OUTPUT: dict(
             front_positional_arguments=["output-file"],
             options=["NO_SOURCE_PERMISSIONS", "USE_SOURCE_PERMISSIONS"],
             one_value_keywords=[
@@ -795,15 +814,15 @@ class Set(ArgumentAwareCommandInvocationDumper):
 
 class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
     two_words_keywords = [
-        ("REGEX", "MATCH"),
-        ("REGEX", "MATCHALL"),
-        ("REGEX", "REPLACE"),
-        ("COMPARE", "LESS"),
-        ("COMPARE", "GREATER"),
-        ("COMPARE", "EQUAL"),
-        ("COMPARE", "NOTEQUAL"),
-        ("COMPARE", "LESS_EQUAL"),
-        ("COMPARE", "GREATER_EQUAL"),
+        _REGEX_MATCH,
+        _REGEX_MATCHALL,
+        _REGEX_REPLACE,
+        _COMPARE_LESS,
+        _COMPARE_GREATER,
+        _COMPARE_EQUAL,
+        _COMPARE_NOTEQUAL,
+        _COMPARE_LESS_EQUAL,
+        _COMPARE_GREATER_EQUAL,
     ]
     customized_signatures = {
         # Search and Replace
@@ -819,13 +838,13 @@ class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
             ]
         ),
         # Regular Expressions
-        "REGEX MATCH": dict(
+        _REGEX_MATCH: dict(
             front_positional_arguments=["<regular_expression>", "<output_variable>"]
         ),
-        "REGEX MATCHALL": dict(
+        _REGEX_MATCHALL: dict(
             front_positional_arguments=["<regular_expression>", "<output_variable>"]
         ),
-        "REGEX REPLACE": dict(
+        _REGEX_REPLACE: dict(
             front_positional_arguments=[
                 "<regular_expression>",
                 "<replacement_expression>",
@@ -856,22 +875,22 @@ class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
             front_positional_arguments=["<string>", "<count>", "<output_variable>"]
         ),
         # Comparison
-        "COMPARE LESS": dict(
+        _COMPARE_LESS: dict(
             front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
         ),
-        "COMPARE GREATER": dict(
+        _COMPARE_GREATER: dict(
             front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
         ),
-        "COMPARE EQUAL": dict(
+        _COMPARE_EQUAL: dict(
             front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
         ),
-        "COMPARE NOTEQUAL": dict(
+        _COMPARE_NOTEQUAL: dict(
             front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
         ),
-        "COMPARE LESS_EQUAL": dict(
+        _COMPARE_LESS_EQUAL: dict(
             front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
         ),
-        "COMPARE GREATER_EQUAL": dict(
+        _COMPARE_GREATER_EQUAL: dict(
             front_positional_arguments=["<string1>", "<string2>", "<output_variable>"]
         ),
         # Hashing

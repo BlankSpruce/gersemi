@@ -1,5 +1,7 @@
+from typing import List
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
+from gersemi.keywords import AnyMatcher, KeywordMatcher
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -8,7 +10,7 @@ from .multiple_signature_command_invocation_dumper import (
 )
 from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
 from .target_link_libraries_command_dumper import TargetLinkLibraries
-from .two_word_keyword_isolator import AnyMatcher, TwoWordKeywordIsolator
+from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
 class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationDumper):
@@ -70,12 +72,10 @@ class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper
     multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
     keyword_formatters = {"COMMAND": "_format_command_line"}
 
-    def _format_positional_arguments_group(self, group):
-        if len(group) > 1:
-            if group[0].children[0] == "ALL":
-                first, *rest = group
-                return f"{self.visit(first)}\n{super()._format_command_line(rest)}"
-        return super()._format_command_line(group)
+    def positional_arguments(self, tree):
+        if len(tree.children) > 1:
+            return super()._format_command_line(tree.children)
+        return super().positional_arguments(tree)
 
 
 class AddDependencies(ArgumentAwareCommandInvocationDumper):
@@ -220,7 +220,12 @@ class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
     one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
 
 
-_Install_TARGETS_kinds = [
+_INCLUDES_DESTINATION = ("INCLUDES", "DESTINATION")
+_FILE_SET_Any = ("FILE_SET", AnyMatcher())
+_PATTERN_Any = ("PATTERN", AnyMatcher())
+_REGEX_Any = ("REGEX", AnyMatcher())
+
+_Install_TARGETS_kinds: List[KeywordMatcher] = [
     "ARCHIVE",
     "LIBRARY",
     "RUNTIME",
@@ -230,7 +235,7 @@ _Install_TARGETS_kinds = [
     "PUBLIC_HEADER",
     "PRIVATE_HEADER",
     "RESOURCE",
-    "FILE_SET.*",
+    _FILE_SET_Any,
     "CXX_MODULES_BMI",
 ]
 _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds = [
@@ -239,7 +244,7 @@ _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds = [
     "FRAMEWORK",
     "BUNDLE",
 ]
-_Install_DIRECTORY_kinds = ["PATTERN.*", "REGEX.*"]
+_Install_DIRECTORY_kinds: List[KeywordMatcher] = [_PATTERN_Any, _REGEX_Any]
 _Install_RUNTIME_DEPENDENCY_SET_kinds = ["LIBRARY", "RUNTIME", "FRAMEWORK"]
 
 
@@ -249,10 +254,10 @@ class Install(
     MultipleSignatureCommandInvocationDumper,
 ):
     two_words_keywords = [
-        ("INCLUDES", "DESTINATION"),
-        ("FILE_SET", AnyMatcher()),
-        ("PATTERN", AnyMatcher()),
-        ("REGEX", AnyMatcher()),
+        _INCLUDES_DESTINATION,
+        _FILE_SET_Any,
+        _PATTERN_Any,
+        _REGEX_Any,
     ]
 
     customized_signatures = {
@@ -280,7 +285,7 @@ class Install(
             ],
             multi_value_keywords=[
                 "TARGETS",
-                "INCLUDES DESTINATION",
+                _INCLUDES_DESTINATION,
                 "RUNTIME_DEPENDENCIES",
                 *_Install_TARGETS_kinds,
             ],

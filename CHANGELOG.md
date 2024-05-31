@@ -17,6 +17,7 @@
 ### Fixed
 - use specialized formatting of some previously omitted official commands
 - improve consistency of `set_package_properties` with similar commands
+- fix incorrect detection of sections in commands like `install` (#26)
 
 ## [0.12.1] 2024-03-27
 - improve `find_package` formatting around `REQUIRED` keyword (#20)

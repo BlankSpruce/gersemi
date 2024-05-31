@@ -1,23 +1,9 @@
 from typing import Sequence, Tuple, Union
 from lark import Tree
-from lark.visitors import Transformer, Transformer_InPlace
-from gersemi.ast_helpers import is_keyword
+from lark.visitors import Transformer_InPlace
+from gersemi.ast_helpers import is_keyword, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.utils import advance
-
-
-class AnyMatcher:
-    def __eq__(self, other):
-        return True
-
-
-class PrependLhs(Transformer):
-    def __init__(self, lhs):
-        super().__init__()
-        self.lhs = lhs
-
-    def unquoted_argument(self, children):
-        return Tree("unquoted_argument", [self.lhs + " " + "".join(children)])
+from gersemi.keywords import AnyMatcher
 
 
 class IsolateTwoWordKeywords(Transformer_InPlace):
@@ -32,25 +18,32 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
     def _is_rhs(self, node):
         return is_keyword(self.rhs)(node)
 
-    def _prepend_lhs(self, node):
-        return PrependLhs(self.lhs).transform(node)
-
     def arguments(self, children):
         if len(children) <= 1:
             return Tree("arguments", children)
 
         new_children = []
-        iterator = zip(children, children[1:])
-        for one_behind, current in iterator:
-            if self._is_lhs(one_behind) and self._is_rhs(current):
-                new_children += [self._prepend_lhs(current)]
-                _, current = advance(iterator, times=1, default=(None, None))
-                if current is None:
-                    break
+        accumulator = []
+        iterator = iter(children)
+        for child in iterator:
+            if len(accumulator) > 0:
+                if is_comment(child):
+                    accumulator.append(child)
+                elif self._is_rhs(child):
+                    new_children.append(Tree("keyword_argument", [*accumulator, child]))
+                    accumulator = []
+                else:
+                    new_children.extend(accumulator)
+                    accumulator = [child]
             else:
-                new_children += [one_behind]
-        else:
-            new_children += [item for item in [current] if item is not None]
+                if self._is_lhs(child):
+                    accumulator = [child]
+                else:
+                    new_children.append(child)
+
+        if len(accumulator) > 0:
+            new_children.extend(accumulator)
+
         return Tree("arguments", new_children)
 
 
@@ -62,3 +55,10 @@ class TwoWordKeywordIsolator(BaseCommandInvocationDumper):
         for lhs, rhs in self.two_words_keywords:
             preprocessed = IsolateTwoWordKeywords(lhs, rhs).transform(preprocessed)
         return preprocessed
+
+    def keyword_argument(self, tree):
+        result = self._try_to_format_into_single_line(tree.children, separator=" ")
+        if result is not None:
+            return result
+
+        return "\n".join(map(self.visit, tree.children))

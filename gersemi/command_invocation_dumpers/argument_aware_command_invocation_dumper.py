@@ -1,7 +1,17 @@
 from collections.abc import Sized
 from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Tuple
-from gersemi.ast_helpers import is_one_of_keywords, is_comment
+from lark import Tree
+from gersemi.ast_helpers import (
+    is_comment,
+    is_multi_value_argument,
+    is_one_of_keywords,
+    is_one_value_argument,
+    is_option_argument,
+    is_positional_arguments,
+    is_section,
+)
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.keywords import KeywordMatcher
 from gersemi.types import Nodes
 from gersemi.utils import pop_all
 
@@ -14,8 +24,25 @@ def is_non_empty(sequence: Sized) -> bool:
     return len(sequence) > 0
 
 
+def is_non_empty_group(group: Sized) -> bool:
+    if isinstance(group, Tree):
+        return is_non_empty(group.children)
+
+    return is_non_empty(group)
+
+
 def is_empty(sequence: Sized) -> bool:
     return len(sequence) <= 0
+
+
+def make_tree(name: str):
+    return lambda children: Tree(name, children)
+
+
+option_argument = make_tree("option_argument")
+one_value_argument = make_tree("one_value_argument")
+multi_value_argument = make_tree("multi_value_argument")
+positional_arguments = make_tree("positional_arguments")
 
 
 class PositionalArguments(list):
@@ -32,16 +59,15 @@ class KeywordSplitter:
         self.comment_accumulator: Nodes = []
 
     def _flush_accumulators(self):
-        each_comment_in_its_own_group = [[c] for c in pop_all(self.comment_accumulator)]
         if isinstance(self.accumulator, PositionalArguments):
-            argument_group = PositionalArguments(pop_all(self.accumulator))
+            argument_group = positional_arguments(pop_all(self.accumulator))
         else:
-            argument_group = pop_all(self.accumulator)
-        self.groups += [argument_group, *each_comment_in_its_own_group]
+            argument_group = multi_value_argument(pop_all(self.accumulator))
+        self.groups += [argument_group, *pop_all(self.comment_accumulator)]
 
     def _append_option_group(self, argument):
         self._flush_accumulators()
-        self.groups += [[argument]]
+        self.groups.append(option_argument([argument]))
 
     def _append_one_value_group(self, argument, iterator):
         self._flush_accumulators()
@@ -50,7 +76,7 @@ class KeywordSplitter:
             group.append(n)
             if not is_comment(n):
                 break
-        self.groups.append(group)
+        self.groups.append(one_value_argument(group))
 
     def split(self, arguments: Nodes) -> Iterator[Nodes]:
         iterator = iter(arguments)
@@ -72,7 +98,7 @@ class KeywordSplitter:
                 self.accumulator += [*pop_all(self.comment_accumulator), argument]
 
         self._flush_accumulators()
-        return filter(is_non_empty, self.groups)
+        return filter(is_non_empty_group, self.groups)
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
@@ -80,26 +106,23 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     front_positional_arguments: Sequence[str] = []
     back_positional_arguments: Sequence[str] = []
     options: Iterable[str] = []
-    one_value_keywords: Iterable[str] = []
-    multi_value_keywords: Iterable[str] = []
+    one_value_keywords: Iterable[KeywordMatcher] = []
+    multi_value_keywords: Iterable[KeywordMatcher] = []
     keyword_formatters: Dict[str, str] = {}
     canonical_name: Optional[str] = None
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
 
-    def _format_positional_arguments_group(self, group) -> str:
-        return "\n".join(map(self.visit, group))
+    def positional_arguments(self, tree) -> str:
+        return "\n".join(map(self.visit, tree.children))
 
-    def _format_group(self, group) -> str:
-        if isinstance(group, PositionalArguments):
-            return self._format_positional_arguments_group(group)
-
-        result = self._try_to_format_into_single_line(group, separator=" ")
+    def _format_non_option(self, tree):
+        result = self._try_to_format_into_single_line(tree.children, separator=" ")
         if result is not None:
             return result
 
-        keyword, *values = group
+        keyword, *values = tree.children
         keyword_as_value = keyword.children[0] if len(keyword.children) > 0 else None
 
         can_be_inlined = (not self.favour_expansion) or (
@@ -109,7 +132,9 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         )
         if can_be_inlined:
             with self.select_inlining_strategy():
-                result = self._try_to_format_into_single_line(group, separator=" ")
+                result = self._try_to_format_into_single_line(
+                    tree.children, separator=" "
+                )
                 if result is not None:
                     return result
 
@@ -125,15 +150,15 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             formatted_values = formatter(values)
         return f"{begin}\n{formatted_values}"
 
-    def _split_positional_arguments(self, arguments: Nodes, positional_arguments):
-        last_index = min(len(arguments), len(positional_arguments))
+    def _split_positional_arguments(self, arguments: Nodes, known_positional_arguments):
+        last_index = min(len(arguments), len(known_positional_arguments))
         result = []
         for i in range(last_index):
-            result.append(PositionalArguments([arguments[i]]))
+            result.append(positional_arguments([arguments[i]]))
 
         rest = arguments[last_index:]
         if len(rest) > 0:
-            result.append(PositionalArguments(rest))
+            result.append(positional_arguments(rest))
         return result
 
     def _separate_front(self, arguments: Nodes) -> Tuple[List[Nodes], Nodes]:
@@ -173,7 +198,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             arguments, back = (
                 arguments[: -len(self.back_positional_arguments)],
                 [
-                    PositionalArguments(
+                    positional_arguments(
                         arguments[-len(self.back_positional_arguments) :]
                     )
                 ],
@@ -186,13 +211,33 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return [*front, *keyworded_arguments, *back]
 
     def group_size(self, group):
-        if isinstance(group, PositionalArguments):
-            return len(group)
-        return max(0, len(group) - 1)
+        if is_positional_arguments(group):
+            return len(group.children)
+        if is_option_argument(group):
+            return 0
+        if is_one_value_argument(group):
+            return len(group.children) - 1
+        if is_multi_value_argument(group):
+            return len(group.children) - 1
+        if is_section(group):
+            section_size = len(group.children) - 1
+            subarguments_size = max(map(self.group_size, group.children))
+            return max(section_size, subarguments_size)
+
+        return 0
+
+    def option_argument(self, tree):
+        return self.visit(tree.children[0])
+
+    def one_value_argument(self, tree):
+        return self._format_non_option(tree)
+
+    def multi_value_argument(self, tree):
+        return self._format_non_option(tree)
 
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)
-        return "\n".join(map(self._format_group, filter(None, groups)))
+        return "\n".join(map(self.visit, filter(None, groups)))
 
     def format_command_name(self, identifier):
         if self.canonical_name is None:
