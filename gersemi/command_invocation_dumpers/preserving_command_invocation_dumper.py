@@ -45,6 +45,10 @@ def split_into_segments(string):
 def indent_segment(segment, indent_symbol):
     if segment[:1] in ["[", '"']:
         return segment
+
+    if segment.startswith(" ") or segment.startswith("\t"):
+        return segment
+
     return indent(segment, indent_symbol, lambda s: not s.startswith("\n"))
 
 

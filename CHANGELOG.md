@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.1] 2024-06-01
+### Fixed
+- fix issue with messing up whitespaces in between arguments of unknown custom commands
+
 ## [0.13.0] 2024-06-01
 ### Added
 - support for using canonical casing of custom commands (#21)
