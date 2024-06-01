@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.13.0] 2024-05-24
+## [0.13.0] 2024-06-01
 ### Added
 - support for using canonical casing of custom commands (#21)
 
