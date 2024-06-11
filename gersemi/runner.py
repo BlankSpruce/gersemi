@@ -224,12 +224,10 @@ def handle_files_to_format(
     return compute_error_code(code for _, code in results)
 
 
-def run(
-    mode: Mode, configuration: Configuration, num_workers: int, sources: Iterable[Path]
-):
+def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
     requested_files = get_files(sources)
 
-    pool_cm = create_pool(Path("-") in requested_files, num_workers)
+    pool_cm = create_pool(Path("-") in requested_files, configuration.workers)
     with create_cache() as cache, pool_cm() as pool:
         already_formatted_files, files_to_format = split_files(
             cache, configuration.summary(), requested_files

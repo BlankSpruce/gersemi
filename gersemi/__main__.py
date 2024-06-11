@@ -190,7 +190,7 @@ def main():
     configuration = make_configuration(args)
     mode = get_mode(args)
 
-    sys.exit(run(mode, configuration, args.workers, args.sources))
+    sys.exit(run(mode, configuration, args.sources))
 
 
 if __name__ == "__main__":
