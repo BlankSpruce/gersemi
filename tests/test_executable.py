@@ -854,3 +854,32 @@ def test_format_file_with_conflicting_command_definitions():
             completed_process.stderr,
             re.MULTILINE,
         )
+
+
+def test_cached_result_doesnt_inhibit_printing_in_stdout_mode():
+    with temporary_copy(
+        case("formatted_file.cmake")
+    ) as copy, make_temporary_cache() as cache_path:
+        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
+            cache_path, *args, **kwargs
+        )
+
+        check_run = gersemi_("--check", copy)
+        assert check_run.returncode == 0, (
+            check_run.stdout,
+            check_run.stderr,
+        )
+        assert len(check_run.stdout) == 0, check_run.stdout
+
+        subsequent_non_check_run = gersemi_(copy)
+        assert subsequent_non_check_run.returncode == 0, (
+            subsequent_non_check_run.stdout,
+            subsequent_non_check_run.stderr,
+        )
+
+        with open(copy, "r", encoding="utf-8") as f:
+            file_content = f.read()
+
+        assert (
+            subsequent_non_check_run.stdout == file_content
+        ), subsequent_non_check_run.stdout

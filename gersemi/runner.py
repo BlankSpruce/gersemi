@@ -12,13 +12,14 @@ from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
-from gersemi.formatter import create_formatter, Formatter
+from gersemi.formatter import create_formatter, NullFormatter, Formatter
 from gersemi.mode import Mode
 from gersemi.parser import PARSER as parser
 from gersemi.result import Result, Error, apply, get_error_message
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
 from gersemi.task_result import TaskResult
 from gersemi.tasks.check_formatting import check_formatting, quiet_check_formatting
+from gersemi.tasks.do_nothing import do_nothing
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.format_file import format_file, FormattedFile
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
@@ -143,17 +144,21 @@ def create_pool(is_stdin_in_sources, num_workers):
     return partial(mp.Pool, processes=num_workers)
 
 
-def filter_already_formatted_files(
-    cache, configuration_summary: str, files: Iterable[Path]
-):
+def split_files(cache, configuration_summary: str, files: Iterable[Path]):
     known_files = cache.get_files(configuration_summary)
+    already_formatted_files = []
+    files_to_format = []
     for f in files:
         if f not in known_files:
-            yield f
+            files_to_format.append(f)
         else:
             s = f.stat()
             if (s.st_size, s.st_mtime_ns) != known_files[f]:
-                yield f
+                files_to_format.append(f)
+            else:
+                already_formatted_files.append(f)
+
+    return already_formatted_files, files_to_format
 
 
 def store_files_in_cache(
@@ -163,43 +168,80 @@ def store_files_in_cache(
         cache.store_files(configuration_summary, files)
 
 
+def compute_error_code(collection):
+    return max(collection, default=SUCCESS)
+
+
+def select_task_for_already_formatted_files(mode: Mode):
+    return {
+        Mode.ForwardToStdout: forward_to_stdout,
+    }.get(mode, do_nothing)
+
+
+def handle_already_formatted_files(
+    mode: Mode, already_formatted_files: Iterable[Path]
+) -> int:
+    task = select_task_for_already_formatted_files(mode)
+    formatter = NullFormatter()
+    execute = partial(run_task, formatter=formatter, task=task)
+    results = [
+        consume_task_result(result) for result in map(execute, already_formatted_files)
+    ]
+    return compute_error_code(code for _, code in results)
+
+
+def handle_files_to_format(
+    mode: Mode,
+    configuration: Configuration,
+    cache,
+    pool,
+    files_to_format: Iterable[Path],
+) -> int:
+    configuration_summary = configuration.summary()
+    custom_command_definitions = find_all_custom_command_definitions(
+        set(configuration.definitions), pool
+    )
+    formatter = create_formatter(
+        not configuration.unsafe,
+        configuration.line_length,
+        configuration.indent,
+        custom_command_definitions,
+        configuration.list_expansion,
+    )
+    task = select_task(mode, configuration)
+    execute = partial(run_task, formatter=formatter, task=task)
+
+    results = [
+        consume_task_result(result)
+        for result in pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE)
+    ]
+    store_files_in_cache(
+        mode,
+        cache,
+        configuration_summary,
+        (path for path, code in results if code == SUCCESS and path != Path("-")),
+    )
+    return compute_error_code(code for _, code in results)
+
+
 def run(
     mode: Mode, configuration: Configuration, num_workers: int, sources: Iterable[Path]
 ):
-    configuration_summary = configuration.summary()
     requested_files = get_files(sources)
-    task = select_task(mode, configuration)
 
     pool_cm = create_pool(Path("-") in requested_files, num_workers)
     with create_cache() as cache, pool_cm() as pool:
-        files_to_format = list(
-            filter_already_formatted_files(
-                cache, configuration_summary, requested_files
-            )
-        )
-        custom_command_definitions = find_all_custom_command_definitions(
-            set(configuration.definitions), pool
-        )
-        formatter = create_formatter(
-            not configuration.unsafe,
-            configuration.line_length,
-            configuration.indent,
-            custom_command_definitions,
-            configuration.list_expansion,
-        )
-        execute = partial(run_task, formatter=formatter, task=task)
-
-        results = [
-            consume_task_result(result)
-            for result in pool.imap_unordered(
-                execute, files_to_format, chunksize=CHUNKSIZE
-            )
-        ]
-        store_files_in_cache(
-            mode,
-            cache,
-            configuration_summary,
-            (path for path, code in results if code == SUCCESS and path != Path("-")),
+        already_formatted_files, files_to_format = split_files(
+            cache, configuration.summary(), requested_files
         )
 
-        return max((code for _, code in results), default=SUCCESS)
+        already_formatted_files_error_code = handle_already_formatted_files(
+            mode, already_formatted_files
+        )
+        files_to_format_error_code = handle_files_to_format(
+            mode, configuration, cache, pool, files_to_format
+        )
+
+        return compute_error_code(
+            [already_formatted_files_error_code, files_to_format_error_code]
+        )

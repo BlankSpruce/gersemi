@@ -35,6 +35,11 @@ class Formatter:
         return result
 
 
+class NullFormatter:
+    def format(self, code):
+        return code
+
+
 def create_formatter(
     do_sanity_check,
     line_length,

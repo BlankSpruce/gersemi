@@ -1,4 +1,7 @@
 # Changelog
+## [0.13.2] 2024-06-11
+### Fixed
+- fix issue with cached results interfering with stdout mode
 
 ## [0.13.1] 2024-06-01
 ### Fixed
