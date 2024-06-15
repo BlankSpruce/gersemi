@@ -1,4 +1,8 @@
 # Changelog
+## [0.13.3] 2024-06-15
+### Added
+- support for new keywords in native commands available in CMake 3.30
+
 ## [0.13.2] 2024-06-11
 ### Fixed
 - fix issue with cached results interfering with stdout mode

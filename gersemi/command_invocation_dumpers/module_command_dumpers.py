@@ -257,6 +257,7 @@ class ExternalProjectAdd(CommandLineFormatter, ArgumentAwareCommandInvocationDum
         "CVS_MODULE",
         "CVS_TAG",
         "DOWNLOAD_EXTRACT_TIMESTAMP",
+        "TLS_VERSION",
         # Update/Patch Step
         "UPDATE_DISCONNECTED",
         # Configure Step
