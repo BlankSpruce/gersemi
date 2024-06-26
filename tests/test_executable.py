@@ -41,10 +41,7 @@ def gersemi(*gersemi_args, **subprocess_kwargs):
 
 
 HERE = os.path.dirname(os.path.realpath(__file__))
-
-
-def case(filepath):
-    return f"{HERE}/executable/{filepath}"
+TESTS = Path(HERE) / "executable"
 
 
 @contextmanager
@@ -159,17 +156,17 @@ def test_help_just_works():
 
 
 def test_check_on_formatted_file_should_return_zero():
-    with temporary_copy(case("formatted_file.cmake")) as copy:
+    with temporary_copy(TESTS / "formatted_file.cmake") as copy:
         assert_success("--check", copy)
 
 
 def test_check_on_not_formatted_file_should_return_one():
-    with temporary_copy(case("not_formatted_file.cmake")) as copy:
+    with temporary_copy(TESTS / "not_formatted_file.cmake") as copy:
         assert_fail("--check", copy)
 
 
 def test_format_file_in_place():
-    with temporary_copy(case("not_formatted_file.cmake")) as copy:
+    with temporary_copy(TESTS / "not_formatted_file.cmake") as copy:
         assert_fail("--check", copy)
         gersemi("--in-place", copy)
         assert_success("--check", copy)
@@ -209,63 +206,61 @@ def test_when_run_with_no_input_should_return_zero():
 
 
 def test_dont_mix_stdin_and_file_input():
-    assert_fail(case("formatted_file.cmake"), "-")
-    assert_fail("-", case("formatted_file.cmake"))
-    assert_fail(case("formatted_file.cmake"), "-", case("formatted_file.cmake"))
+    assert_fail(TESTS / "formatted_file.cmake", "-")
+    assert_fail("-", TESTS / "formatted_file.cmake")
+    assert_fail(TESTS / "formatted_file.cmake", "-", TESTS / "formatted_file.cmake")
 
 
 def test_check_multiple_formatted_input_files():
-    case_ = lambda filename: case("/directory_with_formatted_files/" + filename)
     with temporary_copies(
-        [case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")]
+        TESTS / "directory_with_formatted_files" / f
+        for f in ["file1.cmake", "file2.cmake", "file3.cmake"]
     ) as copies:
         assert_success("--check", *copies)
 
 
 def test_check_multiple_not_formatted_input_files():
-    case_ = lambda filename: case("/directory_with_not_formatted_files/" + filename)
     with temporary_copies(
-        [case_("file1.cmake"), case_("file2.cmake"), case_("file3.cmake")]
+        TESTS / "directory_with_not_formatted_files" / f
+        for f in ["file1.cmake", "file2.cmake", "file3.cmake"]
     ) as copies:
         assert_fail("--check", *copies)
 
 
 def test_check_multiple_input_files_when_some_are_not_formatted():
-    case_ = lambda filename: case(
-        "/directory_with_some_not_formatted_files/" + filename
-    )
     with temporary_copies(
-        [
-            case_("formatted_file1.cmake"),
-            case_("formatted_file2.cmake"),
-            case_("formatted_file3.cmake"),
-            case_("not_formatted_file1.cmake"),
-            case_("not_formatted_file2.cmake"),
-            case_("not_formatted_file3.cmake"),
+        TESTS / "directory_with_some_not_formatted_files" / f
+        for f in [
+            "formatted_file1.cmake",
+            "formatted_file2.cmake",
+            "formatted_file3.cmake",
+            "not_formatted_file1.cmake",
+            "not_formatted_file2.cmake",
+            "not_formatted_file3.cmake",
         ]
     ) as copies:
         assert_fail("--check", *copies)
 
 
 def test_check_directory_with_formatted_files():
-    with temporary_dir_copy(case("directory_with_formatted_files")) as copy:
+    with temporary_dir_copy(TESTS / "directory_with_formatted_files") as copy:
         assert_success("--check", copy)
 
 
 def test_check_directory_with_not_formatted_files():
-    with temporary_dir_copy(case("directory_with_not_formatted_files")) as copy:
+    with temporary_dir_copy(TESTS / "directory_with_not_formatted_files") as copy:
         assert_fail("--check", copy)
 
 
 def test_check_directory_with_some_not_formatted_files():
-    with temporary_dir_copy(case("directory_with_some_not_formatted_files")) as copy:
+    with temporary_dir_copy(TESTS / "directory_with_some_not_formatted_files") as copy:
         assert_fail("--check", copy)
 
 
 def test_format_in_place_multiple_formatted_files():
     files = ["file1.cmake", "file2.cmake", "file3.cmake"]
     with temporary_copies(
-        case("/directory_with_formatted_files/" + f) for f in files
+        TESTS / "directory_with_formatted_files" / f for f in files
     ) as copies:
         assert_success("--check", *copies)
         gersemi("--in-place", *copies)
@@ -275,7 +270,7 @@ def test_format_in_place_multiple_formatted_files():
 def test_format_in_place_multiple_not_formatted_files():
     files = ["file1.cmake", "file2.cmake", "file3.cmake"]
     with temporary_copies(
-        case("/directory_with_not_formatted_files/" + f) for f in files
+        TESTS / "directory_with_not_formatted_files" / f for f in files
     ) as copies:
         assert_fail("--check", *copies)
         gersemi("--in-place", *copies)
@@ -292,7 +287,7 @@ def test_format_in_place_multiple_input_files_when_some_are_not_formatted():
         "not_formatted_file3.cmake",
     ]
     with temporary_copies(
-        case("/directory_with_some_not_formatted_files/" + f) for f in files
+        TESTS / "directory_with_some_not_formatted_files" / f for f in files
     ) as copies:
         formatted_copies, not_formatted_copies = copies[:3], copies[3:]
         assert_success("--check", *formatted_copies)
@@ -302,21 +297,21 @@ def test_format_in_place_multiple_input_files_when_some_are_not_formatted():
 
 
 def test_format_in_place_directory_with_formatted_files():
-    with temporary_dir_copy(case("directory_with_formatted_files")) as copy:
+    with temporary_dir_copy(TESTS / "directory_with_formatted_files") as copy:
         assert_success("--check", copy)
         gersemi("--in-place", copy)
         assert_success("--check", copy)
 
 
 def test_format_in_place_directory_with_not_formatted_files():
-    with temporary_dir_copy(case("directory_with_not_formatted_files")) as copy:
+    with temporary_dir_copy(TESTS / "directory_with_not_formatted_files") as copy:
         assert_fail("--check", copy)
         gersemi("--in-place", copy)
         assert_success("--check", copy)
 
 
 def test_format_in_place_directory_with_some_not_formatted_files():
-    with temporary_dir_copy(case("directory_with_some_not_formatted_files")) as copy:
+    with temporary_dir_copy(TESTS / "directory_with_some_not_formatted_files") as copy:
         assert_fail("--check", copy)
         gersemi("--in-place", copy)
         assert_success("--check", copy)
@@ -380,26 +375,26 @@ def test_format_with_non_default_line_length(tmpdir):
 
 
 def test_check_project_with_custom_commands():
-    with temporary_dir_copy(case("custom_project/not_formatted")) as copy:
+    with temporary_dir_copy(TESTS / "custom_project" / "not_formatted") as copy:
         assert_fail("--check", copy, "--definitions", copy)
 
-    with temporary_dir_copy(case("custom_project/formatted")) as copy:
+    with temporary_dir_copy(TESTS / "custom_project" / "formatted") as copy:
         assert_success("--check", copy, "--definitions", copy)
 
 
 def test_check_project_with_custom_commands_but_without_definitions():
-    with temporary_dir_copy(case("custom_project/not_formatted")) as copy:
+    with temporary_dir_copy(TESTS / "custom_project" / "not_formatted") as copy:
         assert_fail("--check", copy)
 
     with temporary_dir_copy(
-        case("custom_project/only_custom_commands_not_formatted")
+        TESTS / "custom_project" / "only_custom_commands_not_formatted"
     ) as copy:
         assert_success("--check", copy)
 
 
 def test_format_project_with_custom_commands():
     with temporary_dir_copies(
-        case("custom_project/" + d) for d in ["not_formatted", "formatted"]
+        TESTS / "custom_project" / d for d in ["not_formatted", "formatted"]
     ) as (
         not_formatted,
         formatted,
@@ -413,7 +408,7 @@ def test_format_project_with_custom_commands():
 
 def test_format_project_with_custom_commands_but_without_definitions():
     with temporary_dir_copies(
-        case("custom_project/" + d)
+        TESTS / "custom_project" / d
         for d in ["not_formatted", "only_custom_commands_not_formatted"]
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
@@ -424,7 +419,7 @@ def test_format_project_with_custom_commands_but_without_definitions():
 
 
 def test_non_empty_stderr_when_files_are_not_formatted():
-    completed_process = gersemi("--check", case("custom_project/not_formatted"))
+    completed_process = gersemi("--check", TESTS / "custom_project" / "not_formatted")
     assert completed_process.returncode == 1
     assert completed_process.stderr != ""
 
@@ -432,7 +427,7 @@ def test_non_empty_stderr_when_files_are_not_formatted():
 def test_empty_stderr_when_files_are_not_formatted_but_quiet_is_supplied():
     completed_process = gersemi(
         "--check",
-        case("custom_project/not_formatted"),
+        TESTS / "custom_project" / "not_formatted",
         "--quiet",
         universal_newlines=True,
     )
@@ -442,12 +437,14 @@ def test_empty_stderr_when_files_are_not_formatted_but_quiet_is_supplied():
 
 def test_project_with_dot_gersemirc_will_use_configuration_defined_in_file():
     with temporary_dir_copies(
-        case("custom_project/" + d)
+        TESTS / "custom_project" / d
         for d in ["not_formatted", "formatted_with_line_length_100"]
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        creator = lambda dirname: {"line_length": 100, "definitions": [dirname]}
+        def creator(dirname):
+            return {"line_length": 100, "definitions": [dirname]}
+
         with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
@@ -458,7 +455,7 @@ def test_project_with_dot_gersemirc_will_use_configuration_defined_in_file():
 
 def test_line_length_from_command_line_takes_precedence_over_configuration_file():
     with temporary_dir_copy(
-        case("custom_project/formatted_with_line_length_100")
+        TESTS / "custom_project" / "formatted_with_line_length_100"
     ) as formatted:
         # without configuration file
         assert_fail("--check", formatted, "--definitions", formatted)
@@ -491,7 +488,7 @@ def test_line_length_from_command_line_takes_precedence_over_configuration_file(
 
 
 def test_definitions_from_command_line_take_precedence_over_configuration_file():
-    directories = [case("custom_project/" + d) for d in ["not_formatted", "formatted"]]
+    directories = [TESTS / "custom_project" / d for d in ["not_formatted", "formatted"]]
 
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
@@ -500,12 +497,14 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
         assert_success("--in-place", not_formatted, "--definitions", not_formatted)
         assert_that_directories_have_the_same_content(not_formatted, formatted)
 
+    def empty_creator(_):
+        return {}
+
     # missing definitions in configuration file
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        creator = lambda _: {}
-        with create_configuration_files([not_formatted, formatted], creator):
+        with create_configuration_files([not_formatted, formatted], empty_creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
             assert_success("--in-place", not_formatted)
@@ -516,8 +515,7 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        creator = lambda _: {}
-        with create_configuration_files([not_formatted, formatted], creator):
+        with create_configuration_files([not_formatted, formatted], empty_creator):
             assert_success("--check", formatted, "--definitions", formatted)
             assert_fail("--check", not_formatted, "--definitions", not_formatted)
             assert_success("--in-place", not_formatted, "--definitions", not_formatted)
@@ -528,7 +526,9 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
     with temporary_dir_copies(directories) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        creator = lambda dirname: {"definitions": [dirname]}
+        def creator(dirname):
+            return {"definitions": [dirname]}
+
         with create_configuration_files([not_formatted, formatted], creator):
             with ExitStack() as fake_definitions:
                 fake_definitions_in_not_formatted, fake_definitions_in_formatted = [
@@ -559,18 +559,20 @@ def test_definitions_from_command_line_take_precedence_over_configuration_file()
 
 def test_use_paths_relative_to_root_as_definitions_in_configuration_file():
     with temporary_dir_copies(
-        case("custom_project/" + d)
+        TESTS / "custom_project" / d
         for d in ["not_formatted", "formatted_with_line_length_100"]
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        creator = lambda dirname: {
-            "line_length": 100,
-            "definitions": [
-                "back_to_the_future.cmake",
-                "./back_to_the_future_sequels.cmake",
-            ],
-        }
+        def creator(_):
+            return {
+                "line_length": 100,
+                "definitions": [
+                    "back_to_the_future.cmake",
+                    "back_to_the_future_sequels.cmake",
+                ],
+            }
+
         with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
@@ -581,18 +583,20 @@ def test_use_paths_relative_to_root_as_definitions_in_configuration_file():
 
 def test_use_absolute_paths_as_definitions_in_configuration_file():
     with temporary_dir_copies(
-        case("custom_project/" + d)
+        TESTS / "custom_project" / d
         for d in ["not_formatted", "formatted_with_line_length_100"]
     ) as (not_formatted, formatted):
         assert_that_directories_differ(not_formatted, formatted)
 
-        creator = lambda dirname: {
-            "line_length": 100,
-            "definitions": [
-                os.path.join(dirname, "back_to_the_future.cmake"),
-                os.path.join(dirname, "back_to_the_future_sequels.cmake"),
-            ],
-        }
+        def creator(dirname):
+            return {
+                "line_length": 100,
+                "definitions": [
+                    os.path.join(dirname, "back_to_the_future.cmake"),
+                    os.path.join(dirname, "back_to_the_future_sequels.cmake"),
+                ],
+            }
+
         with create_configuration_files([not_formatted, formatted], creator):
             assert_success("--check", formatted)
             assert_fail("--check", not_formatted)
@@ -641,15 +645,20 @@ def cache_tests(files_to_format):
             stack.enter_context(temporary_dir_copy(files_to_format)),
             stack.enter_context(make_temporary_cache()),
         ]
-        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
-            temporary_cache, *args, **kwargs
-        )
+
+        def gersemi_(*args, **kwargs):
+            return gersemi_with_cache_path(temporary_cache, *args, **kwargs)
+
         inspector = stack.enter_context(inspect_cache(temporary_cache))
         yield copy, gersemi_, inspector
 
 
 def test_formatted_files_are_stored_in_cache_on_check():
-    with cache_tests(case("custom_project/formatted")) as (copy, gersemi_, inspector):
+    with cache_tests(TESTS / "custom_project" / "formatted") as (
+        copy,
+        gersemi_,
+        inspector,
+    ):
         inspector.assert_that_has_no_tables()
 
         gersemi_("--check", copy, "--definitions", copy)
@@ -661,7 +670,7 @@ def test_formatted_files_are_stored_in_cache_on_check():
 
 
 def test_not_formatted_files_are_not_stored_in_cache_on_check():
-    with cache_tests(case("custom_project/not_formatted")) as (
+    with cache_tests(TESTS / "custom_project" / "not_formatted") as (
         copy,
         gersemi_,
         inspector,
@@ -676,7 +685,7 @@ def test_not_formatted_files_are_not_stored_in_cache_on_check():
 
 
 def test_not_formatted_files_are_stored_in_cache_after_formatting():
-    with cache_tests(case("custom_project/not_formatted")) as (
+    with cache_tests(TESTS / "custom_project" / "not_formatted") as (
         copy,
         gersemi_,
         inspector,
@@ -691,7 +700,7 @@ def test_not_formatted_files_are_stored_in_cache_after_formatting():
 
 
 def test_formatted_files_in_cache_dont_get_updated_on_subsequent_run():
-    with cache_tests(case("custom_project/not_formatted")) as (
+    with cache_tests(TESTS / "custom_project" / "not_formatted") as (
         copy,
         gersemi_,
         inspector,
@@ -714,7 +723,7 @@ def test_formatted_files_in_cache_dont_get_updated_on_subsequent_run():
 
 
 def test_different_configuration_leads_to_overriding_data_stored_in_cache():
-    with cache_tests(case("custom_project/not_formatted")) as (
+    with cache_tests(TESTS / "custom_project" / "not_formatted") as (
         copy,
         gersemi_,
         inspector,
@@ -741,7 +750,7 @@ def test_different_configuration_leads_to_overriding_data_stored_in_cache():
 
 
 def test_no_files_are_stored_in_cache_on_diff():
-    with cache_tests(case("custom_project/not_formatted")) as (
+    with cache_tests(TESTS / "custom_project" / "not_formatted") as (
         copy,
         gersemi_,
         inspector,
@@ -755,13 +764,12 @@ def test_no_files_are_stored_in_cache_on_diff():
 
 def test_when_cache_cant_be_modified_it_is_ignored():
     with temporary_dir_copy(
-        case("custom_project/formatted")
+        TESTS / "custom_project" / "formatted"
     ) as copy, tempfile.NamedTemporaryFile(mode="r") as cache_path:
         os.chmod(cache_path.name, S_IREAD | S_IRGRP | S_IROTH)
 
-        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
-            cache_path.name, *args, **kwargs
-        )
+        def gersemi_(*args, **kwargs):
+            return gersemi_with_cache_path(cache_path.name, *args, **kwargs)
 
         completed_process = gersemi_("--check", copy, "--definitions", copy)
         assert completed_process.returncode == 0
@@ -771,14 +779,13 @@ def test_when_cache_cant_be_modified_it_is_ignored():
 
 def test_when_cache_is_malformed_it_is_ignored():
     with temporary_dir_copy(
-        case("custom_project/formatted")
+        TESTS / "custom_project" / "formatted"
     ) as copy, tempfile.NamedTemporaryFile() as cache_path:
         cache_path.write("foobarbaz1231212312312312313".encode("ascii"))
         cache_path.flush()
 
-        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
-            cache_path.name, *args, **kwargs
-        )
+        def gersemi_(*args, **kwargs):
+            return gersemi_with_cache_path(cache_path.name, *args, **kwargs)
 
         completed_process = gersemi_("--check", copy, "--definitions", copy)
         assert completed_process.returncode == 0
@@ -790,9 +797,9 @@ def test_cache_is_not_updated_when_input_is_from_stdin():
     inp = """set(FOO BAR)
 """
     with make_temporary_cache() as cache_path, inspect_cache(cache_path) as inspector:
-        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
-            cache_path, *args, **kwargs
-        )
+
+        def gersemi_(*args, **kwargs):
+            return gersemi_with_cache_path(cache_path, *args, **kwargs)
 
         inspector.assert_that_has_no_tables()
         gersemi_("--check", "-", input=inp)
@@ -809,7 +816,7 @@ def test_cache_is_not_updated_when_input_is_from_stdin():
 
 
 def test_check_project_with_conflicting_command_definitions():
-    with temporary_dir_copy(case("conflicting_definitions")) as copy:
+    with temporary_dir_copy(TESTS / "conflicting_definitions") as copy:
         completed_process = gersemi("--check", copy, "--definitions", copy)
         assert completed_process.returncode == 0
         assert completed_process.stdout == ""
@@ -826,7 +833,7 @@ def test_check_project_with_conflicting_command_definitions():
 
 
 def test_format_file_with_conflicting_command_definitions():
-    with temporary_dir_copy(case("conflicting_definitions")) as copy:
+    with temporary_dir_copy(TESTS / "conflicting_definitions") as copy:
         completed_process = gersemi(
             f"{copy}/CMakeLists.txt",
             "--definitions",
@@ -858,11 +865,11 @@ def test_format_file_with_conflicting_command_definitions():
 
 def test_cached_result_doesnt_inhibit_printing_in_stdout_mode():
     with temporary_copy(
-        case("formatted_file.cmake")
+        TESTS / "formatted_file.cmake"
     ) as copy, make_temporary_cache() as cache_path:
-        gersemi_ = lambda *args, **kwargs: gersemi_with_cache_path(
-            cache_path, *args, **kwargs
-        )
+
+        def gersemi_(*args, **kwargs):
+            return gersemi_with_cache_path(cache_path, *args, **kwargs)
 
         check_run = gersemi_("--check", copy)
         assert check_run.returncode == 0, (
