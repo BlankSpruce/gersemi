@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterable, List, Mapping
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from gersemi.keywords import AnyMatcher, KeywordMatcher
@@ -9,7 +9,6 @@ from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
 from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
-from .target_link_libraries_command_dumper import TargetLinkLibraries
 from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
@@ -454,6 +453,33 @@ class TargetLinkDirectories(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<target>"]
     options = ["BEFORE"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
+
+
+_debug_optimized_general: Mapping[KeywordMatcher, Iterable[KeywordMatcher]] = {
+    "one_value_keywords": ["debug", "optimized", "general"]
+}
+
+
+class TargetLinkLibraries(
+    SectionAwareCommandInvocationDumper, ArgumentAwareCommandInvocationDumper
+):
+    front_positional_arguments = ["<target>"]
+    multi_value_keywords = [
+        "INTERFACE",
+        "PUBLIC",
+        "PRIVATE",
+        "LINK_PRIVATE",
+        "LINK_PUBLIC",
+        "LINK_INTERFACE_LIBRARIES",
+    ]
+    sections = {
+        "INTERFACE": _debug_optimized_general,
+        "PUBLIC": _debug_optimized_general,
+        "PRIVATE": _debug_optimized_general,
+        "LINK_PRIVATE": _debug_optimized_general,
+        "LINK_PUBLIC": _debug_optimized_general,
+        "LINK_INTERFACE_LIBRARIES": _debug_optimized_general,
+    }
 
 
 class TargetLinkOptions(ArgumentAwareCommandInvocationDumper):
