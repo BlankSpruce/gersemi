@@ -58,17 +58,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
         first_argument = next(arguments_only, None)
         matcher = self._get_signature_matcher(first_argument)
 
-        if matcher is None:
-            signature = self.customized_signatures.get(None, None)
-            if signature is None:
-                return super().format_command(tree)
-            with self._update_signature_characteristics(signature):
-                return super().format_command(tree)
-
         signature = self.customized_signatures.get(matcher, None)
-        if signature is None:
-            signature = self.customized_signatures.get(None, None)
-
         with self._update_signature_characteristics(signature):
             return super().format_command(tree)
 
