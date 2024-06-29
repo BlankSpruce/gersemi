@@ -65,6 +65,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
             return Tree("section", subarguments)
 
     def _split_arguments(self, arguments):
+        self.multi_value_keywords.extend(self.sections.keys())
         preprocessed = super()._split_arguments(arguments)
         return [
             (

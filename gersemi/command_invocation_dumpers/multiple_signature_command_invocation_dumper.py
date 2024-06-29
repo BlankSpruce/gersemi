@@ -21,7 +21,7 @@ def create_signature_patch(signature, old_class):
         options = get("options")
         one_value_keywords = get("one_value_keywords")
         multi_value_keywords = get("multi_value_keywords")
-        sections = get("sections")
+        sections = signature.get("sections", {})
 
     return Impl
 

@@ -175,7 +175,6 @@ class Export(
         "PACKAGE": dict(one_value_keywords=["PACKAGE"]),
         "SETUP": dict(
             one_value_keywords=["SETUP"],
-            multi_value_keywords=["PACKAGE_DEPENDENCY", "TARGET"],
             sections=dict(
                 PACKAGE_DEPENDENCY=dict(
                     front_positional_arguments=["<dep>"],
@@ -286,7 +285,6 @@ class Install(
                 "TARGETS",
                 _INCLUDES_DESTINATION,
                 "RUNTIME_DEPENDENCIES",
-                *_Install_TARGETS_kinds,
             ],
         ),
         "FILES": dict(
@@ -317,7 +315,6 @@ class Install(
                 "FILE_PERMISSIONS",
                 "DIRECTORY_PERMISSIONS",
                 "CONFIGURATIONS",
-                *_Install_DIRECTORY_kinds,
             ],
         ),
         "SCRIPT": dict(
@@ -366,7 +363,6 @@ class Install(
             one_value_keywords=["RUNTIME_DEPENDENCY_SET"],
             multi_value_keywords=[
                 "IMPORTED_RUNTIME_ARTIFACTS",
-                *_Install_IMPORTED_RUNTIME_ARTIFACTS_kinds,
             ],
         ),
         "RUNTIME_DEPENDENCY_SET": dict(
@@ -395,7 +391,6 @@ class Install(
                 "POST_INCLUDE_FILES",
                 "POST_EXCLUDE_FILES",
                 "DIRECTORIES",
-                *_Install_RUNTIME_DEPENDENCY_SET_kinds,
             ],
         ),
     }
@@ -464,14 +459,6 @@ class TargetLinkLibraries(
     SectionAwareCommandInvocationDumper, ArgumentAwareCommandInvocationDumper
 ):
     front_positional_arguments = ["<target>"]
-    multi_value_keywords = [
-        "INTERFACE",
-        "PUBLIC",
-        "PRIVATE",
-        "LINK_PRIVATE",
-        "LINK_PUBLIC",
-        "LINK_INTERFACE_LIBRARIES",
-    ]
     sections = {
         "INTERFACE": _debug_optimized_general,
         "PUBLIC": _debug_optimized_general,
@@ -496,7 +483,6 @@ class TargetPrecompileHeaders(ArgumentAwareCommandInvocationDumper):
 
 class TargetSources(SectionAwareCommandInvocationDumper):
     front_positional_arguments = ["<target>"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
     sections = {
         "INTERFACE": {
             "one_value_keywords": ["FILE_SET", "TYPE"],
