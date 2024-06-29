@@ -16,10 +16,6 @@ from gersemi.types import Nodes
 from gersemi.utils import pop_all
 
 
-def to_list_of_single_item_lists(sequence):
-    return [*map(lambda item: [item], sequence)]
-
-
 def is_non_empty(sequence: Sized) -> bool:
     return len(sequence) > 0
 
@@ -29,10 +25,6 @@ def is_non_empty_group(group: Sized) -> bool:
         return is_non_empty(group.children)
 
     return is_non_empty(group)
-
-
-def is_empty(sequence: Sized) -> bool:
-    return len(sequence) <= 0
 
 
 def make_tree(name: str):
