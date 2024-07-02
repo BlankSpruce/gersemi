@@ -41,8 +41,7 @@ add_executable(
 
 add_executable(
     long_arg____________________________________________________________
-    IMPORTED
-    GLOBAL
+    IMPORTED GLOBAL
 )
 
 add_executable(FOO ALIAS BAR)

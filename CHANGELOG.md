@@ -1,4 +1,8 @@
 # Changelog
+## [0.13.5] 2024-06-29
+### Fixed
+- improve consistency of `add_executable`
+
 ## [0.13.4] 2024-06-29
 ### Fixed
 - improve consistency of `target_link_libraries`

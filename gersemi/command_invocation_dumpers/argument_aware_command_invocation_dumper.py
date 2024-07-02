@@ -97,7 +97,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     inhibit_favour_expansion: bool = False
     front_positional_arguments: Sequence[str] = []
     back_positional_arguments: Sequence[str] = []
-    options: Iterable[str] = []
+    options: Iterable[KeywordMatcher] = []
     one_value_keywords: Iterable[KeywordMatcher] = []
     multi_value_keywords: Iterable[KeywordMatcher] = []
     keyword_formatters: Dict[str, str] = {}

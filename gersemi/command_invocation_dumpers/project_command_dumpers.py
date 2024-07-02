@@ -81,7 +81,7 @@ class AddDependencies(ArgumentAwareCommandInvocationDumper):
     front_positional_arguments = ["<target>"]
 
 
-class AddExecutable(ArgumentAwareCommandInvocationDumper):
+class AddExecutable(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
     two_words_keywords = [("IMPORTED", "GLOBAL")]
     front_positional_arguments = ["<name>"]
     options = [
@@ -89,7 +89,7 @@ class AddExecutable(ArgumentAwareCommandInvocationDumper):
         "MACOSX_BUNDLE",
         "EXCLUDE_FROM_ALL",
         "IMPORTED",
-        "IMPORTED GLOBAL",
+        ("IMPORTED", "GLOBAL"),
     ]
     one_value_keywords = ["ALIAS"]
 
@@ -104,7 +104,7 @@ class AddLibrary(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
         "EXCLUDE_FROM_ALL",
         "OBJECT",
         "IMPORTED",
-        "IMPORTED GLOBAL",
+        ("IMPORTED", "GLOBAL"),
         "UNKNOWN",
         "INTERFACE",
     ]
