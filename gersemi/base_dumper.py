@@ -15,9 +15,10 @@ def get_indent(indent_type: Indent) -> str:
 
 
 class BaseDumper(Interpreter):
-    def __init__(self, width, indent_type):
+    def __init__(self, width, indent_type, autosort):
         self.width = width
         self.indent_type = indent_type
+        self.autosort = autosort
         self._indent_symbol = get_indent(self.indent_type)
         self.indent_level = 0
         self.favour_expansion = False
@@ -36,6 +37,8 @@ class BaseDumper(Interpreter):
         self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
         if self.favour_expansion:
+            return None
+        if self.autosort:
             return None
 
         if not contains_line_comment(children):

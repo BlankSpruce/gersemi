@@ -158,6 +158,14 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
+    autosort: bool = field(
+        default=False,
+        metadata=dict(
+            title="Autosort",
+            description="Autosort multiple arguments lists.",
+        ),
+    )
+
     def summary(self):
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))

@@ -11,10 +11,11 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         indent_size,
         custom_command_definitions,
         list_expansion=ListExpansion.FavourInlining,
+        autosort=False,
     ):
         self.custom_command_definitions = custom_command_definitions
         self.list_expansion = list_expansion
-        super().__init__(width, indent_size)
+        super().__init__(width, indent_size, autosort)
 
     def file(self, tree):
         result = self.__default__(tree)

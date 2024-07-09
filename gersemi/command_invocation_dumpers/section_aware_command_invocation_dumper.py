@@ -87,5 +87,10 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
             return begin
 
         with self.indented():
-            formatted_values = "\n".join(map(self.visit, rest))
+            if self.autosort:
+                formatted_values = "\n".join(
+                    sorted(map(self.visit, rest), key=lambda f: f.lower())
+                )
+            else:
+                formatted_values = "\n".join(map(self.visit, rest))
         return f"{begin}\n{formatted_values}"

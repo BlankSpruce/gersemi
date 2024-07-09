@@ -207,6 +207,7 @@ def handle_files_to_format(
         configuration.indent,
         custom_command_definitions,
         configuration.list_expansion,
+        configuration.autosort,
     )
     task = select_task(mode, configuration)
     execute = partial(run_task, formatter=formatter, task=task)

@@ -16,12 +16,14 @@ class Formatter:
         indent: Indent,
         custom_command_definitions,
         list_expansion: ListExpansion,
+        autosort: bool,
     ):
         self.sanity_checker = sanity_checker
         self.line_length = line_length
         self.indent_type = indent
         self.custom_command_definitions = custom_command_definitions
         self.list_expansion = list_expansion
+        self.autosort = autosort
 
     def format(self, code):
         dumper = Dumper(
@@ -29,6 +31,7 @@ class Formatter:
             self.indent_type,
             self.custom_command_definitions,
             self.list_expansion,
+            self.autosort,
         )
         result = dumper.visit(PARSER.parse(code))
         self.sanity_checker(BARE_PARSER, code, result)
@@ -46,12 +49,16 @@ def create_formatter(
     indent,
     custom_command_definitions,
     list_expansion,
+    autosort,
 ):
-    sanity_checker = check_code_equivalence if do_sanity_check else noop
+    sanity_checker = (
+        check_code_equivalence if do_sanity_check and not autosort else noop
+    )
     return Formatter(
         sanity_checker,
         line_length,
         indent,
         custom_command_definitions,
         list_expansion,
+        autosort,
     )

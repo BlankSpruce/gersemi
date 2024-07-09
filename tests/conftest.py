@@ -48,6 +48,7 @@ def formatter_creator():
             list_expansion=ListExpansion(
                 config.get("list_expansion", ListExpansion.FavourInlining)
             ),
+            autosort=config.get("autosort", False),
         )
 
     return creator

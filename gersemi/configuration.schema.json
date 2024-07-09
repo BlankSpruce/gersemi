@@ -82,6 +82,12 @@
       "description": "Number of workers used to format multiple files in parallel.",
       "title": "Workers",
       "type": "integer"
+    },
+    "autosort": {
+      "default": false,
+      "description": "Autosort multiple arguments lists.",
+      "title": "Autosort",
+      "type": "boolean"
     }
   },
   "title": "Configuration",

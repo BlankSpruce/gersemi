@@ -151,6 +151,12 @@ def create_argparser():
     [default: number of CPUs on this system]
         """,
     )
+    configuration_group.add_argument(
+        "--autosort",
+        dest="autosort",
+        action="store_true",
+        help=conf_doc["autosort"],
+    )
 
     parser.add_argument(
         dest="sources",
