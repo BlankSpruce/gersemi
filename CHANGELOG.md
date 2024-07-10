@@ -1,4 +1,8 @@
 # Changelog
+## [0.13.6] 2024-07-10
+### Fixed
+- non-deterministic formatting regression (#32)
+
 ## [0.13.5] 2024-06-29
 ### Fixed
 - improve consistency of `add_executable`
