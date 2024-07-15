@@ -178,8 +178,7 @@ endif()
 set_property(
     GLOBAL
     PROPERTY
-        BAR_____________________________________________________________80
-            VALUE
+        BAR_____________________________________________________________80 VALUE
 )
 
 set_property(
@@ -208,4 +207,16 @@ set_property(
         bar__________________________________________________
         baz__________________________________________________
     DIRECTORY qux__________________________________________________
+)
+
+set_property(
+    SOURCE shader.hlsl
+    PROPERTY
+        VS_SETTINGS "$<$<CONFIG:DEBUG>:SourceProperty1=SourceProperty1Value>"
+)
+
+set_property(
+    SOURCE foo.cpp
+    PROPERTY
+        VS_SETTINGS "$<$<CONFIG:DEBUG>:SourceProperty2=SourceProperty2Value>"
 )

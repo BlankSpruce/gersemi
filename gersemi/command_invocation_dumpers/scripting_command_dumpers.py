@@ -797,7 +797,7 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
 
     def _format_property(self, args):
         result = self._try_to_format_into_single_line(
-            args, separator=" ", prefix="(", postfix=")"
+            args, separator=" ", prefix="", postfix=""
         )
         if result is not None:
             return result
