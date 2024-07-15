@@ -3,7 +3,6 @@ from contextlib import contextmanager, ExitStack
 import filecmp
 import os
 from pathlib import Path
-import re
 import shutil
 from stat import S_IREAD, S_IRGRP, S_IROTH
 import subprocess
@@ -818,23 +817,26 @@ def test_cache_is_not_updated_when_input_is_from_stdin():
 
 def test_check_project_with_conflicting_command_definitions():
     with temporary_dir_copy(TESTS / "conflicting_definitions") as copy:
+        foo1 = Path(copy) / "foo1.cmake"
+        foo2 = Path(copy) / "foo2.cmake"
         completed_process = gersemi("--check", copy, "--definitions", copy)
         assert completed_process.returncode == 0
         assert completed_process.stdout == ""
-        assert re.search(
-            """Warning: conflicting definitions for 'foo':
-\\(used\\)    .*foo1\\.cmake:1:10
-\\(ignored\\) .*foo2\\.cmake:1:10
-\\(ignored\\) .*foo2\\.cmake:5:10
-\\(ignored\\) .*foo2\\.cmake:9:10
-""",
-            completed_process.stderr,
-            re.MULTILINE,
-        )
+        assert (
+            f"""Warning: conflicting definitions for 'foo':
+(used)    {foo1}:1:10
+(ignored) {foo2}:1:10
+(ignored) {foo2}:5:10
+(ignored) {foo2}:9:10
+"""
+            == completed_process.stderr
+        ), completed_process.stderr
 
 
 def test_format_file_with_conflicting_command_definitions():
     with temporary_dir_copy(TESTS / "conflicting_definitions") as copy:
+        foo1 = Path(copy) / "foo1.cmake"
+        foo2 = Path(copy) / "foo2.cmake"
         completed_process = gersemi(
             f"{copy}/CMakeLists.txt",
             "--definitions",
@@ -852,16 +854,15 @@ def test_format_file_with_conflicting_command_definitions():
 )
 """
         )
-        assert re.search(
-            """Warning: conflicting definitions for 'foo':
-\\(used\\)    .*foo1\\.cmake:1:10
-\\(ignored\\) .*foo2\\.cmake:1:10
-\\(ignored\\) .*foo2\\.cmake:5:10
-\\(ignored\\) .*foo2\\.cmake:9:10
-""",
-            completed_process.stderr,
-            re.MULTILINE,
-        )
+        assert (
+            f"""Warning: conflicting definitions for 'foo':
+(used)    {foo1}:1:10
+(ignored) {foo2}:1:10
+(ignored) {foo2}:5:10
+(ignored) {foo2}:9:10
+"""
+            == completed_process.stderr
+        ), completed_process.stderr
 
 
 def test_cached_result_doesnt_inhibit_printing_in_stdout_mode():
