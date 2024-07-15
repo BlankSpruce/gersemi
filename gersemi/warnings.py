@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 
 Position = Tuple[int, int]
@@ -25,5 +25,5 @@ class WrongFormattingWarning:
         return f"{filepath} would be reformatted"
 
 
-FormatterWarning = UnknownCommandWarning | WrongFormattingWarning
+FormatterWarning = Union[UnknownCommandWarning, WrongFormattingWarning]
 FormatterWarnings = Iterable[FormatterWarning]
