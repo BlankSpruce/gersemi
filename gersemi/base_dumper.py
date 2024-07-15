@@ -1,3 +1,4 @@
+from collections import defaultdict
 from contextlib import contextmanager
 from textwrap import indent
 from typing import Optional
@@ -6,6 +7,7 @@ from lark.visitors import Interpreter
 from gersemi.ast_helpers import contains_line_comment
 from gersemi.configuration import Indent, ListExpansion, Tabs
 from gersemi.types import Nodes
+from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
 
 def get_indent(indent_type: Indent) -> str:
@@ -21,6 +23,7 @@ class BaseDumper(Interpreter):
         self._indent_symbol = get_indent(self.indent_type)
         self.indent_level = 0
         self.favour_expansion = False
+        self.unknown_commands_used = defaultdict(list)
 
     def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))
@@ -83,3 +86,15 @@ class BaseDumper(Interpreter):
 
     def format_command_name(self, identifier):
         return identifier.lower()
+
+    def _record_unknown_command(self, command):
+        self.unknown_commands_used[str(command)].append((command.line, command.column))
+
+    def get_warnings(self) -> FormatterWarnings:
+        if len(self.unknown_commands_used) == 0:
+            return []
+
+        return [
+            UnknownCommandWarning(command_name=name, positions=positions)
+            for name, positions in self.unknown_commands_used.items()
+        ]

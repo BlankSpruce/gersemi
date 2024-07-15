@@ -44,6 +44,7 @@ def show_diff(formatted_file: FormattedFile) -> TaskResult:
         path=formatted_file.path,
         return_code=SUCCESS,
         to_stdout="".join(get_diff(formatted_file)),
+        warnings=formatted_file.warnings,
     )
 
 
@@ -52,4 +53,5 @@ def show_colorized_diff(formatted_file: FormattedFile) -> TaskResult:
         path=formatted_file.path,
         return_code=SUCCESS,
         to_stdout="".join(colorize(get_diff(formatted_file))),
+        warnings=formatted_file.warnings,
     )

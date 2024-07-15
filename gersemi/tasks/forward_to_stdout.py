@@ -5,5 +5,8 @@ from gersemi.task_result import TaskResult
 
 def forward_to_stdout(formatted_file: FormattedFile) -> TaskResult:
     return TaskResult(
-        path=formatted_file.path, return_code=SUCCESS, to_stdout=formatted_file.after
+        path=formatted_file.path,
+        return_code=SUCCESS,
+        to_stdout=formatted_file.after,
+        warnings=formatted_file.warnings,
     )

@@ -1,4 +1,3 @@
-from dataclasses import astuple
 from functools import partial
 from itertools import chain
 import multiprocessing as mp
@@ -12,19 +11,20 @@ from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
+from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import create_formatter, NullFormatter, Formatter
 from gersemi.mode import Mode
 from gersemi.parser import PARSER as parser
 from gersemi.result import Result, Error, apply, get_error_message
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
 from gersemi.task_result import TaskResult
-from gersemi.tasks.check_formatting import check_formatting, quiet_check_formatting
+from gersemi.tasks.check_formatting import check_formatting
 from gersemi.tasks.do_nothing import do_nothing
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
-from gersemi.tasks.format_file import format_file, FormattedFile
+from gersemi.tasks.format_file import format_file
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_colorized_diff, show_diff
-from gersemi.utils import smart_open
+from gersemi.utils import fromfile, smart_open
 from gersemi.keywords import Keywords
 
 CHUNKSIZE = 16
@@ -81,7 +81,7 @@ def check_conflicting_definitions(definitions):
 
 
 def find_all_custom_command_definitions(
-    paths: Iterable[Path], pool
+    paths: Iterable[Path], pool, quiet: bool
 ) -> Dict[str, Keywords]:
     result: Dict = {}
 
@@ -99,7 +99,9 @@ def find_all_custom_command_definitions(
             else:
                 result[name] = info
 
-    check_conflicting_definitions(result)
+    if not quiet:
+        check_conflicting_definitions(result)
+
     return get_just_definitions(result)
 
 
@@ -107,9 +109,7 @@ def select_task(mode: Mode, configuration: Configuration):
     return {
         Mode.ForwardToStdout: lambda _: forward_to_stdout,
         Mode.RewriteInPlace: lambda _: rewrite_in_place,
-        Mode.CheckFormatting: lambda config: (
-            quiet_check_formatting if config.quiet else check_formatting
-        ),
+        Mode.CheckFormatting: lambda _: check_formatting,
         Mode.ShowDiff: lambda config: (
             show_colorized_diff if config.color else show_diff
         ),
@@ -129,13 +129,18 @@ def run_task(
     return task(formatted_file)
 
 
-def consume_task_result(task_result: TaskResult) -> Tuple[Path, int]:
-    path, return_code, to_stdout, to_stderr = astuple(task_result)
-    if to_stdout != "":
-        print_to_stdout(to_stdout)
-    if to_stderr != "":
-        print_to_stderr(to_stderr)
-    return path, return_code
+def consume_task_result(task_result: TaskResult, quiet: bool) -> Tuple[Path, int]:
+    if task_result.to_stdout != "":
+        print_to_stdout(task_result.to_stdout)
+
+    if not quiet:
+        for warning in task_result.warnings:
+            print_to_stderr(warning.get_message(fromfile(task_result.path)))
+
+        if task_result.to_stderr != "":
+            print_to_stderr(task_result.to_stderr)
+
+    return task_result.path, task_result.return_code
 
 
 def create_pool(is_stdin_in_sources, num_workers):
@@ -179,13 +184,14 @@ def select_task_for_already_formatted_files(mode: Mode):
 
 
 def handle_already_formatted_files(
-    mode: Mode, already_formatted_files: Iterable[Path]
+    mode: Mode, quiet: bool, already_formatted_files: Iterable[Path]
 ) -> int:
     task = select_task_for_already_formatted_files(mode)
     formatter = NullFormatter()
     execute = partial(run_task, formatter=formatter, task=task)
     results = [
-        consume_task_result(result) for result in map(execute, already_formatted_files)
+        consume_task_result(result, quiet)
+        for result in map(execute, already_formatted_files)
     ]
     return compute_error_code(code for _, code in results)
 
@@ -199,7 +205,7 @@ def handle_files_to_format(
 ) -> int:
     configuration_summary = configuration.summary()
     custom_command_definitions = find_all_custom_command_definitions(
-        set(configuration.definitions), pool
+        set(configuration.definitions), pool, configuration.quiet
     )
     formatter = create_formatter(
         not configuration.unsafe,
@@ -212,7 +218,7 @@ def handle_files_to_format(
     execute = partial(run_task, formatter=formatter, task=task)
 
     results = [
-        consume_task_result(result)
+        consume_task_result(result, configuration.quiet)
         for result in pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE)
     ]
     store_files_in_cache(
@@ -234,7 +240,7 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
         )
 
         already_formatted_files_error_code = handle_already_formatted_files(
-            mode, already_formatted_files
+            mode, configuration.quiet, already_formatted_files
         )
         files_to_format_error_code = handle_files_to_format(
             mode, configuration, cache, pool, files_to_format

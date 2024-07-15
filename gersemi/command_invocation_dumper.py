@@ -92,4 +92,6 @@ class CommandInvocationDumper(
             return self.visit(
                 Tree("command_invocation", [command_name.lower(), arguments])
             )
+
+        self._record_unknown_command(command_name)
         return super().custom_command(tree)

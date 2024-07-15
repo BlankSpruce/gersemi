@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import yaml
+import pytest
 from tests.cache_inspector import inspect_cache
 
 
@@ -890,3 +891,101 @@ def test_cached_result_doesnt_inhibit_printing_in_stdout_mode():
         assert (
             subsequent_non_check_run.stdout == file_content
         ), subsequent_non_check_run.stdout
+
+
+def check_warnings(result, stderr):
+    assert result.returncode == 0, (result.returncode, result.stderr)
+    assert result.stderr == stderr, result.stderr
+
+
+@pytest.mark.parametrize(
+    ["args"],
+    [
+        ((),),
+        (("--check",),),
+        (("--in-place",),),
+        (("--diff",),),
+    ],
+)
+def test_warn_about_unknown_commands(tmpdir, args):
+    with temporary_dir_copy(TESTS / "warn_about_unknown_commands") as copy:
+        cmakelists = Path(copy) / "CMakeLists.txt"
+        custom_command_definition = Path(copy) / "watch_movies.cmake"
+
+        with_definition = gersemi(
+            *args,
+            cmakelists,
+            "--definitions",
+            custom_command_definition,
+            cwd=tmpdir,
+        )
+        assert with_definition.returncode == 0, (
+            with_definition.returncode,
+            with_definition.stderr,
+        )
+        assert with_definition.stderr == "", with_definition.stderr
+
+        without_definition = gersemi(*args, cmakelists, cwd=tmpdir)
+        assert without_definition.returncode == 0, (
+            without_definition.returncode,
+            without_definition.stderr,
+        )
+        assert (
+            without_definition.stderr
+            == f"""Warning: unknown command 'watch_nolan_movies' used at:
+{str(cmakelists)}:3:1
+{str(cmakelists)}:8:5
+
+Warning: unknown command 'watch_tarantino_movies' used at:
+{str(cmakelists)}:6:5
+{str(cmakelists)}:11:1
+
+"""
+        ), without_definition.stderr
+
+
+@pytest.mark.parametrize(
+    ["args"],
+    [
+        ((),),
+        (("--check",),),
+        (("--diff",),),
+    ],
+)
+def test_warn_about_unknown_commands_with_stdin(tmpdir, args):
+    with temporary_dir_copy(TESTS / "warn_about_unknown_commands") as copy:
+        custom_command_definition = Path(copy) / "watch_movies.cmake"
+        with open(Path(copy) / "CMakeLists.txt", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        with_definition = gersemi(
+            *args,
+            "-",
+            "--definitions",
+            custom_command_definition,
+            input=content,
+            cwd=tmpdir,
+        )
+        assert with_definition.returncode == 0, (
+            with_definition.returncode,
+            with_definition.stderr,
+        )
+        assert with_definition.stderr == "", with_definition.stderr
+
+        without_definition = gersemi(*args, "-", input=content, cwd=tmpdir)
+        assert without_definition.returncode == 0, (
+            without_definition.returncode,
+            without_definition.stderr,
+        )
+        assert (
+            without_definition.stderr
+            == """Warning: unknown command 'watch_nolan_movies' used at:
+<stdin>:3:1
+<stdin>:8:5
+
+Warning: unknown command 'watch_tarantino_movies' used at:
+<stdin>:6:5
+<stdin>:11:1
+
+"""
+        ), without_definition.stderr

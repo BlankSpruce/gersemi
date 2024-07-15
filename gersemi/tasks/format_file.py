@@ -1,15 +1,7 @@
-from dataclasses import dataclass
 from pathlib import Path
+from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import Formatter
 from gersemi.utils import smart_open
-
-
-@dataclass
-class FormattedFile:
-    before: str
-    after: str
-    newlines_style: str
-    path: Path
 
 
 def get_newlines_style(code: str) -> str:
@@ -30,9 +22,12 @@ def format_file(path: Path, formatter: Formatter) -> FormattedFile:
 
     newlines_style = get_newlines_style(code)
     code = translate_newlines_to_line_feed(code)
+    formatted_code, warnings = formatter.format(code)
+
     return FormattedFile(
         before=code,
-        after=formatter.format(code),
+        after=formatted_code,
         newlines_style=newlines_style,
         path=path,
+        warnings=warnings,
     )

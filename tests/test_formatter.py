@@ -16,14 +16,15 @@ def preprocess(text):
 def test_formatter(formatter_creator, case):
     p = preprocess
     formatter = formatter_creator(case.config)
-    assert p(formatter.format(case.given)) == p(case.expected)
+    formatted_once, _ = formatter.format(case.given)
+    assert p(formatted_once) == p(case.expected)
 
 
 def test_formatter_idempotence(formatter_creator, case):
     p = preprocess
     formatter = formatter_creator(case.config)
-    formatted_once = formatter.format(case.given)
-    formatted_twice = formatter.format(formatted_once)
+    formatted_once, _ = formatter.format(case.given)
+    formatted_twice, _ = formatter.format(formatted_once)
     assert p(formatted_once) == p(formatted_twice)
 
 

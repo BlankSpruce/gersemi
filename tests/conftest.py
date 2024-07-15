@@ -32,7 +32,7 @@ def get_custom_command_definitions(configuration_definitions):
             yield from map(func, files)
 
     paths = [pathlib.Path(d).resolve() for d in configuration_definitions]
-    return find_all_custom_command_definitions(paths, Pool())
+    return find_all_custom_command_definitions(paths=paths, quiet=False, pool=Pool())
 
 
 @pytest.fixture(scope="module")
