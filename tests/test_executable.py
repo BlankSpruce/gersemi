@@ -817,8 +817,8 @@ def test_cache_is_not_updated_when_input_is_from_stdin():
 
 def test_check_project_with_conflicting_command_definitions():
     with temporary_dir_copy(TESTS / "conflicting_definitions") as copy:
-        foo1 = Path(copy) / "foo1.cmake"
-        foo2 = Path(copy) / "foo2.cmake"
+        foo1 = (Path(copy) / "foo1.cmake").resolve()
+        foo2 = (Path(copy) / "foo2.cmake").resolve()
         completed_process = gersemi("--check", copy, "--definitions", copy)
         assert completed_process.returncode == 0
         assert completed_process.stdout == ""
@@ -835,8 +835,8 @@ def test_check_project_with_conflicting_command_definitions():
 
 def test_format_file_with_conflicting_command_definitions():
     with temporary_dir_copy(TESTS / "conflicting_definitions") as copy:
-        foo1 = Path(copy) / "foo1.cmake"
-        foo2 = Path(copy) / "foo2.cmake"
+        foo1 = (Path(copy) / "foo1.cmake").resolve()
+        foo2 = (Path(copy) / "foo2.cmake").resolve()
         completed_process = gersemi(
             f"{copy}/CMakeLists.txt",
             "--definitions",
@@ -934,12 +934,12 @@ def test_warn_about_unknown_commands(tmpdir, args):
         assert (
             without_definition.stderr
             == f"""Warning: unknown command 'watch_nolan_movies' used at:
-{str(cmakelists)}:3:1
-{str(cmakelists)}:8:5
+{str(cmakelists.resolve())}:3:1
+{str(cmakelists.resolve())}:8:5
 
 Warning: unknown command 'watch_tarantino_movies' used at:
-{str(cmakelists)}:6:5
-{str(cmakelists)}:11:1
+{str(cmakelists.resolve())}:6:5
+{str(cmakelists.resolve())}:11:1
 
 """
         ), without_definition.stderr
