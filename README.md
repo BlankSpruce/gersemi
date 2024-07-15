@@ -80,7 +80,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.13.6
+  rev: 0.14.0
   hooks:
   - id: gersemi
 ```
@@ -422,7 +422,25 @@ Seven_Samurai(
 )
 ```
 
-Otherwise `gersemi` will fallback to only fixing indentation and preserving original formatting. If you find these limitations too strict let me know about your case.
+Otherwise `gersemi` will fallback to only fixing indentation of command name and it's closing parenthesis while preserving original formatting of arguments:
+```cmake
+# before formatting of unknown command
+  watch_david_fincher_movies(
+       "Se7en"
+       "The Game"
+         "Fight Club"
+       "Zodiac"     "The Curious Case of Benjamin Button"
+         )
+
+# after
+watch_david_fincher_movies(
+       "Se7en"
+       "The Game"
+         "Fight Club"
+       "Zodiac"     "The Curious Case of Benjamin Button"
+)
+```
+If you find these limitations too strict let me know about your case.
 
 #### How to format custom commands for which path to definition can't be guaranteed to be stable? (e.g external dependencies not managed by CMake)
 

@@ -1,4 +1,14 @@
 # Changelog
+## [0.14.0] 2024-07-15
+### Added
+- warnings about unknown commands when `quiet` isn't used
+
+### Changed
+- document the intent of only formatting command name and closing parenthesis in "Let's make a deal" section of README
+
+### Fixed
+- `set_property` formatting
+
 ## [0.13.6] 2024-07-10
 ### Fixed
 - non-deterministic formatting regression (#32)
