@@ -30,13 +30,11 @@ class ShowVersion(argparse.Action):
 
 class ToggleAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        print(getattr(namespace, self.dest))
         setattr(
             namespace,
             self.dest,
             not option_string.startswith("--no-"),
         )
-        print(getattr(namespace, self.dest))
 
 
 def create_argparser():
