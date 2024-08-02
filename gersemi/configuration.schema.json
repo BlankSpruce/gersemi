@@ -82,6 +82,12 @@
       "description": "Number of workers used to format multiple files in parallel.",
       "title": "Workers",
       "type": "integer"
+    },
+    "cache": {
+      "default": true,
+      "description": "Enables cache with data about files that are known to be formatted to speed up execution.",
+      "title": "Enable cache",
+      "type": "boolean"
     }
   },
   "title": "Configuration",

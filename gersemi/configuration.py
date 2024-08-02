@@ -158,6 +158,19 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
+    cache: bool = field(
+        default=True,
+        metadata=dict(
+            title="Enable cache",
+            description=doc(
+                """
+    Enables cache with data about files that are known
+    to be formatted to speed up execution.
+                """
+            ),
+        ),
+    )
+
     def summary(self):
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))
@@ -245,7 +258,7 @@ def override_configuration_with_args(
     parameters = [field.name for field in fields(Configuration)]
     for param in parameters:
         value = getattr(args, param)
-        if not value:
+        if value is None:
             continue
         if param == "definitions":
             value = normalize_definitions(value)

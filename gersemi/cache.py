@@ -92,7 +92,11 @@ class DummyCache:
 
 
 @contextmanager
-def create_cache():
+def create_cache(enable_cache):
+    if not enable_cache:
+        yield DummyCache()
+        return
+
     try:
         with database_cursor(cache_path()) as cursor:
             yield Cache(cursor)

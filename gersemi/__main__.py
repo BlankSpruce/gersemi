@@ -28,6 +28,17 @@ class ShowVersion(argparse.Action):
         print(f"Python {sys.version}")
 
 
+class ToggleAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(getattr(namespace, self.dest))
+        setattr(
+            namespace,
+            self.dest,
+            not option_string.startswith("--no-"),
+        )
+        print(getattr(namespace, self.dest))
+
+
 def create_argparser():
     parser = argparse.ArgumentParser(
         description="A formatter to make your CMake code the real treasure.",
@@ -125,7 +136,7 @@ def create_argparser():
         "--definitions",
         dest="definitions",
         metavar="src",
-        default=[],
+        default=None,
         nargs="+",
         type=pathlib.Path,
         help=conf_doc["definitions"],
@@ -151,6 +162,18 @@ def create_argparser():
     [default: number of CPUs on this system]
         """,
     )
+    configuration_group.add_argument(
+        "--cache",
+        "--no-cache",
+        dest="cache",
+        action=ToggleAction,
+        nargs=0,
+        default=None,
+        help=f"""
+    {conf_doc["cache"]}
+    [default: cache enabled]
+        """,
+    )
 
     parser.add_argument(
         dest="sources",
@@ -167,12 +190,16 @@ def create_argparser():
 
 
 def is_stdin_mixed_with_file_input(sources):
+    if sources is None:
+        return False
+
     return pathlib.Path("-") in sources and len(sources) != 1
 
 
 def postprocess_args(args):
     args.sources = set(args.sources)
-    args.definitions = set(args.definitions)
+    if args.definitions is not None:
+        args.definitions = set(args.definitions)
 
 
 def main():

@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 # pylint: disable=unnecessary-lambda-assignment
 from contextlib import contextmanager, ExitStack
 import filecmp
@@ -990,3 +991,64 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 
 """
         ), without_definition.stderr
+
+
+def test_cache_is_disabled():
+    original = TESTS / "custom_project" / "formatted"
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        inspector.assert_that_has_no_tables()
+
+        gersemi_("--no-cache", "--check", target, "--definitions", target)
+
+        inspector.assert_that_has_no_tables()
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        inspector.assert_that_has_no_tables()
+
+        with create_dot_gersemirc(where=target, cache=False):
+            gersemi_("--check", target, "--definitions", target, cwd=target)
+
+        inspector.assert_that_has_no_tables()
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        inspector.assert_that_has_no_tables()
+
+        with create_dot_gersemirc(where=target, cache=True):
+            gersemi_(
+                "--no-cache", "--check", target, "--definitions", target, cwd=target
+            )
+
+        inspector.assert_that_has_no_tables()
+
+
+def test_cache_is_enabled():
+    original = TESTS / "custom_project" / "formatted"
+
+    def assert_that_cache_was_used(inspector):
+        inspector.assert_that_has_initialized_tables()
+        assert len(inspector.get_files()) > 0
+        assert len(inspector.get_formatted()) > 0
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        inspector.assert_that_has_no_tables()
+
+        gersemi_("--cache", "--check", target, "--definitions", target)
+
+        assert_that_cache_was_used(inspector)
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        inspector.assert_that_has_no_tables()
+
+        with create_dot_gersemirc(where=target, cache=True):
+            gersemi_("--check", target, "--definitions", target, cwd=target)
+
+        assert_that_cache_was_used(inspector)
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        inspector.assert_that_has_no_tables()
+
+        with create_dot_gersemirc(where=target, cache=False):
+            gersemi_("--cache", "--check", target, "--definitions", target, cwd=target)
+
+        assert_that_cache_was_used(inspector)

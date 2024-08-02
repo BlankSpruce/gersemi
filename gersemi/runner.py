@@ -4,7 +4,7 @@ import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
-from typing import Callable, Dict, Iterable, Tuple
+from typing import Callable, Dict, Iterable, Tuple, Union
 from gersemi.cache import create_cache
 from gersemi.configuration import Configuration
 from gersemi.custom_command_definition_finder import (
@@ -117,7 +117,9 @@ def select_task(mode: Mode, configuration: Configuration):
 
 
 def run_task(
-    path: Path, formatter: Formatter, task: Callable[[FormattedFile], TaskResult]
+    path: Path,
+    formatter: Union[NullFormatter, Formatter],
+    task: Callable[[FormattedFile], TaskResult],
 ) -> TaskResult:
     formatted_file: Result[FormattedFile] = apply(format_file, path, formatter)
     if isinstance(formatted_file, Error):
@@ -234,7 +236,7 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
     requested_files = get_files(sources)
 
     pool_cm = create_pool(Path("-") in requested_files, configuration.workers)
-    with create_cache() as cache, pool_cm() as pool:
+    with create_cache(configuration.cache) as cache, pool_cm() as pool:
         already_formatted_files, files_to_format = split_files(
             cache, configuration.summary(), requested_files
         )
