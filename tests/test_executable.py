@@ -901,20 +901,25 @@ def check_warnings(result, stderr):
 
 
 @pytest.mark.parametrize(
-    ["args"],
+    ["args", "check_cache"],
     [
-        ((),),
-        (("--check",),),
-        (("--in-place",),),
-        (("--diff",),),
+        ((), False),
+        (("--check",), True),
+        (("--in-place",), True),
+        (("--diff",), False),
     ],
 )
-def test_warn_about_unknown_commands(tmpdir, args):
-    with temporary_dir_copy(TESTS / "warn_about_unknown_commands") as copy:
-        cmakelists = Path(copy) / "CMakeLists.txt"
-        custom_command_definition = Path(copy) / "watch_movies.cmake"
+def test_warn_about_unknown_commands(tmpdir, args, check_cache):
+    original = TESTS / "warn_about_unknown_commands"
 
-        with_definition = gersemi(
+    with cache_tests(original) as (target, gersemi_, inspector):
+        if check_cache:
+            inspector.assert_that_has_no_tables()
+
+        cmakelists = Path(target) / "CMakeLists.txt"
+        custom_command_definition = Path(target) / "watch_movies.cmake"
+
+        with_definition = gersemi_(
             *args,
             cmakelists,
             "--definitions",
@@ -927,7 +932,17 @@ def test_warn_about_unknown_commands(tmpdir, args):
         )
         assert with_definition.stderr == "", with_definition.stderr
 
-        without_definition = gersemi(*args, cmakelists, cwd=tmpdir)
+        if check_cache:
+            inspector.assert_that_has_initialized_tables()
+            assert len(inspector.get_files()) > 0
+            assert len(inspector.get_formatted()) > 0
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        if check_cache:
+            inspector.assert_that_has_no_tables()
+
+        cmakelists = Path(target) / "CMakeLists.txt"
+        without_definition = gersemi_(*args, cmakelists, cwd=tmpdir)
         assert without_definition.returncode == 0, (
             without_definition.returncode,
             without_definition.stderr,
@@ -944,6 +959,11 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 
 """
         ), without_definition.stderr
+
+        if check_cache:
+            inspector.assert_that_has_initialized_tables()
+            assert len(inspector.get_files()) == 0
+            assert len(inspector.get_formatted()) == 0
 
 
 @pytest.mark.parametrize(

@@ -131,7 +131,7 @@ def run_task(
     return task(formatted_file)
 
 
-def consume_task_result(task_result: TaskResult, quiet: bool) -> Tuple[Path, int]:
+def consume_task_result(task_result: TaskResult, quiet: bool) -> Tuple[Path, int, bool]:
     if task_result.to_stdout != "":
         print_to_stdout(task_result.to_stdout)
 
@@ -142,7 +142,7 @@ def consume_task_result(task_result: TaskResult, quiet: bool) -> Tuple[Path, int
         if task_result.to_stderr != "":
             print_to_stderr(task_result.to_stderr)
 
-    return task_result.path, task_result.return_code
+    return task_result.path, task_result.return_code, (len(task_result.warnings) > 0)
 
 
 def create_pool(is_stdin_in_sources, num_workers):
@@ -195,7 +195,7 @@ def handle_already_formatted_files(
         consume_task_result(result, quiet)
         for result in map(execute, already_formatted_files)
     ]
-    return compute_error_code(code for _, code in results)
+    return compute_error_code(code for _, code, _ in results)
 
 
 def handle_files_to_format(
@@ -227,9 +227,13 @@ def handle_files_to_format(
         mode,
         cache,
         configuration_summary,
-        (path for path, code in results if code == SUCCESS and path != Path("-")),
+        (
+            path
+            for path, code, has_warnings in results
+            if code == SUCCESS and path != Path("-") and (not has_warnings)
+        ),
     )
-    return compute_error_code(code for _, code in results)
+    return compute_error_code(code for _, code, _ in results)
 
 
 def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):

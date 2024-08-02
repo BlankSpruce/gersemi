@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Iterable, Tuple, Union
+from typing import Sequence, Tuple, Union
 
 
 Position = Tuple[int, int]
@@ -8,7 +8,7 @@ Position = Tuple[int, int]
 @dataclass
 class UnknownCommandWarning:
     command_name: str
-    positions: Iterable[Position]
+    positions: Sequence[Position]
 
     def get_message(self, filepath: str) -> str:
         return "\n".join(
@@ -26,4 +26,4 @@ class WrongFormattingWarning:
 
 
 FormatterWarning = Union[UnknownCommandWarning, WrongFormattingWarning]
-FormatterWarnings = Iterable[FormatterWarning]
+FormatterWarnings = Sequence[FormatterWarning]
