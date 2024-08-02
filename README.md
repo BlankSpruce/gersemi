@@ -19,6 +19,7 @@ usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGE
                [--indent (INTEGER | tabs)] [--unsafe] [-q] [--color]
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}] [-w INTEGER]
+               [--cache] [--require-definitions]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -71,6 +72,16 @@ configuration:
   -w INTEGER, --workers INTEGER
                         Number of workers used to format multiple files in parallel.
                         [default: number of CPUs on this system]
+  --cache, --no-cache   Enables cache with data about files that are known to be
+                        formatted to speed up execution.
+                        [default: cache enabled]
+  --require-definitions, --no-require-definitions
+                        Require definitions of custom commands. When enabled file which
+                        has unknown custom commands will have warnings issued about
+                        that and result won't be cached. When disabled it will be
+                        assumed that original formatting of unknown command is the
+                        correct one. See: "Let's make a deal" section in README.
+                        [default: definitions are required]
 ```
 
 ### [pre-commit](https://pre-commit.com/) hook
@@ -441,6 +452,8 @@ watch_david_fincher_movies(
 )
 ```
 If you find these limitations too strict let me know about your case.
+
+When source code has custom commands but their definitions aren't known `gersemi` will warn about that. Warnings can be suppressed with `--no-required-definitions`/`required_definitions: false`.
 
 #### How to format custom commands for which path to definition can't be guaranteed to be stable? (e.g external dependencies not managed by CMake)
 
