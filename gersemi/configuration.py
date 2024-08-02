@@ -171,6 +171,22 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
+    require_definitions: bool = field(
+        default=True,
+        metadata=dict(
+            title="Require definitions",
+            description=doc(
+                """
+    Require definitions of custom commands. When enabled
+    file which has unknown custom commands will have warnings
+    issued about that and result won't be cached. When disabled
+    it will be assumed that original formatting of unknown command
+    is the correct one. See: "Let's make a deal" section in README.
+                """
+            ),
+        ),
+    )
+
     def summary(self):
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))

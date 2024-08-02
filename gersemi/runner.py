@@ -26,6 +26,7 @@ from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_colorized_diff, show_diff
 from gersemi.utils import fromfile, smart_open
 from gersemi.keywords import Keywords
+from gersemi.warnings import UnknownCommandWarning
 
 CHUNKSIZE = 16
 
@@ -131,18 +132,26 @@ def run_task(
     return task(formatted_file)
 
 
-def consume_task_result(task_result: TaskResult, quiet: bool) -> Tuple[Path, int, bool]:
+def consume_task_result(
+    task_result: TaskResult, configuration: Configuration
+) -> Tuple[Path, int, bool]:
     if task_result.to_stdout != "":
         print_to_stdout(task_result.to_stdout)
 
-    if not quiet:
-        for warning in task_result.warnings:
+    warnings = (
+        [w for w in task_result.warnings if not isinstance(w, UnknownCommandWarning)]
+        if not configuration.require_definitions
+        else task_result.warnings
+    )
+
+    if not configuration.quiet:
+        for warning in warnings:
             print_to_stderr(warning.get_message(fromfile(task_result.path)))
 
         if task_result.to_stderr != "":
             print_to_stderr(task_result.to_stderr)
 
-    return task_result.path, task_result.return_code, (len(task_result.warnings) > 0)
+    return task_result.path, task_result.return_code, (len(warnings) > 0)
 
 
 def create_pool(is_stdin_in_sources, num_workers):
@@ -186,13 +195,13 @@ def select_task_for_already_formatted_files(mode: Mode):
 
 
 def handle_already_formatted_files(
-    mode: Mode, quiet: bool, already_formatted_files: Iterable[Path]
+    mode: Mode, configuration: Configuration, already_formatted_files: Iterable[Path]
 ) -> int:
     task = select_task_for_already_formatted_files(mode)
     formatter = NullFormatter()
     execute = partial(run_task, formatter=formatter, task=task)
     results = [
-        consume_task_result(result, quiet)
+        consume_task_result(result, configuration)
         for result in map(execute, already_formatted_files)
     ]
     return compute_error_code(code for _, code, _ in results)
@@ -220,7 +229,7 @@ def handle_files_to_format(
     execute = partial(run_task, formatter=formatter, task=task)
 
     results = [
-        consume_task_result(result, configuration.quiet)
+        consume_task_result(result, configuration)
         for result in pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE)
     ]
     store_files_in_cache(
@@ -246,7 +255,7 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
         )
 
         already_formatted_files_error_code = handle_already_formatted_files(
-            mode, configuration.quiet, already_formatted_files
+            mode, configuration, already_formatted_files
         )
         files_to_format_error_code = handle_files_to_format(
             mode, configuration, cache, pool, files_to_format

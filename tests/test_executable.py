@@ -905,7 +905,9 @@ def check_warnings(result, stderr):
     [
         ((), False),
         (("--check",), True),
+        (("--require-definitions", "--check"), True),
         (("--in-place",), True),
+        (("--require-definitions", "--in-place"), True),
         (("--diff",), False),
     ],
 )
@@ -1011,6 +1013,78 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 
 """
         ), without_definition.stderr
+
+
+@pytest.mark.parametrize(
+    ["args", "check_cache"],
+    [
+        ((), False),
+        (("--check",), True),
+        (("--in-place",), True),
+        (("--diff",), False),
+    ],
+)
+def test_dont_warn_about_unknown_commands_when_definition_arent_required(
+    tmpdir, args, check_cache
+):
+    original = TESTS / "warn_about_unknown_commands"
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        if check_cache:
+            inspector.assert_that_has_no_tables()
+
+        cmakelists = Path(target) / "CMakeLists.txt"
+        without_definition = gersemi_(
+            *args, "--no-require-definitions", cmakelists, cwd=tmpdir
+        )
+        assert without_definition.returncode == 0, (
+            without_definition.returncode,
+            without_definition.stderr,
+        )
+        assert without_definition.stderr == "", without_definition.stderr
+
+        if check_cache:
+            inspector.assert_that_has_initialized_tables()
+            assert len(inspector.get_files()) > 0
+            assert len(inspector.get_formatted()) > 0
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        if check_cache:
+            inspector.assert_that_has_no_tables()
+
+        cmakelists = Path(target) / "CMakeLists.txt"
+        with create_dot_gersemirc(where=target, require_definitions=False):
+            without_definition = gersemi_(*args, cmakelists, cwd=tmpdir)
+        assert without_definition.returncode == 0, (
+            without_definition.returncode,
+            without_definition.stderr,
+        )
+        assert without_definition.stderr == "", without_definition.stderr
+
+        if check_cache:
+            inspector.assert_that_has_initialized_tables()
+            assert len(inspector.get_files()) > 0
+            assert len(inspector.get_formatted()) > 0
+
+    with cache_tests(original) as (target, gersemi_, inspector):
+        if check_cache:
+            inspector.assert_that_has_no_tables()
+
+        cmakelists = Path(target) / "CMakeLists.txt"
+        with create_dot_gersemirc(where=target, require_definitions=True):
+            without_definition = gersemi_(
+                *args, "--no-require-definitions", cmakelists, cwd=tmpdir
+            )
+        assert without_definition.returncode == 0, (
+            without_definition.returncode,
+            without_definition.stderr,
+        )
+        assert without_definition.stderr == "", without_definition.stderr
+
+        if check_cache:
+            inspector.assert_that_has_initialized_tables()
+            assert len(inspector.get_files()) > 0
+            assert len(inspector.get_formatted()) > 0
 
 
 def test_cache_is_disabled():

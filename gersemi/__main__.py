@@ -172,6 +172,18 @@ def create_argparser():
     [default: cache enabled]
         """,
     )
+    configuration_group.add_argument(
+        "--require-definitions",
+        "--no-require-definitions",
+        dest="require_definitions",
+        action=ToggleAction,
+        nargs=0,
+        default=None,
+        help=f"""
+    {conf_doc["require_definitions"]}
+    [default: definitions are required]
+        """,
+    )
 
     parser.add_argument(
         dest="sources",
