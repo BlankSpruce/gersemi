@@ -451,7 +451,7 @@ watch_david_fincher_movies(
 ```
 If you find these limitations too strict let me know about your case.
 
-When source code has custom commands but their definitions aren't known `gersemi` will warn about that. Warnings can be suppressed with `--no-required-definitions`/`required_definitions: false`.
+When source code has custom commands but their definitions aren't known `gersemi` will warn about that. Warnings can be suppressed with `--no-warn-about-unknown-commands`/`warn_about_unknown_commands: false`.
 
 #### How to format custom commands for which path to definition can't be guaranteed to be stable? (e.g external dependencies not managed by CMake)
 
