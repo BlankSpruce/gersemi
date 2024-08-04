@@ -171,17 +171,15 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
-    require_definitions: bool = field(
+    warn_about_unknown_commands: bool = field(
         default=True,
         metadata=dict(
-            title="Require definitions",
+            title="Warn about unknown commands",
             description=doc(
                 """
-    Require definitions of custom commands. When enabled
-    file which has unknown custom commands will have warnings
-    issued about that and result won't be cached. When disabled
-    it will be assumed that original formatting of unknown command
-    is the correct one. See: "Let's make a deal" section in README.
+    When enabled file which has unknown custom commands will have warnings
+    issued about that and result won't be cached. See: "Let's make a deal"
+    section in README.
                 """
             ),
         ),

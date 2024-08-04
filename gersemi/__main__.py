@@ -173,15 +173,15 @@ def create_argparser():
         """,
     )
     configuration_group.add_argument(
-        "--require-definitions",
-        "--no-require-definitions",
-        dest="require_definitions",
+        "--warn-about-unknown-commands",
+        "--no-warn-about-unknown-commands",
+        dest="warn_about_unknown_commands",
         action=ToggleAction,
         nargs=0,
         default=None,
         help=f"""
-    {conf_doc["require_definitions"]}
-    [default: definitions are required]
+    {conf_doc["warn_about_unknown_commands"]}
+    [default: warnings enabled]
         """,
     )
 

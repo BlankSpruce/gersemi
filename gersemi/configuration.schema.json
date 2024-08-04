@@ -89,10 +89,10 @@
       "title": "Enable cache",
       "type": "boolean"
     },
-    "require_definitions": {
+    "warn_about_unknown_commands": {
       "default": true,
-        "description": "Require definitions of custom commands. When enabled file which has unknown custom commands will have warnings issued about that and result won't be cached. When disabled it will be assumed that original formatting of unknown command is the correct one. See: \"Let's make a deal\" section in README.",
-      "title": "Require definitions",
+        "description": "When enabled file which has unknown custom commands will have warnings issued about that and result won't be cached. See: \"Let's make a deal\" section in README.",
+      "title": "Warn about unknown commands",
       "type": "boolean"
     }
   },

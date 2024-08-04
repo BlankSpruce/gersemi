@@ -7,6 +7,6 @@ indent: 4
 line_length: 80
 list_expansion: favour-inlining
 quiet: false
-require_definitions: true
 unsafe: false
+warn_about_unknown_commands: true
 workers: 8

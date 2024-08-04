@@ -1,4 +1,12 @@
 # Changelog
+## [0.15.0] 2024-08-04
+### Added
+- cache can be disabled through `--no-cache`/`cache: false`, cache is still enabled by default
+- warnings about unknown commands can be suppressed through `--no-warn-about-unknown-commands`/`warn_about_unknown_commands: false`, warnings are enabled by default
+
+### Fixed
+- only those files that were checked or formatted without warning will be cached
+
 ## [0.14.0] 2024-07-15
 ### Added
 - warnings about unknown commands when `quiet` isn't used

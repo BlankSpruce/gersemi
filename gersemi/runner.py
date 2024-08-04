@@ -140,7 +140,7 @@ def consume_task_result(
 
     warnings = (
         [w for w in task_result.warnings if not isinstance(w, UnknownCommandWarning)]
-        if not configuration.require_definitions
+        if not configuration.warn_about_unknown_commands
         else task_result.warnings
     )
 

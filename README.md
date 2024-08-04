@@ -19,7 +19,7 @@ usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGE
                [--indent (INTEGER | tabs)] [--unsafe] [-q] [--color]
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}] [-w INTEGER]
-               [--cache] [--require-definitions]
+               [--cache] [--warn-about-unknown-commands]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -75,13 +75,11 @@ configuration:
   --cache, --no-cache   Enables cache with data about files that are known to be
                         formatted to speed up execution.
                         [default: cache enabled]
-  --require-definitions, --no-require-definitions
-                        Require definitions of custom commands. When enabled file which
-                        has unknown custom commands will have warnings issued about
-                        that and result won't be cached. When disabled it will be
-                        assumed that original formatting of unknown command is the
-                        correct one. See: "Let's make a deal" section in README.
-                        [default: definitions are required]
+  --warn-about-unknown-commands, --no-warn-about-unknown-commands
+                        When enabled file which has unknown custom commands will have
+                        warnings issued about that and result won't be cached.
+                        See: "Let's make a deal" section in README.
+                        [default: warnings enabled]
 ```
 
 ### [pre-commit](https://pre-commit.com/) hook
@@ -91,7 +89,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.14.0
+  rev: 0.15.0
   hooks:
   - id: gersemi
 ```

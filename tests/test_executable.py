@@ -905,9 +905,9 @@ def check_warnings(result, stderr):
     [
         ((), False),
         (("--check",), True),
-        (("--require-definitions", "--check"), True),
+        (("--warn-about-unknown-commands", "--check"), True),
         (("--in-place",), True),
-        (("--require-definitions", "--in-place"), True),
+        (("--warn-about-unknown-commands", "--in-place"), True),
         (("--diff",), False),
     ],
 )
@@ -1035,7 +1035,7 @@ def test_dont_warn_about_unknown_commands_when_definition_arent_required(
 
         cmakelists = Path(target) / "CMakeLists.txt"
         without_definition = gersemi_(
-            *args, "--no-require-definitions", cmakelists, cwd=tmpdir
+            *args, "--no-warn-about-unknown-commands", cmakelists, cwd=tmpdir
         )
         assert without_definition.returncode == 0, (
             without_definition.returncode,
@@ -1053,7 +1053,7 @@ def test_dont_warn_about_unknown_commands_when_definition_arent_required(
             inspector.assert_that_has_no_tables()
 
         cmakelists = Path(target) / "CMakeLists.txt"
-        with create_dot_gersemirc(where=target, require_definitions=False):
+        with create_dot_gersemirc(where=target, warn_about_unknown_commands=False):
             without_definition = gersemi_(*args, cmakelists, cwd=tmpdir)
         assert without_definition.returncode == 0, (
             without_definition.returncode,
@@ -1071,9 +1071,9 @@ def test_dont_warn_about_unknown_commands_when_definition_arent_required(
             inspector.assert_that_has_no_tables()
 
         cmakelists = Path(target) / "CMakeLists.txt"
-        with create_dot_gersemirc(where=target, require_definitions=True):
+        with create_dot_gersemirc(where=target, warn_about_unknown_commands=True):
             without_definition = gersemi_(
-                *args, "--no-require-definitions", cmakelists, cwd=tmpdir
+                *args, "--no-warn-about-unknown-commands", cmakelists, cwd=tmpdir
             )
         assert without_definition.returncode == 0, (
             without_definition.returncode,
