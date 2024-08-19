@@ -224,8 +224,12 @@ def main():
     if len(args.sources) < 1:
         sys.exit(SUCCESS)
 
-    configuration = make_configuration(args)
-    mode = get_mode(args)
+    try:
+        configuration = make_configuration(args)
+        mode = get_mode(args)
+    except Exception as exception:  # pylint: disable=broad-except
+        print_to_stderr(exception)
+        sys.exit(FAIL)
 
     sys.exit(run(mode, configuration, args.sources))
 
