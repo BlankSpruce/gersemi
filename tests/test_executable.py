@@ -1146,3 +1146,31 @@ def test_cache_is_enabled():
             gersemi_("--cache", "--check", target, "--definitions", target, cwd=target)
 
         assert_that_cache_was_used(inspector)
+
+
+def test_definition_path_doesnt_exist():
+    with temporary_dir_copy(TESTS / "custom_project") as project:
+        sources = Path(project) / "formatted"
+        definitions = Path(project) / "formatted"
+        common_args = ["--check", sources, "--definitions"]
+
+        assert_success(*common_args, definitions)
+
+        assert_fail(*common_args, Path(project) / "this_path_doesnt_exist")
+
+        assert_success(*common_args, definitions / ".." / "formatted")
+
+        assert_fail(*common_args, definitions / ".." / ".." / "formatted")
+
+        definitions_as_files = [
+            definitions / "back_to_the_future.cmake",
+            definitions / "back_to_the_future_sequels.cmake",
+        ]
+        assert_success(*common_args, *definitions_as_files)
+
+        definitions_as_files_with_path_that_doesnt_exist = [
+            definitions / "back_to_the_future.cmake",
+            definitions / "back_to_the_future_sequels.cmake",
+            definitions / "back_to_the_future_four.cmake",
+        ]
+        assert_fail(*common_args, *definitions_as_files_with_path_that_doesnt_exist)

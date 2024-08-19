@@ -233,7 +233,7 @@ def enter_directory(target_directory):
 
 
 def normalize_definitions(definitions):
-    return [Path(d).resolve() for d in definitions]
+    return [Path(d).resolve(True) for d in definitions]
 
 
 def sanitize_list_expansion(list_expansion):
