@@ -233,7 +233,11 @@ def enter_directory(target_directory):
 
 
 def normalize_definitions(definitions):
-    return [Path(d).resolve(True) for d in definitions]
+    try:
+        return [Path(d).resolve(True) for d in definitions]
+    except FileNotFoundError as e:
+        # pylint: disable=broad-exception-raised
+        raise Exception(f"Definition path doesn't exist: {e.filename}") from e
 
 
 def sanitize_list_expansion(list_expansion):

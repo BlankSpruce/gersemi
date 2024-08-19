@@ -1174,3 +1174,33 @@ def test_definition_path_doesnt_exist():
             definitions / "back_to_the_future_four.cmake",
         ]
         assert_fail(*common_args, *definitions_as_files_with_path_that_doesnt_exist)
+
+
+def test_source_path_doesnt_exist():
+    with temporary_dir_copy(TESTS / "custom_project") as project:
+        sources = Path(project) / "formatted"
+        definitions = Path(project) / "formatted"
+        common_args = ["--definitions", definitions, "--check"]
+
+        assert_success(*common_args, sources)
+
+        assert_fail(*common_args, Path(project) / "this_path_doesnt_exist")
+
+        assert_success(*common_args, sources / ".." / "formatted")
+
+        assert_fail(*common_args, definitions / ".." / ".." / "formatted")
+
+        sources_as_files = [
+            sources / "CMakeLists.txt",
+            sources / "subdirectory_one" / "CMakeLists.txt",
+            sources / "subdirectory_two" / "CMakeLists.txt",
+        ]
+        assert_success(*common_args, *sources_as_files)
+
+        sources_as_files_with_path_that_doesnt_exist = [
+            sources / "CMakeLists.txt",
+            sources / "this_subdirectory_doesnt_exist" / "CMakeLists.txt",
+            sources / "subdirectory_one" / "CMakeLists.txt",
+            sources / "subdirectory_two" / "CMakeLists.txt",
+        ]
+        assert_fail(*common_args, *sources_as_files_with_path_that_doesnt_exist)
