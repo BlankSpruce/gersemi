@@ -42,7 +42,7 @@ def get_files(paths: Iterable[Path]) -> Iterable[Path]:
         return [path]
 
     return set(
-        item.resolve() if item != Path("-") else item
+        item.resolve(True) if item != Path("-") else item
         for path in paths
         for item in get_files_from_single_path(path)
     )
@@ -86,7 +86,12 @@ def find_all_custom_command_definitions(
 ) -> Dict[str, Keywords]:
     result: Dict = {}
 
-    files = get_files(paths)
+    try:
+        files = get_files(paths)
+    except FileNotFoundError as e:
+        # pylint: disable=broad-exception-raised
+        raise Exception(f"Definition path doesn't exist: {e.filename}") from e
+
     find = find_custom_command_definitions_in_file
 
     for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
@@ -246,7 +251,11 @@ def handle_files_to_format(
 
 
 def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
-    requested_files = get_files(sources)
+    try:
+        requested_files = get_files(sources)
+    except FileNotFoundError as e:
+        # pylint: disable=broad-exception-raised
+        raise Exception(f"Source path doesn't exist: {e.filename}") from e
 
     pool_cm = create_pool(Path("-") in requested_files, configuration.workers)
     with create_cache(configuration.cache) as cache, pool_cm() as pool:

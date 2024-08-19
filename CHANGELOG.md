@@ -1,4 +1,8 @@
 # Changelog
+## [0.15.1] 2024-08-19
+### Fixed
+- when source or definition path doesn't exist `gersemi` will fail early
+
 ## [0.15.0] 2024-08-04
 ### Added
 - cache can be disabled through `--no-cache`/`cache: false`, cache is still enabled by default
