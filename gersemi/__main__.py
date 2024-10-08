@@ -9,6 +9,7 @@ from gersemi.configuration import (
     Configuration,
     ListExpansion,
     indent_type,
+    workers_type,
 )
 from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
@@ -152,12 +153,11 @@ def create_argparser():
     configuration_group.add_argument(
         "-w",
         "--workers",
-        metavar="INTEGER",
+        metavar="(INTEGER | max)",
         dest="workers",
-        type=int,
+        type=workers_type,
         help=f"""
-    {conf_doc['workers']}
-    [default: number of CPUs on this system]
+    {conf_doc['workers']} [default: {Configuration.workers.value}]
         """,
     )
     configuration_group.add_argument(

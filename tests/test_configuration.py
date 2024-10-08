@@ -7,11 +7,13 @@ from gersemi.configuration import (
     Configuration,
     ListExpansion,
     make_configuration_file,
+    MaxWorkers,
     Tabs,
 )
 
 try:
     from pydantic.json_schema import GenerateJsonSchema
+    from pydantic.version import version_short
     from pydantic import TypeAdapter
 except ImportError:
 
@@ -20,6 +22,13 @@ except ImportError:
 
     class TypeAdapter:
         pass
+
+    def version_short() -> str:
+        return "0.0"
+
+
+def pydantic_version_as_tuple():
+    return tuple(map(int, version_short().split(".")))
 
 
 def get_representation(represented_type):
@@ -41,17 +50,19 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         result = super().generate(schema, mode=mode)
         result["$schema"] = "https://json-schema.org/draft-07/schema"
         result["$defs"]["ListExpansion"] = get_representation(ListExpansion)
+        result["$defs"]["MaxWorkers"] = get_representation(MaxWorkers)
         result["$defs"]["Tabs"] = get_representation(Tabs)
 
         result["properties"]["indent"]["anyOf"][0]["minimum"] = 1
-
-        del result["properties"]["workers"]["default"]
-        result["properties"]["workers"]["minimum"] = 1
+        result["properties"]["workers"]["anyOf"][0]["minimum"] = 1
 
         return result
 
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="At least Python 3.7 is required")
+@pytest.mark.skipif(
+    pydantic_version_as_tuple() < (2, 9), reason="At least pydantic 2.9 is required"
+)
 def test_schema_in_repository_is_consistent_with_configuration_definition():
     this_file_dir = os.path.dirname(os.path.realpath(__file__))
     schema_path = os.path.join(this_file_dir, "configuration.schema.json")
@@ -70,5 +81,4 @@ def test_example_file_in_repository_is_consistent_with_configuration_definition(
         example = f.read().strip()
 
     configuration = Configuration()
-    configuration.workers = 8
     assert example == make_configuration_file(configuration)

@@ -15,6 +15,16 @@
       ],
       "type": "string"
     },
+    "MaxWorkers": {
+      "oneOf": [
+        {
+          "description": "Use maximum possible amount of workers.",
+          "enum": ["max"],
+          "title": "Max workers"
+        }
+      ],
+      "type": "string"
+    },
     "Tabs": {
       "oneOf": [
         {
@@ -78,10 +88,16 @@
       "type": "boolean"
     },
     "workers": {
-      "minimum": 1,
-      "description": "Number of workers used to format multiple files in parallel.",
-      "title": "Workers",
-      "type": "integer"
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {"$ref": "#/$defs/MaxWorkers"}
+      ],
+      "default": "max",
+      "description": "Explicit number of workers or 'max' for maximum possible number of workers on given machine used to format multiple files in parallel.",
+      "title": "Workers"
     },
     "cache": {
       "default": true,
