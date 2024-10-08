@@ -11,7 +11,7 @@ def noop(*_):
 
 
 class Formatter:
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         sanity_checker,
         line_length: int,

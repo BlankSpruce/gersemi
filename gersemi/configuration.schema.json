@@ -60,7 +60,7 @@
       "type": "integer"
     },
     "list_expansion": {
-      "allOf": [{"$ref": "#/$defs/ListExpansion"}],
+      "$ref": "#/$defs/ListExpansion",
       "default": "favour-inlining",
       "description": "Switch controls how code is expanded into multiple lines when it's not possible to keep it formatted in one line.",
       "title": "List expansion"
