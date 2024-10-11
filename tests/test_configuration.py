@@ -1,7 +1,6 @@
 # mypy: disable-error-code="no-redef"
 import json
 import os
-import sys
 import pytest
 from gersemi.configuration import (
     Configuration,
@@ -59,7 +58,6 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         return result
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="At least Python 3.7 is required")
 @pytest.mark.skipif(
     pydantic_version_as_tuple() < (2, 9), reason="At least pydantic 2.9 is required"
 )

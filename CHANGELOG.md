@@ -1,6 +1,8 @@
 # Changelog
-## [0.16.0] 2024-10-08
+## [0.16.0] 2024-10-11
 ### Changed
+- removed dependency to `dataclasses` package (#36)
+- supported Python versions changed from `>= 3.6` to `>= 3.8`
 - number of workers can now be specified with either integer or "max", default value will now be "max" instead of numerical value of max on given machine
 
 ## [0.15.1] 2024-08-19
