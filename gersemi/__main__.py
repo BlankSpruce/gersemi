@@ -9,6 +9,7 @@ from gersemi.configuration import (
     Configuration,
     ListExpansion,
     indent_type,
+    workers_type,
 )
 from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
@@ -109,7 +110,7 @@ def create_argparser():
         metavar="(INTEGER | tabs)",
         dest="indent",
         type=indent_type,
-        help=f"{conf_doc['indent']} [default: {Configuration.indent}]",
+        help=f"{conf_doc['indent']} [default: {repr(Configuration.indent)}]",
     )
     configuration_group.add_argument(
         "--unsafe",
@@ -152,12 +153,11 @@ def create_argparser():
     configuration_group.add_argument(
         "-w",
         "--workers",
-        metavar="INTEGER",
+        metavar="(INTEGER | max)",
         dest="workers",
-        type=int,
+        type=workers_type,
         help=f"""
-    {conf_doc['workers']}
-    [default: number of CPUs on this system]
+    {conf_doc['workers']} [default: {repr(Configuration.workers)}]
         """,
     )
     configuration_group.add_argument(

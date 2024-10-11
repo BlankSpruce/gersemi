@@ -69,9 +69,10 @@ configuration:
                         entities will be formatted in such way that sublists will be
                         completely expanded once expansion becomes necessary at all.
                         [default: favour-inlining]
-  -w INTEGER, --workers INTEGER
-                        Number of workers used to format multiple files in parallel.
-                        [default: number of CPUs on this system]
+  -w INTEGER, --workers (INTEGER | max)
+                        Explicit number of workers or 'max' for maximum possible number
+                        of workers on given machine used to format multiple files
+                        in parallel. [default: max]
   --cache, --no-cache   Enables cache with data about files that are known to be
                         formatted to speed up execution.
                         [default: cache enabled]

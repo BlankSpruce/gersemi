@@ -1,4 +1,8 @@
 # Changelog
+## [0.16.0] 2024-10-08
+### Changed
+- number of workers can now be specified with either integer or "max", default value will now be "max" instead of numerical value of max on given machine
+
 ## [0.15.1] 2024-08-19
 ### Fixed
 - when source or definition path doesn't exist `gersemi` will fail early

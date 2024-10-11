@@ -9,4 +9,4 @@ list_expansion: favour-inlining
 quiet: false
 unsafe: false
 warn_about_unknown_commands: true
-workers: 8
+workers: max

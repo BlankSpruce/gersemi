@@ -6,7 +6,12 @@ from pathlib import Path
 import sys
 from typing import Callable, Dict, Iterable, Tuple, Union
 from gersemi.cache import create_cache
-from gersemi.configuration import Configuration
+from gersemi.configuration import (
+    Configuration,
+    MaxWorkers,
+    max_number_of_workers,
+    Workers,
+)
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
@@ -159,10 +164,19 @@ def consume_task_result(
     return task_result.path, task_result.return_code, (len(warnings) > 0)
 
 
-def create_pool(is_stdin_in_sources, num_workers):
+def create_pool(is_stdin_in_sources, workers: Workers):
     if is_stdin_in_sources:
         return mp_dummy.Pool
-    return partial(mp.Pool, processes=num_workers)
+
+    if isinstance(workers, MaxWorkers):
+        value = max_number_of_workers()
+    else:
+        if workers <= 1:
+            return mp_dummy.Pool
+
+        value = workers
+
+    return partial(mp.Pool, processes=value)
 
 
 def split_files(cache, configuration_summary: str, files: Iterable[Path]):

@@ -12,7 +12,7 @@ from typing import Iterable, Optional, Union
 import yaml
 
 
-def number_of_workers():
+def max_number_of_workers():
     result = multiprocessing.cpu_count()
     if sys.platform == "win32":
         # https://bugs.python.org/issue26903
@@ -33,6 +33,9 @@ class EnumWithMetadata(Enum):
         self.title = data["title"]
         return self
 
+    def __repr__(self):
+        return self.value
+
 
 class Tabs(EnumWithMetadata):
     Tabs = dict(
@@ -49,7 +52,27 @@ Indent = Union[Spaces, Tabs]
 def indent_type(thing) -> Indent:
     if thing == Tabs.Tabs.value:
         return Tabs.Tabs
-    return int(thing)
+
+    return max(1, int(thing))
+
+
+class MaxWorkers(EnumWithMetadata):
+    MaxWorkers = dict(
+        value="max",
+        description="Use maximum possible amount of workers.",
+        title="Max workers",
+    )
+
+
+NumberOfWorkers = int
+Workers = Union[NumberOfWorkers, MaxWorkers]
+
+
+def workers_type(thing) -> Workers:
+    if thing == MaxWorkers.MaxWorkers.value:
+        return MaxWorkers.MaxWorkers
+
+    return min(max(1, int(thing)), max_number_of_workers())
 
 
 class ListExpansion(EnumWithMetadata):
@@ -150,11 +173,17 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
-    workers: int = field(
-        default=number_of_workers(),
+    workers: Workers = field(
+        default=MaxWorkers.MaxWorkers,
         metadata=dict(
             title="Workers",
-            description="Number of workers used to format multiple files in parallel.",
+            description=doc(
+                """
+    Explicit number of workers or 'max' for maximum possible
+    number of workers on given machine used to format multiple
+    files in parallel.
+                """
+            ),
         ),
     )
 
@@ -189,6 +218,14 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))
         return hasher.hexdigest()
+
+
+def represent_enum_with_metadata(dumper, data):
+    return dumper.represent_str(data.value)
+
+
+yaml.SafeDumper.add_representer(Tabs, represent_enum_with_metadata)
+yaml.SafeDumper.add_representer(MaxWorkers, represent_enum_with_metadata)
 
 
 def make_configuration_file(configuration):
@@ -249,10 +286,6 @@ def sanitize_list_expansion(list_expansion):
     )
 
 
-def sanitize_workers(workers):
-    return max(1, workers)
-
-
 def load_configuration_from_file(configuration_file_path: Path) -> Configuration:
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
@@ -264,7 +297,7 @@ def load_configuration_from_file(configuration_file_path: Path) -> Configuration
                     config["list_expansion"]
                 )
             if "workers" in config:
-                config["workers"] = sanitize_workers(config["workers"])
+                config["workers"] = workers_type(config["workers"])
             if "indent" in config:
                 config["indent"] = indent_type(config["indent"])
         return Configuration(**config)
@@ -282,8 +315,6 @@ def override_configuration_with_args(
             value = normalize_definitions(value)
         if param == "list_expansion":
             value = sanitize_list_expansion(value)
-        if param == "workers":
-            value = sanitize_workers(value)
         setattr(configuration, param, value)
     return configuration
 
