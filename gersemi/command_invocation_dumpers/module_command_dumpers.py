@@ -690,7 +690,7 @@ class WriteBasicPackageVersionFile(ArgumentAwareCommandInvocationDumper):
 
 
 class BisonTarget(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["COMPILE_FLAGS", "DEFINES_FILES", "VERBOSE", "REPORT_FILE"]
+    one_value_keywords = ["COMPILE_FLAGS", "DEFINES_FILE", "VERBOSE", "REPORT_FILE"]
 
 
 class DoxygenAddDocs(ArgumentAwareCommandInvocationDumper):
@@ -710,7 +710,7 @@ class EnvModuleSwap(ArgumentAwareCommandInvocationDumper):
 
 
 class FlexTarget(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["COMPILE_FLAGS", "DEFINES_FILES"]
+    one_value_keywords = ["COMPILE_FLAGS", "DEFINES_FILE"]
 
 
 class GettextCreateTranslations(ArgumentAwareCommandInvocationDumper):
