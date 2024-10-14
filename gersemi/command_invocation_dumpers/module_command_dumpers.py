@@ -532,10 +532,13 @@ class GenerateAppleArchitectureSelectionFile(ArgumentAwareCommandInvocationDumpe
     one_value_keywords = [
         "INSTALL_DESTINATION",
         "INSTALL_PREFIX",
+        "UNIVERSAL_INCLUDE_FILE",
+        "ERROR_VARIABLE",
+    ]
+    multi_value_keywords = [
         "SINGLE_ARCHITECTURES",
         "SINGLE_ARCHITECTURE_INCLUDE_FILES",
         "UNIVERSAL_ARCHITECTURES",
-        "UNIVERSAL_INCLUDE_FILE",
     ]
 
 
@@ -547,12 +550,14 @@ class GenerateApplePlatformSelectionFile(ArgumentAwareCommandInvocationDumper):
         "MACOS_INCLUDE_FILE",
         "IOS_INCLUDE_FILE",
         "IOS_SIMULATOR_INCLUDE_FILE",
+        "IOS_CATALYST_INCLUDE_FILE",
         "TVOS_INCLUDE_FILE",
         "TVOS_SIMULATOR_INCLUDE_FILE",
         "WATCHOS_INCLUDE_FILE",
         "WATCHOS_SIMULATOR_INCLUDE_FILE",
         "VISIONOS_INCLUDE_FILE",
         "VISIONOS_SIMULATOR_INCLUDE_FILE",
+        "ERROR_VARIABLE",
     ]
 
 
@@ -595,16 +600,17 @@ class GTestDiscoverTests(
         "WORKING_DIRECTORY",
         "TEST_PREFIX",
         "TEST_SUFFIX",
+        "TEST_FILTER",
         "TEST_LIST",
         "DISCOVERY_TIMEOUT",
         "XML_OUTPUT_DIR",
         "DISCOVERY_MODE",
-        "TEST_FILTER",
     ]
-    multi_value_keywords = ["EXTRA_ARGS", "PROPERTIES"]
+    multi_value_keywords = ["EXTRA_ARGS", "PROPERTIES", "DISCOVERY_EXTRA_ARGS"]
     keyword_formatters = {
         "EXTRA_ARGS": "_format_command_line",
         "PROPERTIES": "_format_keyword_with_pairs",
+        "DISCOVERY_EXTRA_ARGS": "_format_command_line",
     }
 
 

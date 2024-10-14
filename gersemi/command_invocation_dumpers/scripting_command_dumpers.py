@@ -204,6 +204,26 @@ class CMakePath(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper
     }
 
 
+class CMakePkgConfig(ArgumentAwareCommandInvocationDumper):
+    options = ["REQUIRED", "EXACT", "QUIET"]
+    one_value_keywords = [
+        "STRICTNESS",
+        "ENV_MODE",
+        "DISABLE_UNINSTALLED",
+        "PC_SYSROOT_DIR",
+        "TOP_BUILD_DIR",
+        "ALLOW_SYSTEM_INCLUDES",
+        "ALLOW_SYSTEM_LIBS",
+    ]
+    multi_value_keywords = [
+        "EXTRACT",
+        "PC_LIBDIR",
+        "PC_PATH",
+        "SYSTEM_INCLUDE_DIRS",
+        "SYSTEM_LIBRARY_DIRS",
+    ]
+
+
 class CMakePolicy(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "VERSION": dict(front_positional_arguments=["<min>...<max>"]),
@@ -490,6 +510,7 @@ class File(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
                 "COMPRESSION",
                 "COMPRESSION_LEVEL",
                 "MTIME",
+                "WORKING_DIRECTORY",
             ],
             multi_value_keywords=["PATHS"],
         ),
@@ -964,6 +985,7 @@ scripting_command_mapping = {
     "cmake_minimum_required": CMakeMinimumRequired,
     "cmake_parse_arguments": CMakeParseArguments,
     "cmake_path": CMakePath,
+    "cmake_pkg_config": CMakePkgConfig,
     "cmake_policy": CMakePolicy,
     "configure_file": ConfigureFile,
     "elseif": ConditionSyntaxCommandInvocationDumper,

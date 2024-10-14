@@ -10,6 +10,7 @@ cmake_language
 cmake_minimum_required
 cmake_parse_arguments
 cmake_path
+cmake_pkg_config
 cmake_policy
 configure_file
 continue

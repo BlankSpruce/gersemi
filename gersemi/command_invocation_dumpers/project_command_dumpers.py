@@ -21,6 +21,7 @@ class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationD
                 "USES_TERMINAL",
                 "COMMAND_EXPAND_LISTS",
                 "DEPENDS_EXPLICIT_ONLY",
+                "CODEGEN",
             ],
             one_value_keywords=[
                 "MAIN_DEPENDENCY",

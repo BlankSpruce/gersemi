@@ -1,4 +1,11 @@
 # Changelog
+## [0.16.1] 2024-10-14
+### Added
+- support for new keywords in native commands available in CMake 3.31
+
+### Fixed
+- incorrect keywords in `bison_target` and `flex_target` (#37)
+
 ## [0.16.0] 2024-10-11
 ### Changed
 - removed dependency to `dataclasses` package (#36)
