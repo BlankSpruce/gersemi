@@ -399,6 +399,28 @@ class Install(
                 *_Install_RUNTIME_DEPENDENCY_SET_kinds,
             ],
         ),
+        "PACKAGE_INFO": dict(
+            sections={
+                "VERSION": dict(
+                    one_value_keywords=["COMPAT_VERSION", "VERSION_SCHEMA"]
+                ),
+            },
+            options=["LOWER_CASE_FILE", "EXCLUDE_FROM_ALL"],
+            one_value_keywords=[
+                "PACKAGE_INFO",
+                "EXPORT",
+                "APPENDIX",
+                "DESTINATION",
+                "COMPONENT",
+            ],
+            multi_value_keywords=[
+                "VERSION",
+                "DEFAULT_TARGETS",
+                "DEFAULT_CONFIGURATIONS",
+                "PERMISSIONS",
+                "CONFIGURATIONS",
+            ],
+        ),
     }
 
 
@@ -522,7 +544,7 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
         "<projectName>",
         "<targetName>",
     ]
-    option = ["NO_CACHE", "NO_LOG"]
+    options = ["NO_CACHE", "NO_LOG"]
     one_value_keywords = [
         "OUTPUT_VARIABLE",
         "COPY_FILE",
@@ -547,6 +569,8 @@ class TryCompile(ArgumentAwareCommandInvocationDumper):
         "BINARY_DIR",
         "TARGET",
         "LOG_DESCRIPTION",
+        "SOURCES_TYPE",
+        "LINKER_LANGUAGE",
     ]
     multi_value_keywords = [
         "SOURCES",

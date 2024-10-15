@@ -1,4 +1,10 @@
 # Changelog
+## [0.16.2] 2024-10-15
+### Fixed
+- support missing keywords in `file(MAKE_DIRECTORY)` (#38)
+- support missing support for experimental `install(PACKAGE_INFO)`
+- support missing keywords in `try_compile`
+
 ## [0.16.1] 2024-10-14
 ### Added
 - support for new keywords in native commands available in CMake 3.31

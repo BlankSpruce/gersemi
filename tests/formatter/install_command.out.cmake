@@ -691,3 +691,64 @@ install(
         OPTIONAL
         EXCLUDE_FROM_ALL
 )
+
+install(PACKAGE_INFO foo EXPORT bar APPENDIX baz)
+
+install(
+    PACKAGE_INFO foo
+    EXPORT bar
+    LOWER_CASE_FILE
+    VERSION 1.2.3
+    PERMISSIONS foo bar baz
+)
+
+install(
+    PACKAGE_INFO foo
+    EXPORT bar
+    LOWER_CASE_FILE
+    VERSION
+        long_version_why_not__________________________________________________
+    PERMISSIONS foo bar baz
+)
+
+install(
+    PACKAGE_INFO foo
+    EXPORT bar
+    LOWER_CASE_FILE
+    VERSION 1.2.3 COMPAT_VERSION 1.2.1 VERSION_SCHEMA foo
+    PERMISSIONS foo bar baz
+    CONFIGURATIONS
+        foo
+        bar
+        baz____________________________________________________________
+)
+
+install(
+    PACKAGE_INFO foo
+    EXPORT bar
+    LOWER_CASE_FILE
+    VERSION
+        1.2.3
+        COMPAT_VERSION 1.2.1
+        VERSION_SCHEMA foo__________________________________________________
+    PERMISSIONS foo bar baz
+    CONFIGURATIONS
+        foo
+        bar
+        baz____________________________________________________________
+)
+
+install(
+    PACKAGE_INFO foo
+    EXPORT bar
+    LOWER_CASE_FILE
+    VERSION
+        long_version_why_not__________________________________________________
+        COMPAT_VERSION 1.2.1
+        VERSION_SCHEMA foo__________________________________________________
+    PERMISSIONS foo bar baz
+    CONFIGURATIONS
+        foo
+        bar
+        baz____________________________________________________________
+)

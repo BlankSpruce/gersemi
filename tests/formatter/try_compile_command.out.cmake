@@ -260,3 +260,13 @@ try_compile(
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS ON
 )
+
+try_compile(
+    FOO
+    SOURCES_TYPE foo
+    SOURCES foo bar baz
+    SOURCE_FROM_CONTENT foo bar
+    SOURCE_FROM_VAR foo bar
+    NO_CACHE
+    OUTPUT_VARIABLE foo
+)
