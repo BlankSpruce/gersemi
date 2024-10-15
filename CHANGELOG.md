@@ -2,8 +2,8 @@
 ## [0.16.2] 2024-10-15
 ### Fixed
 - support missing keywords in `file(MAKE_DIRECTORY)` (#38)
-- support missing support for experimental `install(PACKAGE_INFO)`
 - support missing keywords in `try_compile`
+- add support for experimental `install(PACKAGE_INFO)`
 
 ## [0.16.1] 2024-10-14
 ### Added
