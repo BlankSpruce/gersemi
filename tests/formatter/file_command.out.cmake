@@ -161,12 +161,13 @@ file(
     long_filename__________________________
 )
 
-file(MAKE_DIRECTORY foo bar)
+file(MAKE_DIRECTORY foo bar RESULT result)
 
 file(
     MAKE_DIRECTORY
-    long_filename__________________________
-    long_filename__________________________
+        long_filename__________________________
+        long_filename__________________________
+    RESULT result
 )
 
 file(COPY foo bar DESTINATION baz)
