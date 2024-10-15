@@ -379,6 +379,10 @@ class File(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
             options=["CONFIGURE_DEPENDS", "FOLLOW_SYMLINKS"],
             one_value_keywords=["GLOB_RECURSE", "LIST_DIRECTORIES", "RELATIVE"],
         ),
+        "MAKE_DIRECTORY": dict(
+            one_value_keywords=["RESULT"],
+            multi_value_keywords=["MAKE_DIRECTORY"],
+        ),
         "RENAME": dict(
             front_positional_arguments=["<oldname>", "<newname>"],
             options=["NO_REPLACE"],
