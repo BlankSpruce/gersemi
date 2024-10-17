@@ -1,10 +1,13 @@
 import os
 import pathlib
+import shutil
 import pytest
 from gersemi.configuration import indent_type, ListExpansion
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.formatter import create_formatter
 from gersemi.runner import find_all_custom_command_definitions
+from tests.fixtures.app import App
+from tests.fixtures.cache import Cache
 
 
 @pytest.fixture(scope="module")
@@ -51,3 +54,22 @@ def formatter_creator():
         )
 
     return creator
+
+
+@pytest.fixture(scope="function")
+def cache(tmpdir):
+    return Cache(pathlib.Path(tmpdir) / "temporary_cache.db")
+
+
+@pytest.fixture(scope="function")
+def app(cache, tmpdir):  # pylint: disable=redefined-outer-name
+    return App(cache=cache, fallback_cwd=tmpdir)
+
+
+@pytest.fixture(scope="function")
+def testfiles(tmpdir):
+    original = pathlib.Path(os.path.dirname(os.path.realpath(__file__))) / "executable"
+    original_base = os.path.basename(original)
+    copy = os.path.join(tmpdir, original_base)
+    shutil.copytree(original, copy)
+    return pathlib.Path(copy)
