@@ -4,16 +4,17 @@ from pathlib import Path
 import subprocess
 import sys
 from typing import Optional, Union
+from tests.utils import preprocess
 
 
 def repr_outcome(outcome):
     return f"""- returncode: {outcome.returncode}
 ----------------------------------------
 - stdout:
-{outcome.stdout if outcome.stdout is not None else "--ignore--"}
+{preprocess(outcome.stdout) if outcome.stdout is not None else "--ignore--"}
 ----------------------------------------
 - stderr:
-{outcome.stderr if outcome.stderr is not None else "--ignore--"}"""
+{preprocess(outcome.stderr) if outcome.stderr is not None else "--ignore--"}"""
 
 
 @dataclass

@@ -1,16 +1,8 @@
 import pytest
 from gersemi.exceptions import ASTMismatch
 from gersemi.sanity_checker import check_code_equivalence
-from .tests_generator import generate_input_output_tests
-
-
-def preprocess(text):
-    return (
-        text.replace("⟶", "\\⟶")
-        .replace("·", "\\·")
-        .replace("\t", "⟶")
-        .replace(" ", "·")
-    )
+from tests.utils import preprocess
+from tests.tests_generator import generate_input_output_tests
 
 
 def test_formatter(formatter_creator, case):

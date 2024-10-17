@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import sys
 import textwrap
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Sequence, Tuple, Union
 import yaml
 
 
@@ -286,10 +286,27 @@ def sanitize_list_expansion(list_expansion):
     )
 
 
-def load_configuration_from_file(configuration_file_path: Path) -> Configuration:
+UnknownKeys = Sequence[str]
+
+
+def load_configuration_from_file(
+    configuration_file_path: Path,
+) -> Tuple[Configuration, UnknownKeys]:
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f.read())
+            configuration_file_content = yaml.safe_load(f.read())
+            valid_keys = [f.name for f in fields(Configuration)]
+            config = {
+                key: value
+                for key, value in configuration_file_content.items()
+                if key in valid_keys
+            }
+            unknown_keys = [
+                key
+                for key in configuration_file_content.keys()
+                if key not in valid_keys
+            ]
+
             if "definitions" in config:
                 config["definitions"] = normalize_definitions(config["definitions"])
             if "list_expansion" in config:
@@ -300,7 +317,7 @@ def load_configuration_from_file(configuration_file_path: Path) -> Configuration
                 config["workers"] = workers_type(config["workers"])
             if "indent" in config:
                 config["indent"] = indent_type(config["indent"])
-        return Configuration(**config)
+        return Configuration(**config), unknown_keys
 
 
 def override_configuration_with_args(
@@ -319,11 +336,11 @@ def override_configuration_with_args(
     return configuration
 
 
-def make_configuration(args) -> Configuration:
+def make_configuration(args) -> Tuple[Configuration, UnknownKeys]:
     configuration_file_path = find_dot_gersemirc(args.sources)
     if configuration_file_path is not None:
-        result = load_configuration_from_file(configuration_file_path)
+        result, unknown_keys = load_configuration_from_file(configuration_file_path)
     else:
-        result = Configuration()
+        result, unknown_keys = Configuration(), []
 
-    return override_configuration_with_args(result, args)
+    return override_configuration_with_args(result, args), unknown_keys

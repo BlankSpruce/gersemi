@@ -225,7 +225,12 @@ def main():
         sys.exit(SUCCESS)
 
     try:
-        configuration = make_configuration(args)
+        configuration, unknown_keys = make_configuration(args)
+        if len(unknown_keys) > 0:
+            print_to_stderr(
+                f"Unknown options in configuration file: {', '.join(sorted(unknown_keys))}"
+            )
+
         mode = get_mode(args)
     except Exception as exception:  # pylint: disable=broad-except
         print_to_stderr(exception)

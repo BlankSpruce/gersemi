@@ -968,3 +968,23 @@ def test_source_path_doesnt_exist(app, testfiles):
         sources / "subdirectory_two" / "CMakeLists.txt",
     ]
     assert app(*common_args, *sources_as_files_with_path_that_doesnt_exist) == fail()
+
+
+def test_just_works_with_not_supported_options_in_configuration_file(app, testfiles):
+    with create_dot_gersemirc(where=testfiles, frombulate=100):
+        assert app("--check", testfiles / "formatted_file.cmake") == success(
+            stderr="Unknown options in configuration file: frombulate\n"
+        )
+
+    with create_dot_gersemirc(
+        where=testfiles,
+        line_length=80,
+        kambei=1,
+        katsushiro=2,
+        list_expansion="favour-inlining",
+        gorobei="3",
+        heihachi=True,
+    ):
+        assert app("--check", testfiles / "formatted_file.cmake") == success(
+            stderr="Unknown options in configuration file: gorobei, heihachi, kambei, katsushiro\n"
+        )
