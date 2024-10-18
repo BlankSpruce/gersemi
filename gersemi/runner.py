@@ -122,7 +122,7 @@ def select_task(mode: Mode, configuration: Configuration):
         Mode.RewriteInPlace: lambda _: rewrite_in_place,
         Mode.CheckFormatting: lambda _: check_formatting,
         Mode.ShowDiff: lambda config: (
-            show_colorized_diff if config.color else show_diff
+            show_colorized_diff if config.control.color else show_diff
         ),
     }[mode](configuration)
 
@@ -150,11 +150,11 @@ def consume_task_result(
 
     warnings = (
         [w for w in task_result.warnings if not isinstance(w, UnknownCommandWarning)]
-        if not configuration.warn_about_unknown_commands
+        if not configuration.outcome.warn_about_unknown_commands
         else task_result.warnings
     )
 
-    if not configuration.quiet:
+    if not configuration.control.quiet:
         for warning in warnings:
             print_to_stderr(warning.get_message(fromfile(task_result.path)))
 
@@ -233,16 +233,15 @@ def handle_files_to_format(
     pool,
     files_to_format: Iterable[Path],
 ) -> int:
-    configuration_summary = configuration.summary()
     custom_command_definitions = find_all_custom_command_definitions(
-        set(configuration.definitions), pool, configuration.quiet
+        set(configuration.outcome.definitions), pool, configuration.control.quiet
     )
     formatter = create_formatter(
-        not configuration.unsafe,
-        configuration.line_length,
-        configuration.indent,
+        not configuration.outcome.unsafe,
+        configuration.outcome.line_length,
+        configuration.outcome.indent,
         custom_command_definitions,
-        configuration.list_expansion,
+        configuration.outcome.list_expansion,
     )
     task = select_task(mode, configuration)
     execute = partial(run_task, formatter=formatter, task=task)
@@ -254,7 +253,7 @@ def handle_files_to_format(
     store_files_in_cache(
         mode,
         cache,
-        configuration_summary,
+        configuration.outcome.summary(),
         (
             path
             for path, code, has_warnings in results
@@ -271,10 +270,10 @@ def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
         # pylint: disable=broad-exception-raised
         raise Exception(f"Source path doesn't exist: {e.filename}") from e
 
-    pool_cm = create_pool(Path("-") in requested_files, configuration.workers)
-    with create_cache(configuration.cache) as cache, pool_cm() as pool:
+    pool_cm = create_pool(Path("-") in requested_files, configuration.control.workers)
+    with create_cache(configuration.control.cache) as cache, pool_cm() as pool:
         already_formatted_files, files_to_format = split_files(
-            cache, configuration.summary(), requested_files
+            cache, configuration.outcome.summary(), requested_files
         )
 
         already_formatted_files_error_code = handle_already_formatted_files(

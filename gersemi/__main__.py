@@ -6,7 +6,8 @@ from lark import __version__ as lark_version
 from gersemi.configuration import (
     make_configuration,
     make_default_configuration_file,
-    Configuration,
+    ControlConfiguration,
+    OutcomeConfiguration,
     ListExpansion,
     indent_type,
     workers_type,
@@ -20,6 +21,7 @@ from gersemi.__version__ import __title__, __version__
 class GenerateConfigurationFile(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         print(make_default_configuration_file())
+        sys.exit(SUCCESS)
 
 
 class ShowVersion(argparse.Action):
@@ -90,89 +92,53 @@ def create_argparser():
         help="Show this help message and exit.",
     )
 
-    conf_doc: dict[str, str] = {
-        item.name: item.metadata["description"] for item in fields(Configuration)
+    outcome_conf_doc: dict[str, str] = {
+        item.name: item.metadata["description"] for item in fields(OutcomeConfiguration)
     }
-
-    configuration_group = parser.add_argument_group(
-        title="configuration", description=Configuration.__doc__
+    outcome_configuration_group = parser.add_argument_group(
+        title="outcome configuration", description=OutcomeConfiguration.__doc__
     )
-    configuration_group.add_argument(
+    outcome_configuration_group.add_argument(
         "-l",
         "--line-length",
         metavar="INTEGER",
         dest="line_length",
         type=int,
-        help=f"{conf_doc['line_length']} [default: {Configuration.line_length}]",
+        help=f"{outcome_conf_doc['line_length']} [default: {OutcomeConfiguration.line_length}]",
     )
-    configuration_group.add_argument(
+    outcome_configuration_group.add_argument(
         "--indent",
         metavar="(INTEGER | tabs)",
         dest="indent",
         type=indent_type,
-        help=f"{conf_doc['indent']} [default: {repr(Configuration.indent)}]",
+        help=f"{outcome_conf_doc['indent']} [default: {repr(OutcomeConfiguration.indent)}]",
     )
-    configuration_group.add_argument(
+    outcome_configuration_group.add_argument(
         "--unsafe",
         dest="unsafe",
         action="store_true",
-        help=conf_doc["unsafe"],
+        help=outcome_conf_doc["unsafe"],
     )
-    configuration_group.add_argument(
-        "-q",
-        "--quiet",
-        dest="quiet",
-        action="store_true",
-        help=conf_doc["quiet"],
-    )
-    configuration_group.add_argument(
-        "--color",
-        dest="color",
-        action="store_true",
-        help=conf_doc["color"],
-    )
-    configuration_group.add_argument(
+    outcome_configuration_group.add_argument(
         "--definitions",
         dest="definitions",
         metavar="src",
         default=None,
         nargs="+",
         type=pathlib.Path,
-        help=conf_doc["definitions"],
+        help=outcome_conf_doc["definitions"],
     )
-    configuration_group.add_argument(
+    outcome_configuration_group.add_argument(
         "--list-expansion",
         dest="list_expansion",
         choices=["favour-inlining", "favour-expansion"],
         help=f"""
-    {conf_doc['list_expansion']}
+    {outcome_conf_doc['list_expansion']}
     {" ".join(map(lambda attr: attr.description, ListExpansion))}
-    [default: {Configuration.list_expansion.value}]
+    [default: {OutcomeConfiguration.list_expansion.value}]
             """,
     )
-    configuration_group.add_argument(
-        "-w",
-        "--workers",
-        metavar="(INTEGER | max)",
-        dest="workers",
-        type=workers_type,
-        help=f"""
-    {conf_doc['workers']} [default: {repr(Configuration.workers)}]
-        """,
-    )
-    configuration_group.add_argument(
-        "--cache",
-        "--no-cache",
-        dest="cache",
-        action=ToggleAction,
-        nargs=0,
-        default=None,
-        help=f"""
-    {conf_doc["cache"]}
-    [default: cache enabled]
-        """,
-    )
-    configuration_group.add_argument(
+    outcome_configuration_group.add_argument(
         "--warn-about-unknown-commands",
         "--no-warn-about-unknown-commands",
         dest="warn_about_unknown_commands",
@@ -180,8 +146,54 @@ def create_argparser():
         nargs=0,
         default=None,
         help=f"""
-    {conf_doc["warn_about_unknown_commands"]}
+    {outcome_conf_doc["warn_about_unknown_commands"]}
     [default: warnings enabled]
+        """,
+    )
+
+    control_conf_doc: dict[str, str] = {
+        item.name: item.metadata["description"] for item in fields(ControlConfiguration)
+    }
+    control_configuration_group = parser.add_argument_group(
+        title="control configuration", description=ControlConfiguration.__doc__
+    )
+    control_configuration_group.add_argument(
+        "-q",
+        "--quiet",
+        "--no-quiet",
+        dest="quiet",
+        action="store_true",
+        help=f"{control_conf_doc['quiet']} [default: don't skip]",
+    )
+    control_configuration_group.add_argument(
+        "--color",
+        "--no-color",
+        dest="color",
+        action=ToggleAction,
+        nargs=0,
+        default=None,
+        help=f"{control_conf_doc['color']} [default: don't colorize diff]",
+    )
+    control_configuration_group.add_argument(
+        "-w",
+        "--workers",
+        metavar="(INTEGER | max)",
+        dest="workers",
+        type=workers_type,
+        help=f"""
+    {control_conf_doc['workers']} [default: {repr(ControlConfiguration.workers)}]
+        """,
+    )
+    control_configuration_group.add_argument(
+        "--cache",
+        "--no-cache",
+        dest="cache",
+        action=ToggleAction,
+        nargs=0,
+        default=None,
+        help=f"""
+    {control_conf_doc["cache"]}
+    [default: cache enabled]
         """,
     )
 
@@ -217,24 +229,35 @@ def main():
     args = argparser.parse_args()
     postprocess_args(args)
 
-    if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
-        print_to_stderr("Don't mix stdin with file input")
+    def error(text):
+        print_to_stderr(text)
         sys.exit(FAIL)
+
+    def warn(text):
+        if not args.quiet:
+            print_to_stderr(text)
+
+    if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
+        error("Don't mix stdin with file input")
 
     if len(args.sources) < 1:
         sys.exit(SUCCESS)
 
     try:
-        configuration, unknown_keys = make_configuration(args)
-        if len(unknown_keys) > 0:
-            print_to_stderr(
-                f"Unknown options in configuration file: {', '.join(sorted(unknown_keys))}"
+        configuration, not_supported_keys = make_configuration(args)
+        if len(not_supported_keys.command_line_only) > 0:
+            keys = ", ".join(sorted(not_supported_keys.command_line_only))
+            warn(
+                f"Configuration file has options supported only through command line: {keys}"
             )
+
+        if len(not_supported_keys.unknown) > 0:
+            keys = ", ".join(sorted(not_supported_keys.unknown))
+            warn(f"Configuration file has not supported options: {keys}")
 
         mode = get_mode(args)
     except Exception as exception:  # pylint: disable=broad-except
-        print_to_stderr(exception)
-        sys.exit(FAIL)
+        error(exception)
 
     sys.exit(run(mode, configuration, args.sources))
 

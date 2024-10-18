@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 from contextlib import contextmanager, ExitStack
 import filecmp
 from functools import partial
@@ -869,22 +870,6 @@ def test_cache_is_disabled(app, testfiles, cache):
     assert app("--no-cache", *common_args) == success()
     cache.assert_that_has_no_tables()
 
-    cache.clear()
-
-    cache.assert_that_has_no_tables()
-    with create_dot_gersemirc(where=target, cache=False):
-        assert app(*common_args, cwd=target) == success()
-
-    cache.assert_that_has_no_tables()
-
-    cache.clear()
-
-    cache.assert_that_has_no_tables()
-    with create_dot_gersemirc(where=target, cache=True):
-        assert app("--no-cache", *common_args, cwd=target) == success()
-
-    cache.assert_that_has_no_tables()
-
 
 def test_cache_is_enabled(app, testfiles, cache):
     target = testfiles / "custom_project" / "formatted"
@@ -895,24 +880,16 @@ def test_cache_is_enabled(app, testfiles, cache):
         assert len(cache.get_files()) > 0
         assert len(cache.get_formatted()) > 0
 
+    # enabled by default
+    cache.assert_that_has_no_tables()
+    assert app(*common_args) == success()
+    assert_that_cache_was_used()
+
+    cache.clear()
+
+    # enabled explicitly
     cache.assert_that_has_no_tables()
     assert app("--cache", *common_args) == success()
-    assert_that_cache_was_used()
-
-    cache.clear()
-
-    cache.assert_that_has_no_tables()
-    with create_dot_gersemirc(where=target, cache=True):
-        assert app(*common_args, cwd=target) == success()
-
-    assert_that_cache_was_used()
-
-    cache.clear()
-
-    cache.assert_that_has_no_tables()
-    with create_dot_gersemirc(where=target, cache=False):
-        assert app("--cache", *common_args, cwd=target) == success()
-
     assert_that_cache_was_used()
 
 
@@ -971,9 +948,11 @@ def test_source_path_doesnt_exist(app, testfiles):
 
 
 def test_just_works_with_not_supported_options_in_configuration_file(app, testfiles):
+    f = testfiles / "formatted_file.cmake"
     with create_dot_gersemirc(where=testfiles, frombulate=100):
-        assert app("--check", testfiles / "formatted_file.cmake") == success(
-            stderr="Unknown options in configuration file: frombulate\n"
+        assert app("--check", f) == success(
+            stdout="",
+            stderr="Configuration file has not supported options: frombulate\n",
         )
 
     with create_dot_gersemirc(
@@ -985,6 +964,59 @@ def test_just_works_with_not_supported_options_in_configuration_file(app, testfi
         gorobei="3",
         heihachi=True,
     ):
-        assert app("--check", testfiles / "formatted_file.cmake") == success(
-            stderr="Unknown options in configuration file: gorobei, heihachi, kambei, katsushiro\n"
+        assert app("--check", f) == success(
+            stdout="",
+            # pylint: disable=line-too-long
+            stderr="Configuration file has not supported options: gorobei, heihachi, kambei, katsushiro\n",
         )
+
+    with create_dot_gersemirc(
+        where=testfiles,
+        cache=False,
+        color=True,
+        workers=8,
+        quiet=False,
+        line_length=80,
+        kyuzo=123,
+        shichiroji="foo",
+        kikuchiyo=["foo", "bar"],
+    ):
+        assert app("--check", f) == success(
+            stdout="",
+            # pylint: disable=line-too-long
+            stderr="""Configuration file has options supported only through command line: cache, color, quiet, workers
+Configuration file has not supported options: kikuchiyo, kyuzo, shichiroji
+""",
+        )
+
+
+def test_when_quiet_not_supported_options_in_configuration_file_are_not_printed(
+    app, testfiles
+):
+    f = testfiles / "formatted_file.cmake"
+    with create_dot_gersemirc(where=testfiles, frombulate=100):
+        assert app("--quiet", "--check", f) == success(stdout="", stderr="")
+
+    with create_dot_gersemirc(
+        where=testfiles,
+        line_length=80,
+        kambei=1,
+        katsushiro=2,
+        list_expansion="favour-inlining",
+        gorobei="3",
+        heihachi=True,
+    ):
+        assert app("--quiet", "--check", f) == success(stdout="", stderr="")
+
+    with create_dot_gersemirc(
+        where=testfiles,
+        cache=False,
+        color=True,
+        workers=8,
+        quiet=False,
+        line_length=80,
+        kyuzo=123,
+        shichiroji="foo",
+        kikuchiyo=["foo", "bar"],
+    ):
+        assert app("--quiet", "--check", f) == success(stdout="", stderr="")

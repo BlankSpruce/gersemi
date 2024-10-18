@@ -97,12 +97,14 @@ class ListExpansion(EnumWithMetadata):
 
 
 @dataclass
-class Configuration:  # pylint: disable=too-many-instance-attributes
+class OutcomeConfiguration:
     """
-    By default configuration is loaded from YAML formatted .gersemirc file if it's available.
-    This file should be placed in one of the common parent directories of source files.
-    Arguments from command line can be used to override parts of that configuration or
-    supply them in absence of configuration file.
+    These arguments control how gersemi formats source code.
+    Values for these arguments can be stored in .gersemirc file which should be
+    placed in directory next to the source file or any parent directory.
+    Arguments from command line can be used to override parts of that stored
+    configuration or supply them in absence of configuration file.
+    Precedence: (command line arguments) > (.gersemirc values) > (defaults)
     """
 
     line_length: int = field(
@@ -126,22 +128,6 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         metadata=dict(
             title="Unsafe",
             description="Skip default sanity checks.",
-        ),
-    )
-
-    quiet: bool = field(
-        default=False,
-        metadata=dict(
-            title="Quiet",
-            description="Skip printing non-error messages to stderr.",
-        ),
-    )
-
-    color: bool = field(
-        default=False,
-        metadata=dict(
-            title="Colorized diff",
-            description="If --diff is selected showed diff is colorized.",
         ),
     )
 
@@ -173,33 +159,6 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
-    workers: Workers = field(
-        default=MaxWorkers.MaxWorkers,
-        metadata=dict(
-            title="Workers",
-            description=doc(
-                """
-    Explicit number of workers or 'max' for maximum possible
-    number of workers on given machine used to format multiple
-    files in parallel.
-                """
-            ),
-        ),
-    )
-
-    cache: bool = field(
-        default=True,
-        metadata=dict(
-            title="Enable cache",
-            description=doc(
-                """
-    Enables cache with data about files that are known
-    to be formatted to speed up execution.
-                """
-            ),
-        ),
-    )
-
     warn_about_unknown_commands: bool = field(
         default=True,
         metadata=dict(
@@ -218,6 +177,74 @@ class Configuration:  # pylint: disable=too-many-instance-attributes
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))
         return hasher.hexdigest()
+
+
+@dataclass
+class ControlConfiguration:
+    """
+    These arguments control how gersemi operates rather than how it formats source code.
+    Values for these options are not read from .gersemirc file.
+    Default values are used when the arguments aren't supplied.
+    Precedence: (command line arguments) > (defaults)
+    """
+
+    quiet: bool = field(
+        default=False,
+        metadata=dict(
+            title="Quiet",
+            description="Skip printing non-error messages to stderr.",
+            command_line_only=True,
+        ),
+    )
+
+    color: bool = field(
+        default=False,
+        metadata=dict(
+            title="Colorized diff",
+            description="If --diff is selected showed diff is colorized.",
+            command_line_only=True,
+        ),
+    )
+
+    workers: Workers = field(
+        default=MaxWorkers.MaxWorkers,
+        metadata=dict(
+            title="Workers",
+            description=doc(
+                """
+    Explicit number of workers or 'max' for maximum possible
+    number of workers on given machine used to format multiple
+    files in parallel.
+                """
+            ),
+            command_line_only=True,
+        ),
+    )
+
+    cache: bool = field(
+        default=True,
+        metadata=dict(
+            title="Enable cache",
+            description=doc(
+                """
+    Enables cache with data about files that are known
+    to be formatted to speed up execution.
+                """
+            ),
+            command_line_only=True,
+        ),
+    )
+
+
+@dataclass
+class Configuration:
+    outcome: OutcomeConfiguration
+    control: ControlConfiguration
+
+
+OUTCOME_CONFIGURATION_KEYS = [f.name for f in fields(OutcomeConfiguration)]
+CONTROL_CONFIGURATION_KEYS = [f.name for f in fields(ControlConfiguration)]
+CONFIGURATION_KEYS = OUTCOME_CONFIGURATION_KEYS + CONTROL_CONFIGURATION_KEYS
 
 
 def represent_enum_with_metadata(dumper, data):
@@ -240,7 +267,7 @@ def make_configuration_file(configuration):
 
 
 def make_default_configuration_file():
-    return make_configuration_file(Configuration())
+    return make_configuration_file(OutcomeConfiguration())
 
 
 def find_common_parent_path(paths: Iterable[Path]) -> Path:
@@ -270,6 +297,9 @@ def enter_directory(target_directory):
 
 
 def normalize_definitions(definitions):
+    if definitions is None:
+        return definitions
+
     try:
         return [Path(d).resolve(True) for d in definitions]
     except FileNotFoundError as e:
@@ -278,6 +308,9 @@ def normalize_definitions(definitions):
 
 
 def sanitize_list_expansion(list_expansion):
+    if list_expansion is None:
+        return list_expansion
+
     legal_values = [e.value for e in ListExpansion]
     if list_expansion in legal_values:
         return ListExpansion(list_expansion)
@@ -286,26 +319,39 @@ def sanitize_list_expansion(list_expansion):
     )
 
 
-UnknownKeys = Sequence[str]
+@dataclass
+class NotSupportedKeys:
+    unknown: Sequence[str] = tuple()
+    command_line_only: Sequence[str] = tuple()
+
+
+def get_not_supported_keys(configuration_file_content):
+    return NotSupportedKeys(
+        unknown=[
+            key
+            for key in configuration_file_content.keys()
+            if key not in CONFIGURATION_KEYS
+        ],
+        command_line_only=[
+            key
+            for key in configuration_file_content.keys()
+            if key in CONTROL_CONFIGURATION_KEYS
+        ],
+    )
 
 
 def load_configuration_from_file(
     configuration_file_path: Path,
-) -> Tuple[Configuration, UnknownKeys]:
+) -> Tuple[OutcomeConfiguration, NotSupportedKeys]:
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
             configuration_file_content = yaml.safe_load(f.read())
-            valid_keys = [f.name for f in fields(Configuration)]
             config = {
                 key: value
                 for key, value in configuration_file_content.items()
-                if key in valid_keys
+                if key in OUTCOME_CONFIGURATION_KEYS
             }
-            unknown_keys = [
-                key
-                for key in configuration_file_content.keys()
-                if key not in valid_keys
-            ]
+            not_supported_keys = get_not_supported_keys(configuration_file_content)
 
             if "definitions" in config:
                 config["definitions"] = normalize_definitions(config["definitions"])
@@ -313,34 +359,35 @@ def load_configuration_from_file(
                 config["list_expansion"] = sanitize_list_expansion(
                     config["list_expansion"]
                 )
-            if "workers" in config:
-                config["workers"] = workers_type(config["workers"])
             if "indent" in config:
                 config["indent"] = indent_type(config["indent"])
-        return Configuration(**config), unknown_keys
+        return OutcomeConfiguration(**config), not_supported_keys
 
 
-def override_configuration_with_args(
-    configuration: Configuration, args
-) -> Configuration:
-    parameters = [field.name for field in fields(Configuration)]
+def override_with_args(configuration, args):
+    parameters = [field.name for field in fields(type(configuration))]
     for param in parameters:
         value = getattr(args, param)
         if value is None:
             continue
-        if param == "definitions":
-            value = normalize_definitions(value)
-        if param == "list_expansion":
-            value = sanitize_list_expansion(value)
+
         setattr(configuration, param, value)
     return configuration
 
 
-def make_configuration(args) -> Tuple[Configuration, UnknownKeys]:
+def make_configuration(args) -> Tuple[Configuration, NotSupportedKeys]:
     configuration_file_path = find_dot_gersemirc(args.sources)
     if configuration_file_path is not None:
-        result, unknown_keys = load_configuration_from_file(configuration_file_path)
+        outcome, not_supported_keys = load_configuration_from_file(
+            configuration_file_path
+        )
     else:
-        result, unknown_keys = Configuration(), []
+        outcome, not_supported_keys = OutcomeConfiguration(), NotSupportedKeys()
 
-    return override_configuration_with_args(result, args), unknown_keys
+    args.definitions = normalize_definitions(args.definitions)
+    args.list_expansion = sanitize_list_expansion(args.list_expansion)
+
+    outcome = override_with_args(outcome, args)
+    control = override_with_args(ControlConfiguration(), args)
+
+    return Configuration(outcome=outcome, control=control), not_supported_keys

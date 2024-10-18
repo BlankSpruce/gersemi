@@ -15,16 +15,6 @@
       ],
       "type": "string"
     },
-    "MaxWorkers": {
-      "oneOf": [
-        {
-          "description": "Use maximum possible amount of workers.",
-          "enum": ["max"],
-          "title": "Max workers"
-        }
-      ],
-      "type": "string"
-    },
     "Tabs": {
       "oneOf": [
         {
@@ -38,12 +28,6 @@
   },
   "$schema": "https://json-schema.org/draft-07/schema",
   "properties": {
-    "color": {
-      "default": false,
-      "description": "If --diff is selected showed diff is colorized.",
-      "title": "Colorized diff",
-      "type": "boolean"
-    },
     "definitions": {
       "default": [],
       "description": "Files or directories containing custom command definitions (functions or macros). If only - is provided custom definitions, if there are any, are taken from stdin instead. Commands from not deprecated CMake native modules don't have to be provided. See: https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html",
@@ -75,34 +59,10 @@
       "description": "Switch controls how code is expanded into multiple lines when it's not possible to keep it formatted in one line.",
       "title": "List expansion"
     },
-    "quiet": {
-      "default": false,
-      "description": "Skip printing non-error messages to stderr.",
-      "title": "Quiet",
-      "type": "boolean"
-    },
     "unsafe": {
       "default": false,
       "description": "Skip default sanity checks.",
       "title": "Unsafe",
-      "type": "boolean"
-    },
-    "workers": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
-        },
-        {"$ref": "#/$defs/MaxWorkers"}
-      ],
-      "default": "max",
-      "description": "Explicit number of workers or 'max' for maximum possible number of workers on given machine used to format multiple files in parallel.",
-      "title": "Workers"
-    },
-    "cache": {
-      "default": true,
-      "description": "Enables cache with data about files that are known to be formatted to speed up execution.",
-      "title": "Enable cache",
       "type": "boolean"
     },
     "warn_about_unknown_commands": {
@@ -112,6 +72,6 @@
       "type": "boolean"
     }
   },
-  "title": "Configuration",
+  "title": "OutcomeConfiguration",
   "type": "object"
 }

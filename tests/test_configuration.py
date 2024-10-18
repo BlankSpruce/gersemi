@@ -3,10 +3,9 @@ import json
 import os
 import pytest
 from gersemi.configuration import (
-    Configuration,
+    OutcomeConfiguration,
     ListExpansion,
     make_configuration_file,
-    MaxWorkers,
     Tabs,
 )
 
@@ -49,11 +48,9 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         result = super().generate(schema, mode=mode)
         result["$schema"] = "https://json-schema.org/draft-07/schema"
         result["$defs"]["ListExpansion"] = get_representation(ListExpansion)
-        result["$defs"]["MaxWorkers"] = get_representation(MaxWorkers)
         result["$defs"]["Tabs"] = get_representation(Tabs)
 
         result["properties"]["indent"]["anyOf"][0]["minimum"] = 1
-        result["properties"]["workers"]["anyOf"][0]["minimum"] = 1
 
         return result
 
@@ -67,7 +64,7 @@ def test_schema_in_repository_is_consistent_with_configuration_definition():
     with open(schema_path, "r", encoding="utf-8") as f:
         schema = json.load(f)
 
-    assert schema == TypeAdapter(Configuration).json_schema(
+    assert schema == TypeAdapter(OutcomeConfiguration).json_schema(
         schema_generator=CustomizedGenerateJsonSchema,
     )
 
@@ -78,5 +75,5 @@ def test_example_file_in_repository_is_consistent_with_configuration_definition(
     with open(example_path, "r", encoding="utf-8") as f:
         example = f.read().strip()
 
-    configuration = Configuration()
+    configuration = OutcomeConfiguration()
     assert example == make_configuration_file(configuration)
