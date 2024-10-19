@@ -342,6 +342,9 @@ def run(args: argparse.Namespace):
         )
 
         for config, files in configuration_buckets.items():
+            if config.outcome.disable_formatting:
+                continue
+
             already_formatted_files, files_to_format = split_files_by_formatting_state(
                 cache, config.outcome.summary(), files
             )

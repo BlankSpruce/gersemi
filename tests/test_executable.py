@@ -1061,3 +1061,63 @@ def test_each_file_uses_closest_configuration_file_with_some_not_supported_optio
 {d80_dotfile}: these options are not supported: gorobei
 """,
         )
+
+
+def test_disable_formatting(app, testfiles):
+    not_formatted = testfiles / "custom_project" / "not_formatted"
+
+    assert app("--check", not_formatted) == fail()
+
+    with create_dot_gersemirc(where=not_formatted, disable_formatting=True):
+        assert app("--check", not_formatted) == success()
+        assert app("--enable-formatting", "--check", not_formatted) == fail()
+        assert app("--disable-formatting", "--check", not_formatted) == success()
+
+    with create_dot_gersemirc(where=not_formatted, disable_formatting=False):
+        assert app("--check", not_formatted) == fail()
+        assert app("--enable-formatting", "--check", not_formatted) == fail()
+        assert app("--disable-formatting", "--check", not_formatted) == success()
+
+
+def test_disable_formatting_with_multiple_configuration_files_at_play(app, testfiles):
+    d = testfiles / "closest_configuration_file"
+    d40 = d
+    d60 = d / "60_different_config_than_root"
+    d80 = (
+        d
+        / "mixed_config_80_subdirectory_40_files_not_in_subdirectory"
+        / "80_subdirectory"
+    )
+
+    def cf(**kwargs):
+        config_files.enter_context(create_dot_gersemirc(**kwargs))
+
+    with ExitStack() as config_files:
+        cf(where=d40, line_length=60, disable_formatting=True)
+        cf(where=d60, line_length=80, disable_formatting=True)
+        cf(where=d80, line_length=100, disable_formatting=True)
+
+        assert app("--check", d40) == success()
+        assert app("--check", d60) == success()
+        assert app("--check", d80) == success()
+        assert app("--check", d) == success()
+
+    with ExitStack() as config_files:
+        cf(where=d40, line_length=70, disable_formatting=False)
+        cf(where=d60, line_length=60, disable_formatting=False)
+        cf(where=d80, line_length=80, disable_formatting=False)
+
+        assert app("--check", d40) == fail()
+        assert app("--check", d60) == success()
+        assert app("--check", d80) == success()
+        assert app("--check", d) == fail()
+
+    with ExitStack() as config_files:
+        cf(where=d80, line_length=100, disable_formatting=False)
+        cf(where=d40, line_length=60, disable_formatting=False)
+        cf(where=d60, line_length=80, disable_formatting=False)
+
+        assert app("--check", d40) == fail()
+        assert app("--check", d60) == fail()
+        assert app("--check", d80) == fail()
+        assert app("--check", d) == fail()

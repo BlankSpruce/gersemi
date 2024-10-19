@@ -35,6 +35,12 @@
       "title": "Definitions",
       "type": "array"
     },
+    "disable_formatting": {
+      "default": false,
+      "description": "Completely disable formatting.",
+      "title": "Disable formatting",
+      "type": "boolean"
+    },
     "indent": {
       "anyOf": [
         {

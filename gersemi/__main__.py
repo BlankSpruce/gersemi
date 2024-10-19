@@ -32,13 +32,21 @@ class ShowVersion(argparse.Action):
         sys.exit(SUCCESS)
 
 
-class ToggleAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(
-            namespace,
-            self.dest,
-            not option_string.startswith("--no-"),
-        )
+def toggle_action(predicate):
+    class Impl(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            setattr(
+                namespace,
+                self.dest,
+                not predicate(option_string),
+            )
+
+            # option_string.startswith("--no-")
+
+    return Impl
+
+
+toggle_with_no_prefix = toggle_action(lambda s: s.startswith("--no-"))
 
 
 def create_argparser():
@@ -143,12 +151,24 @@ def create_argparser():
         "--warn-about-unknown-commands",
         "--no-warn-about-unknown-commands",
         dest="warn_about_unknown_commands",
-        action=ToggleAction,
+        action=toggle_with_no_prefix,
         nargs=0,
         default=None,
         help=f"""
     {outcome_conf_doc["warn_about_unknown_commands"]}
     [default: warnings enabled]
+        """,
+    )
+    outcome_configuration_group.add_argument(
+        "--disable-formatting",
+        "--enable-formatting",
+        dest="disable_formatting",
+        action=toggle_action(lambda s: s == "--enable-formatting"),
+        nargs=0,
+        default=None,
+        help=f"""
+    {outcome_conf_doc["disable_formatting"]}
+    [default: formatting enabled]
         """,
     )
 
@@ -170,7 +190,7 @@ def create_argparser():
         "--color",
         "--no-color",
         dest="color",
-        action=ToggleAction,
+        action=toggle_with_no_prefix,
         nargs=0,
         default=None,
         help=f"{control_conf_doc['color']} [default: don't colorize diff]",
@@ -189,7 +209,7 @@ def create_argparser():
         "--cache",
         "--no-cache",
         dest="cache",
-        action=ToggleAction,
+        action=toggle_with_no_prefix,
         nargs=0,
         default=None,
         help=f"""

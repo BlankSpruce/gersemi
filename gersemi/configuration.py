@@ -174,6 +174,14 @@ class OutcomeConfiguration:
         ),
     )
 
+    disable_formatting: bool = field(
+        default=False,
+        metadata=dict(
+            title="Disable formatting",
+            description=doc("Completely disable formatting."),
+        ),
+    )
+
     def summary(self):
         hasher = sha1()
         hasher.update(repr(self).encode("utf-8"))
