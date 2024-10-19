@@ -948,11 +948,12 @@ def test_source_path_doesnt_exist(app, testfiles):
 
 
 def test_just_works_with_not_supported_options_in_configuration_file(app, testfiles):
-    f = testfiles / "formatted_file.cmake"
+    f = testfiles / "directory_with_formatted_files"
+    dotfile = (testfiles / ".gersemirc").resolve()
     with create_dot_gersemirc(where=testfiles, frombulate=100):
         assert app("--check", f) == success(
             stdout="",
-            stderr="Configuration file has not supported options: frombulate\n",
+            stderr=f"{dotfile}: these options are not supported: frombulate\n",
         )
 
     with create_dot_gersemirc(
@@ -967,7 +968,7 @@ def test_just_works_with_not_supported_options_in_configuration_file(app, testfi
         assert app("--check", f) == success(
             stdout="",
             # pylint: disable=line-too-long
-            stderr="Configuration file has not supported options: gorobei, heihachi, kambei, katsushiro\n",
+            stderr=f"{dotfile}: these options are not supported: gorobei, heihachi, kambei, katsushiro\n",
         )
 
     with create_dot_gersemirc(
@@ -984,8 +985,8 @@ def test_just_works_with_not_supported_options_in_configuration_file(app, testfi
         assert app("--check", f) == success(
             stdout="",
             # pylint: disable=line-too-long
-            stderr="""Configuration file has options supported only through command line: cache, color, quiet, workers
-Configuration file has not supported options: kikuchiyo, kyuzo, shichiroji
+            stderr=f"""{dotfile}: these options are supported only through command line: cache, color, quiet, workers
+{dotfile}: these options are not supported: kikuchiyo, kyuzo, shichiroji
 """,
         )
 
@@ -1020,3 +1021,43 @@ def test_when_quiet_not_supported_options_in_configuration_file_are_not_printed(
         kikuchiyo=["foo", "bar"],
     ):
         assert app("--quiet", "--check", f) == success(stdout="", stderr="")
+
+
+def test_each_file_uses_closest_configuration_file(app, testfiles):
+    d = testfiles / "closest_configuration_file"
+    assert app("--check", d) == success(stdout="", stderr="")
+
+
+def test_each_file_uses_closest_configuration_file_with_some_not_supported_options(
+    app, testfiles
+):
+    d = testfiles / "closest_configuration_file"
+    d40 = d
+    d60 = d / "60_different_config_than_root"
+    d80 = (
+        d
+        / "mixed_config_80_subdirectory_40_files_not_in_subdirectory"
+        / "80_subdirectory"
+    )
+
+    d40_dotfile = (d40 / ".gersemirc").resolve()
+    d60_dotfile = (d60 / ".gersemirc").resolve()
+    d80_dotfile = (d80 / ".gersemirc").resolve()
+
+    with ExitStack() as config_files:
+
+        def cf(**kwargs):
+            config_files.enter_context(create_dot_gersemirc(**kwargs))
+
+        cf(where=d80, line_length=80, cache=False, gorobei="3")
+        cf(where=d40, line_length=40, frombulate=100)
+        cf(where=d60, line_length=60, kambei=100, katsushiro="abc")
+
+        assert app("--check", d) == success(
+            stdout="",
+            stderr=f"""{d40_dotfile}: these options are not supported: frombulate
+{d60_dotfile}: these options are not supported: kambei, katsushiro
+{d80_dotfile}: these options are supported only through command line: cache
+{d80_dotfile}: these options are not supported: gorobei
+""",
+        )

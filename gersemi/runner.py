@@ -1,15 +1,21 @@
+import argparse
+from collections import defaultdict
 from functools import partial
 from itertools import chain
 import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
-from typing import Callable, Dict, Iterable, Tuple, Union
+from typing import Callable, Dict, List, Iterable, Tuple, Union
 from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
+    ControlConfiguration,
+    make_control_configuration,
+    make_outcome_configuration,
     MaxWorkers,
     max_number_of_workers,
+    NotSupportedKeys,
     Workers,
 )
 from gersemi.custom_command_definition_finder import (
@@ -18,7 +24,7 @@ from gersemi.custom_command_definition_finder import (
 )
 from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import create_formatter, NullFormatter, Formatter
-from gersemi.mode import Mode
+from gersemi.mode import get_mode, Mode
 from gersemi.parser import PARSER as parser
 from gersemi.result import Result, Error, apply, get_error_message
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
@@ -33,6 +39,7 @@ from gersemi.utils import fromfile, smart_open
 from gersemi.keywords import Keywords
 from gersemi.warnings import UnknownCommandWarning
 
+
 CHUNKSIZE = 16
 
 
@@ -46,10 +53,12 @@ def get_files(paths: Iterable[Path]) -> Iterable[Path]:
             return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"))
         return [path]
 
-    return set(
-        item.resolve(True) if item != Path("-") else item
-        for path in paths
-        for item in get_files_from_single_path(path)
+    return sorted(
+        set(
+            item.resolve(True) if item != Path("-") else item
+            for path in paths
+            for item in get_files_from_single_path(path)
+        )
     )
 
 
@@ -179,7 +188,9 @@ def create_pool(is_stdin_in_sources, workers: Workers):
     return partial(mp.Pool, processes=value)
 
 
-def split_files(cache, configuration_summary: str, files: Iterable[Path]):
+def split_files_by_formatting_state(
+    cache, configuration_summary: str, files: Iterable[Path]
+):
     known_files = cache.get_files(configuration_summary)
     already_formatted_files = []
     files_to_format = []
@@ -263,26 +274,86 @@ def handle_files_to_format(
     return compute_error_code(code for _, code, _ in results)
 
 
-def run(mode: Mode, configuration: Configuration, sources: Iterable[Path]):
+class ConfigurationHelper:
+    def __init__(self, args: argparse.Namespace, control: ControlConfiguration):
+        self.args = args
+        self.control = control
+        self.processed_configuration_files: List[Path] = []
+
+    def _warn(self, item: NotSupportedKeys, text: str):
+        if not self.control.quiet:
+            print_to_stderr(f"{item.path}:", text)
+
+    def _inform_about_not_supported_keys(self, item: NotSupportedKeys):
+        if item.path in self.processed_configuration_files:
+            return
+
+        if item.path is None:
+            return
+
+        self.processed_configuration_files.append(item.path)
+
+        if len(item.command_line_only) > 0:
+            keys = ", ".join(sorted(item.command_line_only))
+            self._warn(
+                item, f"these options are supported only through command line: {keys}"
+            )
+
+        if len(item.unknown) > 0:
+            keys = ", ".join(sorted(item.unknown))
+            self._warn(item, f"these options are not supported: {keys}")
+
+    def __call__(self, path: Path) -> Configuration:
+        outcome_configuration, not_supported_keys = make_outcome_configuration(
+            path, self.args
+        )
+        self._inform_about_not_supported_keys(not_supported_keys)
+        return Configuration(control=self.control, outcome=outcome_configuration)
+
+
+def split_files_by_configuration(
+    paths: Iterable[Path], args: argparse.Namespace, control: ControlConfiguration
+):
+    result = defaultdict(list)
+    helper = ConfigurationHelper(args, control)
+    for path in paths:
+        result[helper(path)].append(path)
+
+    return result
+
+
+def run(args: argparse.Namespace):
     try:
-        requested_files = get_files(sources)
+        requested_files = get_files(args.sources)
     except FileNotFoundError as e:
         # pylint: disable=broad-exception-raised
         raise Exception(f"Source path doesn't exist: {e.filename}") from e
 
-    pool_cm = create_pool(Path("-") in requested_files, configuration.control.workers)
-    with create_cache(configuration.control.cache) as cache, pool_cm() as pool:
-        already_formatted_files, files_to_format = split_files(
-            cache, configuration.outcome.summary(), requested_files
+    mode = get_mode(args)
+    control = make_control_configuration(args)
+    pool_cm = create_pool(
+        is_stdin_in_sources=(Path("-") in requested_files),
+        workers=control.workers,
+    )
+    with create_cache(control.cache) as cache, pool_cm() as pool:
+        error_code = SUCCESS
+        configuration_buckets = split_files_by_configuration(
+            requested_files, args, control
         )
 
-        already_formatted_files_error_code = handle_already_formatted_files(
-            mode, configuration, already_formatted_files
-        )
-        files_to_format_error_code = handle_files_to_format(
-            mode, configuration, cache, pool, files_to_format
-        )
+        for config, files in configuration_buckets.items():
+            already_formatted_files, files_to_format = split_files_by_formatting_state(
+                cache, config.outcome.summary(), files
+            )
 
-        return compute_error_code(
-            [already_formatted_files_error_code, files_to_format_error_code]
-        )
+            error_code = compute_error_code(
+                [
+                    error_code,
+                    handle_already_formatted_files(
+                        mode, config, already_formatted_files
+                    ),
+                    handle_files_to_format(mode, config, cache, pool, files_to_format),
+                ]
+            )
+
+        return error_code

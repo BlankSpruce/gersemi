@@ -4,15 +4,15 @@ import pathlib
 import sys
 from lark import __version__ as lark_version
 from gersemi.configuration import (
-    make_configuration,
     make_default_configuration_file,
+    normalize_definitions,
+    sanitize_list_expansion,
     ControlConfiguration,
     OutcomeConfiguration,
     ListExpansion,
     indent_type,
     workers_type,
 )
-from gersemi.mode import get_mode
 from gersemi.return_codes import SUCCESS, FAIL
 from gersemi.runner import run, print_to_stderr
 from gersemi.__version__ import __title__, __version__
@@ -29,6 +29,7 @@ class ShowVersion(argparse.Action):
         print(f"{__title__} {__version__}")
         print(f"lark {lark_version}")
         print(f"Python {sys.version}")
+        sys.exit(SUCCESS)
 
 
 class ToggleAction(argparse.Action):
@@ -223,6 +224,9 @@ def postprocess_args(args):
     if args.definitions is not None:
         args.definitions = set(args.definitions)
 
+    args.definitions = normalize_definitions(args.definitions)
+    args.list_expansion = sanitize_list_expansion(args.list_expansion)
+
 
 def main():
     argparser = create_argparser()
@@ -233,10 +237,6 @@ def main():
         print_to_stderr(text)
         sys.exit(FAIL)
 
-    def warn(text):
-        if not args.quiet:
-            print_to_stderr(text)
-
     if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
         error("Don't mix stdin with file input")
 
@@ -244,22 +244,9 @@ def main():
         sys.exit(SUCCESS)
 
     try:
-        configuration, not_supported_keys = make_configuration(args)
-        if len(not_supported_keys.command_line_only) > 0:
-            keys = ", ".join(sorted(not_supported_keys.command_line_only))
-            warn(
-                f"Configuration file has options supported only through command line: {keys}"
-            )
-
-        if len(not_supported_keys.unknown) > 0:
-            keys = ", ".join(sorted(not_supported_keys.unknown))
-            warn(f"Configuration file has not supported options: {keys}")
-
-        mode = get_mode(args)
-    except Exception as exception:  # pylint: disable=broad-except
+        sys.exit(run(args))
+    except Exception as exception:  # pylint: disable=broad-exception-caught
         error(exception)
-
-    sys.exit(run(mode, configuration, args.sources))
 
 
 if __name__ == "__main__":

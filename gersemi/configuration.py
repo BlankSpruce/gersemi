@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import asdict, astuple, dataclass, field, fields
 from enum import Enum
+from functools import lru_cache
 from hashlib import sha1
-from itertools import chain
 import multiprocessing
 import os
 from pathlib import Path
@@ -101,7 +101,8 @@ class OutcomeConfiguration:
     """
     These arguments control how gersemi formats source code.
     Values for these arguments can be stored in .gersemirc file which should be
-    placed in directory next to the source file or any parent directory.
+    placed in directory next to the source file or any parent directory with
+    priority on closest configuration file.
     Arguments from command line can be used to override parts of that stored
     configuration or supply them in absence of configuration file.
     Precedence: (command line arguments) > (.gersemirc values) > (defaults)
@@ -241,6 +242,9 @@ class Configuration:
     outcome: OutcomeConfiguration
     control: ControlConfiguration
 
+    def __hash__(self):
+        return hash(astuple(self))
+
 
 OUTCOME_CONFIGURATION_KEYS = [f.name for f in fields(OutcomeConfiguration)]
 CONTROL_CONFIGURATION_KEYS = [f.name for f in fields(ControlConfiguration)]
@@ -270,18 +274,20 @@ def make_default_configuration_file():
     return make_configuration_file(OutcomeConfiguration())
 
 
-def find_common_parent_path(paths: Iterable[Path]) -> Path:
-    return Path(os.path.commonpath([path.absolute() for path in paths]))
+@lru_cache(maxsize=None)
+def find_closest_dot_gersemirc_impl(parent: Path) -> Optional[Path]:
+    maybe_found = list(parent.glob(".gersemirc"))
+    if maybe_found:
+        return maybe_found[0]
+
+    return None
 
 
-def find_dot_gersemirc(paths: Iterable[Path]) -> Optional[Path]:
-    lowest_level_common_parent = find_common_parent_path(paths)
-    for parent in chain(
-        [lowest_level_common_parent], lowest_level_common_parent.parents
-    ):
-        maybe_found = list(parent.glob(".gersemirc"))
+def find_closest_dot_gersemirc(path: Path) -> Optional[Path]:
+    for parent in path.parents:
+        maybe_found = find_closest_dot_gersemirc_impl(parent)
         if maybe_found:
-            return maybe_found[0]
+            return maybe_found
 
     return None
 
@@ -301,7 +307,7 @@ def normalize_definitions(definitions):
         return definitions
 
     try:
-        return [Path(d).resolve(True) for d in definitions]
+        return tuple(Path(d).resolve(True) for d in definitions)
     except FileNotFoundError as e:
         # pylint: disable=broad-exception-raised
         raise Exception(f"Definition path doesn't exist: {e.filename}") from e
@@ -321,28 +327,26 @@ def sanitize_list_expansion(list_expansion):
 
 @dataclass
 class NotSupportedKeys:
+    path: Optional[Path] = None
     unknown: Sequence[str] = tuple()
     command_line_only: Sequence[str] = tuple()
 
 
-def get_not_supported_keys(configuration_file_content):
+def get_not_supported_keys(path, content):
     return NotSupportedKeys(
-        unknown=[
-            key
-            for key in configuration_file_content.keys()
-            if key not in CONFIGURATION_KEYS
-        ],
-        command_line_only=[
-            key
-            for key in configuration_file_content.keys()
-            if key in CONTROL_CONFIGURATION_KEYS
-        ],
+        path=path.resolve(),
+        unknown=[key for key in content if key not in CONFIGURATION_KEYS],
+        command_line_only=[key for key in content if key in CONTROL_CONFIGURATION_KEYS],
     )
 
 
+@lru_cache(maxsize=None)
 def load_configuration_from_file(
-    configuration_file_path: Path,
+    configuration_file_path: Optional[Path],
 ) -> Tuple[OutcomeConfiguration, NotSupportedKeys]:
+    if configuration_file_path is None:
+        return OutcomeConfiguration(), NotSupportedKeys()
+
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
             configuration_file_content = yaml.safe_load(f.read())
@@ -351,7 +355,9 @@ def load_configuration_from_file(
                 for key, value in configuration_file_content.items()
                 if key in OUTCOME_CONFIGURATION_KEYS
             }
-            not_supported_keys = get_not_supported_keys(configuration_file_content)
+            not_supported_keys = get_not_supported_keys(
+                configuration_file_path, configuration_file_content
+            )
 
             if "definitions" in config:
                 config["definitions"] = normalize_definitions(config["definitions"])
@@ -375,19 +381,15 @@ def override_with_args(configuration, args):
     return configuration
 
 
-def make_configuration(args) -> Tuple[Configuration, NotSupportedKeys]:
-    configuration_file_path = find_dot_gersemirc(args.sources)
-    if configuration_file_path is not None:
-        outcome, not_supported_keys = load_configuration_from_file(
-            configuration_file_path
-        )
-    else:
-        outcome, not_supported_keys = OutcomeConfiguration(), NotSupportedKeys()
+def make_outcome_configuration(
+    path, args
+) -> Tuple[OutcomeConfiguration, NotSupportedKeys]:
+    outcome, not_supported_keys = load_configuration_from_file(
+        find_closest_dot_gersemirc(path)
+    )
 
-    args.definitions = normalize_definitions(args.definitions)
-    args.list_expansion = sanitize_list_expansion(args.list_expansion)
+    return override_with_args(outcome, args), not_supported_keys
 
-    outcome = override_with_args(outcome, args)
-    control = override_with_args(ControlConfiguration(), args)
 
-    return Configuration(outcome=outcome, control=control), not_supported_keys
+def make_control_configuration(args) -> ControlConfiguration:
+    return override_with_args(ControlConfiguration(), args)
