@@ -100,12 +100,14 @@ class ListExpansion(EnumWithMetadata):
 class OutcomeConfiguration:
     """
     These arguments control how gersemi formats source code.
-    Values for these arguments can be stored in .gersemirc file which should be
-    placed in directory next to the source file or any parent directory with
-    priority on closest configuration file.
+    Values for these arguments can be stored in .gersemirc file which can be
+    placed in directory next to the source file or any parent directory.
+    The highest priority has file provided through --config, then file closest
+    to the source file, then file in parent directory etc. until root of file
+    system is reached.
     Arguments from command line can be used to override parts of that stored
     configuration or supply them in absence of configuration file.
-    Precedence: (command line arguments) > (.gersemirc values) > (defaults)
+    Precedence: (command line arguments) > (configuration file) > (defaults)
     """
 
     line_length: int = field(
@@ -192,7 +194,7 @@ class OutcomeConfiguration:
 class ControlConfiguration:
     """
     These arguments control how gersemi operates rather than how it formats source code.
-    Values for these options are not read from .gersemirc file.
+    Values for these options are not read from configuration file.
     Default values are used when the arguments aren't supplied.
     Precedence: (command line arguments) > (defaults)
     """
@@ -202,7 +204,6 @@ class ControlConfiguration:
         metadata=dict(
             title="Quiet",
             description="Skip printing non-error messages to stderr.",
-            command_line_only=True,
         ),
     )
 
@@ -211,7 +212,6 @@ class ControlConfiguration:
         metadata=dict(
             title="Colorized diff",
             description="If --diff is selected showed diff is colorized.",
-            command_line_only=True,
         ),
     )
 
@@ -226,7 +226,6 @@ class ControlConfiguration:
     files in parallel.
                 """
             ),
-            command_line_only=True,
         ),
     )
 
@@ -240,7 +239,21 @@ class ControlConfiguration:
     to be formatted to speed up execution.
                 """
             ),
-            command_line_only=True,
+        ),
+    )
+
+    configuration_file: Optional[Path] = field(
+        default=None,
+        metadata=dict(
+            title="Configuration file",
+            description=doc(
+                """
+    Path to configuration file. When present this configuration
+    file will be used for determining configuration for all sources
+    instead of automatically found configuration files closest to
+    each of the sources.
+                """
+            ),
         ),
     )
 
@@ -390,12 +403,9 @@ def override_with_args(configuration, args):
 
 
 def make_outcome_configuration(
-    path, args
+    configuration_file, args
 ) -> Tuple[OutcomeConfiguration, NotSupportedKeys]:
-    outcome, not_supported_keys = load_configuration_from_file(
-        find_closest_dot_gersemirc(path)
-    )
-
+    outcome, not_supported_keys = load_configuration_from_file(configuration_file)
     return override_with_args(outcome, args), not_supported_keys
 
 

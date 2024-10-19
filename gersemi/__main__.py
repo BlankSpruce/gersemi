@@ -217,6 +217,16 @@ def create_argparser():
     [default: cache enabled]
         """,
     )
+    control_configuration_group.add_argument(
+        "--config",
+        dest="configuration_file",
+        type=pathlib.Path,
+        default=None,
+        help=f"""
+    {control_conf_doc["configuration_file"]}
+    [default: omitted]
+        """,
+    )
 
     parser.add_argument(
         dest="sources",

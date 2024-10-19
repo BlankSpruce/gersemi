@@ -11,6 +11,7 @@ from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
+    find_closest_dot_gersemirc,
     make_control_configuration,
     make_outcome_configuration,
     MaxWorkers,
@@ -305,7 +306,8 @@ class ConfigurationHelper:
 
     def __call__(self, path: Path) -> Configuration:
         outcome_configuration, not_supported_keys = make_outcome_configuration(
-            path, self.args
+            configuration_file=find_closest_dot_gersemirc(path),
+            args=self.args,
         )
         self._inform_about_not_supported_keys(not_supported_keys)
         return Configuration(control=self.control, outcome=outcome_configuration)
@@ -314,8 +316,11 @@ class ConfigurationHelper:
 def split_files_by_configuration(
     paths: Iterable[Path], args: argparse.Namespace, control: ControlConfiguration
 ):
-    result = defaultdict(list)
     helper = ConfigurationHelper(args, control)
+    if control.configuration_file is not None:
+        return {helper(control.configuration_file): paths}
+
+    result = defaultdict(list)
     for path in paths:
         result[helper(path)].append(path)
 

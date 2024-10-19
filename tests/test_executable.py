@@ -1121,3 +1121,35 @@ def test_disable_formatting_with_multiple_configuration_files_at_play(app, testf
         assert app("--check", d60) == fail()
         assert app("--check", d80) == fail()
         assert app("--check", d) == fail()
+
+
+def test_config_parameter(app, testfiles):
+    base = testfiles
+    target = base / "directory_with_formatted_files"
+    configuration_file_elsewhere = base / "directory_with_not_formatted_files"
+    configuration_file = configuration_file_elsewhere / ".gersemirc"
+    config = ["--config", configuration_file_elsewhere / ".gersemirc"]
+
+    assert app("--check", target) == success(stderr="")
+    assert app("-l", 100, "--check", target) == fail()
+
+    with create_dot_gersemirc(where=configuration_file_elsewhere, line_length=100):
+        assert app("--check", target) == success(stderr="")
+        assert app("-l", 100, "--check", target) == fail()
+
+        assert app(*config, "--check", target) == fail()
+        assert app(*config, "-l", 80, "--check", target) == success(stderr="")
+
+    with create_dot_gersemirc(
+        where=configuration_file_elsewhere, line_length=100, color=True, kambei=314
+    ):
+        assert app("--check", target) == success(stderr="")
+        assert app("-l", 100, "--check", target) == fail()
+
+        assert app(*config, "--check", target) == fail()
+        assert app(*config, "-l", 80, "--check", target) == success(
+            # pylint: disable=line-too-long
+            stderr=f"""{configuration_file}: these options are supported only through command line: color
+{configuration_file}: these options are not supported: kambei
+"""
+        )
