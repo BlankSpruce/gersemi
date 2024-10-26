@@ -111,7 +111,9 @@ class TestPrintConfigMinimalWithConfigurationFile:
         ):
             assert self.app(self.target) == success(
                 stdout=self.file_differs(
-                    "definitions:\n- .\n- ../directory_with_not_formatted_files"
+                    f"""definitions:
+- {Path('.')}
+- {Path('../directory_with_not_formatted_files')}"""
                 ),
                 stderr="",
             )
@@ -335,7 +337,9 @@ class TestPrintConfigVerboseWithConfigurationFile:
         ):
             assert self.app(self.target) == success(
                 stdout=self.based_on_file(
-                    definitions="\n- .\n- ../directory_with_not_formatted_files"
+                    definitions=f"""
+- {Path('.')}
+- {Path('../directory_with_not_formatted_files')}"""
                 ),
                 stderr="",
             )

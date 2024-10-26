@@ -15,18 +15,21 @@ pip3 install gersemi
 ## Usage
 
 ```plain
-usage: gersemi [-c] [-i] [--diff] [--default-config] [--version] [-h] [-l INTEGER]
-               [--indent (INTEGER | tabs)] [--unsafe] [-q] [--color]
+usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--version]
+               [-h] [-l INTEGER] [--indent (INTEGER | tabs)] [--unsafe]
                [--definitions src [src ...]]
-               [--list-expansion {favour-inlining,favour-expansion}] [-w INTEGER]
-               [--cache] [--warn-about-unknown-commands]
+               [--list-expansion {favour-inlining,favour-expansion}]
+               [--warn-about-unknown-commands] [--disable-formatting] [-q] [--color]
+               [-w (INTEGER | max)] [--cache] [--config CONFIGURATION_FILE]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
 
 positional arguments:
-  src                   File or directory to format. If only `-` is provided, input is
-                        taken from stdin instead.
+  src                   File or directory to format. When directory is provided then
+                        CMakeLists.txt and files with .cmake extension are automatically
+                        discovered. If only `-` is provided, input is taken from stdin
+                        instead.
 
 modes:
   -c, --check           Check if files require reformatting. Return 0 when there's
@@ -34,55 +37,87 @@ modes:
                         reformatted.
   -i, --in-place        Format files in-place.
   --diff                Show diff on stdout for each formatted file instead.
-  --default-config      Generate default .gersemirc configuration file.
+  --print-config {minimal,verbose,default}
+                        Print configuration for files. With "minimal" prints source of
+                        outcome configuration (configuration file or defaults) and the
+                        options that differ from defaults. With "verbose" prints source
+                        of outcome configuration (configuration file or defaults), files
+                        for which this configuration is applicable and complete listing
+                        of options. With "default" prints outcome configuration with
+                        default values. Command line arguments are taken into
+                        consideration just as they would be for formatting. When
+                        configuration file is found values in "definitions" are printed
+                        as relative paths, otherwise absolute paths are printed. Output
+                        can be placed in .gersemirc file verbatim.
   --version             Show version.
   -h, --help            Show this help message and exit.
 
-configuration:
-  By default configuration is loaded from YAML formatted .gersemirc file if it's
-  available. This file should be placed in one of the common parent directories of
-  source files. Arguments from command line can be used to override parts of that
-  configuration or supply them in absence of configuration file.
+outcome configuration:
+  These arguments control how gersemi formats source code. Values for these arguments
+  can be stored in .gersemirc file which can be placed in directory next to the source
+  file or any parent directory. The highest priority has file provided through
+  --config, then file closest to the source file, then file in parent directory etc.
+  until root of file system is reached. Arguments from command line can be used to
+  override parts of that stored configuration or supply them in absence of
+  configuration file. Precedence: (command line arguments) > (configuration file) >
+  (defaults)
 
   -l INTEGER, --line-length INTEGER
                         Maximum line length in characters. [default: 80]
   --indent (INTEGER | tabs)
-                        Number of spaces used to indent or 'tabs' for indenting with tabs
-                        [default: 4]
+                        Number of spaces used to indent or 'tabs' for indenting with
+                        tabs [default: 4]
   --unsafe              Skip default sanity checks.
-  -q, --quiet           Skip printing non-error messages to stderr.
-  --color               If --diff is selected showed diff is colorized.
   --definitions src [src ...]
                         Files or directories containing custom command definitions
                         (functions or macros). If only - is provided custom definitions,
-                        if there are any, are taken from stdin instead. Commands from not
-                        deprecated CMake native modules don't have to be provided. See:
-                        https://cmake.org/cmake/help/latest/manual/cmake-modules.7.html
+                        if there are any, are taken from stdin instead. Commands from
+                        not deprecated CMake native modules don't have to be provided.
+                        See: https://cmake.org/cmake/help/latest/manual/cmake-
+                        modules.7.html
   --list-expansion {favour-inlining,favour-expansion}
                         Switch controls how code is expanded into multiple lines when
-                        it's not possible to keep it formatted in one line. With "favour-
-                        inlining" the list of entities will be formatted in such way that
-                        sublists might still be formatted into single line as long as
-                        it's possible or as long as it doesn't break the "more than four
-                        standalone arguments" heuristic that's mostly focused on commands
-                        like `set` or `list(APPEND)`. With "favour-expansion" the list of
-                        entities will be formatted in such way that sublists will be
-                        completely expanded once expansion becomes necessary at all.
-                        [default: favour-inlining]
-  -w INTEGER, --workers (INTEGER | max)
-                        Explicit number of workers or 'max' for maximum possible number
-                        of workers on given machine used to format multiple files
-                        in parallel. [default: max]
-  --cache, --no-cache   Enables cache with data about files that are known to be
-                        formatted to speed up execution.
-                        [default: cache enabled]
+                        it's not possible to keep it formatted in one line. With
+                        "favour-inlining" the list of entities will be formatted in such
+                        way that sublists might still be formatted into single line as
+                        long as it's possible or as long as it doesn't break the "more
+                        than four standalone arguments" heuristic that's mostly focused
+                        on commands like `set` or `list(APPEND)`. With "favour-
+                        expansion" the list of entities will be formatted in such way
+                        that sublists will be completely expanded once expansion becomes
+                        necessary at all. [default: favour-inlining]
   --warn-about-unknown-commands, --no-warn-about-unknown-commands
                         When enabled file which has unknown custom commands will have
-                        warnings issued about that and result won't be cached.
-                        See: "Let's make a deal" section in README.
-                        [default: warnings enabled]
-```
+                        warnings issued about that and result won't be cached. See:
+                        "Let's make a deal" section in README. [default: warnings
+                        enabled]
+  --disable-formatting, --enable-formatting
+                        Completely disable formatting. [default: formatting enabled]
 
+control configuration:
+  These arguments control how gersemi operates rather than how it formats source code.
+  Values for these options are not read from configuration file. Default values are
+  used when the arguments aren't supplied. Precedence: (command line arguments) >
+  (defaults)
+
+  -q, --quiet, --no-quiet
+                        Skip printing non-error messages to stderr. 
+                        [default: don't skip]
+  --color, --no-color   If --diff is selected showed diff is colorized. Colorama has to
+                        be installed for this option to work. 
+                        [default: don't colorize diff]
+  -w (INTEGER | max), --workers (INTEGER | max)
+                        Explicit number of workers or 'max' for maximum possible number
+                        of workers on given machine used to format multiple files in
+                        parallel. [default: max]
+  --cache, --no-cache   Enables cache with data about files that are known to be
+                        formatted to speed up execution. [default: cache enabled]
+  --config CONFIGURATION_FILE
+                        Path to configuration file. When present this configuration file
+                        will be used for determining configuration for all sources
+                        instead of automatically found configuration files closest to
+                        each of the sources. [default: omitted]
+```
 ### [pre-commit](https://pre-commit.com/) hook
 
 You can use gersemi with a pre-commit hook by adding the following to `.pre-commit-config.yaml` of your repository:
@@ -90,7 +125,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.16.2
+  rev: 0.17.0
   hooks:
   - id: gersemi
 ```

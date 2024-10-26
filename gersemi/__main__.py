@@ -90,7 +90,7 @@ def create_argparser():
         help=f"""Print configuration for files.
         {" ".join(map(lambda attr: attr.description, PrintConfigKind))}
         Command line arguments are taken into consideration just
-        as they would be for for formatting.
+        as they would be for formatting.
         When configuration file is found values in "definitions" are printed as relative
         paths, otherwise absolute paths are printed.
         Output can be placed in .gersemirc file verbatim.""",

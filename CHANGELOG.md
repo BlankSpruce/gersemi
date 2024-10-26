@@ -1,4 +1,21 @@
 # Changelog
+## [0.17.0] 2024-10-26
+### Added
+- Add `disable_formatting`. (#35)
+- `--config` can be used to provide explicit path to configuration file. (#35)
+- Add `--print-config` to print outcome configuration in one of three variants: minimal, verbose, default. (#35)
+- Warn about options not supported through configuration file.
+
+### Changed
+- Configuration has been split into two kinds: outcome and control. Outcome configuration can be changed through either configuration file or command line arguments whereas control configuration be changed only through command line.
+- Search strategy for `.gersemirc` file has been changed so that the file closest to given source file is picked instead of using `.gersemirc` that it the most commont among files passed to gersemi.
+- `--default-config` is removed because its functionality is subsumed by `--print-config default`.
+- `cache`, `color`, `quiet` and `workers` can be changed only through command line.
+
+### Fixed
+- custom command definitions nested inside other definitions are picked as well (#39)
+- colors stripping when output is redirected (#40)
+
 ## [0.16.2] 2024-10-15
 ### Fixed
 - support missing keywords in `file(MAKE_DIRECTORY)` (#38)
