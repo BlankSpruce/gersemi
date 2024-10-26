@@ -139,6 +139,8 @@ class CMakeInterpreter(Interpreter):
         hint = self._get_hint(tree)
         subinterpreter = self._inner_scope
         block_begin, *body, _ = subinterpreter.visit_children(tree)
+        self.found_commands.update(subinterpreter.found_commands)
+
         command_node, *_ = block_begin
         if command_node is None:
             return
