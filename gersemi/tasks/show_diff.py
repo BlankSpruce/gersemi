@@ -8,7 +8,7 @@ from gersemi.utils import fromfile, tofile
 try:
     from colorama import Fore, Style, init  # type: ignore
 
-    init()
+    init(strip=False)
 
     def colorize(diff):
         for line in diff:

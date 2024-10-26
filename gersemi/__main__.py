@@ -18,11 +18,21 @@ from gersemi.return_codes import SUCCESS, FAIL
 from gersemi.runner import run, print_to_stderr
 from gersemi.__version__ import __title__, __version__
 
+MISSING = "(missing)"
+
+
+try:
+    from colorama import __version__ as colorama_version
+
+except ImportError:
+    colorama_version = MISSING
+
 
 class ShowVersion(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         print(f"{__title__} {__version__}")
         print(f"lark {lark_version}")
+        print(f"colorama {colorama_version}")
         print(f"Python {sys.version}")
         sys.exit(SUCCESS)
 
@@ -186,6 +196,12 @@ def create_argparser():
         action="store_true",
         help=f"{control_conf_doc['quiet']} [default: don't skip]",
     )
+
+    if colorama_version == MISSING:
+        warn_about_missing_colorama = " Warning: missing colorama."
+    else:
+        warn_about_missing_colorama = ""
+
     control_configuration_group.add_argument(
         "--color",
         "--no-color",
@@ -193,7 +209,11 @@ def create_argparser():
         action=toggle_with_no_prefix,
         nargs=0,
         default=None,
-        help=f"{control_conf_doc['color']} [default: don't colorize diff]",
+        help=f"""
+        {control_conf_doc['color']}
+        {warn_about_missing_colorama}
+        [default: don't colorize diff]
+        """,
     )
     control_configuration_group.add_argument(
         "-w",

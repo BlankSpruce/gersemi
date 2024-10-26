@@ -195,7 +195,12 @@ class ControlConfiguration:
         default=False,
         metadata=dict(
             title="Colorized diff",
-            description="If --diff is selected showed diff is colorized.",
+            description=doc(
+                """
+    If --diff is selected showed diff is colorized.
+    Colorama has to be installed for this option to work.
+                """
+            ),
         ),
     )
 
