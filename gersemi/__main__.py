@@ -4,7 +4,6 @@ import pathlib
 import sys
 from lark import __version__ as lark_version
 from gersemi.configuration import (
-    make_default_configuration_file,
     normalize_definitions,
     sanitize_list_expansion,
     ControlConfiguration,
@@ -13,15 +12,11 @@ from gersemi.configuration import (
     indent_type,
     workers_type,
 )
+from gersemi.configuration_reports import default_report
+from gersemi.print_config_kind import PrintConfigKind, print_config_kind
 from gersemi.return_codes import SUCCESS, FAIL
 from gersemi.runner import run, print_to_stderr
 from gersemi.__version__ import __title__, __version__
-
-
-class GenerateConfigurationFile(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        print(make_default_configuration_file())
-        sys.exit(SUCCESS)
 
 
 class ShowVersion(argparse.Action):
@@ -40,8 +35,6 @@ def toggle_action(predicate):
                 self.dest,
                 not predicate(option_string),
             )
-
-            # option_string.startswith("--no-")
 
     return Impl
 
@@ -81,10 +74,16 @@ def create_argparser():
         help="Show diff on stdout for each formatted file instead.",
     )
     modes_group.add_argument(
-        "--default-config",
-        nargs=0,
-        action=GenerateConfigurationFile,
-        help="Generate default .gersemirc configuration file.",
+        "--print-config",
+        dest="print_config",
+        choices=[e.value for e in PrintConfigKind],
+        help=f"""Print configuration for files.
+        {" ".join(map(lambda attr: attr.description, PrintConfigKind))}
+        Command line arguments are taken into consideration just
+        as they would be for for formatting.
+        When configuration file is found values in "definitions" are printed as relative
+        paths, otherwise absolute paths are printed.
+        Output can be placed in .gersemirc file verbatim.""",
     )
     modes_group.add_argument(
         "--version",
@@ -126,6 +125,7 @@ def create_argparser():
         "--unsafe",
         dest="unsafe",
         action="store_true",
+        default=None,
         help=outcome_conf_doc["unsafe"],
     )
     outcome_configuration_group.add_argument(
@@ -256,24 +256,31 @@ def postprocess_args(args):
 
     args.definitions = normalize_definitions(args.definitions)
     args.list_expansion = sanitize_list_expansion(args.list_expansion)
+    args.print_config = print_config_kind(args.print_config)
+
+
+def error(text):
+    print_to_stderr(text)
+    sys.exit(FAIL)
 
 
 def main():
-    argparser = create_argparser()
-    args = argparser.parse_args()
-    postprocess_args(args)
-
-    def error(text):
-        print_to_stderr(text)
-        sys.exit(FAIL)
-
-    if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
-        error("Don't mix stdin with file input")
-
-    if len(args.sources) < 1:
-        sys.exit(SUCCESS)
-
     try:
+        argparser = create_argparser()
+        args = argparser.parse_args()
+
+        if args.print_config == PrintConfigKind.Default.value:
+            print(default_report())
+            sys.exit(SUCCESS)
+
+        postprocess_args(args)
+
+        if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
+            error("Don't mix stdin with file input")
+
+        if len(args.sources) < 1:
+            sys.exit(SUCCESS)
+
         sys.exit(run(args))
     except Exception as exception:  # pylint: disable=broad-exception-caught
         error(exception)

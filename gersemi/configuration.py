@@ -1,15 +1,15 @@
 from contextlib import contextmanager
-from dataclasses import asdict, astuple, dataclass, field, fields
-from enum import Enum
+from dataclasses import astuple, dataclass, field, fields
 from functools import lru_cache
 from hashlib import sha1
 import multiprocessing
 import os
 from pathlib import Path
 import sys
-import textwrap
 from typing import Iterable, Optional, Sequence, Tuple, Union
 import yaml
+from gersemi.enum_with_metadata import EnumWithMetadata, doc
+from gersemi.__version__ import __version__
 
 
 def max_number_of_workers():
@@ -19,22 +19,6 @@ def max_number_of_workers():
         # https://github.com/python/cpython/issues/89240
         return min(result, 60)
     return result
-
-
-def doc(text: str) -> str:
-    return " ".join(textwrap.dedent(text).splitlines()).strip()
-
-
-class EnumWithMetadata(Enum):
-    def __new__(cls, data):
-        self = object.__new__(cls)
-        self._value_ = data["value"]
-        self.description = doc(data["description"])
-        self.title = data["title"]
-        return self
-
-    def __repr__(self):
-        return self.value
 
 
 class Tabs(EnumWithMetadata):
@@ -272,27 +256,30 @@ CONTROL_CONFIGURATION_KEYS = [f.name for f in fields(ControlConfiguration)]
 CONFIGURATION_KEYS = OUTCOME_CONFIGURATION_KEYS + CONTROL_CONFIGURATION_KEYS
 
 
-def represent_enum_with_metadata(dumper, data):
-    return dumper.represent_str(data.value)
+class CustomizedSafeDumper(yaml.SafeDumper):
+    def represent_data(self, data):
+        if isinstance(data, Path):
+            return self.represent_data(str(data))
+
+        if isinstance(data, EnumWithMetadata):
+            return self.represent_data(data.value)
+
+        return super().represent_data(data)
 
 
-yaml.SafeDumper.add_representer(Tabs, represent_enum_with_metadata)
-yaml.SafeDumper.add_representer(MaxWorkers, represent_enum_with_metadata)
+# pylint: disable=line-too-long
+SCHEMA = f"# yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/{__version__}/gersemi/configuration.schema.json"
 
 
-def make_configuration_file(configuration):
-    d = asdict(configuration)
-    d["list_expansion"] = d["list_expansion"].value
-    result = f"""
-# yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/master/gersemi/configuration.schema.json
+def make_configuration_file(configuration_dict, add_schema_link=False):
+    if configuration_dict == dict():
+        return ""
 
-{yaml.safe_dump(d)}
-    """
-    return result.strip()
+    result = yaml.dump(configuration_dict, Dumper=CustomizedSafeDumper)
+    if add_schema_link:
+        result = f"{SCHEMA}\n\n{result}"
 
-
-def make_default_configuration_file():
-    return make_configuration_file(OutcomeConfiguration())
+    return result
 
 
 @lru_cache(maxsize=None)
@@ -370,7 +357,7 @@ def load_configuration_from_file(
 
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
-            configuration_file_content = yaml.safe_load(f.read())
+            configuration_file_content = yaml.safe_load(f.read()) or dict()
             config = {
                 key: value
                 for key, value in configuration_file_content.items()

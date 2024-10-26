@@ -6,6 +6,7 @@ class Mode(Enum):
     RewriteInPlace = 1
     CheckFormatting = 2
     ShowDiff = 3
+    PrintConfig = 4
 
 
 def get_mode(args) -> Mode:
@@ -15,4 +16,6 @@ def get_mode(args) -> Mode:
         return Mode.CheckFormatting
     if args.in_place:
         return Mode.RewriteInPlace
+    if args.print_config:
+        return Mode.PrintConfig
     return Mode.ForwardToStdout

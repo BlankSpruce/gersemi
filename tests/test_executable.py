@@ -411,7 +411,7 @@ def test_missing_definitions_in_configuration_file_but_provided_from_command_lin
     assert_that_directories_have_the_same_content(not_formatted, formatted)
 
 
-def test_best_definitions_in_configuration_file_but_overriden_by_command_line(
+def test_best_definitions_in_configuration_file_but_overridden_by_command_line(
     app, testfiles
 ):
     not_formatted = testfiles / "custom_project" / "not_formatted"

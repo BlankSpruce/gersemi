@@ -11,10 +11,10 @@ def repr_outcome(outcome):
     return f"""- returncode: {outcome.returncode}
 ----------------------------------------
 - stdout:
-{preprocess(outcome.stdout) if outcome.stdout is not None else "--ignore--"}
+{preprocess(str(outcome.stdout)) if outcome.stdout is not None else "--ignore--"}
 ----------------------------------------
 - stderr:
-{preprocess(outcome.stderr) if outcome.stderr is not None else "--ignore--"}"""
+{preprocess(str(outcome.stderr)) if outcome.stderr is not None else "--ignore--"}"""
 
 
 @dataclass

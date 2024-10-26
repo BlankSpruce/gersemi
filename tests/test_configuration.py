@@ -1,4 +1,5 @@
 # mypy: disable-error-code="no-redef"
+from dataclasses import asdict
 import json
 import os
 import pytest
@@ -73,7 +74,9 @@ def test_example_file_in_repository_is_consistent_with_configuration_definition(
     this_file_dir = os.path.dirname(os.path.realpath(__file__))
     example_path = os.path.join(this_file_dir, ".gersemirc.example")
     with open(example_path, "r", encoding="utf-8") as f:
-        example = f.read().strip()
+        example = f.read()
 
     configuration = OutcomeConfiguration()
-    assert example == make_configuration_file(configuration)
+    assert example == make_configuration_file(
+        asdict(configuration), add_schema_link=True
+    )

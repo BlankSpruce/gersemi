@@ -6,7 +6,7 @@ import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
-from typing import Callable, Dict, List, Iterable, Tuple, Union
+from typing import Callable, Dict, List, Iterable, Optional, Tuple, Union
 from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
@@ -19,6 +19,7 @@ from gersemi.configuration import (
     NotSupportedKeys,
     Workers,
 )
+from gersemi.configuration_reports import minimal_report, verbose_report
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
@@ -27,6 +28,7 @@ from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import create_formatter, NullFormatter, Formatter
 from gersemi.mode import get_mode, Mode
 from gersemi.parser import PARSER as parser
+from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import Result, Error, apply, get_error_message
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
 from gersemi.task_result import TaskResult
@@ -275,7 +277,7 @@ def handle_files_to_format(
     return compute_error_code(code for _, code, _ in results)
 
 
-class ConfigurationHelper:
+class GetConfiguration:
     def __init__(self, args: argparse.Namespace, control: ControlConfiguration):
         self.args = args
         self.control = control
@@ -304,29 +306,48 @@ class ConfigurationHelper:
             keys = ", ".join(sorted(item.unknown))
             self._warn(item, f"these options are not supported: {keys}")
 
-    def __call__(self, path: Path) -> Configuration:
+    def __call__(self, configuration_file: Optional[Path]) -> Configuration:
         outcome_configuration, not_supported_keys = make_outcome_configuration(
-            configuration_file=find_closest_dot_gersemirc(path),
+            configuration_file=configuration_file,
             args=self.args,
         )
         self._inform_about_not_supported_keys(not_supported_keys)
         return Configuration(control=self.control, outcome=outcome_configuration)
 
 
-def split_files_by_configuration(
-    paths: Iterable[Path], args: argparse.Namespace, control: ControlConfiguration
+def split_files_by_configuration_file(
+    paths: Iterable[Path], control: ControlConfiguration
 ):
-    helper = ConfigurationHelper(args, control)
     if control.configuration_file is not None:
-        return {helper(control.configuration_file): paths}
+        return {control.configuration_file: paths}
 
     result = defaultdict(list)
     for path in paths:
-        result[helper(path)].append(path)
+        result[find_closest_dot_gersemirc(path)].append(path)
 
     return result
 
 
+def print_configuration_report(
+    kind: PrintConfigKind,
+    buckets: Dict[Optional[Path], Iterable[Path]],
+    get_configuration: GetConfiguration,
+):
+    report = {
+        PrintConfigKind.Minimal: lambda conf_file, conf, _: minimal_report(
+            conf_file, conf
+        ),
+        PrintConfigKind.Verbose: verbose_report,
+    }.get(kind, lambda *args: None)
+
+    for config_file, target_files in buckets.items():
+        config = get_configuration(config_file)
+        result = report(config_file, config.outcome, target_files)
+        if result is not None:
+            print_to_stdout(result)
+
+
+# pylint: disable=too-many-locals
 def run(args: argparse.Namespace):
     try:
         requested_files = get_files(args.sources)
@@ -340,13 +361,18 @@ def run(args: argparse.Namespace):
         is_stdin_in_sources=(Path("-") in requested_files),
         workers=control.workers,
     )
+
+    buckets = split_files_by_configuration_file(requested_files, control)
+    get_configuration = GetConfiguration(args, control)
+    if mode == Mode.PrintConfig:
+        print_configuration_report(args.print_config, buckets, get_configuration)
+        return SUCCESS
+
     with create_cache(control.cache) as cache, pool_cm() as pool:
         error_code = SUCCESS
-        configuration_buckets = split_files_by_configuration(
-            requested_files, args, control
-        )
 
-        for config, files in configuration_buckets.items():
+        for config_file, files in buckets.items():
+            config = get_configuration(config_file)
             if config.outcome.disable_formatting:
                 continue
 
