@@ -1,4 +1,8 @@
 # Changelog
+## [0.17.1] 2024-11-29
+### Fixed
+- fix `--no-quiet` (#43)
+
 ## [0.17.0] 2024-10-26
 ### Added
 - Add `disable_formatting`. (#35)

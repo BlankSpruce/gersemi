@@ -1,6 +1,6 @@
 # gersemi
 
-[![Status](https://github.com/BlankSpruce/gersemi/workflows/Tests/badge.svg?branch=master)](https://github.com/BlankSpruce/gersemi/actions) [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Status](https://github.com/BlankSpruce/gersemi/workflows/Tests/badge.svg)](https://github.com/BlankSpruce/gersemi/actions) [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A formatter to make your CMake code the real treasure.
 
@@ -90,7 +90,7 @@ outcome configuration:
                         When enabled file which has unknown custom commands will have
                         warnings issued about that and result won't be cached. See:
                         "Let's make a deal" section in README. [default: warnings
-                        enabled]
+                        enabled, same as --warn-about-unknown-commands]
   --disable-formatting, --enable-formatting
                         Completely disable formatting. [default: formatting enabled]
 
@@ -101,17 +101,18 @@ control configuration:
   (defaults)
 
   -q, --quiet, --no-quiet
-                        Skip printing non-error messages to stderr. 
-                        [default: don't skip]
+                        Skip printing non-error messages to stderr.
+                        [default: don't skip, same as --no-quiet]
   --color, --no-color   If --diff is selected showed diff is colorized. Colorama has to
-                        be installed for this option to work. 
-                        [default: don't colorize diff]
+                        be installed for this option to work.
+                        [default: don't colorize diff, same as --no-color]
   -w (INTEGER | max), --workers (INTEGER | max)
                         Explicit number of workers or 'max' for maximum possible number
                         of workers on given machine used to format multiple files in
                         parallel. [default: max]
   --cache, --no-cache   Enables cache with data about files that are known to be
-                        formatted to speed up execution. [default: cache enabled]
+                        formatted to speed up execution.
+                        [default: cache enabled, same as --cache]
   --config CONFIGURATION_FILE
                         Path to configuration file. When present this configuration file
                         will be used for determining configuration for all sources
@@ -125,7 +126,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.17.0
+  rev: 0.17.1
   hooks:
   - id: gersemi
 ```

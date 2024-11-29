@@ -689,6 +689,26 @@ def test_check_project_with_conflicting_command_definitions(app, testfiles):
 """,
     )
 
+    assert app("--check", "--no-quiet", base, "--definitions", base) == success(
+        stdout="",
+        stderr=f"""Warning: conflicting definitions for 'foo':
+(used)    {foo1}:1:10
+(ignored) {foo2}:1:10
+(ignored) {foo2}:5:10
+(ignored) {foo2}:9:10
+""",
+    )
+
+
+def test_check_project_with_conflicting_command_definitions_dont_warn_when_quiet(
+    app, testfiles
+):
+    base = testfiles / "conflicting_definitions"
+    assert app("--check", "--quiet", base, "--definitions", base) == success(
+        stdout="",
+        stderr="",
+    )
+
 
 def test_format_file_with_conflicting_command_definitions(app, testfiles):
     base = testfiles / "conflicting_definitions"

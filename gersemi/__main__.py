@@ -166,7 +166,7 @@ def create_argparser():
         default=None,
         help=f"""
     {outcome_conf_doc["warn_about_unknown_commands"]}
-    [default: warnings enabled]
+    [default: warnings enabled, same as --warn-about-unknown-commands]
         """,
     )
     outcome_configuration_group.add_argument(
@@ -193,8 +193,10 @@ def create_argparser():
         "--quiet",
         "--no-quiet",
         dest="quiet",
-        action="store_true",
-        help=f"{control_conf_doc['quiet']} [default: don't skip]",
+        action=toggle_with_no_prefix,
+        nargs=0,
+        default=None,
+        help=f"{control_conf_doc['quiet']} [default: don't skip, same as --no-quiet]",
     )
 
     if colorama_version == MISSING:
@@ -212,7 +214,7 @@ def create_argparser():
         help=f"""
         {control_conf_doc['color']}
         {warn_about_missing_colorama}
-        [default: don't colorize diff]
+        [default: don't colorize diff, same as --no-color]
         """,
     )
     control_configuration_group.add_argument(
@@ -234,7 +236,7 @@ def create_argparser():
         default=None,
         help=f"""
     {control_conf_doc["cache"]}
-    [default: cache enabled]
+    [default: cache enabled, same as --cache]
         """,
     )
     control_configuration_group.add_argument(
