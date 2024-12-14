@@ -139,13 +139,83 @@ The key goal is for the tool to "just work" and to have as little configuration 
 
 ### Style
 
-`gersemi` in general will use canonical casing as it's defined in official CMake documentation like `FetchContent_Declare`. There are a few deliberate exceptions for which lower case name was chosen to provide broader consistency with other CMake commands. In case of unknown commands, not provided through `definitions`, lower case will be used.
+General goals:
+- Canonical casing is used as it's defined in official CMake documentation like `FetchContent_Declare`. There are a few deliberate exceptions for which lower case name was chosen to provide broader consistency with other CMake commands. In case of unknown commands, not provided through `definitions`, lower case will be used.
+- Arguments attached to certain multi-value keywords, like `PUBLIC`/`PRIVATE`/`INTERFACE` in `target_link_libraries`, are treated as an argument group and such group might introduce another level of indentation. It's meant to introduce a visual hint that certain arguments have different, specific meaning.
+- Arguments that represent key-value pairs will be treated as such pairs.
+  <details>
+  <summary><b>It's applicable to:</b></summary>
+
+  - `PROPERTIES` keyword in the following official commands:
+    - `gtest_discover_test`
+    - `set_directory_properties`
+    - `set_package_properties`
+    - `set_source_files_properties`
+    - `set_target_properties`
+    - `set_test_properties`
+  - keyword in custom commands that has `pairs` hint (See: Let's make a deal).
+
+  </details>
+- Arguments that represent shell command-like sequence won't be expanded in multiple lines unless character limit for single line is reached. In case of expansion arguments not fitting in given line will be placed in the next one instead of putting each argument in its own line like it would happen for usual multi-value arguments.
+
+  <details>
+  <summary>Empty comments can be used to force some explicit expansions:</summary>
+
+  ```cmake
+  add_test(
+      NAME foo
+      COMMAND
+          some_command --with-argument-one foo --with argument-two bar --with-some-option
+          --with-another-option --with-another-another-option
+  )
+  add_test(
+      NAME foo
+      COMMAND
+          some_command #
+          --with-argument-one foo #
+          --with argument-two bar #
+          --with-some-option --with-another-option --with-another-another-option
+  )
+  ```
+
+  </details>
+
+  <details>
+  <summary><b>It's applicable to:</b></summary>
+
+  - `COMMAND` keyword in the following official commands:
+    - `add_test`
+    - `execute_process`
+    - `env_module`
+  - `COMMAND` and `ARGS` keywords in `add_custom_command`
+  - `COMMAND` keyword and positional arguments of `add_custom_target`
+  - `CMAKE_COMMAND_LINE` in `cmake_add_fortran_subdirectory`
+  - `GCOV_OPTIONS` in `ctest_coverage_collect_gcov`
+  - these keywords in `ExternalProject_Add`:
+    - `DOWNLOAD_COMMAND`
+    - `GIT_CONFIG`
+    - `UPDATE_COMMAND`
+    - `PATCH_COMMAND`
+    - `CONFIGURE_COMMAND`
+    - `CMAKE_ARGS`
+    - `CMAKE_CACHE_ARGS`
+    - `CMAKE_CACHE_DEFAULT_ARGS`
+    - `BUILD_COMMAND`
+    - `INSTALL_COMMAND`
+    - `TEST_COMMAND`
+    - `COMMAND`
+  - these keywords in `FetchContent_Declare`:
+    - `DOWNLOAD_COMMAND`
+    - `UPDATE_COMMAND`
+    - `PATCH_COMMAND`
+  - `EXTRA_ARGS` and `DISCOVERY_EXTRA_ARGS` keywords in `gtest_discover_tests`
+  - `MATLAB_ADDITIONAL_STARTUP_OPTIONS` in `matlab_add_unit_test`
+  - keyword in custom commands that has `command_line` hint (See: Let's make a deal).
+  </details>
 
 #### Default style `favour-inlining`
 
-`gersemi` will try to format the code in a way that respects set character limit for single line and only break line whenever necessary with one exception. The commands that have a group of parameters that aren't attached to any specific keyword (like `set` or `list(APPEND)`) will be broken into multiple lines when there are more than 4 arguments in that group. The exception to the rule is made as a heuristic to avoid large local diff when the given command won't fit into maximum line length.
-
-Example:
+`gersemi` will try to format the code in a way that respects set character limit for single line and only break line whenever necessary with one exception. The commands that have a group of parameters that aren't attached to any specific keyword (like `set` or `list(APPEND)`) will be broken into multiple lines when there are more than 4 arguments in that group. The exception to the rule is made as a heuristic to avoid large local diff when the given command won't fit into maximum line length:
 ```cmake
 # Four elements in the list "Oceans_Eleven"
 set(Oceans_Eleven Danny Frank Rusty Reuben)
@@ -159,8 +229,28 @@ set(Oceans_Twelve
     Tess
 )
 ```
+You can also force expansion by using an empty comment somewhere in the argument group that you intend to keep expanded:
+```cmake
+target_link_libraries(FOOBAR PUBLIC foo bar baz PRIVATE foo bar baz)
 
-`favour-inlining` style example:
+target_link_libraries(
+    FOOBAR #
+    PUBLIC foo bar baz
+    PRIVATE foo bar baz
+)
+
+target_link_libraries(
+    FOOBAR
+    PUBLIC #
+        foo
+        bar
+        baz
+    PRIVATE foo bar baz
+)
+```
+<details>
+<summary><h4><b>Example</b></h4></summary>
+
 ```cmake
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(example CXX)
@@ -282,6 +372,7 @@ add_custom_command(
     COMMENT "example custom command"
 )
 ```
+</details>
 
 #### Alternative style `favour-expansion`
 
@@ -292,7 +383,9 @@ In this style lines are broken in one of these cases:
 
 One-value arguments (like `NAME` in `add_test`) will be inlined unless that'd violate character limit. Structure or control flow commands (`if`, `while`, `function`, `foreach` etc.) are exempted from these special rules and follow the same formatting as `favour-inlining`. This style is more merge or `git blame` friendly because usually multi-value arguments are changed one element at a time and with this style such change will be visible as one line of code per element.
 
-`favour-expansion` style example:
+<details>
+<summary><h4><b>Example</b></h4></summary>
+
 ```cmake
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(example CXX)
@@ -431,6 +524,8 @@ add_custom_command(
 )
 ```
 
+</details>
+
 ### Let's make a deal
 
 It's possible to provide reasonable formatting for custom commands. However on language level there are no hints available about supported keywords for given command so `gersemi` has to generate specialized formatter. To do that custom command definition is necessary which should be provided with `--definitions`. There are limitations though since it'd probably require full-blown CMake language interpreter to do it in every case so let's make a deal: if your custom command definition (function or macro) uses `cmake_parse_arguments` and does it in obvious manner such specialized formatter will be generated. Name casing used in command definition will be considered canonical for custom command (in the example below canonical casing will be `Seven_Samurai`). For instance this definition is okay (you can find other examples in `tests/custom_command_formatting/`):
@@ -545,7 +640,9 @@ If your definition has `# gersemi: hints` at the beginning then after `hints` yo
 - `pairs`: arguments after the keyword will be grouped into pairs, similar to how `set_target_properties(PROPERTIES)` is handled
 - `command_line`: arguments after the keyword will be treated like a sequence of words in command line, similar to how `add_custom_command(COMMAND)` is handled
 
-Example:
+<details>
+<summary>Example:</summary>
+
 ```cmake
 function(movie_description_without_hints)
 set(options "")
@@ -599,6 +696,8 @@ movie_description_with_hints(
         Nolan.
 )
 ```
+
+</details>
 
 ### How to disable reformatting
 
