@@ -4,59 +4,6 @@ from gersemi.keywords import AnyMatcher, KeywordMatcher
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-from .multiple_signature_command_invocation_dumper import (
-    MultipleSignatureCommandInvocationDumper,
-)
-from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
-from .two_word_keyword_isolator import TwoWordKeywordIsolator
-
-
-class AddCustomCommand(CommandLineFormatter, MultipleSignatureCommandInvocationDumper):
-    customized_signatures = {
-        "OUTPUT": dict(
-            options=[
-                "VERBATIM",
-                "APPEND",
-                "USES_TERMINAL",
-                "COMMAND_EXPAND_LISTS",
-                "DEPENDS_EXPLICIT_ONLY",
-                "CODEGEN",
-            ],
-            one_value_keywords=[
-                "MAIN_DEPENDENCY",
-                "WORKING_DIRECTORY",
-                "COMMENT",
-                "DEPFILE",
-                "JOB_POOL",
-                "JOB_SERVER_AWARE",
-            ],
-            multi_value_keywords=[
-                "OUTPUT",
-                "COMMAND",
-                "ARGS",
-                "DEPENDS",
-                "BYPRODUCTS",
-                "IMPLICIT_DEPENDS",
-                "OUTPUT",
-            ],
-        ),
-        "TARGET": dict(
-            options=[
-                "PRE_BUILD",
-                "PRE_LINK",
-                "POST_BUILD",
-                "VERBATIM",
-                "USES_TERMINAL",
-                "COMMAND_EXPAND_LISTS",
-            ],
-            one_value_keywords=["TARGET", "WORKING_DIRECTORY", "COMMENT", "TARGET"],
-            multi_value_keywords=["COMMAND", "ARGS", "BYPRODUCTS"],
-        ),
-    }
-    keyword_formatters = {
-        "COMMAND": "_format_command_line",
-        "ARGS": "_format_command_line",
-    }
 
 
 class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
@@ -77,53 +24,10 @@ class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper
         return super().positional_arguments(tree)
 
 
-class CMakeFileApi(MultipleSignatureCommandInvocationDumper):
-    customized_signatures = {
-        "QUERY": dict(
-            options=["QUERY"],
-            one_value_keywords=["API_VERSION"],
-            multi_value_keywords=["CODEMODEL", "CACHE", "CMAKEFILES", "TOOLCHAINS"],
-        ),
-    }
-
-
-class Export(
-    SectionAwareCommandInvocationDumper, MultipleSignatureCommandInvocationDumper
-):
-    customized_signatures = {
-        "EXPORT": dict(
-            options=["EXPORT_PACKAGE_DEPENDENCIES"],
-            one_value_keywords=["EXPORT", "NAMESPACE", "FILE"],
-        ),
-        "TARGETS": dict(
-            options=["APPEND", "EXPORT_LINK_INTERFACE_LIBRARIES"],
-            one_value_keywords=["NAMESPACE", "FILE", "ANDROID_MK"],
-            multi_value_keywords=["TARGETS"],
-        ),
-        "PACKAGE": dict(one_value_keywords=["PACKAGE"]),
-        "SETUP": dict(
-            one_value_keywords=["SETUP"],
-            multi_value_keywords=["PACKAGE_DEPENDENCY", "TARGET"],
-            sections=dict(
-                PACKAGE_DEPENDENCY=dict(
-                    front_positional_arguments=["<dep>"],
-                    one_value_keywords=["ENABLED"],
-                    multi_value_keywords=["EXTRA_ARGS"],
-                ),
-                TARGET=dict(
-                    front_positional_arguments=["<target>"],
-                    one_value_keywords=["XCFRAMEWORK_LOCATION"],
-                ),
-            ),
-        ),
-    }
-
-
 _INCLUDES_DESTINATION = ("INCLUDES", "DESTINATION")
 _FILE_SET_Any = ("FILE_SET", AnyMatcher())
 _PATTERN_Any = ("PATTERN", AnyMatcher())
 _REGEX_Any = ("REGEX", AnyMatcher())
-
 _Install_TARGETS_kinds: List[KeywordMatcher] = [
     "ARCHIVE",
     "LIBRARY",
@@ -145,232 +49,63 @@ _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds = [
 ]
 _Install_DIRECTORY_kinds: List[KeywordMatcher] = [_PATTERN_Any, _REGEX_Any]
 _Install_RUNTIME_DEPENDENCY_SET_kinds = ["LIBRARY", "RUNTIME", "FRAMEWORK"]
-
-
-class Install(
-    TwoWordKeywordIsolator,
-    SectionAwareCommandInvocationDumper,
-    MultipleSignatureCommandInvocationDumper,
-):
-    two_words_keywords = [
-        _INCLUDES_DESTINATION,
-        _FILE_SET_Any,
-        _PATTERN_Any,
-        _REGEX_Any,
-    ]
-
-    customized_signatures = {
-        "TARGETS": dict(
-            sections={
-                kind: dict(
-                    options=[
-                        "OPTIONAL",
-                        "EXCLUDE_FROM_ALL",
-                        "NAMELINK_ONLY",
-                        "NAMELINK_SKIP",
-                    ],
-                    one_value_keywords=[
-                        "DESTINATION",
-                        "COMPONENT",
-                        "NAMELINK_COMPONENT",
-                    ],
-                    multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
-                )
-                for kind in _Install_TARGETS_kinds
-            },
-            one_value_keywords=[
-                "EXPORT",
-                "RUNTIME_DEPENDENCY_SET",
-            ],
-            multi_value_keywords=[
-                "TARGETS",
-                _INCLUDES_DESTINATION,
-                "RUNTIME_DEPENDENCIES",
-                *_Install_TARGETS_kinds,
-            ],
-        ),
-        "FILES": dict(
-            options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
-            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT", "RENAME"],
-            multi_value_keywords=["FILES", "PERMISSIONS", "CONFIGURATIONS"],
-        ),
-        "PROGRAMS": dict(
-            options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
-            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT", "RENAME"],
-            multi_value_keywords=["PROGRAMS", "PERMISSIONS", "CONFIGURATIONS"],
-        ),
-        "DIRECTORY": dict(
-            sections={
-                kind: dict(options=["EXCLUDE"], multi_value_keywords=["PERMISSIONS"])
-                for kind in _Install_DIRECTORY_kinds
-            },
-            options=[
-                "USE_SOURCE_PERMISSIONS",
-                "OPTIONAL",
-                "MESSAGE_NEVER",
-                "EXCLUDE_FROM_ALL",
-                "FILES_MATCHING",
-            ],
-            one_value_keywords=["TYPE", "DESTINATION", "COMPONENT"],
-            multi_value_keywords=[
-                "DIRECTORY",
-                "FILE_PERMISSIONS",
-                "DIRECTORY_PERMISSIONS",
-                "CONFIGURATIONS",
-                *_Install_DIRECTORY_kinds,
-            ],
-        ),
-        "SCRIPT": dict(
-            options=["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
-            one_value_keywords=["SCRIPT", "COMPONENT"],
-        ),
-        "CODE": dict(
-            options=["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
-            one_value_keywords=["CODE", "COMPONENT"],
-        ),
-        "EXPORT": dict(
-            options=[
-                "EXPORT_LINK_INTERFACE_LIBRARIES",
-                "EXCLUDE_FROM_ALL",
-                "EXPORT_PACKAGE_DEPENDENCIES",
-            ],
-            one_value_keywords=[
-                "EXPORT",
-                "DESTINATION",
-                "NAMESPACE",
-                "FILE",
-                "COMPONENT",
-            ],
-            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
-        ),
-        "EXPORT_ANDROID_MK": dict(
-            options=["EXPORT_LINK_INTERFACE_LIBRARIES", "EXCLUDE_FROM_ALL"],
-            one_value_keywords=[
-                "EXPORT_ANDROID_MK",
-                "DESTINATION",
-                "NAMESPACE",
-                "FILE",
-                "COMPONENT",
-            ],
-            multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
-        ),
-        "IMPORTED_RUNTIME_ARTIFACTS": dict(
-            sections={
-                kind: dict(
-                    options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
-                    one_value_keywords=["DESTINATION", "COMPONENT"],
-                    multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
-                )
-                for kind in _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds
-            },
-            one_value_keywords=["RUNTIME_DEPENDENCY_SET"],
-            multi_value_keywords=[
-                "IMPORTED_RUNTIME_ARTIFACTS",
-                *_Install_IMPORTED_RUNTIME_ARTIFACTS_kinds,
-            ],
-        ),
-        "RUNTIME_DEPENDENCY_SET": dict(
-            sections={
-                kind: dict(
-                    options=["OPTIONAL", "EXCLUDE_FROM_ALL"],
-                    one_value_keywords=[
-                        "DESTINATION",
-                        "COMPONENT",
-                        "NAMELINK_COMPONENT",
-                    ],
-                    multi_value_keywords=["PERMISSIONS", "CONFIGURATIONS"],
-                )
-                for kind in _Install_RUNTIME_DEPENDENCY_SET_kinds
-            },
-            options=[
-                "LIBRARY",
-                "RUNTIME",
-                "FRAMEWORK",
-            ],
-            multi_value_keywords=[
-                "PRE_INCLUDE_REGEXES",
-                "PRE_EXCLUDE_REGEXES",
-                "POST_INCLUDE_REGEXES",
-                "POST_EXCLUDE_REGEXES",
-                "POST_INCLUDE_FILES",
-                "POST_EXCLUDE_FILES",
-                "DIRECTORIES",
-                *_Install_RUNTIME_DEPENDENCY_SET_kinds,
-            ],
-        ),
-        "PACKAGE_INFO": dict(
-            sections={
-                "VERSION": dict(
-                    one_value_keywords=["COMPAT_VERSION", "VERSION_SCHEMA"]
-                ),
-            },
-            options=["LOWER_CASE_FILE", "EXCLUDE_FROM_ALL"],
-            one_value_keywords=[
-                "PACKAGE_INFO",
-                "EXPORT",
-                "APPENDIX",
-                "DESTINATION",
-                "COMPONENT",
-            ],
-            multi_value_keywords=[
-                "VERSION",
-                "DEFAULT_TARGETS",
-                "DEFAULT_CONFIGURATIONS",
-                "PERMISSIONS",
-                "CONFIGURATIONS",
-            ],
-        ),
-    }
-
-
 _debug_optimized_general: Mapping[KeywordMatcher, Iterable[KeywordMatcher]] = {
     "one_value_keywords": ["debug", "optimized", "general"]
 }
 
-
-class TargetLinkLibraries(
-    SectionAwareCommandInvocationDumper, ArgumentAwareCommandInvocationDumper
-):
-    front_positional_arguments = ["<target>"]
-    multi_value_keywords = [
-        "INTERFACE",
-        "PUBLIC",
-        "PRIVATE",
-        "LINK_PRIVATE",
-        "LINK_PUBLIC",
-        "LINK_INTERFACE_LIBRARIES",
-    ]
-    sections = {
-        "INTERFACE": _debug_optimized_general,
-        "PUBLIC": _debug_optimized_general,
-        "PRIVATE": _debug_optimized_general,
-        "LINK_PRIVATE": _debug_optimized_general,
-        "LINK_PUBLIC": _debug_optimized_general,
-        "LINK_INTERFACE_LIBRARIES": _debug_optimized_general,
-    }
-
-
-class TargetSources(SectionAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-    sections = {
-        "INTERFACE": {
-            "one_value_keywords": ["FILE_SET", "TYPE"],
-            "multi_value_keywords": ["BASE_DIRS", "FILES"],
-        },
-        "PUBLIC": {
-            "one_value_keywords": ["FILE_SET", "TYPE"],
-            "multi_value_keywords": ["BASE_DIRS", "FILES"],
-        },
-        "PRIVATE": {
-            "one_value_keywords": ["FILE_SET", "TYPE"],
-            "multi_value_keywords": ["BASE_DIRS", "FILES"],
-        },
-    }
-
-
 project_command_mapping = {
-    "add_custom_command": AddCustomCommand,
+    "add_custom_command": {
+        "customized_signatures": {
+            "OUTPUT": {
+                "options": [
+                    "VERBATIM",
+                    "APPEND",
+                    "USES_TERMINAL",
+                    "COMMAND_EXPAND_LISTS",
+                    "DEPENDS_EXPLICIT_ONLY",
+                    "CODEGEN",
+                ],
+                "one_value_keywords": [
+                    "MAIN_DEPENDENCY",
+                    "WORKING_DIRECTORY",
+                    "COMMENT",
+                    "DEPFILE",
+                    "JOB_POOL",
+                    "JOB_SERVER_AWARE",
+                ],
+                "multi_value_keywords": [
+                    "OUTPUT",
+                    "COMMAND",
+                    "ARGS",
+                    "DEPENDS",
+                    "BYPRODUCTS",
+                    "IMPLICIT_DEPENDS",
+                    "OUTPUT",
+                ],
+            },
+            "TARGET": {
+                "options": [
+                    "PRE_BUILD",
+                    "PRE_LINK",
+                    "POST_BUILD",
+                    "VERBATIM",
+                    "USES_TERMINAL",
+                    "COMMAND_EXPAND_LISTS",
+                ],
+                "one_value_keywords": [
+                    "TARGET",
+                    "WORKING_DIRECTORY",
+                    "COMMENT",
+                    "TARGET",
+                ],
+                "multi_value_keywords": ["COMMAND", "ARGS", "BYPRODUCTS"],
+            },
+        },
+        "keyword_formatters": {
+            "COMMAND": "_format_command_line",
+            "ARGS": "_format_command_line",
+        },
+    },
     "add_custom_target": AddCustomTarget,
     "add_dependencies": {
         "front_positional_arguments": ["<target>"],
@@ -423,7 +158,20 @@ project_command_mapping = {
             "PARALLEL_LEVEL",
         ],
     },
-    "cmake_file_api": CMakeFileApi,
+    "cmake_file_api": {
+        "customized_signatures": {
+            "QUERY": {
+                "options": ["QUERY"],
+                "one_value_keywords": ["API_VERSION"],
+                "multi_value_keywords": [
+                    "CODEMODEL",
+                    "CACHE",
+                    "CMAKEFILES",
+                    "TOOLCHAINS",
+                ],
+            },
+        },
+    },
     "create_test_sourcelist": {
         "front_positional_arguments": ["sourceListName", "driverName"],
         "one_value_keywords": ["EXTRA_INCLUDE", "FUNCTION"],
@@ -442,7 +190,35 @@ project_command_mapping = {
         "one_value_keywords": ["PROPERTY", "INITIALIZE_FROM_VARIABLE"],
         "multi_value_keywords": ["BRIEF_DOCS", "FULL_DOCS"],
     },
-    "export": Export,
+    "export": {
+        "customized_signatures": {
+            "EXPORT": {
+                "options": ["EXPORT_PACKAGE_DEPENDENCIES"],
+                "one_value_keywords": ["EXPORT", "NAMESPACE", "FILE"],
+            },
+            "TARGETS": {
+                "options": ["APPEND", "EXPORT_LINK_INTERFACE_LIBRARIES"],
+                "one_value_keywords": ["NAMESPACE", "FILE", "ANDROID_MK"],
+                "multi_value_keywords": ["TARGETS"],
+            },
+            "PACKAGE": {"one_value_keywords": ["PACKAGE"]},
+            "SETUP": {
+                "one_value_keywords": ["SETUP"],
+                "multi_value_keywords": ["PACKAGE_DEPENDENCY", "TARGET"],
+                "sections": {
+                    "PACKAGE_DEPENDENCY": {
+                        "front_positional_arguments": ["<dep>"],
+                        "one_value_keywords": ["ENABLED"],
+                        "multi_value_keywords": ["EXTRA_ARGS"],
+                    },
+                    "TARGET": {
+                        "front_positional_arguments": ["<target>"],
+                        "one_value_keywords": ["XCFRAMEWORK_LOCATION"],
+                    },
+                },
+            },
+        },
+    },
     "fltk_wrap_ui": {
         "front_positional_arguments": ["resultingLibraryName"],
     },
@@ -465,7 +241,179 @@ project_command_mapping = {
         "front_positional_arguments": ["projectname", "location"],
         "one_value_keywords": ["TYPE", "GUID", "PLATFORM"],
     },
-    "install": Install,
+    "install": {
+        "two_words_keywords": [
+            _INCLUDES_DESTINATION,
+            _FILE_SET_Any,
+            _PATTERN_Any,
+            _REGEX_Any,
+        ],
+        "customized_signatures": {
+            "TARGETS": {
+                "sections": {
+                    kind: {
+                        "options": [
+                            "OPTIONAL",
+                            "EXCLUDE_FROM_ALL",
+                            "NAMELINK_ONLY",
+                            "NAMELINK_SKIP",
+                        ],
+                        "one_value_keywords": [
+                            "DESTINATION",
+                            "COMPONENT",
+                            "NAMELINK_COMPONENT",
+                        ],
+                        "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
+                    }
+                    for kind in _Install_TARGETS_kinds
+                },
+                "one_value_keywords": [
+                    "EXPORT",
+                    "RUNTIME_DEPENDENCY_SET",
+                ],
+                "multi_value_keywords": [
+                    "TARGETS",
+                    _INCLUDES_DESTINATION,
+                    "RUNTIME_DEPENDENCIES",
+                    *_Install_TARGETS_kinds,
+                ],
+            },
+            "FILES": {
+                "options": ["OPTIONAL", "EXCLUDE_FROM_ALL"],
+                "one_value_keywords": ["TYPE", "DESTINATION", "COMPONENT", "RENAME"],
+                "multi_value_keywords": ["FILES", "PERMISSIONS", "CONFIGURATIONS"],
+            },
+            "PROGRAMS": {
+                "options": ["OPTIONAL", "EXCLUDE_FROM_ALL"],
+                "one_value_keywords": ["TYPE", "DESTINATION", "COMPONENT", "RENAME"],
+                "multi_value_keywords": ["PROGRAMS", "PERMISSIONS", "CONFIGURATIONS"],
+            },
+            "DIRECTORY": {
+                "sections": {
+                    kind: {
+                        "options": ["EXCLUDE"],
+                        "multi_value_keywords": ["PERMISSIONS"],
+                    }
+                    for kind in _Install_DIRECTORY_kinds
+                },
+                "options": [
+                    "USE_SOURCE_PERMISSIONS",
+                    "OPTIONAL",
+                    "MESSAGE_NEVER",
+                    "EXCLUDE_FROM_ALL",
+                    "FILES_MATCHING",
+                ],
+                "one_value_keywords": ["TYPE", "DESTINATION", "COMPONENT"],
+                "multi_value_keywords": [
+                    "DIRECTORY",
+                    "FILE_PERMISSIONS",
+                    "DIRECTORY_PERMISSIONS",
+                    "CONFIGURATIONS",
+                    *_Install_DIRECTORY_kinds,
+                ],
+            },
+            "SCRIPT": {
+                "options": ["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
+                "one_value_keywords": ["SCRIPT", "COMPONENT"],
+            },
+            "CODE": {
+                "options": ["EXCLUDE_FROM_ALL", "ALL_COMPONENTS"],
+                "one_value_keywords": ["CODE", "COMPONENT"],
+            },
+            "EXPORT": {
+                "options": [
+                    "EXPORT_LINK_INTERFACE_LIBRARIES",
+                    "EXCLUDE_FROM_ALL",
+                    "EXPORT_PACKAGE_DEPENDENCIES",
+                ],
+                "one_value_keywords": [
+                    "EXPORT",
+                    "DESTINATION",
+                    "NAMESPACE",
+                    "FILE",
+                    "COMPONENT",
+                ],
+                "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
+            },
+            "EXPORT_ANDROID_MK": {
+                "options": ["EXPORT_LINK_INTERFACE_LIBRARIES", "EXCLUDE_FROM_ALL"],
+                "one_value_keywords": [
+                    "EXPORT_ANDROID_MK",
+                    "DESTINATION",
+                    "NAMESPACE",
+                    "FILE",
+                    "COMPONENT",
+                ],
+                "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
+            },
+            "IMPORTED_RUNTIME_ARTIFACTS": {
+                "sections": {
+                    kind: {
+                        "options": ["OPTIONAL", "EXCLUDE_FROM_ALL"],
+                        "one_value_keywords": ["DESTINATION", "COMPONENT"],
+                        "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
+                    }
+                    for kind in _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds
+                },
+                "one_value_keywords": ["RUNTIME_DEPENDENCY_SET"],
+                "multi_value_keywords": [
+                    "IMPORTED_RUNTIME_ARTIFACTS",
+                    *_Install_IMPORTED_RUNTIME_ARTIFACTS_kinds,
+                ],
+            },
+            "RUNTIME_DEPENDENCY_SET": {
+                "sections": {
+                    kind: {
+                        "options": ["OPTIONAL", "EXCLUDE_FROM_ALL"],
+                        "one_value_keywords": [
+                            "DESTINATION",
+                            "COMPONENT",
+                            "NAMELINK_COMPONENT",
+                        ],
+                        "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
+                    }
+                    for kind in _Install_RUNTIME_DEPENDENCY_SET_kinds
+                },
+                "options": [
+                    "LIBRARY",
+                    "RUNTIME",
+                    "FRAMEWORK",
+                ],
+                "multi_value_keywords": [
+                    "PRE_INCLUDE_REGEXES",
+                    "PRE_EXCLUDE_REGEXES",
+                    "POST_INCLUDE_REGEXES",
+                    "POST_EXCLUDE_REGEXES",
+                    "POST_INCLUDE_FILES",
+                    "POST_EXCLUDE_FILES",
+                    "DIRECTORIES",
+                    *_Install_RUNTIME_DEPENDENCY_SET_kinds,
+                ],
+            },
+            "PACKAGE_INFO": {
+                "sections": {
+                    "VERSION": {
+                        "one_value_keywords": ["COMPAT_VERSION", "VERSION_SCHEMA"]
+                    },
+                },
+                "options": ["LOWER_CASE_FILE", "EXCLUDE_FROM_ALL"],
+                "one_value_keywords": [
+                    "PACKAGE_INFO",
+                    "EXPORT",
+                    "APPENDIX",
+                    "DESTINATION",
+                    "COMPONENT",
+                ],
+                "multi_value_keywords": [
+                    "VERSION",
+                    "DEFAULT_TARGETS",
+                    "DEFAULT_CONFIGURATIONS",
+                    "PERMISSIONS",
+                    "CONFIGURATIONS",
+                ],
+            },
+        },
+    },
     "link_directories": {
         "options": ["AFTER", "BEFORE"],
     },
@@ -525,7 +473,25 @@ project_command_mapping = {
         "options": ["BEFORE"],
         "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
     },
-    "target_link_libraries": TargetLinkLibraries,
+    "target_link_libraries": {
+        "front_positional_arguments": ["<target>"],
+        "multi_value_keywords": [
+            "INTERFACE",
+            "PUBLIC",
+            "PRIVATE",
+            "LINK_PRIVATE",
+            "LINK_PUBLIC",
+            "LINK_INTERFACE_LIBRARIES",
+        ],
+        "sections": {
+            "INTERFACE": _debug_optimized_general,
+            "PUBLIC": _debug_optimized_general,
+            "PRIVATE": _debug_optimized_general,
+            "LINK_PRIVATE": _debug_optimized_general,
+            "LINK_PUBLIC": _debug_optimized_general,
+            "LINK_INTERFACE_LIBRARIES": _debug_optimized_general,
+        },
+    },
     "target_link_options": {
         "front_positional_arguments": ["<target>"],
         "options": ["BEFORE"],
@@ -536,7 +502,24 @@ project_command_mapping = {
         "one_value_keywords": ["REUSE_FROM"],
         "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
     },
-    "target_sources": TargetSources,
+    "target_sources": {
+        "front_positional_arguments": ["<target>"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+        "sections": {
+            "INTERFACE": {
+                "one_value_keywords": ["FILE_SET", "TYPE"],
+                "multi_value_keywords": ["BASE_DIRS", "FILES"],
+            },
+            "PUBLIC": {
+                "one_value_keywords": ["FILE_SET", "TYPE"],
+                "multi_value_keywords": ["BASE_DIRS", "FILES"],
+            },
+            "PRIVATE": {
+                "one_value_keywords": ["FILE_SET", "TYPE"],
+                "multi_value_keywords": ["BASE_DIRS", "FILES"],
+            },
+        },
+    },
     "try_compile": {
         "front_positional_arguments": [
             "<compileResultVar>",
