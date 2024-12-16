@@ -1,6 +1,4 @@
 # pylint: disable=too-many-lines
-from gersemi.command_line_formatter import CommandLineFormatter
-from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -26,54 +24,6 @@ _REGEX_MATCH = ("REGEX", "MATCH")
 _REGEX_MATCHALL = ("REGEX", "MATCHALL")
 _REGEX_REPLACE = ("REGEX", "REPLACE")
 _STEM_LAST_ONLY = ("STEM", "LAST_ONLY")
-
-
-class Block(ArgumentAwareCommandInvocationDumper):
-    inhibit_favour_expansion = True
-    multi_value_keywords = ["SCOPE_FOR", "PROPAGATE"]
-
-
-class CMakeHostSysteInformation(
-    TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper
-):
-    two_words_keywords = [_QUERY_WINDOWS_REGISTRY]
-    one_value_keywords = [
-        "RESULT",
-        _QUERY_WINDOWS_REGISTRY,
-        "VALUE_NAMES",
-        "SUBKEYS",
-        "VALUE",
-        "VIEW",
-        "SEPARATOR",
-        "ERROR_VARIABLE",
-    ]
-    multi_value_keywords = ["QUERY"]
-
-
-class CMakeLanguage(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
-    two_words_keywords = [_EVAL_CODE]
-    one_value_keywords = [
-        "DIRECTORY",
-        "ID",
-        "ID_VAR",
-        "GET_CALL_IDS",
-        "GET_CALL",
-        "SET_DEPENDENCY_PROVIDER",
-        "GET_MESSAGE_LOG_LEVEL",
-        "EXIT",
-    ]
-    multi_value_keywords = [
-        "DEFER",
-        "CALL",
-        "CANCEL_CALL",
-        "SUPPORTED_METHODS",
-        _EVAL_CODE,
-    ]
-
-
-class CMakeMinimumRequired(ArgumentAwareCommandInvocationDumper):
-    options = ["FATAL_ERROR"]
-    one_value_keywords = ["VERSION"]
 
 
 class CMakeParseArguments(MultipleSignatureCommandInvocationDumper):
@@ -204,26 +154,6 @@ class CMakePath(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper
     }
 
 
-class CMakePkgConfig(ArgumentAwareCommandInvocationDumper):
-    options = ["REQUIRED", "EXACT", "QUIET"]
-    one_value_keywords = [
-        "STRICTNESS",
-        "ENV_MODE",
-        "DISABLE_UNINSTALLED",
-        "PC_SYSROOT_DIR",
-        "TOP_BUILD_DIR",
-        "ALLOW_SYSTEM_INCLUDES",
-        "ALLOW_SYSTEM_LIBS",
-    ]
-    multi_value_keywords = [
-        "EXTRACT",
-        "PC_LIBDIR",
-        "PC_PATH",
-        "SYSTEM_INCLUDE_DIRS",
-        "SYSTEM_LIBRARY_DIRS",
-    ]
-
-
 class CMakePolicy(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "VERSION": dict(front_positional_arguments=["<min>...<max>"]),
@@ -232,62 +162,6 @@ class CMakePolicy(MultipleSignatureCommandInvocationDumper):
         "PUSH": dict(),
         "POP": dict(),
     }
-
-
-class ConfigureFile(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<input>", "<output>"]
-    options = [
-        "COPYONLY",
-        "ESCAPE_QUOTES",
-        "@ONLY",
-        "NO_SOURCE_PERMISSIONS",
-        "USE_SOURCE_PERMISSIONS",
-    ]
-    one_value_keywords = ["NEWLINE_STYLE"]
-    multi_value_keywords = ["FILE_PERMISSIONS"]
-
-
-class EndBlock(ArgumentAwareCommandInvocationDumper):
-    pass
-
-
-class EndForeach(ArgumentAwareCommandInvocationDumper):
-    pass
-
-
-class EndFunction(ArgumentAwareCommandInvocationDumper):
-    pass
-
-
-class EndMacro(ArgumentAwareCommandInvocationDumper):
-    pass
-
-
-class ExecuteProcess(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
-    options = [
-        "OUTPUT_QUIET",
-        "ERROR_QUIET",
-        "OUTPUT_STRIP_TRAILING_WHITESPACE",
-        "ERROR_STRIP_TRAILING_WHITESPACE",
-        "ECHO_OUTPUT_VARIABLE",
-        "ECHO_ERROR_VARIABLE",
-    ]
-    one_value_keywords = [
-        "WORKING_DIRECTORY",
-        "TIMEOUT",
-        "RESULT_VARIABLE",
-        "RESULTS_VARIABLE",
-        "OUTPUT_VARIABLE",
-        "ERROR_VARIABLE",
-        "INPUT_FILE",
-        "OUTPUT_FILE",
-        "ERROR_FILE",
-        "COMMAND_ECHO",
-        "ENCODING",
-        "COMMAND_ERROR_IS_FATAL",
-    ]
-    multi_value_keywords = ["COMMAND"]
-    keyword_formatters = {"COMMAND": "_format_command_line"}
 
 
 _GENERATE_OUTPUT = ("GENERATE", "OUTPUT")
@@ -526,186 +400,6 @@ class File(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
     }
 
 
-class FindFile(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<VAR>", "name"]
-    options = [
-        "NO_DEFAULT_PATH",
-        "NO_PACKAGE_ROOT_PATH",
-        "NO_CMAKE_PATH",
-        "NO_CMAKE_ENVIRONMENT_PATH",
-        "NO_SYSTEM_ENVIRONMENT_PATH",
-        "NO_CMAKE_SYSTEM_PATH",
-        "CMAKE_FIND_ROOT_PATH_BOTH",
-        "ONLY_CMAKE_FIND_ROOT_PATH",
-        "NO_CMAKE_FIND_ROOT_PATH",
-        "REQUIRED",
-        "NO_CMAKE_INSTALL_PREFIX",
-    ]
-    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
-    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
-
-
-class FindLibrary(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<VAR>", "name"]
-    options = [
-        "NAMES_PER_DIR",
-        "NO_DEFAULT_PATH",
-        "NO_PACKAGE_ROOT_PATH",
-        "NO_CMAKE_PATH",
-        "NO_CMAKE_ENVIRONMENT_PATH",
-        "NO_SYSTEM_ENVIRONMENT_PATH",
-        "NO_CMAKE_SYSTEM_PATH",
-        "CMAKE_FIND_ROOT_PATH_BOTH",
-        "ONLY_CMAKE_FIND_ROOT_PATH",
-        "NO_CMAKE_FIND_ROOT_PATH",
-        "REQUIRED",
-        "NO_CMAKE_INSTALL_PREFIX",
-    ]
-    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
-    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
-
-
-class FindPackage(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<PackageName>", "<version>"]
-    options = [
-        "EXACT",
-        "QUIET",
-        "MODULE",
-        "CONFIG",
-        "NO_MODULE",
-        "NO_POLICY_SCOPE",
-        "NO_DEFAULT_PATH",
-        "NO_PACKAGE_ROOT_PATH",
-        "NO_CMAKE_PATH",
-        "NO_CMAKE_ENVIRONMENT_PATH",
-        "NO_SYSTEM_ENVIRONMENT_PATH",
-        "NO_CMAKE_PACKAGE_REGISTRY",
-        "NO_CMAKE_BUILDS_PATH",
-        "NO_CMAKE_SYSTEM_PATH",
-        "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY",
-        "CMAKE_FIND_ROOT_PATH_BOTH",
-        "ONLY_CMAKE_FIND_ROOT_PATH",
-        "NO_CMAKE_FIND_ROOT_PATH",
-        "NO_CMAKE_INSTALL_PREFIX",
-        "GLOBAL",
-    ]
-    multi_value_keywords = [
-        "COMPONENTS",
-        "OPTIONAL_COMPONENTS",
-        "NAMES",
-        "CONFIGS",
-        "HINTS",
-        "PATHS",
-        "PATH_SUFFIXES",
-        "REQUIRED",
-    ]
-
-
-class FindPath(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<VAR>", "name"]
-    options = [
-        "NO_DEFAULT_PATH",
-        "NO_PACKAGE_ROOT_PATH",
-        "NO_CMAKE_PATH",
-        "NO_CMAKE_ENVIRONMENT_PATH",
-        "NO_SYSTEM_ENVIRONMENT_PATH",
-        "NO_CMAKE_SYSTEM_PATH",
-        "CMAKE_FIND_ROOT_PATH_BOTH",
-        "ONLY_CMAKE_FIND_ROOT_PATH",
-        "NO_CMAKE_FIND_ROOT_PATH",
-        "REQUIRED",
-        "NO_CMAKE_INSTALL_PREFIX",
-    ]
-    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
-    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
-
-
-class FindProgram(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<VAR>", "name"]
-    options = [
-        "NAMES_PER_DIR",
-        "NO_DEFAULT_PATH",
-        "NO_PACKAGE_ROOT_PATH",
-        "NO_CMAKE_PATH",
-        "NO_CMAKE_ENVIRONMENT_PATH",
-        "NO_SYSTEM_ENVIRONMENT_PATH",
-        "NO_CMAKE_SYSTEM_PATH",
-        "CMAKE_FIND_ROOT_PATH_BOTH",
-        "ONLY_CMAKE_FIND_ROOT_PATH",
-        "NO_CMAKE_FIND_ROOT_PATH",
-        "REQUIRED",
-        "NO_CMAKE_INSTALL_PREFIX",
-    ]
-    one_value_keywords = ["DOC", "ENV", "VALIDATOR"]
-    multi_value_keywords = ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"]
-
-
-class Foreach(ArgumentAwareCommandInvocationDumper):
-    inhibit_favour_expansion = True
-    front_positional_arguments = ["<loop_var>"]
-    options = ["IN"]
-    multi_value_keywords = ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"]
-
-
-class Function(ArgumentAwareCommandInvocationDumper):
-    inhibit_favour_expansion = True
-    front_positional_arguments = ["<name>"]
-
-
-class GetCMakeProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<var>", "<property>"]
-
-
-class GetDirectoryProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>"]
-    one_value_keywords = ["DIRECTORY", "DEFINITION"]
-
-
-class GetFilenameComponent(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = [
-        "<var>",
-        "<FileName>",
-        "<mode>",
-    ]
-    options = [
-        "DIRECTORY",
-        "NAME",
-        "EXT",
-        "NAME_WE",
-        "LAST_EXT",
-        "NAME_WLE",
-        "PATH",
-        "PROGRAM",
-        "CACHE",
-    ]
-    one_value_keywords = ["BASE_DIR", "PROGRAM_ARGS"]
-
-
-class GetProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>"]
-    options = ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"]
-    one_value_keywords = [
-        "TARGET",
-        "INSTALL",
-        "TEST",
-        "CACHE",
-        "PROPERTY",
-        "TARGET_DIRECTORY",
-        "SOURCE",
-    ]
-    multi_value_keywords = ["DIRECTORY"]
-
-
-class GetSourceFileProperty(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["DIRECTORY", "TARGET_DIRECTORY"]
-
-
-class Include(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<file|module>"]
-    options = ["OPTIONAL", "NO_POLICY_SCOPE"]
-    one_value_keywords = ["RESULT_VARIABLE"]
-
-
 class List(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         # Reading
@@ -760,52 +454,6 @@ class List(MultipleSignatureCommandInvocationDumper):
     }
 
 
-class Macro(ArgumentAwareCommandInvocationDumper):
-    inhibit_favour_expansion = True
-    front_positional_arguments = ["<name>"]
-
-
-class MarkAsAdvanced(ArgumentAwareCommandInvocationDumper):
-    options = ["CLEAR", "FORCE"]
-
-
-class Math(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["EXPR", "<variable>", "<expression>"]
-    one_value_keywords = ["OUTPUT_FORMAT"]
-
-
-class Message(ArgumentAwareCommandInvocationDumper):
-    options = [
-        "FATAL_ERROR",
-        "SEND_ERROR",
-        "WARNING",
-        "AUTHOR_WARNING",
-        "DEPRECATION",
-        "NOTICE",
-        "STATUS",
-        "VERBOSE",
-        "DEBUG",
-        "TRACE",
-        "CHECK_START",
-        "CHECK_PASS",
-        "CHECK_FAIL",
-        "CONFIGURE_LOG",
-    ]
-
-
-class Option(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>", "<help_text>", "<value>"]
-
-
-class Return(ArgumentAwareCommandInvocationDumper):
-    multi_value_keywords = ["PROPAGATE"]
-
-
-class SeparateArguments(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>", "<mode>"]
-    options = ["PROGRAM", "SEPARATE_ARGS"]
-
-
 class SetProperty(ArgumentAwareCommandInvocationDumper):
     options = ["GLOBAL", "APPEND", "APPEND_STRING"]
     multi_value_keywords = [
@@ -831,12 +479,6 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
         with self.indented():
             formatted_rest = "\n".join(map(self.visit, rest))
         return f"{self.visit(name)}\n{formatted_rest}"
-
-
-class Set(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>"]
-    options = ["PARENT_SCOPE", "FORCE"]
-    one_value_keywords = ["CACHE"]
 
 
 class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
@@ -970,64 +612,340 @@ class String(TwoWordKeywordIsolator, MultipleSignatureCommandInvocationDumper):
     }
 
 
-class SetDirectoryProperties(
-    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
-):
-    multi_value_keywords = ["PROPERTIES"]
-    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
-
-
-class Unset(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>"]
-    options = ["CACHE", "PARENT_SCOPE"]
-
-
 scripting_command_mapping = {
-    "block": Block,
-    "cmake_host_system_information": CMakeHostSysteInformation,
-    "cmake_language": CMakeLanguage,
-    "cmake_minimum_required": CMakeMinimumRequired,
+    "block": {
+        "inhibit_favour_expansion": True,
+        "multi_value_keywords": ["SCOPE_FOR", "PROPAGATE"],
+    },
+    "cmake_host_system_information": {
+        "two_words_keywords": [_QUERY_WINDOWS_REGISTRY],
+        "one_value_keywords": [
+            "RESULT",
+            _QUERY_WINDOWS_REGISTRY,
+            "VALUE_NAMES",
+            "SUBKEYS",
+            "VALUE",
+            "VIEW",
+            "SEPARATOR",
+            "ERROR_VARIABLE",
+        ],
+        "multi_value_keywords": ["QUERY"],
+    },
+    "cmake_language": {
+        "two_words_keywords": [_EVAL_CODE],
+        "one_value_keywords": [
+            "DIRECTORY",
+            "ID",
+            "ID_VAR",
+            "GET_CALL_IDS",
+            "GET_CALL",
+            "SET_DEPENDENCY_PROVIDER",
+            "GET_MESSAGE_LOG_LEVEL",
+            "EXIT",
+        ],
+        "multi_value_keywords": [
+            "DEFER",
+            "CALL",
+            "CANCEL_CALL",
+            "SUPPORTED_METHODS",
+            _EVAL_CODE,
+        ],
+    },
+    "cmake_minimum_required": {
+        "options": ["FATAL_ERROR"],
+        "one_value_keywords": ["VERSION"],
+    },
     "cmake_parse_arguments": CMakeParseArguments,
     "cmake_path": CMakePath,
-    "cmake_pkg_config": CMakePkgConfig,
+    "cmake_pkg_config": {
+        "options": ["REQUIRED", "EXACT", "QUIET"],
+        "one_value_keywords": [
+            "STRICTNESS",
+            "ENV_MODE",
+            "DISABLE_UNINSTALLED",
+            "PC_SYSROOT_DIR",
+            "TOP_BUILD_DIR",
+            "ALLOW_SYSTEM_INCLUDES",
+            "ALLOW_SYSTEM_LIBS",
+        ],
+        "multi_value_keywords": [
+            "EXTRACT",
+            "PC_LIBDIR",
+            "PC_PATH",
+            "SYSTEM_INCLUDE_DIRS",
+            "SYSTEM_LIBRARY_DIRS",
+        ],
+    },
     "cmake_policy": CMakePolicy,
-    "configure_file": ConfigureFile,
+    "configure_file": {
+        "front_positional_arguments": ["<input>", "<output>"],
+        "options": [
+            "COPYONLY",
+            "ESCAPE_QUOTES",
+            "@ONLY",
+            "NO_SOURCE_PERMISSIONS",
+            "USE_SOURCE_PERMISSIONS",
+        ],
+        "one_value_keywords": ["NEWLINE_STYLE"],
+        "multi_value_keywords": ["FILE_PERMISSIONS"],
+    },
     "elseif": ConditionSyntaxCommandInvocationDumper,
     "else": ConditionSyntaxCommandInvocationDumper,
     "endif": ConditionSyntaxCommandInvocationDumper,
-    "endblock": EndBlock,
-    "endforeach": EndForeach,
-    "endfunction": EndFunction,
-    "endmacro": EndMacro,
+    "endblock": {},
+    "endforeach": {},
+    "endfunction": {},
+    "endmacro": {},
     "endwhile": ConditionSyntaxCommandInvocationDumper,
-    "execute_process": ExecuteProcess,
+    "execute_process": {
+        "options": [
+            "OUTPUT_QUIET",
+            "ERROR_QUIET",
+            "OUTPUT_STRIP_TRAILING_WHITESPACE",
+            "ERROR_STRIP_TRAILING_WHITESPACE",
+            "ECHO_OUTPUT_VARIABLE",
+            "ECHO_ERROR_VARIABLE",
+        ],
+        "one_value_keywords": [
+            "WORKING_DIRECTORY",
+            "TIMEOUT",
+            "RESULT_VARIABLE",
+            "RESULTS_VARIABLE",
+            "OUTPUT_VARIABLE",
+            "ERROR_VARIABLE",
+            "INPUT_FILE",
+            "OUTPUT_FILE",
+            "ERROR_FILE",
+            "COMMAND_ECHO",
+            "ENCODING",
+            "COMMAND_ERROR_IS_FATAL",
+        ],
+        "multi_value_keywords": ["COMMAND"],
+        "keyword_formatters": {"COMMAND": "_format_command_line"},
+    },
     "file": File,
-    "find_file": FindFile,
-    "find_library": FindLibrary,
-    "find_package": FindPackage,
-    "find_path": FindPath,
-    "find_program": FindProgram,
-    "foreach": Foreach,
-    "function": Function,
-    "get_cmake_property": GetCMakeProperty,
-    "get_directory_property": GetDirectoryProperty,
-    "get_filename_component": GetFilenameComponent,
-    "get_property": GetProperty,
-    "get_source_file_property": GetSourceFileProperty,
+    "find_file": {
+        "front_positional_arguments": ["<VAR>", "name"],
+        "options": [
+            "NO_DEFAULT_PATH",
+            "NO_PACKAGE_ROOT_PATH",
+            "NO_CMAKE_PATH",
+            "NO_CMAKE_ENVIRONMENT_PATH",
+            "NO_SYSTEM_ENVIRONMENT_PATH",
+            "NO_CMAKE_SYSTEM_PATH",
+            "CMAKE_FIND_ROOT_PATH_BOTH",
+            "ONLY_CMAKE_FIND_ROOT_PATH",
+            "NO_CMAKE_FIND_ROOT_PATH",
+            "REQUIRED",
+            "NO_CMAKE_INSTALL_PREFIX",
+        ],
+        "one_value_keywords": ["DOC", "ENV", "VALIDATOR"],
+        "multi_value_keywords": ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"],
+    },
+    "find_library": {
+        "front_positional_arguments": ["<VAR>", "name"],
+        "options": [
+            "NAMES_PER_DIR",
+            "NO_DEFAULT_PATH",
+            "NO_PACKAGE_ROOT_PATH",
+            "NO_CMAKE_PATH",
+            "NO_CMAKE_ENVIRONMENT_PATH",
+            "NO_SYSTEM_ENVIRONMENT_PATH",
+            "NO_CMAKE_SYSTEM_PATH",
+            "CMAKE_FIND_ROOT_PATH_BOTH",
+            "ONLY_CMAKE_FIND_ROOT_PATH",
+            "NO_CMAKE_FIND_ROOT_PATH",
+            "REQUIRED",
+            "NO_CMAKE_INSTALL_PREFIX",
+        ],
+        "one_value_keywords": ["DOC", "ENV", "VALIDATOR"],
+        "multi_value_keywords": ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"],
+    },
+    "find_package": {
+        "front_positional_arguments": ["<PackageName>", "<version>"],
+        "options": [
+            "EXACT",
+            "QUIET",
+            "MODULE",
+            "CONFIG",
+            "NO_MODULE",
+            "NO_POLICY_SCOPE",
+            "NO_DEFAULT_PATH",
+            "NO_PACKAGE_ROOT_PATH",
+            "NO_CMAKE_PATH",
+            "NO_CMAKE_ENVIRONMENT_PATH",
+            "NO_SYSTEM_ENVIRONMENT_PATH",
+            "NO_CMAKE_PACKAGE_REGISTRY",
+            "NO_CMAKE_BUILDS_PATH",
+            "NO_CMAKE_SYSTEM_PATH",
+            "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY",
+            "CMAKE_FIND_ROOT_PATH_BOTH",
+            "ONLY_CMAKE_FIND_ROOT_PATH",
+            "NO_CMAKE_FIND_ROOT_PATH",
+            "NO_CMAKE_INSTALL_PREFIX",
+            "GLOBAL",
+        ],
+        "multi_value_keywords": [
+            "COMPONENTS",
+            "OPTIONAL_COMPONENTS",
+            "NAMES",
+            "CONFIGS",
+            "HINTS",
+            "PATHS",
+            "PATH_SUFFIXES",
+            "REQUIRED",
+        ],
+    },
+    "find_path": {
+        "front_positional_arguments": ["<VAR>", "name"],
+        "options": [
+            "NO_DEFAULT_PATH",
+            "NO_PACKAGE_ROOT_PATH",
+            "NO_CMAKE_PATH",
+            "NO_CMAKE_ENVIRONMENT_PATH",
+            "NO_SYSTEM_ENVIRONMENT_PATH",
+            "NO_CMAKE_SYSTEM_PATH",
+            "CMAKE_FIND_ROOT_PATH_BOTH",
+            "ONLY_CMAKE_FIND_ROOT_PATH",
+            "NO_CMAKE_FIND_ROOT_PATH",
+            "REQUIRED",
+            "NO_CMAKE_INSTALL_PREFIX",
+        ],
+        "one_value_keywords": ["DOC", "ENV", "VALIDATOR"],
+        "multi_value_keywords": ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"],
+    },
+    "find_program": {
+        "front_positional_arguments": ["<VAR>", "name"],
+        "options": [
+            "NAMES_PER_DIR",
+            "NO_DEFAULT_PATH",
+            "NO_PACKAGE_ROOT_PATH",
+            "NO_CMAKE_PATH",
+            "NO_CMAKE_ENVIRONMENT_PATH",
+            "NO_SYSTEM_ENVIRONMENT_PATH",
+            "NO_CMAKE_SYSTEM_PATH",
+            "CMAKE_FIND_ROOT_PATH_BOTH",
+            "ONLY_CMAKE_FIND_ROOT_PATH",
+            "NO_CMAKE_FIND_ROOT_PATH",
+            "REQUIRED",
+            "NO_CMAKE_INSTALL_PREFIX",
+        ],
+        "one_value_keywords": ["DOC", "ENV", "VALIDATOR"],
+        "multi_value_keywords": ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"],
+    },
+    "foreach": {
+        "inhibit_favour_expansion": True,
+        "front_positional_arguments": ["<loop_var>"],
+        "options": ["IN"],
+        "multi_value_keywords": ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"],
+    },
+    "function": {
+        "inhibit_favour_expansion": True,
+        "front_positional_arguments": ["<name>"],
+    },
+    "get_cmake_property": {
+        "front_positional_arguments": ["<var>", "<property>"],
+    },
+    "get_directory_property": {
+        "front_positional_arguments": ["<variable>"],
+        "one_value_keywords": ["DIRECTORY", "DEFINITION"],
+    },
+    "get_filename_component": {
+        "front_positional_arguments": [
+            "<var>",
+            "<FileName>",
+            "<mode>",
+        ],
+        "options": [
+            "DIRECTORY",
+            "NAME",
+            "EXT",
+            "NAME_WE",
+            "LAST_EXT",
+            "NAME_WLE",
+            "PATH",
+            "PROGRAM",
+            "CACHE",
+        ],
+        "one_value_keywords": ["BASE_DIR", "PROGRAM_ARGS"],
+    },
+    "get_property": {
+        "front_positional_arguments": ["<variable>"],
+        "options": ["GLOBAL", "VARIABLE", "SET", "DEFINED", "BRIEF_DOCS", "FULL_DOCS"],
+        "one_value_keywords": [
+            "TARGET",
+            "INSTALL",
+            "TEST",
+            "CACHE",
+            "PROPERTY",
+            "TARGET_DIRECTORY",
+            "SOURCE",
+        ],
+        "multi_value_keywords": ["DIRECTORY"],
+    },
+    "get_source_file_property": {
+        "one_value_keywords": ["DIRECTORY", "TARGET_DIRECTORY"],
+    },
     "if": ConditionSyntaxCommandInvocationDumper,
-    "include": Include,
+    "include": {
+        "front_positional_arguments": ["<file|module>"],
+        "options": ["OPTIONAL", "NO_POLICY_SCOPE"],
+        "one_value_keywords": ["RESULT_VARIABLE"],
+    },
     "list": List,
-    "macro": Macro,
-    "mark_as_advanced": MarkAsAdvanced,
-    "math": Math,
-    "message": Message,
-    "option": Option,
-    "return": Return,
-    "separate_arguments": SeparateArguments,
-    "set_directory_properties": SetDirectoryProperties,
+    "macro": {
+        "inhibit_favour_expansion": True,
+        "front_positional_arguments": ["<name>"],
+    },
+    "mark_as_advanced": {
+        "options": ["CLEAR", "FORCE"],
+    },
+    "math": {
+        "front_positional_arguments": ["EXPR", "<variable>", "<expression>"],
+        "one_value_keywords": ["OUTPUT_FORMAT"],
+    },
+    "message": {
+        "options": [
+            "FATAL_ERROR",
+            "SEND_ERROR",
+            "WARNING",
+            "AUTHOR_WARNING",
+            "DEPRECATION",
+            "NOTICE",
+            "STATUS",
+            "VERBOSE",
+            "DEBUG",
+            "TRACE",
+            "CHECK_START",
+            "CHECK_PASS",
+            "CHECK_FAIL",
+            "CONFIGURE_LOG",
+        ],
+    },
+    "option": {
+        "front_positional_arguments": ["<variable>", "<help_text>", "<value>"],
+    },
+    "return": {
+        "multi_value_keywords": ["PROPAGATE"],
+    },
+    "separate_arguments": {
+        "front_positional_arguments": ["<variable>", "<mode>"],
+        "options": ["PROGRAM", "SEPARATE_ARGS"],
+    },
+    "set_directory_properties": {
+        "multi_value_keywords": ["PROPERTIES"],
+        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+    },
     "set_property": SetProperty,
-    "set": Set,
+    "set": {
+        "front_positional_arguments": ["<variable>"],
+        "options": ["PARENT_SCOPE", "FORCE"],
+        "one_value_keywords": ["CACHE"],
+    },
     "string": String,
-    "unset": Unset,
+    "unset": {
+        "front_positional_arguments": ["<variable>"],
+        "options": ["CACHE", "PARENT_SCOPE"],
+    },
     "while": ConditionSyntaxCommandInvocationDumper,
 }

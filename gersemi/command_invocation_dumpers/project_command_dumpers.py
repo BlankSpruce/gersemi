@@ -1,6 +1,5 @@
 from typing import Iterable, List, Mapping
 from gersemi.command_line_formatter import CommandLineFormatter
-from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from gersemi.keywords import AnyMatcher, KeywordMatcher
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
@@ -78,58 +77,6 @@ class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper
         return super().positional_arguments(tree)
 
 
-class AddDependencies(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-
-
-class AddExecutable(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
-    two_words_keywords = [("IMPORTED", "GLOBAL")]
-    front_positional_arguments = ["<name>"]
-    options = [
-        "WIN32",
-        "MACOSX_BUNDLE",
-        "EXCLUDE_FROM_ALL",
-        "IMPORTED",
-        ("IMPORTED", "GLOBAL"),
-    ]
-    one_value_keywords = ["ALIAS"]
-
-
-class AddLibrary(TwoWordKeywordIsolator, ArgumentAwareCommandInvocationDumper):
-    two_words_keywords = [("IMPORTED", "GLOBAL")]
-    front_positional_arguments = ["<name>"]
-    options = [
-        "STATIC",
-        "SHARED",
-        "MODULE",
-        "EXCLUDE_FROM_ALL",
-        "OBJECT",
-        "IMPORTED",
-        ("IMPORTED", "GLOBAL"),
-        "UNKNOWN",
-        "INTERFACE",
-    ]
-    one_value_keywords = ["ALIAS"]
-
-
-class AddSubdirectory(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["source_dir", "binary_dir"]
-    options = ["EXCLUDE_FROM_ALL", "SYSTEM"]
-
-
-class AddTest(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<name>", "<command>"]
-    options = ["COMMAND_EXPAND_LISTS"]
-    one_value_keywords = ["NAME", "WORKING_DIRECTORY"]
-    multi_value_keywords = ["COMMAND", "CONFIGURATIONS"]
-    keyword_formatters = {"COMMAND": "_format_command_line"}
-
-
-class BuildCommand(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>"]
-    one_value_keywords = ["CONFIGURATION", "TARGET", "PROJECT_NAME", "PARALLEL_LEVEL"]
-
-
 class CMakeFileApi(MultipleSignatureCommandInvocationDumper):
     customized_signatures = {
         "QUERY": dict(
@@ -138,26 +85,6 @@ class CMakeFileApi(MultipleSignatureCommandInvocationDumper):
             multi_value_keywords=["CODEMODEL", "CACHE", "CMAKEFILES", "TOOLCHAINS"],
         ),
     }
-
-
-class CreateTestSourcelist(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["sourceListName", "driverName"]
-    one_value_keywords = ["EXTRA_INCLUDE", "FUNCTION"]
-
-
-class DefineProperty(ArgumentAwareCommandInvocationDumper):
-    options = [
-        "GLOBAL",
-        "DIRECTORY",
-        "TARGET",
-        "SOURCE",
-        "TEST",
-        "VARIABLE",
-        "CACHED_VARIABLE",
-        "INHERITED",
-    ]
-    one_value_keywords = ["PROPERTY", "INITIALIZE_FROM_VARIABLE"]
-    multi_value_keywords = ["BRIEF_DOCS", "FULL_DOCS"]
 
 
 class Export(
@@ -190,34 +117,6 @@ class Export(
             ),
         ),
     }
-
-
-class FtlkWrapUi(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["resultingLibraryName"]
-
-
-class GetSourceFileProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<variable>", "<file>"]
-    back_positional_arguments = ["<property>"]
-    one_value_keywords = ["DIRECTORY", "TARGET_DIRECTORY"]
-
-
-class GetTargetProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<VAR>", "target", "property"]
-
-
-class GetTestProperty(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["test", "property"]
-    one_value_keywords = ["DIRECTORY"]
-
-
-class IncludeDirectories(ArgumentAwareCommandInvocationDumper):
-    options = ["AFTER", "BEFORE", "SYSTEM"]
-
-
-class IncludeExternalMsProject(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["projectname", "location"]
-    one_value_keywords = ["TYPE", "GUID", "PLATFORM"]
 
 
 _INCLUDES_DESTINATION = ("INCLUDES", "DESTINATION")
@@ -424,60 +323,6 @@ class Install(
     }
 
 
-class LinkDirectories(ArgumentAwareCommandInvocationDumper):
-    options = ["AFTER", "BEFORE"]
-
-
-class LinkLibraries(ArgumentAwareCommandInvocationDumper):
-    one_value_keywords = ["debug", "optimized", "general"]
-
-
-class LoadCache(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["pathToBuildDirectory"]
-    one_value_keywords = ["READ_WITH_PREFIX"]
-    multi_value_keywords = ["EXCLUDE", "INCLUDE_INTERNALS"]
-
-
-class Project(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<PROJECT-NAME>"]
-    one_value_keywords = ["VERSION", "DESCRIPTION", "HOMEPAGE_URL"]
-    multi_value_keywords = ["LANGUAGES"]
-
-
-class SourceGroup(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<name>"]
-    one_value_keywords = ["REGULAR_EXPRESSION", "TREE", "PREFIX"]
-    multi_value_keywords = ["FILES"]
-
-
-class TargetCompileDefinitions(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
-class TargetCompileFeatures(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
-class TargetCompileOptions(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    options = ["BEFORE"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
-class TargetIncludeDirectories(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    options = ["BEFORE", "SYSTEM", "AFTER"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
-class TargetLinkDirectories(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    options = ["BEFORE"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
 _debug_optimized_general: Mapping[KeywordMatcher, Iterable[KeywordMatcher]] = {
     "one_value_keywords": ["debug", "optimized", "general"]
 }
@@ -505,18 +350,6 @@ class TargetLinkLibraries(
     }
 
 
-class TargetLinkOptions(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    options = ["BEFORE"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
-class TargetPrecompileHeaders(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = ["<target>"]
-    one_value_keywords = ["REUSE_FROM"]
-    multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
-
-
 class TargetSources(SectionAwareCommandInvocationDumper):
     front_positional_arguments = ["<target>"]
     multi_value_keywords = ["INTERFACE", "PUBLIC", "PRIVATE"]
@@ -536,161 +369,266 @@ class TargetSources(SectionAwareCommandInvocationDumper):
     }
 
 
-class TryCompile(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = [
-        "<compileResultVar>",
-        "<bindir>",
-        "<srcdir>",  # or "<srcfile>"
-        "<projectName>",
-        "<targetName>",
-    ]
-    options = ["NO_CACHE", "NO_LOG"]
-    one_value_keywords = [
-        "OUTPUT_VARIABLE",
-        "COPY_FILE",
-        "COPY_FILE_ERROR",
-        "C_STANDARD",
-        "C_STANDARD_REQUIRED",
-        "C_EXTENSIONS",
-        "CXX_STANDARD",
-        "CXX_STANDARD_REQUIRED",
-        "CXX_EXTENSIONS",
-        "OBJC_STANDARD",
-        "OBJC_STANDARD_REQUIRED",
-        "OBJC_EXTENSIONS",
-        "OBJCXX_STANDARD",
-        "OBJCXX_STANDARD_REQUIRED",
-        "OBJCXX_EXTENSIONS",
-        "CUDA_STANDARD",
-        "CUDA_STANDARD_REQUIRED",
-        "CUDA_EXTENSIONS",
-        "PROJECT",
-        "SOURCE_DIR",
-        "BINARY_DIR",
-        "TARGET",
-        "LOG_DESCRIPTION",
-        "SOURCES_TYPE",
-        "LINKER_LANGUAGE",
-    ]
-    multi_value_keywords = [
-        "SOURCES",
-        "CMAKE_FLAGS",
-        "COMPILE_DEFINITIONS",
-        "LINK_OPTIONS",
-        "LINK_LIBRARIES",
-        "SOURCE_FROM_CONTENT",
-        "SOURCE_FROM_VAR",
-        "SOURCE_FROM_FILE",
-    ]
-
-
-class TryRun(ArgumentAwareCommandInvocationDumper):
-    front_positional_arguments = [
-        "<runResultVar>",
-        "<compileResultVar>",
-        "<bindir>",
-        "<srcfile>",
-    ]
-    options = ["NO_CACHE", "NO_LOG"]
-    one_value_keywords = [
-        "COMPILE_OUTPUT_VARIABLE",
-        "RUN_OUTPUT_VARIABLE",
-        "OUTPUT_VARIABLE",
-        "WORKING_DIRECTORY",
-        "COPY_FILE",
-        "COPY_FILE_ERROR",
-        "C_STANDARD",
-        "C_STANDARD_REQUIRED",
-        "C_EXTENSIONS",
-        "CXX_STANDARD",
-        "CXX_STANDARD_REQUIRED",
-        "CXX_EXTENSIONS",
-        "OBJC_STANDARD",
-        "OBJC_STANDARD_REQUIRED",
-        "OBJC_EXTENSIONS",
-        "OBJCXX_STANDARD",
-        "OBJCXX_STANDARD_REQUIRED",
-        "OBJCXX_EXTENSIONS",
-        "CUDA_STANDARD",
-        "CUDA_STANDARD_REQUIRED",
-        "CUDA_EXTENSIONS",
-        "RUN_OUTPUT_VARIABLE",
-        "RUN_OUTPUT_STDOUT_VARIABLE",
-        "RUN_OUTPUT_STDERR_VARIABLE",
-        "LOG_DESCRIPTION",
-    ]
-    multi_value_keywords = [
-        "CMAKE_FLAGS",
-        "COMPILE_DEFINITIONS",
-        "LINK_OPTIONS",
-        "LINK_LIBRARIES",
-        "ARGS",
-        "SOURCES",
-        "SOURCE_FROM_CONTENT",
-        "SOURCE_FROM_VAR",
-        "SOURCE_FROM_FILE",
-    ]
-
-
-class SetSourceFilesProperties(
-    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
-):
-    multi_value_keywords = ["PROPERTIES", "DIRECTORY", "TARGET_DIRECTORY"]
-    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
-
-
-class SetTargetProperties(
-    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
-):
-    multi_value_keywords = ["PROPERTIES"]
-    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
-
-
-class SetTestsProperties(
-    KeywordWithPairsFormatter, ArgumentAwareCommandInvocationDumper
-):
-    one_value_keywords = ["DIRECTORY"]
-    multi_value_keywords = ["PROPERTIES"]
-    keyword_formatters = {"PROPERTIES": "_format_keyword_with_pairs"}
-
-
 project_command_mapping = {
     "add_custom_command": AddCustomCommand,
     "add_custom_target": AddCustomTarget,
-    "add_dependencies": AddDependencies,
-    "add_executable": AddExecutable,
-    "add_library": AddLibrary,
-    "add_subdirectory": AddSubdirectory,
-    "add_test": AddTest,
-    "build_command": BuildCommand,
+    "add_dependencies": {
+        "front_positional_arguments": ["<target>"],
+    },
+    "add_executable": {
+        "two_words_keywords": [("IMPORTED", "GLOBAL")],
+        "front_positional_arguments": ["<name>"],
+        "options": [
+            "WIN32",
+            "MACOSX_BUNDLE",
+            "EXCLUDE_FROM_ALL",
+            "IMPORTED",
+            ("IMPORTED", "GLOBAL"),
+        ],
+        "one_value_keywords": ["ALIAS"],
+    },
+    "add_library": {
+        "two_words_keywords": [("IMPORTED", "GLOBAL")],
+        "front_positional_arguments": ["<name>"],
+        "options": [
+            "STATIC",
+            "SHARED",
+            "MODULE",
+            "EXCLUDE_FROM_ALL",
+            "OBJECT",
+            "IMPORTED",
+            ("IMPORTED", "GLOBAL"),
+            "UNKNOWN",
+            "INTERFACE",
+        ],
+        "one_value_keywords": ["ALIAS"],
+    },
+    "add_subdirectory": {
+        "front_positional_arguments": ["source_dir", "binary_dir"],
+        "options": ["EXCLUDE_FROM_ALL", "SYSTEM"],
+    },
+    "add_test": {
+        "front_positional_arguments": ["<name>", "<command>"],
+        "options": ["COMMAND_EXPAND_LISTS"],
+        "one_value_keywords": ["NAME", "WORKING_DIRECTORY"],
+        "multi_value_keywords": ["COMMAND", "CONFIGURATIONS"],
+        "keyword_formatters": {"COMMAND": "_format_command_line"},
+    },
+    "build_command": {
+        "front_positional_arguments": ["<variable>"],
+        "one_value_keywords": [
+            "CONFIGURATION",
+            "TARGET",
+            "PROJECT_NAME",
+            "PARALLEL_LEVEL",
+        ],
+    },
     "cmake_file_api": CMakeFileApi,
-    "create_test_sourcelist": CreateTestSourcelist,
-    "define_property": DefineProperty,
+    "create_test_sourcelist": {
+        "front_positional_arguments": ["sourceListName", "driverName"],
+        "one_value_keywords": ["EXTRA_INCLUDE", "FUNCTION"],
+    },
+    "define_property": {
+        "options": [
+            "GLOBAL",
+            "DIRECTORY",
+            "TARGET",
+            "SOURCE",
+            "TEST",
+            "VARIABLE",
+            "CACHED_VARIABLE",
+            "INHERITED",
+        ],
+        "one_value_keywords": ["PROPERTY", "INITIALIZE_FROM_VARIABLE"],
+        "multi_value_keywords": ["BRIEF_DOCS", "FULL_DOCS"],
+    },
     "export": Export,
-    "fltk_wrap_ui": FtlkWrapUi,
-    "get_source_file_property": GetSourceFileProperty,
-    "get_target_property": GetTargetProperty,
-    "get_test_property": GetTestProperty,
-    "include_directories": IncludeDirectories,
-    "include_external_msproject": IncludeExternalMsProject,
+    "fltk_wrap_ui": {
+        "front_positional_arguments": ["resultingLibraryName"],
+    },
+    "get_source_file_property": {
+        "front_positional_arguments": ["<variable>", "<file>"],
+        "back_positional_arguments": ["<property>"],
+        "one_value_keywords": ["DIRECTORY", "TARGET_DIRECTORY"],
+    },
+    "get_target_property": {
+        "front_positional_arguments": ["<VAR>", "target", "property"],
+    },
+    "get_test_property": {
+        "front_positional_arguments": ["test", "property"],
+        "one_value_keywords": ["DIRECTORY"],
+    },
+    "include_directories": {
+        "options": ["AFTER", "BEFORE", "SYSTEM"],
+    },
+    "include_external_msproject": {
+        "front_positional_arguments": ["projectname", "location"],
+        "one_value_keywords": ["TYPE", "GUID", "PLATFORM"],
+    },
     "install": Install,
-    "link_directories": LinkDirectories,
-    "link_libraries": LinkLibraries,
-    "load_cache": LoadCache,
-    "project": Project,
-    "source_group": SourceGroup,
-    "set_source_files_properties": SetSourceFilesProperties,
-    "set_target_properties": SetTargetProperties,
-    "set_tests_properties": SetTestsProperties,
-    "target_compile_definitions": TargetCompileDefinitions,
-    "target_compile_features": TargetCompileFeatures,
-    "target_compile_options": TargetCompileOptions,
-    "target_include_directories": TargetIncludeDirectories,
-    "target_link_directories": TargetLinkDirectories,
+    "link_directories": {
+        "options": ["AFTER", "BEFORE"],
+    },
+    "link_libraries": {
+        "one_value_keywords": ["debug", "optimized", "general"],
+    },
+    "load_cache": {
+        "front_positional_arguments": ["pathToBuildDirectory"],
+        "one_value_keywords": ["READ_WITH_PREFIX"],
+        "multi_value_keywords": ["EXCLUDE", "INCLUDE_INTERNALS"],
+    },
+    "project": {
+        "front_positional_arguments": ["<PROJECT-NAME>"],
+        "one_value_keywords": ["VERSION", "DESCRIPTION", "HOMEPAGE_URL"],
+        "multi_value_keywords": ["LANGUAGES"],
+    },
+    "source_group": {
+        "front_positional_arguments": ["<name>"],
+        "one_value_keywords": ["REGULAR_EXPRESSION", "TREE", "PREFIX"],
+        "multi_value_keywords": ["FILES"],
+    },
+    "set_source_files_properties": {
+        "multi_value_keywords": ["PROPERTIES", "DIRECTORY", "TARGET_DIRECTORY"],
+        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+    },
+    "set_target_properties": {
+        "multi_value_keywords": ["PROPERTIES"],
+        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+    },
+    "set_tests_properties": {
+        "one_value_keywords": ["DIRECTORY"],
+        "multi_value_keywords": ["PROPERTIES"],
+        "keyword_formatters": {
+            "PROPERTIES": "_format_keyword_with_pairs",
+        },
+    },
+    "target_compile_definitions": {
+        "front_positional_arguments": ["<target>"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
+    "target_compile_features": {
+        "front_positional_arguments": ["<target>"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
+    "target_compile_options": {
+        "front_positional_arguments": ["<target>"],
+        "options": ["BEFORE"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
+    "target_include_directories": {
+        "front_positional_arguments": ["<target>"],
+        "options": ["BEFORE", "SYSTEM", "AFTER"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
+    "target_link_directories": {
+        "front_positional_arguments": ["<target>"],
+        "options": ["BEFORE"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
     "target_link_libraries": TargetLinkLibraries,
-    "target_link_options": TargetLinkOptions,
-    "target_precompile_headers": TargetPrecompileHeaders,
+    "target_link_options": {
+        "front_positional_arguments": ["<target>"],
+        "options": ["BEFORE"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
+    "target_precompile_headers": {
+        "front_positional_arguments": ["<target>"],
+        "one_value_keywords": ["REUSE_FROM"],
+        "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
+    },
     "target_sources": TargetSources,
-    "try_compile": TryCompile,
-    "try_run": TryRun,
+    "try_compile": {
+        "front_positional_arguments": [
+            "<compileResultVar>",
+            "<bindir>",
+            "<srcdir>",  # or "<srcfile>"
+            "<projectName>",
+            "<targetName>",
+        ],
+        "options": ["NO_CACHE", "NO_LOG"],
+        "one_value_keywords": [
+            "OUTPUT_VARIABLE",
+            "COPY_FILE",
+            "COPY_FILE_ERROR",
+            "C_STANDARD",
+            "C_STANDARD_REQUIRED",
+            "C_EXTENSIONS",
+            "CXX_STANDARD",
+            "CXX_STANDARD_REQUIRED",
+            "CXX_EXTENSIONS",
+            "OBJC_STANDARD",
+            "OBJC_STANDARD_REQUIRED",
+            "OBJC_EXTENSIONS",
+            "OBJCXX_STANDARD",
+            "OBJCXX_STANDARD_REQUIRED",
+            "OBJCXX_EXTENSIONS",
+            "CUDA_STANDARD",
+            "CUDA_STANDARD_REQUIRED",
+            "CUDA_EXTENSIONS",
+            "PROJECT",
+            "SOURCE_DIR",
+            "BINARY_DIR",
+            "TARGET",
+            "LOG_DESCRIPTION",
+            "SOURCES_TYPE",
+            "LINKER_LANGUAGE",
+        ],
+        "multi_value_keywords": [
+            "SOURCES",
+            "CMAKE_FLAGS",
+            "COMPILE_DEFINITIONS",
+            "LINK_OPTIONS",
+            "LINK_LIBRARIES",
+            "SOURCE_FROM_CONTENT",
+            "SOURCE_FROM_VAR",
+            "SOURCE_FROM_FILE",
+        ],
+    },
+    "try_run": {
+        "front_positional_arguments": [
+            "<runResultVar>",
+            "<compileResultVar>",
+            "<bindir>",
+            "<srcfile>",
+        ],
+        "options": ["NO_CACHE", "NO_LOG"],
+        "one_value_keywords": [
+            "COMPILE_OUTPUT_VARIABLE",
+            "RUN_OUTPUT_VARIABLE",
+            "OUTPUT_VARIABLE",
+            "WORKING_DIRECTORY",
+            "COPY_FILE",
+            "COPY_FILE_ERROR",
+            "C_STANDARD",
+            "C_STANDARD_REQUIRED",
+            "C_EXTENSIONS",
+            "CXX_STANDARD",
+            "CXX_STANDARD_REQUIRED",
+            "CXX_EXTENSIONS",
+            "OBJC_STANDARD",
+            "OBJC_STANDARD_REQUIRED",
+            "OBJC_EXTENSIONS",
+            "OBJCXX_STANDARD",
+            "OBJCXX_STANDARD_REQUIRED",
+            "OBJCXX_EXTENSIONS",
+            "CUDA_STANDARD",
+            "CUDA_STANDARD_REQUIRED",
+            "CUDA_EXTENSIONS",
+            "RUN_OUTPUT_VARIABLE",
+            "RUN_OUTPUT_STDOUT_VARIABLE",
+            "RUN_OUTPUT_STDERR_VARIABLE",
+            "LOG_DESCRIPTION",
+        ],
+        "multi_value_keywords": [
+            "CMAKE_FLAGS",
+            "COMPILE_DEFINITIONS",
+            "LINK_OPTIONS",
+            "LINK_LIBRARIES",
+            "ARGS",
+            "SOURCES",
+            "SOURCE_FROM_CONTENT",
+            "SOURCE_FROM_VAR",
+            "SOURCE_FROM_FILE",
+        ],
+    },
 }

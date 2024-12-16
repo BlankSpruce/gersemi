@@ -21,6 +21,9 @@ from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper imp
 from gersemi.command_invocation_dumpers.specialized_dumpers import (
     create_specialized_dumper,
 )
+from gersemi.command_invocation_dumpers.standard_command_dumper import (
+    create_standard_dumper,
+)
 from gersemi.keywords import Keywords
 
 
@@ -66,9 +69,11 @@ class CommandInvocationDumper(
             canonical_name = BUILTIN_COMMANDS[command_name]
 
             if command_name in BUILTIN_COMMAND_DUMPERS:
-                return add_canonical_name(
-                    BUILTIN_COMMAND_DUMPERS[command_name], canonical_name
-                )
+                dumper = BUILTIN_COMMAND_DUMPERS[command_name]
+                if isinstance(dumper, dict):
+                    dumper = create_standard_dumper(dumper)
+
+                return add_canonical_name(dumper, canonical_name)
 
             return create_specialized_dumper(canonical_name, (), Keywords())
 
