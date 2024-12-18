@@ -181,3 +181,16 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
             formatted_arguments = self.visit(arguments)
         end = self._indent(")")
         return f"{begin}{formatted_arguments}\n{end}"
+
+
+condition_syntax_commands = {
+    key: ConditionSyntaxCommandInvocationDumper
+    for key in (
+        "elseif",
+        "else",
+        "endif",
+        "endwhile",
+        "if",
+        "while",
+    )
+}

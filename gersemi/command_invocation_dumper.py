@@ -3,36 +3,17 @@ from functools import lru_cache
 from lark import Tree
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.builtin_commands import BUILTIN_COMMANDS
-from gersemi.command_invocation_dumpers.ctest_command_dumpers import (
-    ctest_command_mapping,
-)
-from gersemi.command_invocation_dumpers.module_command_dumpers import (
-    module_command_mapping,
-)
-from gersemi.command_invocation_dumpers.scripting_command_dumpers import (
-    scripting_command_mapping,
-)
-from gersemi.command_invocation_dumpers.project_command_dumpers import (
-    project_command_mapping,
-)
-from gersemi.command_invocation_dumpers.preserving_command_invocation_dumper import (
+from gersemi.official_commands import official_commands
+from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
-from gersemi.command_invocation_dumpers.specialized_dumpers import (
+from gersemi.specializations.specialized_dumpers import (
     create_specialized_dumper,
 )
-from gersemi.command_invocation_dumpers.standard_command_dumper import (
+from gersemi.specializations.standard_command_dumper import (
     create_standard_dumper,
 )
 from gersemi.keywords import Keywords
-
-
-BUILTIN_COMMAND_DUMPERS = {
-    **scripting_command_mapping,
-    **project_command_mapping,
-    **ctest_command_mapping,
-    **module_command_mapping,
-}
 
 
 @lru_cache(maxsize=None)
@@ -68,8 +49,8 @@ class CommandInvocationDumper(
         if command_name in BUILTIN_COMMANDS:
             canonical_name = BUILTIN_COMMANDS[command_name]
 
-            if command_name in BUILTIN_COMMAND_DUMPERS:
-                dumper = BUILTIN_COMMAND_DUMPERS[command_name]
+            if command_name in official_commands:
+                dumper = official_commands[command_name]
                 if isinstance(dumper, dict):
                     dumper = create_standard_dumper(dumper)
 

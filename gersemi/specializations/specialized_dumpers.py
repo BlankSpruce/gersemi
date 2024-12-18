@@ -1,12 +1,12 @@
 from enum import Enum
 from typing import Sequence
 from lark import Tree
-from gersemi.command_invocation_dumpers.argument_aware_command_invocation_dumper import (
-    ArgumentAwareCommandInvocationDumper,
-)
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from gersemi.keywords import Keywords
+from gersemi.specializations.argument_aware_command_invocation_dumper import (
+    ArgumentAwareCommandInvocationDumper,
+)
 
 
 class HintKind(Enum):
