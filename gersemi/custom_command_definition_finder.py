@@ -1,3 +1,4 @@
+from enum import Enum
 import yaml
 from lark import Discard
 from lark.visitors import Interpreter, Transformer
@@ -191,10 +192,37 @@ def find_custom_command_definitions(tree, filepath="---"):
     return CMakeInterpreter(filepath).visit(tree)
 
 
+class HintKind(Enum):
+    CommandLine = "command_line"
+    Pairs = "pairs"
+
+
+def kind_to_function(kind: str) -> str:
+    kind_enum = HintKind(kind) if kind in [e.value for e in HintKind] else None
+    return {
+        HintKind.Pairs: "_format_keyword_with_pairs",
+        HintKind.CommandLine: "_format_command_line",
+        None: "_default_format_values",
+    }[kind_enum]
+
+
+def create_command(canonical_name, positional_arguments, keywords):
+    return {
+        "canonical_name": canonical_name,
+        "front_positional_arguments": positional_arguments,
+        "options": keywords.options,
+        "one_value_keywords": keywords.one_value_keywords,
+        "multi_value_keywords": keywords.multi_value_keywords,
+        "keyword_formatters": {
+            hint.keyword: kind_to_function(hint.kind) for hint in keywords.hints
+        },
+    }
+
+
 def get_just_definitions(definitions):
     result = {}
     for name, info in definitions.items():
         sorted_info = list(sorted(info, key=lambda item: item[1]))
-        (canonical_name, arguments), _ = sorted_info[0]
-        result[name] = canonical_name, arguments
+        (canonical_name, (positional_arguments, keywords)), _ = sorted_info[0]
+        result[name] = create_command(canonical_name, positional_arguments, keywords)
     return result

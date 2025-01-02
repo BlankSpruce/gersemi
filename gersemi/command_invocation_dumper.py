@@ -6,9 +6,6 @@ from gersemi.builtin_commands import builtin_commands
 from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
-from gersemi.specializations.specialized_dumpers import (
-    create_specialized_dumper,
-)
 from gersemi.specializations.standard_command_dumper import (
     create_standard_dumper,
 )
@@ -45,8 +42,8 @@ class CommandInvocationDumper(
             return command
 
         if command_name in self.custom_command_definitions:
-            canonical_name, arguments = self.custom_command_definitions[command_name]
-            return create_specialized_dumper(canonical_name, *arguments)
+            command = self.custom_command_definitions[command_name]
+            return create_standard_dumper(command, custom_command=True)
 
         return None
 

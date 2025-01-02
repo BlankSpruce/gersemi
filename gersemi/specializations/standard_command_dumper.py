@@ -1,3 +1,4 @@
+from lark import Tree
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
@@ -10,7 +11,13 @@ from .section_aware_command_invocation_dumper import SectionAwareCommandInvocati
 from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
-def create_standard_dumper(data):
+class CustomCommandDumper(ArgumentAwareCommandInvocationDumper):
+    def custom_command(self, tree):
+        _, command_name, arguments, *_ = tree.children
+        return self.visit(Tree("command_invocation", [command_name, arguments]))
+
+
+def create_standard_dumper(data, custom_command=False):
     bases = [
         SectionAwareCommandInvocationDumper,
         TwoWordKeywordIsolator,
@@ -22,6 +29,9 @@ def create_standard_dumper(data):
     data_customized_signatures = data.get("customized_signatures", None)
     if data_customized_signatures is not None:
         bases = [MultipleSignatureCommandInvocationDumper, *bases]
+
+    if custom_command:
+        bases = [CustomCommandDumper, *bases]
 
     class Impl(*bases):
         canonical_name = data.get("canonical_name", None)
