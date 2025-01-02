@@ -6,6 +6,7 @@ from gersemi.specializations.condition_syntax_command_invocation_dumper import (
 )
 from gersemi.specializations.set_property import set_property
 from gersemi.keywords import AnyMatcher, KeywordMatcher
+from gersemi.keyword_kind import KeywordKind
 
 
 _COMPARE_EQUAL = ("COMPARE", "EQUAL")
@@ -312,7 +313,7 @@ builtin_commands = {
             "COMMAND_ERROR_IS_FATAL",
         ],
         "multi_value_keywords": ["COMMAND"],
-        "keyword_formatters": {"COMMAND": "_format_command_line"},
+        "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
     "file": {
         "two_words_keywords": [_GENERATE_OUTPUT],
@@ -816,7 +817,7 @@ builtin_commands = {
     },
     "set_directory_properties": {
         "multi_value_keywords": ["PROPERTIES"],
-        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+        "keyword_kinds": {"PROPERTIES": KeywordKind.Pairs},
     },
     **set_property,
     "set": {
@@ -1059,9 +1060,9 @@ builtin_commands = {
                 "multi_value_keywords": ["COMMAND", "ARGS", "BYPRODUCTS"],
             },
         },
-        "keyword_formatters": {
-            "COMMAND": "_format_command_line",
-            "ARGS": "_format_command_line",
+        "keyword_kinds": {
+            "COMMAND": KeywordKind.CommandLine,
+            "ARGS": KeywordKind.CommandLine,
         },
     },
     **add_custom_target,
@@ -1107,7 +1108,7 @@ builtin_commands = {
         "options": ["COMMAND_EXPAND_LISTS"],
         "one_value_keywords": ["NAME", "WORKING_DIRECTORY"],
         "multi_value_keywords": ["COMMAND", "CONFIGURATIONS"],
-        "keyword_formatters": {"COMMAND": "_format_command_line"},
+        "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
     "aux_source_directory": {},
     "build_command": {
@@ -1401,17 +1402,17 @@ builtin_commands = {
     },
     "set_source_files_properties": {
         "multi_value_keywords": ["PROPERTIES", "DIRECTORY", "TARGET_DIRECTORY"],
-        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+        "keyword_kinds": {"PROPERTIES": KeywordKind.Pairs},
     },
     "set_target_properties": {
         "multi_value_keywords": ["PROPERTIES"],
-        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+        "keyword_kinds": {"PROPERTIES": KeywordKind.Pairs},
     },
     "set_tests_properties": {
         "one_value_keywords": ["DIRECTORY"],
         "multi_value_keywords": ["PROPERTIES"],
-        "keyword_formatters": {
-            "PROPERTIES": "_format_keyword_with_pairs",
+        "keyword_kinds": {
+            "PROPERTIES": KeywordKind.Pairs,
         },
     },
     "target_compile_definitions": {
@@ -1892,7 +1893,7 @@ builtin_commands = {
         "options": ["NO_EXTERNAL_INSTALL", "LINK_LIBRARIES"],
         "one_value_keywords": ["PROJECT", "ARCHIVE_DIR", "RUNTIME_DIR"],
         "multi_value_keywords": ["LIBRARIES", "LINK_LIBS", "CMAKE_COMMAND_LINE"],
-        "keyword_formatters": {"CMAKE_COMMAND_LINE": "_format_command_line"},
+        "keyword_kinds": {"CMAKE_COMMAND_LINE": KeywordKind.CommandLine},
     },
     #
     ### CMakeBackwardCompatibilityCXX
@@ -2102,7 +2103,7 @@ builtin_commands = {
         "options": ["GLOB", "DELETE", "QUIET"],
         "one_value_keywords": ["TARBALL", "SOURCE", "BUILD", "GCOV_COMMAND"],
         "multi_value_keywords": ["GCOV_OPTIONS"],
-        "keyword_formatters": {"GCOV_OPTIONS": "_format_command_line"},
+        "keyword_kinds": {"GCOV_OPTIONS": KeywordKind.CommandLine},
     },
     #
     ### CTestScriptMode
@@ -2252,8 +2253,8 @@ builtin_commands = {
             # Miscellaneous
             "COMMAND",
         ],
-        "keyword_formatters": {
-            key: "_format_command_line"
+        "keyword_kinds": {
+            key: KeywordKind.CommandLine
             for key in [
                 "DOWNLOAD_COMMAND",
                 "GIT_CONFIG",
@@ -2287,7 +2288,7 @@ builtin_commands = {
             "DEPENDS",
             "BYPRODUCTS",
         ],
-        "keyword_formatters": {"COMMAND": "_format_command_line"},
+        "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
     "externalproject_add_stepdependencies": {
         "canonical_name": "ExternalProject_Add_Stepdependencies",
@@ -2317,7 +2318,7 @@ builtin_commands = {
     "set_package_info": {},
     "set_package_properties": {
         "multi_value_keywords": ["PROPERTIES"],
-        "keyword_formatters": {"PROPERTIES": "_format_keyword_with_pairs"},
+        "keyword_kinds": {"PROPERTIES": KeywordKind.Pairs},
     },
     #
     ### FetchContent
@@ -2370,8 +2371,8 @@ builtin_commands = {
             "UPDATE_COMMAND",
             "PATCH_COMMAND",
         ],
-        "keyword_formatters": {
-            key: "_format_command_line"
+        "keyword_kinds": {
+            key: KeywordKind.CommandLine
             for key in ["DOWNLOAD_COMMAND", "UPDATE_COMMAND", "PATCH_COMMAND"]
         },
     },
@@ -2529,10 +2530,10 @@ builtin_commands = {
             "DISCOVERY_MODE",
         ],
         "multi_value_keywords": ["EXTRA_ARGS", "PROPERTIES", "DISCOVERY_EXTRA_ARGS"],
-        "keyword_formatters": {
-            "EXTRA_ARGS": "_format_command_line",
-            "PROPERTIES": "_format_keyword_with_pairs",
-            "DISCOVERY_EXTRA_ARGS": "_format_command_line",
+        "keyword_kinds": {
+            "EXTRA_ARGS": KeywordKind.CommandLine,
+            "PROPERTIES": KeywordKind.Pairs,
+            "DISCOVERY_EXTRA_ARGS": KeywordKind.CommandLine,
         },
     },
     #
@@ -2715,7 +2716,7 @@ builtin_commands = {
     "env_module": {
         "one_value_keywords": ["OUTPUT_VARIABLE", "RESULT_VARIABLE"],
         "multi_value_keywords": ["COMMAND"],
-        "keyword_formatters": {"COMMAND": "_format_command_line"},
+        "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
     "env_module_swap": {
         "one_value_keywords": ["OUTPUT_VARIABLE", "RESULT_VARIABLE"],
@@ -2862,9 +2863,7 @@ builtin_commands = {
             "MATLAB_ADDITIONAL_STARTUP_OPTIONS",
             "TEST_ARGS",
         ],
-        "keyword_formatters": {
-            "MATLAB_ADDITIONAL_STARTUP_OPTIONS": "_format_command_line"
-        },
+        "keyword_kinds": {"MATLAB_ADDITIONAL_STARTUP_OPTIONS": KeywordKind.CommandLine},
     },
     "matlab_add_mex": {
         "options": [

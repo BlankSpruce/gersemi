@@ -1,9 +1,10 @@
-from enum import Enum
+from typing import Optional
 import yaml
 from lark import Discard
 from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import is_keyword
 from gersemi.keywords import Hint, Keywords
+from gersemi.keyword_kind import KeywordKind
 
 
 class IgnoreThisDefinition:
@@ -192,18 +193,8 @@ def find_custom_command_definitions(tree, filepath="---"):
     return CMakeInterpreter(filepath).visit(tree)
 
 
-class HintKind(Enum):
-    CommandLine = "command_line"
-    Pairs = "pairs"
-
-
-def kind_to_function(kind: str) -> str:
-    kind_enum = HintKind(kind) if kind in [e.value for e in HintKind] else None
-    return {
-        HintKind.Pairs: "_format_keyword_with_pairs",
-        HintKind.CommandLine: "_format_command_line",
-        None: "_default_format_values",
-    }[kind_enum]
+def string_to_kind(kind: str) -> Optional[KeywordKind]:
+    return KeywordKind(kind) if kind in [e.value for e in KeywordKind] else None
 
 
 def create_command(canonical_name, positional_arguments, keywords):
@@ -213,8 +204,8 @@ def create_command(canonical_name, positional_arguments, keywords):
         "options": keywords.options,
         "one_value_keywords": keywords.one_value_keywords,
         "multi_value_keywords": keywords.multi_value_keywords,
-        "keyword_formatters": {
-            hint.keyword: kind_to_function(hint.kind) for hint in keywords.hints
+        "keyword_kinds": {
+            hint.keyword: string_to_kind(hint.kind) for hint in keywords.hints
         },
     }
 
