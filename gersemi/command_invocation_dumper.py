@@ -2,8 +2,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 from lark import Tree
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.builtin_commands import BUILTIN_COMMANDS
-from gersemi.official_commands import official_commands
+from gersemi.builtin_commands import builtin_commands
 from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
@@ -13,20 +12,12 @@ from gersemi.specializations.specialized_dumpers import (
 from gersemi.specializations.standard_command_dumper import (
     create_standard_dumper,
 )
-from gersemi.keywords import Keywords
 
 
 @lru_cache(maxsize=None)
 def create_patch(patch, old_class):
     class Impl(patch, old_class):
         pass
-
-    return Impl
-
-
-def add_canonical_name(dumper_class, desired_canonical_name):
-    class Impl(dumper_class):
-        canonical_name = desired_canonical_name
 
     return Impl
 
@@ -46,17 +37,12 @@ class CommandInvocationDumper(
 
     def _get_patch(self, raw_command_name):
         command_name = raw_command_name.lower()
-        if command_name in BUILTIN_COMMANDS:
-            canonical_name = BUILTIN_COMMANDS[command_name]
+        if command_name in builtin_commands:
+            command = builtin_commands[command_name]
+            if isinstance(command, dict):
+                return create_standard_dumper(command)
 
-            if command_name in official_commands:
-                dumper = official_commands[command_name]
-                if isinstance(dumper, dict):
-                    dumper = create_standard_dumper(dumper)
-
-                return add_canonical_name(dumper, canonical_name)
-
-            return create_specialized_dumper(canonical_name, (), Keywords())
+            return command
 
         if command_name in self.custom_command_definitions:
             canonical_name, arguments = self.custom_command_definitions[command_name]

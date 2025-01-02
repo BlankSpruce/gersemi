@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     url=about["__url__"],
     packages=find_packages(include=["gersemi", "gersemi.*"]),
-    package_data={"gersemi": ["cmake.lark", "builtin_commands"]},
+    package_data={"gersemi": ["cmake.lark"]},
     install_requires=[
         "appdirs",
         "lark>=1.0",

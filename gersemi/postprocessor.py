@@ -3,7 +3,7 @@ from typing import List
 from lark import Discard, Tree
 from lark.visitors import Transformer_InPlace
 from gersemi.ast_helpers import is_newline
-from gersemi.builtin_commands import BUILTIN_COMMANDS
+from gersemi.builtin_commands import builtin_commands
 from gersemi.types import Nodes
 
 
@@ -56,7 +56,7 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         )
 
     def _is_builtin(self, identifier):
-        return identifier.lower() in BUILTIN_COMMANDS
+        return identifier.lower() in builtin_commands
 
     def command_invocation(self, children):
         identifier, _, arguments, _ = children
