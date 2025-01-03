@@ -2,7 +2,7 @@ from itertools import dropwhile
 from typing import List
 from lark import Discard, Tree
 from lark.visitors import Transformer_InPlace
-from gersemi.ast_helpers import is_newline
+from gersemi.ast_helpers import is_newline, is_quoted_argument, is_unquoted_argument
 from gersemi.builtin_commands import builtin_commands
 from gersemi.types import Nodes
 
@@ -66,7 +66,60 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         return self._make_custom_command(children)
 
 
+class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
+    def _valid_pair(self, lhs, rhs):
+        if not is_unquoted_argument(lhs):
+            return False
+
+        if not is_quoted_argument(rhs):
+            return False
+
+        end = lhs.children[-1].end_pos
+        start = rhs.children[0].start_pos
+        return end == start
+
+    def _simplify_argument(self, argument):
+        if is_quoted_argument(argument):
+            if argument.children:
+                return Tree("quoted_argument", ["".join(argument.children[1:-1])])
+            return Tree("quoted_argument", [])
+
+        return argument
+
+    def arguments(self, children):
+        if len(children) < 2:
+            return Tree(
+                "arguments", [self._simplify_argument(child) for child in children]
+            )
+
+        i = 1
+        new_children = []
+        while i < len(children):
+            lhs, rhs = children[i - 1], children[i]
+
+            if not self._valid_pair(lhs, rhs):
+                new_children.append(self._simplify_argument(lhs))
+                i += 1
+                continue
+
+            new_children.append(
+                Tree(
+                    "unquoted_argument",
+                    ["".join(lhs.children) + "".join(rhs.children)],
+                )
+            )
+            i += 2
+
+        if not self._valid_pair(children[-2], children[-1]):
+            new_children.append(self._simplify_argument(children[-1]))
+
+        return Tree("arguments", new_children)
+
+
 class PostProcessor(
-    PreserveCustomCommandFormatting, SimplifyParseTree, RemoveSuperfluousEmptyLines
+    PreserveCustomCommandFormatting,
+    SimplifyParseTree,
+    RemoveSuperfluousEmptyLines,
+    RecognizeUnquotedLegacyArgument,
 ):
     pass

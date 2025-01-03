@@ -73,21 +73,20 @@ _separation_atom    : bracket_comment
 
 bracket_argument : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
-quoted_argument     : _QUOTATION_MARK QUOTED_ELEMENT* _QUOTATION_MARK
+quoted_argument     : QUOTATION_MARK QUOTED_ELEMENT* QUOTATION_MARK
 QUOTED_ELEMENT      : /([^\\\"]|\n)+/
                     | ESCAPE_SEQUENCE
                     | QUOTED_CONTINUATION
 QUOTED_CONTINUATION : BACKSLASH NEWLINE
 
 unquoted_argument : UNQUOTED_ARGUMENT
-UNQUOTED_ARGUMENT : (UNQUOTED_ELEMENT [DOUBLE_QUOTED_STRING])+
+UNQUOTED_ARGUMENT : UNQUOTED_ELEMENT+
 UNQUOTED_ELEMENT  : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
                   | /(?:(?!\[=*\[))[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
                   | MAKE_STYLE_REFERENCE
 
 MAKE_STYLE_REFERENCE : /\$\([^\)\n\"#]+?\)/
-DOUBLE_QUOTED_STRING : /\"[^\n#]*?\"/
 
 complex_argument : LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 
@@ -101,7 +100,7 @@ BACKSLASH              : "\\"
 LEFT_PARENTHESIS       : "("
 NEWLINE                : "\n"
 _POUND_SIGN            : "#"
-_QUOTATION_MARK        : "\""
+QUOTATION_MARK         : "\""
 RIGHT_PARENTHESIS      : ")"
 _SPACE                 : /[ \t]+/
 

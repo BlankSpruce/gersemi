@@ -34,10 +34,8 @@ _unquoted_element : /(?:(?!\[=*\[))[^\$\s\(\)#\"\\]+/
                   | /(?:(?!\[=*\[))[^\s\(\)#\"\\]/
                   | ESCAPE_SEQUENCE
                   | MAKE_STYLE_REFERENCE
-                  | _unquoted_element DOUBLE_QUOTED_STRING
 
 MAKE_STYLE_REFERENCE : /\$\([^\)\n\"#]+?\)/
-DOUBLE_QUOTED_STRING : /\"[^\n#]*?\"/
 
 complex_argument : _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
 
