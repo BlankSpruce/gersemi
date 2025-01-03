@@ -53,7 +53,7 @@ _debug_optimized_general: Mapping[KeywordMatcher, Iterable[KeywordMatcher]] = {
 }
 
 
-builtin_commands = {
+builtin_commands_impl = {
     #### Legend
     #### (&): canonical name used different than in the documentation
     #
@@ -2123,21 +2123,15 @@ builtin_commands = {
     ### Documentation
     #
     ### ExternalData
-    "externaldata_expand_arguments": {
-        "canonical_name": "ExternalData_Expand_Arguments",
-    },
-    "externaldata_add_test": {
-        "canonical_name": "ExternalData_Add_Test",
-    },
-    "externaldata_add_target": {
-        "canonical_name": "ExternalData_Add_Target",
+    "ExternalData_Expand_Arguments": {},
+    "ExternalData_Add_Test": {},
+    "ExternalData_Add_Target": {
         "front_positional_arguments": ["<target>"],
         "one_value_keywords": ["SHOW_PROGRESS"],
     },
     #
     ### ExternalProject
-    "externalproject_add": {
-        "canonical_name": "ExternalProject_Add",
+    "ExternalProject_Add": {
         "one_value_keywords": [
             # Directory
             "PREFIX",
@@ -2271,8 +2265,7 @@ builtin_commands = {
             ]
         },
     },
-    "externalproject_add_step": {
-        "canonical_name": "ExternalProject_Add_Step",
+    "ExternalProject_Add_Step": {
         "one_value_keywords": [
             "COMMENT",
             "ALWAYS",
@@ -2290,15 +2283,9 @@ builtin_commands = {
         ],
         "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
-    "externalproject_add_stepdependencies": {
-        "canonical_name": "ExternalProject_Add_Stepdependencies",
-    },
-    "externalproject_add_steptargets": {
-        "canonical_name": "ExternalProject_Add_Steptargets",
-    },
-    "externalproject_get_property": {
-        "canonical_name": "ExternalProject_Get_Property",
-    },
+    "ExternalProject_Add_Stepdependencies": {},
+    "ExternalProject_Add_Steptargets": {},
+    "ExternalProject_Get_Property": {},
     #
     ### FeatureSummary
     "add_feature_info": {},
@@ -2322,8 +2309,7 @@ builtin_commands = {
     },
     #
     ### FetchContent
-    "fetchcontent_declare": {
-        "canonical_name": "FetchContent_Declare",
+    "FetchContent_Declare": {
         "options": ["SYSTEM", "OVERRIDE_FIND_PACKAGE", "EXCLUDE_FROM_ALL"],
         "one_value_keywords": [
             # Download Step
@@ -2376,15 +2362,11 @@ builtin_commands = {
             for key in ["DOWNLOAD_COMMAND", "UPDATE_COMMAND", "PATCH_COMMAND"]
         },
     },
-    "fetchcontent_getproperties": {
-        "canonical_name": "FetchContent_GetProperties",
+    "FetchContent_GetProperties": {
         "one_value_keywords": ["SOURCE_DIR", "BINARY_DIR", "POPULATED"],
     },
-    "fetchcontent_makeavailable": {
-        "canonical_name": "FetchContent_MakeAvailable",
-    },
-    "fetchcontent_populate": {
-        "canonical_name": "FetchContent_Populate",
+    "FetchContent_MakeAvailable": {},
+    "FetchContent_Populate": {
         "options": ["QUIET"],
         "one_value_keywords": [
             "SUBBUILD_DIR",
@@ -2436,8 +2418,7 @@ builtin_commands = {
             "PATCH_COMMAND",
         ],
     },
-    "fetchcontent_setpopulated": {
-        "canonical_name": "FetchContent_SetPopulated",
+    "FetchContent_SetPopulated": {
         "front_positional_arguments": ["<name>"],
         "one_value_keywords": ["SOURCE_DIR", "BINARY_DIR"],
     },
@@ -2462,14 +2443,11 @@ builtin_commands = {
     "find_package_message": {},
     #
     ### FortranCInterface
-    "fortrancinterface_header": {
-        "canonical_name": "FortranCInterface_HEADER",
+    "FortranCInterface_HEADER": {
         "one_value_keywords": ["MACRO_NAMESPACE", "SYMBOL_NAMESPACE"],
         "multi_value_keywords": ["SYMBOLS"],
     },
-    "fortrancinterface_verify": {
-        "canonical_name": "FortranCInterface_VERIFY",
-    },
+    "FortranCInterface_VERIFY": {},
     #
     ### GenerateExportHeader
     "generate_export_header": {
@@ -2500,9 +2478,7 @@ builtin_commands = {
     "gp_resolve_item": {},
     #
     ### GNUInstallDirs
-    "gnuinstalldirs_get_absolute_install_dir": {
-        "canonical_name": "GNUInstallDirs_get_absolute_install_dir"
-    },
+    "GNUInstallDirs_get_absolute_install_dir": {},
     #
     ### GoogleTest
     "gtest_add_tests": {
@@ -2540,7 +2516,7 @@ builtin_commands = {
     ### InstallRequiredSystemLibraries
     #
     ### ProcessorCount
-    "processorcount": {"canonical_name": "ProcessorCount"},
+    "ProcessorCount": {},
     #
     ### SelectLibraryConfigurations
     "select_library_configurations": {},
@@ -3148,4 +3124,18 @@ builtin_commands = {
     ### FindXMLRPC
     #
     ### FindZLIB
+}
+
+
+def add_canonical_name(value, canonical_name):
+    if isinstance(value, dict):
+        value["canonical_name"] = canonical_name
+        return value
+
+    return value
+
+
+builtin_commands = {
+    key.lower(): add_canonical_name(value, key)
+    for key, value in builtin_commands_impl.items()
 }
