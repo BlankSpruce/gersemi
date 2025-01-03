@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from dataclasses import astuple, dataclass, field, fields
 from functools import lru_cache
-from hashlib import sha1
 import multiprocessing
 import os
 from pathlib import Path
@@ -81,7 +80,7 @@ class ListExpansion(EnumWithMetadata):
 
 
 @dataclass
-class OutcomeConfiguration:
+class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
     """
     These arguments control how gersemi formats source code.
     Values for these arguments can be stored in .gersemirc file which can be
@@ -168,10 +167,17 @@ class OutcomeConfiguration:
         ),
     )
 
-    def summary(self):
-        hasher = sha1()
-        hasher.update(repr(self).encode("utf-8"))
-        return hasher.hexdigest()
+    extensions: Iterable[str] = field(
+        default=tuple(),
+        metadata=dict(
+            title="Extensions",
+            description=doc(
+                """
+    Names of extensions that follow the convention gersemi_{extension_name}.
+                """
+            ),
+        ),
+    )
 
 
 @dataclass

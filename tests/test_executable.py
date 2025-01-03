@@ -970,10 +970,10 @@ def test_source_path_doesnt_exist(app, testfiles):
 def test_just_works_with_not_supported_options_in_configuration_file(app, testfiles):
     f = testfiles / "directory_with_formatted_files"
     dotfile = (testfiles / ".gersemirc").resolve()
-    with create_dot_gersemirc(where=testfiles, frombulate=100):
+    with create_dot_gersemirc(where=testfiles, command_definitions=100):
         assert app("--check", f) == success(
             stdout="",
-            stderr=f"{dotfile}: these options are not supported: frombulate\n",
+            stderr=f"{dotfile}: these options are not supported: command_definitions\n",
         )
 
     with create_dot_gersemirc(
@@ -1015,7 +1015,7 @@ def test_when_quiet_not_supported_options_in_configuration_file_are_not_printed(
     app, testfiles
 ):
     f = testfiles / "formatted_file.cmake"
-    with create_dot_gersemirc(where=testfiles, frombulate=100):
+    with create_dot_gersemirc(where=testfiles, command_definitions=100):
         assert app("--quiet", "--check", f) == success(stdout="", stderr="")
 
     with create_dot_gersemirc(
@@ -1070,12 +1070,12 @@ def test_each_file_uses_closest_configuration_file_with_some_not_supported_optio
             config_files.enter_context(create_dot_gersemirc(**kwargs))
 
         cf(where=d80, line_length=80, cache=False, gorobei="3")
-        cf(where=d40, line_length=40, frombulate=100)
+        cf(where=d40, line_length=40, command_definitions=100)
         cf(where=d60, line_length=60, kambei=100, katsushiro="abc")
 
         assert app("--check", d) == success(
             stdout="",
-            stderr=f"""{d40_dotfile}: these options are not supported: frombulate
+            stderr=f"""{d40_dotfile}: these options are not supported: command_definitions
 {d60_dotfile}: these options are not supported: kambei, katsushiro
 {d80_dotfile}: these options are supported only through command line: cache
 {d80_dotfile}: these options are not supported: gorobei

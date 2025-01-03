@@ -5,14 +5,18 @@ from gersemi.configuration import ListExpansion
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         width,
         indent_size,
         custom_command_definitions,
+        extension_definitions=None,
         list_expansion=ListExpansion.FavourInlining,
     ):
         self.custom_command_definitions = custom_command_definitions
+        self.extension_definitions = (
+            dict() if extension_definitions is None else extension_definitions
+        )
         self.list_expansion = list_expansion
         super().__init__(width, indent_size)
 

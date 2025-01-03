@@ -41,6 +41,13 @@
       "title": "Disable formatting",
       "type": "boolean"
     },
+    "extensions": {
+      "default": [],
+      "description": "Names of extensions that follow the convention gersemi_{extension_name}.",
+      "items": {"type": "string"},
+      "title": "Extensions",
+      "type": "array"
+    },
     "indent": {
       "anyOf": [
         {

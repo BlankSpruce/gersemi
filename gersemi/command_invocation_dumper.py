@@ -41,6 +41,10 @@ class CommandInvocationDumper(
 
             return command
 
+        if command_name in self.extension_definitions:
+            command = self.extension_definitions[command_name]
+            return create_standard_dumper(command, custom_command=True)
+
         if command_name in self.custom_command_definitions:
             command = self.custom_command_definitions[command_name]
             return create_standard_dumper(command, custom_command=True)
@@ -57,7 +61,10 @@ class CommandInvocationDumper(
 
     def custom_command(self, tree):
         _, command_name, arguments, *_ = tree.children
-        if command_name.lower() in self.custom_command_definitions:
+        if (
+            command_name.lower() in self.extension_definitions
+            or command_name.lower() in self.custom_command_definitions
+        ):
             return self.visit(
                 Tree("command_invocation", [command_name.lower(), arguments])
             )

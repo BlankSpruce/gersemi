@@ -1,6 +1,7 @@
 import argparse
 from collections import defaultdict
 from functools import partial
+from hashlib import sha1
 from itertools import chain
 import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
@@ -17,6 +18,7 @@ from gersemi.configuration import (
     MaxWorkers,
     max_number_of_workers,
     NotSupportedKeys,
+    OutcomeConfiguration,
     Workers,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
@@ -28,6 +30,7 @@ from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import create_formatter, NullFormatter, Formatter
 from gersemi.mode import get_mode, Mode
 from gersemi.parser import PARSER as parser
+from gersemi.extensions import load_definitions_from_extensions
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import Result, Error, apply, get_error_message
 from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
@@ -191,10 +194,21 @@ def create_pool(is_stdin_in_sources, workers: Workers):
     return partial(mp.Pool, processes=value)
 
 
+def summarize_configuration(configuration, extension_definitions):
+    hasher = sha1()
+    hasher.update(repr(configuration).encode("utf-8"))
+    hasher.update(repr(extension_definitions).encode("utf-8"))
+    return hasher.hexdigest()
+
+
 def split_files_by_formatting_state(
-    cache, configuration_summary: str, files: Iterable[Path]
+    cache,
+    configuration: OutcomeConfiguration,
+    files: Iterable[Path],
 ):
-    known_files = cache.get_files(configuration_summary)
+    extension_definitions = load_definitions_from_extensions(configuration.extensions)
+    summary = summarize_configuration(configuration, extension_definitions)
+    known_files = cache.get_files(summary)
     already_formatted_files = []
     files_to_format = []
     for f in files:
@@ -250,11 +264,16 @@ def handle_files_to_format(
     custom_command_definitions = find_all_custom_command_definitions(
         set(configuration.outcome.definitions), pool, configuration.control.quiet
     )
+    extension_definitions = load_definitions_from_extensions(
+        configuration.outcome.extensions
+    )
+
     formatter = create_formatter(
         not configuration.outcome.unsafe,
         configuration.outcome.line_length,
         configuration.outcome.indent,
         custom_command_definitions,
+        extension_definitions,
         configuration.outcome.list_expansion,
     )
     task = select_task(mode, configuration)
@@ -267,7 +286,7 @@ def handle_files_to_format(
     store_files_in_cache(
         mode,
         cache,
-        configuration.outcome.summary(),
+        summarize_configuration(configuration.outcome, extension_definitions),
         (
             path
             for path, code, has_warnings in results
@@ -377,7 +396,7 @@ def run(args: argparse.Namespace):
                 continue
 
             already_formatted_files, files_to_format = split_files_by_formatting_state(
-                cache, config.outcome.summary(), files
+                cache, config.outcome, files
             )
 
             error_code = compute_error_code(

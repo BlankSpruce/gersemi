@@ -181,6 +181,15 @@ def create_argparser():
     [default: formatting enabled]
         """,
     )
+    outcome_configuration_group.add_argument(
+        "--extensions",
+        dest="extensions",
+        metavar="extension-name",
+        default=None,
+        nargs="+",
+        type=str,
+        help=outcome_conf_doc["extensions"],
+    )
 
     control_conf_doc: dict[str, str] = {
         item.name: item.metadata["description"] for item in fields(ControlConfiguration)

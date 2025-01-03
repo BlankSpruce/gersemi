@@ -48,6 +48,7 @@ def formatter_creator():
             custom_command_definitions=get_custom_command_definitions(
                 config.get("definitions", [])
             ),
+            extension_definitions=dict(),
             list_expansion=ListExpansion(
                 config.get("list_expansion", ListExpansion.FavourInlining)
             ),

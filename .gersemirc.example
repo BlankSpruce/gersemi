@@ -2,6 +2,7 @@
 
 definitions: []
 disable_formatting: false
+extensions: []
 indent: 4
 line_length: 80
 list_expansion: favour-inlining

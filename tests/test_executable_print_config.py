@@ -198,6 +198,7 @@ def test_print_config_minimal_with_multiple_configuration_files_at_play(app, tes
 def verbose_config(
     definitions=" []",
     disable_formatting="false",
+    extensions=" []",
     indent=4,
     line_length=80,
     list_expansion="favour-inlining",
@@ -206,6 +207,7 @@ def verbose_config(
 ):
     return f"""definitions:{definitions}
 disable_formatting: {disable_formatting}
+extensions:{extensions}
 indent: {indent}
 line_length: {line_length}
 list_expansion: {list_expansion}

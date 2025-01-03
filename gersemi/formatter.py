@@ -17,12 +17,14 @@ class Formatter:
         line_length: int,
         indent: Indent,
         custom_command_definitions,
+        extension_definitions,
         list_expansion: ListExpansion,
     ):
         self.sanity_checker = sanity_checker
         self.line_length = line_length
         self.indent_type = indent
         self.custom_command_definitions = custom_command_definitions
+        self.extension_definitions = extension_definitions
         self.list_expansion = list_expansion
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:
@@ -30,6 +32,7 @@ class Formatter:
             self.line_length,
             self.indent_type,
             self.custom_command_definitions,
+            self.extension_definitions,
             self.list_expansion,
         )
         result = dumper.visit(PARSER.parse(code))
@@ -42,11 +45,12 @@ class NullFormatter:
         return code, []
 
 
-def create_formatter(
+def create_formatter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     do_sanity_check,
     line_length,
     indent,
     custom_command_definitions,
+    extension_definitions,
     list_expansion,
 ):
     sanity_checker = check_code_equivalence if do_sanity_check else noop
@@ -55,5 +59,6 @@ def create_formatter(
         line_length,
         indent,
         custom_command_definitions,
+        extension_definitions,
         list_expansion,
     )
