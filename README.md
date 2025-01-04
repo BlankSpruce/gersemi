@@ -637,8 +637,8 @@ It should be still preferred simply to not provide that definition instead.
 
 #### `gersemi: hints`
 If your definition has `# gersemi: hints` at the beginning then after `hints` you can provide YAML formatted pairs `<keyword>: <specialized_formatting>` to indicate how to treat specific multi-value arguments. `<specialized_formatting>` can be:
-- `pairs`: arguments after the keyword will be grouped into pairs, similar to how `set_target_properties(PROPERTIES)` is handled
-- `command_line`: arguments after the keyword will be treated like a sequence of words in command line, similar to how `add_custom_command(COMMAND)` is handled
+- `pairs`: values after the keyword will be grouped into pairs, similar to how `set_target_properties(PROPERTIES)` is handled
+- `command_line`: values after the keyword will be treated like a sequence of words in command line, similar to how `add_custom_command(COMMAND)` is handled
 
 <details>
 <summary>Example:</summary>

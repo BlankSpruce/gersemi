@@ -1,5 +1,6 @@
 from functools import lru_cache
 import importlib
+from gersemi.builtin_commands import preprocess_definitions
 
 
 class VerificationFailure(Exception):
@@ -25,7 +26,7 @@ def load_definitions_from_extension(extension):
     if not verify(command_definitions):
         return None, f"Verification failed for extension {extension}"
 
-    return command_definitions, None
+    return preprocess_definitions(command_definitions), None
 
 
 def load_definitions_from_extensions(extensions):

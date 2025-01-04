@@ -3135,7 +3135,11 @@ def add_canonical_name(value, canonical_name):
     return value
 
 
-builtin_commands = {
-    key.lower(): add_canonical_name(value, key)
-    for key, value in builtin_commands_impl.items()
-}
+def preprocess_definitions(definitions):
+    return {
+        key.lower(): add_canonical_name(value, key)
+        for key, value in definitions.items()
+    }
+
+
+builtin_commands = preprocess_definitions(builtin_commands_impl)

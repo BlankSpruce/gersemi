@@ -16,13 +16,16 @@ Sections = Mapping[KeywordMatcher, Mapping[KeywordMatcher, Iterable[KeywordMatch
 
 
 def create_section_patch(section, old_class):
-    def get(key):
-        return section.get(key, [])
+    def get(key, default_value):
+        return section.get(key, default_value)
 
     class Impl(old_class):
-        options = get("options")
-        one_value_keywords = get("one_value_keywords")
-        multi_value_keywords = get("multi_value_keywords")
+        front_positional_arguments = get("front_positional_arguments", [])
+        back_positional_arguments = get("back_positional_arguments", [])
+        options = get("options", [])
+        one_value_keywords = get("one_value_keywords", [])
+        multi_value_keywords = get("multi_value_keywords", [])
+        sections = get("sections", dict())
 
     return Impl
 

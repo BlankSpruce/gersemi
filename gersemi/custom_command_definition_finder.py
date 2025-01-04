@@ -1,10 +1,8 @@
-from typing import Optional
 import yaml
 from lark import Discard
 from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import is_keyword
 from gersemi.keywords import Hint, Keywords
-from gersemi.keyword_kind import KeywordKind
 
 
 class IgnoreThisDefinition:
@@ -193,10 +191,6 @@ def find_custom_command_definitions(tree, filepath="---"):
     return CMakeInterpreter(filepath).visit(tree)
 
 
-def string_to_kind(kind: str) -> Optional[KeywordKind]:
-    return KeywordKind(kind) if kind in [e.value for e in KeywordKind] else None
-
-
 def create_command(canonical_name, positional_arguments, keywords):
     return {
         "canonical_name": canonical_name,
@@ -204,9 +198,7 @@ def create_command(canonical_name, positional_arguments, keywords):
         "options": keywords.options,
         "one_value_keywords": keywords.one_value_keywords,
         "multi_value_keywords": keywords.multi_value_keywords,
-        "keyword_kinds": {
-            hint.keyword: string_to_kind(hint.kind) for hint in keywords.hints
-        },
+        "keyword_kinds": {hint.keyword: hint.kind for hint in keywords.hints},
     }
 
 
