@@ -66,12 +66,14 @@ class TestExtensionExists:
     )
     def test_fails_verification(self):
         assert self.app() == fail(
-            stderr="Verification failed for extension kim_dokja_company\n"
+            stderr="""Verification failed for extension kim_dokja_company:
+gersemi_kim_dokja_company.command_definitions: is not a mapping
+"""
         )
 
     @pytest.mark.parametrize(
         "fake_extension",
-        [{"implementation_present": True, "implementation_passes_validation": True}],
+        [{"implementation_present": True, "implementation_passes_verification": True}],
     )
     def test_warn_about_unknown_commands(self):
         assert self.app() == success(
@@ -99,7 +101,7 @@ Warning: unknown command 'add_constellation' used at:
         [
             {
                 "implementation_present": True,
-                "implementation_passes_validation": True,
+                "implementation_passes_verification": True,
                 "implementations": ["add_constellation"],
             }
         ],
@@ -121,7 +123,7 @@ Warning: unknown command 'add_nebula' used at:
         [
             {
                 "implementation_present": True,
-                "implementation_passes_validation": True,
+                "implementation_passes_verification": True,
                 "implementations": ["add_constellation", "add_nebula"],
             }
         ],

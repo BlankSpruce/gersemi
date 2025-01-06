@@ -23,7 +23,7 @@ def get_implementation(implementation):
 
 
 def command_definitions_impl():
-    if settings.get("implementation_passes_validation", False):
+    if settings.get("implementation_passes_verification", False):
         return {
             implementation: get_implementation(implementation)
             for implementation in settings.get("implementations", [])
