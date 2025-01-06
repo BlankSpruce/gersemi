@@ -42,8 +42,8 @@ def create_standard_dumper(data, custom_command=False):
         ArgumentAwareCommandInvocationDumper,
     ]
 
-    data_customized_signatures = data.get("customized_signatures", None)
-    if data_customized_signatures is not None:
+    data_signatures = data.get("signatures", None)
+    if data_signatures is not None:
         bases = [MultipleSignatureCommandInvocationDumper, *bases]
 
     if custom_command:
@@ -60,8 +60,8 @@ def create_standard_dumper(data, custom_command=False):
         multi_value_keywords = data.get("multi_value_keywords", tuple())
         sections = data.get("sections", dict())
 
-        if data_customized_signatures is not None:
-            customized_signatures = data_customized_signatures
+        if data_signatures is not None:
+            signatures = data_signatures
 
         keyword_formatters = {
             keyword: kind_to_formatter(string_to_kind(kind))

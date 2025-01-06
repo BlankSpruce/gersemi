@@ -27,7 +27,7 @@ def create_signature_patch(signature, old_class):
 
 
 class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
-    customized_signatures: Dict[
+    signatures: Dict[
         Optional[KeywordMatcher], Dict[str, Union[List, Sections]]
     ] = {}
 
@@ -45,7 +45,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
             self.__class__ = old_class
 
     def _get_signature_matcher(self, keyword):
-        for item in self.customized_signatures:
+        for item in self.signatures:
             matcher = is_one_of_keywords([item])
             if matcher(keyword):
                 return item
@@ -58,7 +58,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
         first_argument = next(arguments_only, None)
         matcher = self._get_signature_matcher(first_argument)
 
-        signature = self.customized_signatures.get(matcher, None)
+        signature = self.signatures.get(matcher, None)
         with self._update_signature_characteristics(signature):
             return super().format_command(tree)
 

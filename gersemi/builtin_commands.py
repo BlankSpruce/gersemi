@@ -105,7 +105,7 @@ builtin_commands_impl = {
         "one_value_keywords": ["VERSION"],
     },
     "cmake_parse_arguments": {
-        "customized_signatures": {
+        "signatures": {
             "PARSE_ARGV": {
                 "front_positional_arguments": [
                     "<N>",
@@ -127,7 +127,7 @@ builtin_commands_impl = {
     },
     "cmake_path": {
         "two_words_keywords": [_EXTENSION_LAST_ONLY, _STEM_LAST_ONLY],
-        "customized_signatures": {
+        "signatures": {
             # Decomposition
             "GET": {
                 "front_positional_arguments": ["<path-var>"],
@@ -263,7 +263,7 @@ builtin_commands_impl = {
         ],
     },
     "cmake_policy": {
-        "customized_signatures": {
+        "signatures": {
             "VERSION": {"front_positional_arguments": ["<min>...<max>"]},
             "SET": {"options": ["OLD", "NEW"]},
             "GET": {"back_positional_arguments": ["<variable>"]},
@@ -317,7 +317,7 @@ builtin_commands_impl = {
     },
     "file": {
         "two_words_keywords": [_GENERATE_OUTPUT],
-        "customized_signatures": {
+        "signatures": {
             # Reading
             "READ": {
                 "front_positional_arguments": ["<filename>", "<variable>"],
@@ -723,7 +723,7 @@ builtin_commands_impl = {
     },
     "include_guard": {},
     "list": {
-        "customized_signatures": {
+        "signatures": {
             # Reading
             "LENGTH": {"front_positional_arguments": ["<list>", "<output variable>"]},
             "GET": {
@@ -837,7 +837,7 @@ builtin_commands_impl = {
             _COMPARE_LESS_EQUAL,
             _COMPARE_GREATER_EQUAL,
         ],
-        "customized_signatures": {
+        "signatures": {
             # Search and Replace
             "FIND": {
                 "front_positional_arguments": [
@@ -1014,7 +1014,7 @@ builtin_commands_impl = {
     "add_compile_definitions": {},
     "add_compile_options": {},
     "add_custom_command": {
-        "customized_signatures": {
+        "signatures": {
             "OUTPUT": {
                 "options": [
                     "VERBATIM",
@@ -1121,7 +1121,7 @@ builtin_commands_impl = {
         ],
     },
     "cmake_file_api": {
-        "customized_signatures": {
+        "signatures": {
             "QUERY": {
                 "options": ["QUERY"],
                 "one_value_keywords": ["API_VERSION"],
@@ -1154,7 +1154,7 @@ builtin_commands_impl = {
     },
     "enable_language": {},
     "export": {
-        "customized_signatures": {
+        "signatures": {
             "EXPORT": {
                 "options": ["EXPORT_PACKAGE_DEPENDENCIES"],
                 "one_value_keywords": ["EXPORT", "NAMESPACE", "FILE"],
@@ -1212,7 +1212,7 @@ builtin_commands_impl = {
             _PATTERN_Any,
             _REGEX_Any,
         ],
-        "customized_signatures": {
+        "signatures": {
             "TARGETS": {
                 "sections": {
                     kind: {

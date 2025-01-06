@@ -203,11 +203,11 @@ command_definitions = {
     #     install(PACKAGE_INFO <package-name> [...])
     #     install(RUNTIME_DEPENDENCY_SET <set-name> [...])
     #
-    # Signatures are specified through "customized_signatures" entries
+    # Signatures are specified through "signatures" entries
     # and each signature can specify the same properties as in base case.
     #
     "example_compute_value": {
-        "customized_signatures": {
+        "signatures": {
             "SUM": {
                 "front_positional_arguments": ["result-variable"],
                 "multi_value_keywords": ["VALUES"],
