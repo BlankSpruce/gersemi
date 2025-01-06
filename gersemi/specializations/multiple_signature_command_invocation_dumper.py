@@ -27,9 +27,7 @@ def create_signature_patch(signature, old_class):
 
 
 class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
-    signatures: Dict[
-        Optional[KeywordMatcher], Dict[str, Union[List, Sections]]
-    ] = {}
+    signatures: Dict[Optional[KeywordMatcher], Dict[str, Union[List, Sections]]] = {}
 
     @contextmanager
     def _update_signature_characteristics(self, signature):

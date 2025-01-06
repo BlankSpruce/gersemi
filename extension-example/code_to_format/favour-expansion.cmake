@@ -198,3 +198,16 @@ example_compute_value(
         100
         10000
 )
+
+# command with dead properties
+example_dead_properties(
+    SOME_SIGNATURE
+    THINGS
+        foo
+        bar
+        # treated as THINGS due to no special meaning in this signature
+        THIS_KEYWORD_IS_NOT_RECOGNIZED
+        THAT_ONE_AS_WELL
+    OPTION_KEYWORD_SIGNATURE___1
+    OPTION_KEYWORD_SIGNATURE___2
+)

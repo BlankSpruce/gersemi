@@ -223,4 +223,20 @@ command_definitions = {
             },
         }
     },
+    #
+    # Since "signatures" property takes precedence over base case properties
+    # one should avoid specifying other properties.
+    #
+    "example_dead_properties": {
+        "signatures": {
+            "SOME_SIGNATURE": {
+                "options": [
+                    "OPTION_KEYWORD_SIGNATURE___1",
+                    "OPTION_KEYWORD_SIGNATURE___2",
+                ],
+                "multi_value_keywords": ["THINGS"],
+            },
+        },
+        "options": ["THIS_KEYWORD_IS_NOT_RECOGNIZED", "THAT_ONE_AS_WELL"],
+    },
 }

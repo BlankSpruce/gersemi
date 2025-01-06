@@ -68,9 +68,12 @@ class Verifier:
         for keyword in collection:
             self.verify_identifier("keyword", keyword)
 
-    def verify_section(self, section):
-        if not isinstance(section, Mapping):
+    def verify_is_mapping(self, thing):
+        if not isinstance(thing, Mapping):
             self.fail("is not a mapping")
+
+    def verify_section(self, section):
+        self.verify_is_mapping(section)
 
         for p in PROPERTIES_WITH_POSITIONAL_ARGUMENTS:
             with self.element(p):
@@ -82,8 +85,7 @@ class Verifier:
 
         subsections = section.get("sections", {})
         with self.element("sections"):
-            if not isinstance(subsections, Mapping):
-                self.fail("is not a mapping")
+            self.verify_is_mapping(subsections)
 
             for keyword, subsection in subsections.items():
                 self.verify_identifier("keyword", keyword)
@@ -91,15 +93,28 @@ class Verifier:
                 with self.element(keyword):
                     self.verify_section(subsection)
 
+    def verify_signatures(self, signatures):
+        self.verify_is_mapping(signatures)
+
+        for signature_name, signature in signatures.items():
+            self.verify_identifier("signature", signature_name)
+            with self.element(signature_name):
+                self.verify_section(signature)
+
     def verify_command(self, name, definition):
         self.verify_identifier("command name", name)
 
         with self.element(name):
-            self.verify_section(definition)
+            self.verify_is_mapping(definition)
+
+            if "signatures" in definition:
+                with self.element("signatures"):
+                    self.verify_signatures(definition["signatures"])
+            else:
+                self.verify_section(definition)
 
     def __call__(self, thing):
-        if not isinstance(thing, Mapping):
-            self.fail("is not a mapping")
+        self.verify_is_mapping(thing)
 
         for name, definition in thing.items():
             self.verify_command(name, definition)

@@ -6,6 +6,7 @@ from gersemi.extensions import verify, VerificationFailure
 defs = "gersemi_foo.command_definitions"
 ab = f"{defs}['ab']"
 ab_sections = f"{ab}['sections']"
+ab_signatures = f"{ab}['signatures']"
 
 
 @pytest.mark.parametrize(
@@ -19,6 +20,8 @@ ab_sections = f"{ab}['sections']"
         {"ab": {"options": ("ONE", "TWO", "THREE")}},
         {"ab": {"unsupported_entry": {}, "foobar": {}}},
         {"ab": {"unsupported_entry": {}, "options": [], "foobar": {}}},
+        {"ab": {"signatures": {"OK": {}}}},
+        {"ab": {"signatures": {"OK": {"multi_value_keywords": "VALUES"}}}},
     ],
 )
 def test_extension_passes_verification(definition):
@@ -89,6 +92,19 @@ def test_extension_passes_verification(definition):
         (
             {"ab": {"sections": {"ABC": {"sections": tuple()}}}},
             f"{ab_sections}['ABC']['sections']: is not a mapping",
+        ),
+        ({"ab": {"signatures": tuple()}}, f"{ab_signatures}: is not a mapping"),
+        (
+            {"ab": {"signatures": {12: 34}}},
+            f"{ab_signatures}: signature (12) has to be a string",
+        ),
+        (
+            {"ab": {"signatures": {"12": 34}}},
+            f"{ab_signatures}: signature ('12') has to start with a letter or underscore",
+        ),
+        (
+            {"ab": {"signatures": {"CD": 34}}},
+            f"{ab_signatures}['CD']: is not a mapping",
         ),
     ],
 )
