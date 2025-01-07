@@ -1041,6 +1041,10 @@ builtin_commands_impl = {
                     "IMPLICIT_DEPENDS",
                     "OUTPUT",
                 ],
+                "keyword_kinds": {
+                    "COMMAND": KeywordKind.CommandLine,
+                    "ARGS": KeywordKind.CommandLine,
+                },
             },
             "TARGET": {
                 "options": [
@@ -1058,11 +1062,11 @@ builtin_commands_impl = {
                     "TARGET",
                 ],
                 "multi_value_keywords": ["COMMAND", "ARGS", "BYPRODUCTS"],
+                "keyword_kinds": {
+                    "COMMAND": KeywordKind.CommandLine,
+                    "ARGS": KeywordKind.CommandLine,
+                },
             },
-        },
-        "keyword_kinds": {
-            "COMMAND": KeywordKind.CommandLine,
-            "ARGS": KeywordKind.CommandLine,
         },
     },
     **add_custom_target,

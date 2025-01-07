@@ -16,7 +16,7 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
         "TARGET_DIRECTORIES",
         "DIRECTORY",
     ]
-    keyword_formatters = {"PROPERTY": "_format_property"}
+    _keyword_formatters = {"PROPERTY": "_format_property"}
 
     def _format_property(self, args):
         result = self._try_to_format_into_single_line(

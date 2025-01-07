@@ -12,8 +12,8 @@ from .section_aware_command_invocation_dumper import Sections
 
 
 def create_signature_patch(signature, old_class):
-    def get(key):
-        return signature.get(key, [])
+    def get(key, default_value=None):
+        return signature.get(key, [] if default_value is None else default_value)
 
     class Impl(old_class):
         front_positional_arguments = get("front_positional_arguments")
@@ -21,7 +21,8 @@ def create_signature_patch(signature, old_class):
         options = get("options")
         one_value_keywords = get("one_value_keywords")
         multi_value_keywords = get("multi_value_keywords")
-        sections = get("sections")
+        sections = get("sections", dict())
+        keyword_kinds = get("keyword_kinds", dict())
 
     return Impl
 

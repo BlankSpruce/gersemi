@@ -1,7 +1,5 @@
-from typing import Optional, Union
 from lark import Tree
 from gersemi.command_line_formatter import CommandLineFormatter
-from gersemi.keyword_kind import KeywordKind
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
@@ -17,20 +15,6 @@ class CustomCommandDumper(ArgumentAwareCommandInvocationDumper):
     def custom_command(self, tree):
         _, command_name, arguments, *_ = tree.children
         return self.visit(Tree("command_invocation", [command_name, arguments]))
-
-
-def kind_to_formatter(kind: KeywordKind) -> str:
-    return {
-        KeywordKind.CommandLine: "_format_command_line",
-        KeywordKind.Pairs: "_format_keyword_with_pairs",
-    }.get(kind, "_default_format_values")
-
-
-def string_to_kind(kind: Union[str, KeywordKind]) -> Optional[KeywordKind]:
-    if isinstance(kind, KeywordKind):
-        return kind
-
-    return KeywordKind(kind) if kind in [e.value for e in KeywordKind] else None
 
 
 def create_standard_dumper(data, custom_command=False):
@@ -59,13 +43,9 @@ def create_standard_dumper(data, custom_command=False):
         one_value_keywords = data.get("one_value_keywords", tuple())
         multi_value_keywords = data.get("multi_value_keywords", tuple())
         sections = data.get("sections", dict())
+        keyword_kinds = data.get("keyword_kinds", dict())
 
         if data_signatures is not None:
             signatures = data_signatures
-
-        keyword_formatters = {
-            keyword: kind_to_formatter(string_to_kind(kind))
-            for keyword, kind in data.get("keyword_kinds", dict()).items()
-        }
 
     return Impl

@@ -1,4 +1,5 @@
 from gersemi.command_line_formatter import CommandLineFormatter
+from gersemi.keyword_kind import KeywordKind
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -14,7 +15,7 @@ class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper
         "JOB_SERVER_AWARE",
     ]
     multi_value_keywords = ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"]
-    keyword_formatters = {"COMMAND": "_format_command_line"}
+    keyword_kinds = {"COMMAND": KeywordKind.CommandLine}
 
     def positional_arguments(self, tree):
         if len(tree.children) > 1:

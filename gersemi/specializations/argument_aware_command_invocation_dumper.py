@@ -12,6 +12,7 @@ from gersemi.ast_helpers import (
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keywords import KeywordMatcher
+from gersemi.keyword_kind import kind_to_formatter
 from gersemi.types import Nodes
 from gersemi.utils import pop_all
 
@@ -100,7 +101,8 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     options: Iterable[KeywordMatcher] = []
     one_value_keywords: Iterable[KeywordMatcher] = []
     multi_value_keywords: Iterable[KeywordMatcher] = []
-    keyword_formatters: Dict[str, str] = {}
+    keyword_kinds: Dict[str, str] = {}
+    _keyword_formatters: Dict[str, str] = {}
     canonical_name: Optional[str] = None
 
     def _default_format_values(self, values) -> str:
@@ -134,11 +136,16 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         if len(values) == 0:
             return begin
 
-        with self.indented():
-            formatter = getattr(
-                self,
-                self.keyword_formatters.get(keyword_as_value, "_default_format_values"),
+        formatter_kind = kind_to_formatter(
+            self.keyword_kinds.get(keyword_as_value, None)
+        )
+        if formatter_kind is None:
+            formatter_kind = self._keyword_formatters.get(
+                keyword_as_value, "_default_format_values"
             )
+
+        with self.indented():
+            formatter = getattr(self, formatter_kind)
             formatted_values = formatter(values)
         return f"{begin}\n{formatted_values}"
 
