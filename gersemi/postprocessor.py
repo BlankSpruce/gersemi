@@ -1,6 +1,6 @@
 from itertools import dropwhile
 from typing import List
-from lark import Discard, Tree
+from lark import Discard, Tree, Token
 from lark.visitors import Transformer_InPlace
 from gersemi.ast_helpers import is_newline, is_quoted_argument, is_unquoted_argument
 from gersemi.builtin_commands import builtin_commands
@@ -71,7 +71,7 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
         if not is_unquoted_argument(lhs):
             return False
 
-        if not is_quoted_argument(rhs):
+        if not (is_unquoted_argument(rhs) or is_quoted_argument(rhs)):
             return False
 
         end = lhs.children[-1].end_pos
@@ -86,34 +86,40 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
 
         return argument
 
-    def arguments(self, children):
+    def _join_tokens(self, lhs, rhs):
+        return Token(
+            lhs.children[0].type,
+            "".join(lhs.children) + "".join(rhs.children),
+            start_pos=lhs.children[0].start_pos,
+            end_pos=rhs.children[-1].end_pos,
+        )
+
+    def _join_arguments(self, children):
         if len(children) < 2:
-            return Tree(
-                "arguments", [self._simplify_argument(child) for child in children]
-            )
+            return children
 
-        i = 1
         new_children = []
-        while i < len(children):
-            lhs, rhs = children[i - 1], children[i]
-
-            if not self._valid_pair(lhs, rhs):
-                new_children.append(self._simplify_argument(lhs))
-                i += 1
+        previous = children[0]
+        for current in children[1:]:
+            if not self._valid_pair(previous, current):
+                new_children.append(previous)
+                previous = current
                 continue
 
-            new_children.append(
-                Tree(
-                    "unquoted_argument",
-                    ["".join(lhs.children) + "".join(rhs.children)],
-                )
-            )
-            i += 2
+            previous = Tree("unquoted_argument", [self._join_tokens(previous, current)])
 
-        if not self._valid_pair(children[-2], children[-1]):
-            new_children.append(self._simplify_argument(children[-1]))
+        new_children.append(previous)
+        return new_children
 
-        return Tree("arguments", new_children)
+    def arguments(self, children):
+        original = children
+        new_children = self._join_arguments(children)
+        while original != new_children:
+            original, new_children = new_children, self._join_arguments(new_children)
+
+        return Tree(
+            "arguments", [self._simplify_argument(child) for child in new_children]
+        )
 
 
 class PostProcessor(
