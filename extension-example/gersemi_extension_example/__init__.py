@@ -190,6 +190,21 @@ command_definitions = {
         },
     },
     #
+    # "sections" take precedence over "keyword_kinds" because these properties
+    # are mutually exclusive.
+    #
+    "example_keyword_cant_be_both_section_and_special_kind": {
+        "front_positional_arguments": ["something"],
+        "multi_value_keywords": ["CONFUSING_ARGUMENTS"],
+        "sections": {
+            "CONFUSING_ARGUMENTS": {"one_value_keywords": ["ARG1", "ARG2"]},
+        },
+        # dead property
+        "keyword_kinds": {
+            "CONFUSING_ARGUMENTS": "command_line",
+        },
+    },
+    #
     # 8) Finally command can have multiple signatures which are selected
     # through value of first argument. Example:
     #
@@ -237,6 +252,7 @@ command_definitions = {
                 "multi_value_keywords": ["THINGS"],
             },
         },
+        # dead property
         "options": ["THIS_KEYWORD_IS_NOT_RECOGNIZED", "THAT_ONE_AS_WELL"],
     },
 }

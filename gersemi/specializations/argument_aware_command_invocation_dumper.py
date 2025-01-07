@@ -12,7 +12,7 @@ from gersemi.ast_helpers import (
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keywords import KeywordMatcher
-from gersemi.keyword_kind import kind_to_formatter
+from gersemi.keyword_kind import KeywordKind, kind_to_formatter
 from gersemi.types import Nodes
 from gersemi.utils import pop_all
 
@@ -104,7 +104,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     options: Iterable[KeywordMatcher] = []
     one_value_keywords: Iterable[KeywordMatcher] = []
     multi_value_keywords: Iterable[KeywordMatcher] = []
-    keyword_kinds: Dict[str, str] = {}
+    keyword_kinds: Dict[str, KeywordKind] = {}
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))

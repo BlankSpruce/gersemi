@@ -152,6 +152,21 @@ example_add_movie_to_database(
         Spanish
 )
 
+# command with section CONFUSING_ARGUMENTS and dead "keyword_kinds" property
+example_keyword_cant_be_both_section_and_special_kind(
+    Frombulate
+    CONFUSING_ARGUMENTS
+        ARG1 foo
+        ARG2 bar
+)
+
+example_keyword_cant_be_both_section_and_special_kind(
+    Frombulate
+    CONFUSING_ARGUMENTS
+        ARG1 foo__________________________________________________
+        ARG2 bar__________________________________________________
+)
+
 # command with multiple signatures
 example_compute_value(
     SUM

@@ -14,8 +14,11 @@ def get_kind(kind: Union[None, str, KeywordKind]) -> Optional[KeywordKind]:
     return KeywordKind(kind) if kind in [e.value for e in KeywordKind] else None
 
 
-def kind_to_formatter(kind: KeywordKind) -> Optional[str]:
+def kind_to_formatter(kind: Union[None, str, KeywordKind]) -> Optional[str]:
     proper_kind = get_kind(kind)
+    if proper_kind is None:
+        return None
+
     return {
         KeywordKind.CommandLine: "_format_command_line",
         KeywordKind.Pairs: "_format_keyword_with_pairs",
