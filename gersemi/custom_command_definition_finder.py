@@ -193,7 +193,7 @@ def find_custom_command_definitions(tree, filepath="---"):
 
 def create_command(canonical_name, positional_arguments, keywords):
     return {
-        "canonical_name": canonical_name,
+        "_canonical_name": canonical_name,
         "front_positional_arguments": positional_arguments,
         "options": keywords.options,
         "one_value_keywords": keywords.one_value_keywords,

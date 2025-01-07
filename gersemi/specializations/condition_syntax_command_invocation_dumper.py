@@ -122,7 +122,7 @@ def IsolateConditions() -> Transformer:
 
 
 class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
-    inhibit_favour_expansion = True
+    _inhibit_favour_expansion = True
 
     def unary_operation(self, tree):
         result = self._try_to_format_into_single_line(tree.children, separator=" ")

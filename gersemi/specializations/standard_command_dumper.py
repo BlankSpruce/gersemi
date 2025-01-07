@@ -34,9 +34,10 @@ def create_standard_dumper(data, custom_command=False):
         bases = [CustomCommandDumper, *bases]
 
     class Impl(*bases):
-        canonical_name = data.get("canonical_name", None)
-        inhibit_favour_expansion = data.get("inhibit_favour_expansion", False)
-        two_words_keywords = data.get("two_words_keywords", tuple())
+        _canonical_name = data.get("_canonical_name", None)
+        _inhibit_favour_expansion = data.get("_inhibit_favour_expansion", False)
+        _two_words_keywords = data.get("_two_words_keywords", tuple())
+
         front_positional_arguments = data.get("front_positional_arguments", tuple())
         back_positional_arguments = data.get("back_positional_arguments", tuple())
         options = data.get("options", tuple())

@@ -32,7 +32,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         group_sizes = list(map(self.group_size, groups))
         if (
             self.list_expansion == ListExpansion.FavourExpansion
-            and not self.inhibit_favour_expansion
+            and not self._inhibit_favour_expansion
         ):
             return all(size < 2 for size in group_sizes)
         return all(size <= 4 for size in group_sizes)

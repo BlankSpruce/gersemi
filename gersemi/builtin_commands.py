@@ -62,12 +62,12 @@ builtin_commands_impl = {
     ## Scripting Commands
     #
     "block": {
-        "inhibit_favour_expansion": True,
+        "_inhibit_favour_expansion": True,
         "multi_value_keywords": ["SCOPE_FOR", "PROPAGATE"],
     },
     "break": {},
     "cmake_host_system_information": {
-        "two_words_keywords": [_QUERY_WINDOWS_REGISTRY],
+        "_two_words_keywords": [_QUERY_WINDOWS_REGISTRY],
         "one_value_keywords": [
             "RESULT",
             _QUERY_WINDOWS_REGISTRY,
@@ -81,7 +81,7 @@ builtin_commands_impl = {
         "multi_value_keywords": ["QUERY"],
     },
     "cmake_language": {
-        "two_words_keywords": [_EVAL_CODE],
+        "_two_words_keywords": [_EVAL_CODE],
         "one_value_keywords": [
             "DIRECTORY",
             "ID",
@@ -126,7 +126,7 @@ builtin_commands_impl = {
         },
     },
     "cmake_path": {
-        "two_words_keywords": [_EXTENSION_LAST_ONLY, _STEM_LAST_ONLY],
+        "_two_words_keywords": [_EXTENSION_LAST_ONLY, _STEM_LAST_ONLY],
         "signatures": {
             # Decomposition
             "GET": {
@@ -316,7 +316,7 @@ builtin_commands_impl = {
         "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
     "file": {
-        "two_words_keywords": [_GENERATE_OUTPUT],
+        "_two_words_keywords": [_GENERATE_OUTPUT],
         "signatures": {
             # Reading
             "READ": {
@@ -667,13 +667,13 @@ builtin_commands_impl = {
         "multi_value_keywords": ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"],
     },
     "foreach": {
-        "inhibit_favour_expansion": True,
+        "_inhibit_favour_expansion": True,
         "front_positional_arguments": ["<loop_var>"],
         "options": ["IN"],
         "multi_value_keywords": ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"],
     },
     "function": {
-        "inhibit_favour_expansion": True,
+        "_inhibit_favour_expansion": True,
         "front_positional_arguments": ["<name>"],
     },
     "get_cmake_property": {
@@ -777,7 +777,7 @@ builtin_commands_impl = {
         },
     },
     "macro": {
-        "inhibit_favour_expansion": True,
+        "_inhibit_favour_expansion": True,
         "front_positional_arguments": ["<name>"],
     },
     "mark_as_advanced": {
@@ -826,7 +826,7 @@ builtin_commands_impl = {
         "one_value_keywords": ["CACHE"],
     },
     "string": {
-        "two_words_keywords": [
+        "_two_words_keywords": [
             _REGEX_MATCH,
             _REGEX_MATCHALL,
             _REGEX_REPLACE,
@@ -1075,7 +1075,7 @@ builtin_commands_impl = {
         "front_positional_arguments": ["<target>"],
     },
     "add_executable": {
-        "two_words_keywords": [("IMPORTED", "GLOBAL")],
+        "_two_words_keywords": [("IMPORTED", "GLOBAL")],
         "front_positional_arguments": ["<name>"],
         "options": [
             "WIN32",
@@ -1087,7 +1087,7 @@ builtin_commands_impl = {
         "one_value_keywords": ["ALIAS"],
     },
     "add_library": {
-        "two_words_keywords": [("IMPORTED", "GLOBAL")],
+        "_two_words_keywords": [("IMPORTED", "GLOBAL")],
         "front_positional_arguments": ["<name>"],
         "options": [
             "STATIC",
@@ -1210,7 +1210,7 @@ builtin_commands_impl = {
     },
     "include_regular_expression": {},
     "install": {
-        "two_words_keywords": [
+        "_two_words_keywords": [
             _INCLUDES_DESTINATION,
             _FILE_SET_Any,
             _PATTERN_Any,
@@ -3133,7 +3133,7 @@ builtin_commands_impl = {
 
 def add_canonical_name(value, canonical_name):
     if isinstance(value, dict):
-        value["canonical_name"] = canonical_name
+        value["_canonical_name"] = canonical_name
         return value
 
     return value

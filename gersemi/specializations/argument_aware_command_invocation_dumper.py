@@ -95,15 +95,16 @@ class KeywordSplitter:
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
-    inhibit_favour_expansion: bool = False
+    _inhibit_favour_expansion: bool = False
+    _keyword_formatters: Dict[str, str] = {}
+    _canonical_name: Optional[str] = None
+
     front_positional_arguments: Sequence[str] = []
     back_positional_arguments: Sequence[str] = []
     options: Iterable[KeywordMatcher] = []
     one_value_keywords: Iterable[KeywordMatcher] = []
     multi_value_keywords: Iterable[KeywordMatcher] = []
     keyword_kinds: Dict[str, str] = {}
-    _keyword_formatters: Dict[str, str] = {}
-    canonical_name: Optional[str] = None
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
@@ -239,10 +240,10 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return "\n".join(map(self.visit, filter(None, groups)))
 
     def format_command_name(self, identifier):
-        if self.canonical_name is None:
+        if self._canonical_name is None:
             return super().format_command_name(identifier)
 
-        if self.canonical_name.lower() != identifier.lower():
+        if self._canonical_name.lower() != identifier.lower():
             raise RuntimeError
 
-        return self.canonical_name
+        return self._canonical_name

@@ -48,11 +48,11 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
 
 
 class TwoWordKeywordIsolator(BaseCommandInvocationDumper):
-    two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
+    _two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
 
     def _preprocess_arguments(self, arguments):
         preprocessed = arguments
-        for lhs, rhs in self.two_words_keywords:
+        for lhs, rhs in self._two_words_keywords:
             preprocessed = IsolateTwoWordKeywords(lhs, rhs).transform(preprocessed)
         return preprocessed
 
