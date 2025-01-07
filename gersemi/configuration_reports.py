@@ -6,6 +6,10 @@ from gersemi.configuration import (
     make_configuration_file,
     OutcomeConfiguration,
 )
+from gersemi.extensions import load_definitions_from_extension
+
+
+NL = "\n"
 
 
 def report_header(configuration_file: Optional[Path]) -> str:
@@ -49,15 +53,38 @@ def minimal_report(
     return f"{report_header(configuration_file)},\n## {comparison}\n"
 
 
+def make_listing(prefix, things):
+    return f"{prefix}{f'{NL}{prefix}'.join(things)}"
+
+
 def applicable_to_files(files: Iterable[Path]) -> str:
     if Path("-") in files:
         return "## it's applicable to stdin."
 
-    list_prefix = "## - "
-    NL = "\n"
     return f"""## it's applicable to these files:
-{list_prefix}{f'{NL}{list_prefix}'.join(map(str, files))}
+{make_listing("## - ", map(str, files))}
 ##"""
+
+
+def verbose_about_extension(extension: str) -> str:
+    definitions, error = load_definitions_from_extension(extension)
+    if error is None:
+        return f"""## - [{extension}] additional recognized commands:
+{make_listing("##   - ", sorted(definitions.keys()))}
+##"""
+
+    return f"""## - [{extension}] error:
+{make_listing("##   ", error.splitlines())}
+##"""
+
+
+def verbose_about_extensions(extensions) -> str:
+    if len(extensions) == 0:
+        return ""
+
+    return f"""
+## About extensions:
+{NL.join(map(verbose_about_extension, extensions))}"""
 
 
 def verbose_report(
@@ -71,7 +98,7 @@ def verbose_report(
     )
 
     return f"""{report_header(configuration_file)},
-{applicable_to_files(target_files)}
+{applicable_to_files(target_files)}{verbose_about_extensions(configuration.extensions)}
 {listing}
 """
 
