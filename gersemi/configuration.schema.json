@@ -43,7 +43,7 @@
     },
     "extensions": {
       "default": [],
-      "description": "Names of extensions that follow the convention gersemi_{extension_name}.",
+      "description": "Names of extensions. See: \"Extensions\" section in README.",
       "items": {"type": "string"},
       "title": "Extensions",
       "type": "array"

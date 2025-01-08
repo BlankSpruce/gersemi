@@ -1,4 +1,11 @@
 # Changelog
+## [0.18.0] 2025-XX-XX
+### Added
+- Add support for extensions and provide example extension as a template.
+
+### Fixed
+- Recognize `unquoted_legacy` rule of CMake language. (#49)
+
 ## [0.17.1] 2024-11-29
 ### Fixed
 - fix `--no-quiet` (#43)

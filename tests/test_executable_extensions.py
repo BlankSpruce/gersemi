@@ -35,7 +35,7 @@ def app(extensions_directory, fake_extension, testfiles, app):
         "--",
         testfiles / "extensions" / "there_are_spoilers_ahead",
         env={
-            "PYTHONPATH": testfiles / "extensions" / extensions_directory,
+            "PYTHONPATH": str(testfiles / "extensions" / extensions_directory),
             "GERSEMI_FAKE_EXTENSION_SETTINGS": json.dumps(fake_extension),
         },
         **kwargs,
@@ -148,12 +148,16 @@ Warning: unknown command 'add_nebula' used at:
 )
 def test_print_config_verbose_with_extensions(app, testfiles, outcome):
     base = testfiles / "extensions" / "there_are_spoilers_ahead"
+    applicable_files = [
+        base / "CMakeLists.txt",
+        base / "you_have_been_warned" / "CMakeLists.txt",
+        base / "you_have_been_warned" / "one_last_chance" / "correct_formatting.cmake",
+        base / "you_have_been_warned" / "one_last_chance" / "wrong_formatting.cmake",
+    ]
+    file_listing = "".join(f"\n## - {f.resolve()}" for f in applicable_files)
+
     expected_stdout = f"""## Outcome configuration based on defaults,
-## it's applicable to these files:
-## - {base}/CMakeLists.txt
-## - {base}/you_have_been_warned/CMakeLists.txt
-## - {base}/you_have_been_warned/one_last_chance/correct_formatting.cmake
-## - {base}/you_have_been_warned/one_last_chance/wrong_formatting.cmake
+## it's applicable to these files:{file_listing}
 ##
 ## About extensions:
 ## - [yoo_joonghyuk_company] error:

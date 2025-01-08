@@ -19,7 +19,8 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [-h] [-l INTEGER] [--indent (INTEGER | tabs)] [--unsafe]
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}]
-               [--warn-about-unknown-commands] [--disable-formatting] [-q] [--color]
+               [--warn-about-unknown-commands] [--disable-formatting]
+               [--extensions extension-name [extension-name ...]] [-q] [--color]
                [-w (INTEGER | max)] [--cache] [--config CONFIGURATION_FILE]
                [src ...]
 
@@ -93,6 +94,8 @@ outcome configuration:
                         enabled, same as --warn-about-unknown-commands]
   --disable-formatting, --enable-formatting
                         Completely disable formatting. [default: formatting enabled]
+  --extensions extension-name [extension-name ...]
+                        Names of extensions. See: "Extensions" section in README.
 
 control configuration:
   These arguments control how gersemi operates rather than how it formats source code.
@@ -126,16 +129,50 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.17.1
+  rev: 0.18.0
   hooks:
   - id: gersemi
 ```
 
 Update `rev` to relevant version used in your repository. For more details refer to https://pre-commit.com/#using-the-latest-version-for-a-repository
 
+<details>
+<summary><h3><b>Extensions in pre-commit hook</b></h3></summary>
+
+If you want to use extensions with pre-commit list them with [`additional_dependencies`](https://pre-commit.com/#config-additional_dependencies). Example assuming that outcome configuration is in `.gersemirc`:
+
+`.pre-commit-config.yaml`:
+```yaml
+repos:
+- repo: https://github.com/BlankSpruce/gersemi
+  rev: 0.18.0
+  hooks:
+  - id: gersemi
+    additional_dependencies:
+    - https://github.com/BlankSpruce/gersemi/extension-example/extension
+```
+
+`.gersemirc`:
+```yaml
+line_length: 123
+extensions:
+- extension_example
+```
+
+</details>
+
 ## Formatting
 
-The key goal is for the tool to "just work" and to have as little configuration as possible so that you don't have to worry about fine-tuning formatter to your needs - as long as you embrace the `gersemi` style of formatting, similarly as `black` or `gofmt` do their job. The basic assumption is that code to format is valid CMake language code - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon. Moreover only commands from CMake 3.0 onwards are supported and will be formatted properly - for instance [`exec_program` has been deprecated since CMake 3.0](https://cmake.org/cmake/help/latest/command/exec_program.html) so it won't be formatted. Changes to code might be destructive and you should always have a backup (version control helps a lot).
+> [!IMPORTANT]
+Changes to code might be destructive and you should always have a backup (version control helps a lot).
+
+The key goals:
+- Formatter should "just work" and should have as little configuration as possible so that you don't have to worry about fine-tuning formatter to your needs - as long as you embrace the `gersemi` style of formatting, similarly as `black` or `gofmt` do their job.
+- Only valid CMake language code is considered - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon. 
+- Only commands from CMake 3.0 onwards are supported and will be formatted properly - for instance [`exec_program` has been deprecated since CMake 3.0](https://cmake.org/cmake/help/latest/command/exec_program.html) so it won't be formatted. 
+- Formatter can be informed about commands not supported out of the box:
+  - through command definition (see: [Let's make a deal](#lets-make-a-deal))
+  - through extensions (see: [Extensions](#extensions))
 
 ### Style
 
@@ -587,7 +624,7 @@ When source code has custom commands but their definitions aren't known `gersemi
 
 #### How to format custom commands for which path to definition can't be guaranteed to be stable? (e.g external dependencies not managed by CMake)
 
-You can provide stub definitions that will be used only as an input for gersemi. Example:
+You can either implement [extension](#extensions) or provide stub definitions that will be used only as an input for gersemi. Example of stub definition:
 ```yaml
 # ./.gersemirc
 definitions: [./src/cmake/stubs, ...] # ... other paths that might contain actual definitions
@@ -698,6 +735,18 @@ movie_description_with_hints(
 ```
 
 </details>
+
+
+### Extensions
+
+You can extend gersemi capabilities through Python modules listed with `--extensions`(command line)/`extensions` (configuration file). Such extension has to:
+- follow naming convention `gersemi_{extension module name}`,
+- be available in gersemi's environment,
+- implement `command_definitions` mapping, where key describes command in its canonical casing and value describes command properties,
+> [!IMPORTANT]
+Exact details on command properties are available in [extension example implementation](extension-example/extension/gersemi_extension_example/__init__.py).
+
+- pass verification done once during runtime that checks whether `command_definitions` follows some basic constraints like "keyworded arguments are strings", ["command names don't start with a digit"](https://cmake.org/cmake/help/latest/manual/cmake-language.7.html#grammar-token-identifier) etc.
 
 ### How to disable reformatting
 

@@ -173,7 +173,7 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
             title="Extensions",
             description=doc(
                 """
-    Names of extensions that follow the convention gersemi_{extension_name}.
+    Names of extensions. See: "Extensions" section in README.
                 """
             ),
         ),
