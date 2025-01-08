@@ -10,10 +10,8 @@ def base_directory(testfiles):
 
 
 @pytest.fixture(scope="function")
-def app(app, base_directory):
-    return partial(
-        app, "--extensions", "extension_example", env={"PYTHONPATH": base_directory}
-    )
+def app(app):
+    return partial(app, "--extensions", "extension_example")
 
 
 @pytest.mark.parametrize("case", ["favour-inlining", "favour-expansion"])
