@@ -2,7 +2,12 @@ from itertools import dropwhile
 from typing import List
 from lark import Discard, Tree, Token
 from lark.visitors import Transformer_InPlace
-from gersemi.ast_helpers import is_newline, is_quoted_argument, is_unquoted_argument
+from gersemi.ast_helpers import (
+    is_commented_argument,
+    is_newline,
+    is_quoted_argument,
+    is_unquoted_argument,
+)
 from gersemi.builtin_commands import builtin_commands
 from gersemi.types import Nodes
 
@@ -63,11 +68,15 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         if self._is_builtin(identifier):
             return Tree("command_invocation", [identifier, arguments])
 
-        return self._make_custom_command(children)
+        return super().transform(self._make_custom_command(children))
 
 
 class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
     def _valid_pair(self, lhs, rhs):
+        if is_commented_argument(rhs):
+            argument, *__ = rhs.children
+            return self._valid_pair(lhs, argument)
+
         if not is_unquoted_argument(lhs):
             return False
 
@@ -78,14 +87,6 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
         start = rhs.children[0].start_pos
         return end == start
 
-    def _simplify_argument(self, argument):
-        if is_quoted_argument(argument):
-            if argument.children:
-                return Tree("quoted_argument", ["".join(argument.children[1:-1])])
-            return Tree("quoted_argument", [])
-
-        return argument
-
     def _join_tokens(self, lhs, rhs):
         return Token(
             lhs.children[0].type,
@@ -93,6 +94,13 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
             start_pos=lhs.children[0].start_pos,
             end_pos=rhs.children[-1].end_pos,
         )
+
+    def _join_pair(self, lhs, rhs):
+        if is_commented_argument(rhs):
+            argument, *rest = rhs.children
+            return Tree("commented_argument", [self._join_pair(lhs, argument), *rest])
+
+        return Tree("unquoted_argument", [self._join_tokens(lhs, rhs)])
 
     def _join_arguments(self, children):
         if len(children) < 2:
@@ -106,7 +114,7 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
                 previous = current
                 continue
 
-            previous = Tree("unquoted_argument", [self._join_tokens(previous, current)])
+            previous = self._join_pair(previous, current)
 
         new_children.append(previous)
         return new_children
@@ -117,15 +125,18 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
         while original != new_children:
             original, new_children = new_children, self._join_arguments(new_children)
 
-        return Tree(
-            "arguments", [self._simplify_argument(child) for child in new_children]
-        )
+        return Tree("arguments", new_children)
 
 
-class PostProcessor(
+class PostProcessorStageOne(
     PreserveCustomCommandFormatting,
     SimplifyParseTree,
     RemoveSuperfluousEmptyLines,
     RecognizeUnquotedLegacyArgument,
 ):
     pass
+
+
+class SimplifyQuotedArguments(Transformer_InPlace):
+    def quoted_argument(self, children):
+        return Tree("quoted_argument", ["".join(children[1:-1])])

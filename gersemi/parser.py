@@ -6,7 +6,7 @@ from gersemi.exceptions import (
     UnbalancedBrackets,
 )
 from gersemi.parsing_transformer import ParsingTransformer
-from gersemi.postprocessor import PostProcessor
+from gersemi.postprocessor import PostProcessorStageOne, SimplifyQuotedArguments
 
 
 class Parser:
@@ -68,8 +68,9 @@ class ParserWithPostProcessing:
         self.parser = parser
 
     def parse(self, code):
-        postprocessor = PostProcessor(code)
-        return postprocessor.transform(self.parser.parse(code))
+        stage_one = PostProcessorStageOne(code)
+        stage_two = SimplifyQuotedArguments()
+        return stage_two.transform(stage_one.transform(self.parser.parse(code)))
 
 
 HERE = os.path.dirname(os.path.realpath(__file__))
