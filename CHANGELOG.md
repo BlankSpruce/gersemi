@@ -1,10 +1,12 @@
 # Changelog
-## [0.18.0] 2025-XX-XX
+## [0.18.0] 2025-01-10
 ### Added
 - Add support for extensions and provide example extension as a template.
 
 ### Fixed
 - Recognize `unquoted_legacy` rule of CMake language. (#49)
+- Cut down excessive memory usage when used on a project with big number of files.
+- Correctly recognize keywords from download, upload and patch steps of `ExternalProject_Add` in `FetchContent_Declare`. (#50)
 
 ## [0.17.1] 2024-11-29
 ### Fixed

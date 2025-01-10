@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/0.18.0-rc1/gersemi/configuration.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/0.18.0/gersemi/configuration.schema.json
 
 definitions: []
 disable_formatting: false

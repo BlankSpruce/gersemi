@@ -53,6 +53,61 @@ _debug_optimized_general: Mapping[KeywordMatcher, Iterable[KeywordMatcher]] = {
     "one_value_keywords": ["debug", "optimized", "general"]
 }
 
+_ExternalProject_Add_DownloadStep = {
+    "one_value_keywords": {
+        # Described in "Directory Options"
+        "DOWNLOAD_DIR",
+        #
+        "URL_HASH",
+        "URL_MD5",
+        "DOWNLOAD_NAME",
+        "DOWNLOAD_EXTRACT_TIMESTAMP",
+        "DOWNLOAD_NO_EXTRACT",
+        "DOWNLOAD_NO_PROGRESS",
+        "TIMEOUT",
+        "INACTIVITY_TIMEOUT",
+        "HTTP_USERNAME",
+        "HTTP_PASSWORD",
+        "TLS_VERSION",
+        "TLS_VERIFY",
+        "TLS_CAINFO",
+        "NETRC",
+        "NETRC_FILE",
+        "GIT_REPOSITORY",
+        "GIT_TAG",
+        "GIT_REMOTE_NAME",
+        "GIT_SUBMODULES_RECURSE",
+        "GIT_SHALLOW",
+        "GIT_PROGRESS",
+        "GIT_REMOTE_UPDATE_STRATEGY",
+        "SVN_REPOSITORY",
+        "SVN_REVISION",
+        "SVN_USERNAME",
+        "SVN_PASSWORD",
+        "SVN_TRUST_CERT",
+        "HG_REPOSITORY",
+        "HG_TAG",
+        "CVS_REPOSITORY",
+        "CVS_MODULE",
+        "CVS_TAG",
+    },
+    "multi_value_keywords": {
+        "DOWNLOAD_COMMAND",
+        "URL",
+        "HTTP_HEADER",
+        "GIT_SUBMODULES",
+        "GIT_CONFIG",
+    },
+}
+_ExternalProject_Add_UpdateStep = {
+    "one_value_keywords": ["UPDATE_DISCONNECTED"],
+    "multi_value_keywords": ["UPDATE_COMMAND"],
+}
+_ExternalProject_Add_PatchStep = {
+    "one_value_keywords": [],
+    "multi_value_keywords": ["PATCH_COMMAND"],
+}
+
 
 builtin_commands_impl = {
     #### Legend
@@ -2148,38 +2203,11 @@ builtin_commands_impl = {
             "BINARY_DIR",
             "INSTALL_DIR",
             # Download Step
-            "URL_HASH",
-            "URL_MD5",
-            "DOWNLOAD_NAME",
-            "DOWNLOAD_NO_EXTRACT",
-            "TIMEOUT",
-            "HTTP_USERNAME",
-            "HTTP_PASSWORD",
-            "TLS_VERIFY",
-            "TLS_CAINFO",
-            "NETRC",
-            "NETRC_FILE",
-            "GIT_REPOSITORY",
-            "GIT_TAG",
-            "GIT_REMOTE_NAME",
-            "GIT_SUBMODULES_RECURSE",
-            "GIT_SHALLOW",
-            "GIT_PROGRESS",
-            "GIT_REMOTE_UPDATE_STRATEGY",
-            "SVN_REPOSITORY",
-            "SVN_REVISION",
-            "SVN_USERNAME",
-            "SVN_PASSWORD",
-            "SVN_TRUST_CERT",
-            "HG_REPOSITORY",
-            "HG_TAG",
-            "CVS_REPOSITORY",
-            "CVS_MODULE",
-            "CVS_TAG",
-            "DOWNLOAD_EXTRACT_TIMESTAMP",
-            "TLS_VERSION",
-            # Update/Patch Step
-            "UPDATE_DISCONNECTED",
+            *_ExternalProject_Add_DownloadStep["one_value_keywords"],
+            # Update Step
+            *_ExternalProject_Add_UpdateStep["one_value_keywords"],
+            # Patch Step
+            *_ExternalProject_Add_PatchStep["one_value_keywords"],
             # Configure Step
             "CMAKE_COMMAND",
             "CMAKE_GENERATOR",
@@ -2222,14 +2250,11 @@ builtin_commands_impl = {
         ],
         "multi_value_keywords": [
             # Download Step
-            "DOWNLOAD_COMMAND",
-            "URL",
-            "HTTP_HEADER",
-            "GIT_SUBMODULES",
-            "GIT_CONFIG",
-            # Update/Patch Step
-            "UPDATE_COMMAND",
-            "PATCH_COMMAND",
+            *_ExternalProject_Add_DownloadStep["multi_value_keywords"],
+            # Update Step
+            *_ExternalProject_Add_UpdateStep["multi_value_keywords"],
+            # Patch Step
+            *_ExternalProject_Add_PatchStep["multi_value_keywords"],
             # Configure Step
             "CONFIGURE_COMMAND",
             "CMAKE_ARGS",
@@ -2318,49 +2343,20 @@ builtin_commands_impl = {
         "options": ["SYSTEM", "OVERRIDE_FIND_PACKAGE", "EXCLUDE_FROM_ALL"],
         "one_value_keywords": [
             # Download Step
-            "URL_HASH",
-            "URL_MD5",
-            "DOWNLOAD_NAME",
-            "DOWNLOAD_NO_EXTRACT",
-            "TIMEOUT",
-            "HTTP_USERNAME",
-            "HTTP_PASSWORD",
-            "TLS_VERIFY",
-            "TLS_CAINFO",
-            "NETRC",
-            "NETRC_FILE",
-            "GIT_REPOSITORY",
-            "GIT_TAG",
-            "GIT_REMOTE_NAME",
-            "GIT_SUBMODULES_RECURSE",
-            "GIT_SHALLOW",
-            "GIT_PROGRESS",
-            "GIT_REMOTE_UPDATE_STRATEGY",
-            "SVN_REPOSITORY",
-            "SVN_REVISION",
-            "SVN_USERNAME",
-            "SVN_PASSWORD",
-            "SVN_TRUST_CERT",
-            "HG_REPOSITORY",
-            "HG_TAG",
-            "CVS_REPOSITORY",
-            "CVS_MODULE",
-            "CVS_TAG",
-            "SOURCE_SUBDIR",
-            # Update/Patch Step
-            "UPDATE_DISCONNECTED",
+            *_ExternalProject_Add_DownloadStep["one_value_keywords"],
+            # Update Step
+            *_ExternalProject_Add_UpdateStep["one_value_keywords"],
+            # Patch Step
+            *_ExternalProject_Add_PatchStep["one_value_keywords"],
         ],
         "multi_value_keywords": [
             "FIND_PACKAGE_ARGS",
             # Download Step
-            "DOWNLOAD_COMMAND",
-            "URL",
-            "HTTP_HEADER",
-            "GIT_SUBMODULES",
-            "GIT_CONFIG",
-            # Update/Patch Step
-            "UPDATE_COMMAND",
-            "PATCH_COMMAND",
+            *_ExternalProject_Add_DownloadStep["multi_value_keywords"],
+            # Update Step
+            *_ExternalProject_Add_UpdateStep["multi_value_keywords"],
+            # Patch Step
+            *_ExternalProject_Add_PatchStep["multi_value_keywords"],
         ],
         "keyword_kinds": {
             key: KeywordKind.CommandLine
