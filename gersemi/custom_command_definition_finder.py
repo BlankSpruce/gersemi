@@ -2,6 +2,7 @@ import yaml
 from lark import Discard
 from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import is_keyword
+from gersemi.immutable import make_immutable
 from gersemi.keywords import Hint, Keywords
 
 
@@ -208,4 +209,4 @@ def get_just_definitions(definitions):
         sorted_info = list(sorted(info, key=lambda item: item[1]))
         (canonical_name, (positional_arguments, keywords)), _ = sorted_info[0]
         result[name] = create_command(canonical_name, positional_arguments, keywords)
-    return result
+    return make_immutable(result)

@@ -1,3 +1,4 @@
+from functools import lru_cache
 from lark import Tree
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
@@ -17,6 +18,7 @@ class CustomCommandDumper(ArgumentAwareCommandInvocationDumper):
         return self.visit(Tree("command_invocation", [command_name, arguments]))
 
 
+@lru_cache(maxsize=None)
 def create_standard_dumper(data, custom_command=False):
     bases = [
         SectionAwareCommandInvocationDumper,

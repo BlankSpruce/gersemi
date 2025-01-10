@@ -1,5 +1,6 @@
 # pylint: disable=too-many-lines
 from typing import Iterable, List, Mapping
+from gersemi.immutable import make_immutable
 from gersemi.specializations.add_custom_target import add_custom_target
 from gersemi.specializations.condition_syntax_command_invocation_dumper import (
     condition_syntax_commands,
@@ -3140,10 +3141,12 @@ def add_canonical_name(value, canonical_name):
 
 
 def preprocess_definitions(definitions):
-    return {
-        key.lower(): add_canonical_name(value, key)
-        for key, value in definitions.items()
-    }
+    return make_immutable(
+        {
+            key.lower(): add_canonical_name(value, key)
+            for key, value in definitions.items()
+        }
+    )
 
 
 builtin_commands = preprocess_definitions(builtin_commands_impl)

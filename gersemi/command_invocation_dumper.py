@@ -1,3 +1,4 @@
+import collections.abc
 from contextlib import contextmanager
 from functools import lru_cache
 from lark import Tree
@@ -36,7 +37,7 @@ class CommandInvocationDumper(
         command_name = raw_command_name.lower()
         if command_name in builtin_commands:
             command = builtin_commands[command_name]
-            if isinstance(command, dict):
+            if isinstance(command, collections.abc.Mapping):
                 return create_standard_dumper(command)
 
             return command
