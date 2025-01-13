@@ -67,8 +67,8 @@ class ParserWithPostProcessing:
     def __init__(self, parser):
         self.parser = parser
 
-    def parse(self, code):
-        stage_one = PostProcessorStageOne(code)
+    def parse(self, code, known_definitions=None):
+        stage_one = PostProcessorStageOne(code, known_definitions)
         stage_two = SimplifyQuotedArguments()
         return stage_two.transform(stage_one.transform(self.parser.parse(code)))
 

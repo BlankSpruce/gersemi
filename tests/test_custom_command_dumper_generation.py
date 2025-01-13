@@ -30,22 +30,21 @@ custom_command_properly_formatted = """Seven_Samurai(
 
 
 def create_dumper(custom_command_definitions):
-    return Dumper(
-        width=80, indent_size=4, custom_command_definitions=custom_command_definitions
-    )
+    return Dumper(width=80, indent_size=4, known_definitions=custom_command_definitions)
 
 
 def test_custom_command_generated_dumper(
     parser_with_postprocessing, case
 ):  # pylint: disable=redefined-outer-name
     parsed_function_def = parser_with_postprocessing.parse(case.content)
-    parsed_function = parser_with_postprocessing.parse(custom_command_to_format)
-
     definitions = get_just_definitions(
         find_custom_command_definitions(parsed_function_def)
     )
-    dumper = create_dumper(definitions)
 
+    parsed_function = parser_with_postprocessing.parse(
+        custom_command_to_format, definitions
+    )
+    dumper = create_dumper(definitions)
     custom_command_formatted = dumper.visit(parsed_function)
 
     assert custom_command_formatted == custom_command_properly_formatted

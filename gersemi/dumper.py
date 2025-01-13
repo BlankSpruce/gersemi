@@ -1,22 +1,20 @@
+from collections import ChainMap
 from itertools import chain
 from gersemi.base_dumper import BaseDumper
+from gersemi.builtin_commands import builtin_commands
 from gersemi.command_invocation_dumper import CommandInvocationDumper
 from gersemi.configuration import ListExpansion
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
-    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def __init__(
         self,
         width,
         indent_size,
-        custom_command_definitions,
-        extension_definitions=None,
+        known_definitions,
         list_expansion=ListExpansion.FavourInlining,
     ):
-        self.custom_command_definitions = custom_command_definitions
-        self.extension_definitions = (
-            dict() if extension_definitions is None else extension_definitions
-        )
+        self.known_definitions = ChainMap(known_definitions, builtin_commands)
         self.list_expansion = list_expansion
         super().__init__(width, indent_size)
 

@@ -1,3 +1,4 @@
+from collections import ChainMap
 from itertools import dropwhile
 from typing import List
 from lark import Discard, Tree, Token
@@ -33,9 +34,14 @@ class SimplifyParseTree(Transformer_InPlace):
 
 
 class PreserveCustomCommandFormatting(Transformer_InPlace):
-    def __init__(self, code):
+    def __init__(self, code, known_definitions):
         super().__init__()
         self.code = code
+        self.known_definitions = (
+            builtin_commands
+            if known_definitions is None
+            else ChainMap(known_definitions, builtin_commands)
+        )
 
     def _get_original_formatting(self, lparen, rparen):
         start, end = lparen.end_pos, rparen.start_pos
@@ -60,12 +66,9 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
             ],
         )
 
-    def _is_builtin(self, identifier):
-        return identifier.lower() in builtin_commands
-
     def command_invocation(self, children):
         identifier, _, arguments, _ = children
-        if self._is_builtin(identifier):
+        if identifier.lower() in self.known_definitions:
             return Tree("command_invocation", [identifier, arguments])
 
         return super().transform(self._make_custom_command(children))

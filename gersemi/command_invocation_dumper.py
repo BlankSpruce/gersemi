@@ -1,9 +1,7 @@
 import collections.abc
 from contextlib import contextmanager
 from functools import lru_cache
-from lark import Tree
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.builtin_commands import builtin_commands
 from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
@@ -34,23 +32,11 @@ class CommandInvocationDumper(
             self.__class__ = old_class  # pylint: disable=invalid-class-object,
 
     def _get_patch(self, raw_command_name):
-        command_name = raw_command_name.lower()
-        if command_name in builtin_commands:
-            command = builtin_commands[command_name]
-            if isinstance(command, collections.abc.Mapping):
-                return create_standard_dumper(command)
+        command = self.known_definitions.get(raw_command_name.lower(), None)
+        if isinstance(command, collections.abc.Mapping):
+            return create_standard_dumper(command)
 
-            return command
-
-        if command_name in self.extension_definitions:
-            command = self.extension_definitions[command_name]
-            return create_standard_dumper(command, custom_command=True)
-
-        if command_name in self.custom_command_definitions:
-            command = self.custom_command_definitions[command_name]
-            return create_standard_dumper(command, custom_command=True)
-
-        return None
+        return command
 
     def command_invocation(self, tree):
         command_name, _ = tree.children
@@ -61,14 +47,6 @@ class CommandInvocationDumper(
             return self.format_command(tree)
 
     def custom_command(self, tree):
-        _, command_name, arguments, *_ = tree.children
-        if (
-            command_name.lower() in self.extension_definitions
-            or command_name.lower() in self.custom_command_definitions
-        ):
-            return self.visit(
-                Tree("command_invocation", [command_name.lower(), arguments])
-            )
-
+        _, command_name, *_ = tree.children
         self._record_unknown_command(command_name)
         return super().custom_command(tree)

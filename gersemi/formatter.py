@@ -16,26 +16,23 @@ class Formatter:
         sanity_checker,
         line_length: int,
         indent: Indent,
-        custom_command_definitions,
-        extension_definitions,
+        known_definitions,
         list_expansion: ListExpansion,
     ):
         self.sanity_checker = sanity_checker
         self.line_length = line_length
         self.indent_type = indent
-        self.custom_command_definitions = custom_command_definitions
-        self.extension_definitions = extension_definitions
+        self.known_definitions = known_definitions
         self.list_expansion = list_expansion
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:
         dumper = Dumper(
             self.line_length,
             self.indent_type,
-            self.custom_command_definitions,
-            self.extension_definitions,
+            self.known_definitions,
             self.list_expansion,
         )
-        result = dumper.visit(PARSER.parse(code))
+        result = dumper.visit(PARSER.parse(code, self.known_definitions))
         self.sanity_checker(BARE_PARSER, code, result)
         return result, dumper.get_warnings()
 
@@ -45,20 +42,14 @@ class NullFormatter:
         return code, []
 
 
-def create_formatter(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    do_sanity_check,
-    line_length,
-    indent,
-    custom_command_definitions,
-    extension_definitions,
-    list_expansion,
+def create_formatter(
+    do_sanity_check, line_length, indent, known_definitions, list_expansion
 ):
     sanity_checker = check_code_equivalence if do_sanity_check else noop
     return Formatter(
         sanity_checker,
         line_length,
         indent,
-        custom_command_definitions,
-        extension_definitions,
+        known_definitions,
         list_expansion,
     )

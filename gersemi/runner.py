@@ -1,5 +1,5 @@
 import argparse
-from collections import defaultdict
+from collections import defaultdict, ChainMap
 from functools import partial
 from hashlib import sha1
 from itertools import chain
@@ -272,8 +272,7 @@ def handle_files_to_format(
         not configuration.outcome.unsafe,
         configuration.outcome.line_length,
         configuration.outcome.indent,
-        custom_command_definitions,
-        extension_definitions,
+        ChainMap(custom_command_definitions, extension_definitions),
         configuration.outcome.list_expansion,
     )
     task = select_task(mode, configuration)

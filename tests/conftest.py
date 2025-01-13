@@ -45,10 +45,9 @@ def formatter_creator():
             do_sanity_check=not config.get("unsafe", False),
             line_length=config.get("line_length", 80),
             indent=indent_type(config.get("indent", 4)),
-            custom_command_definitions=get_custom_command_definitions(
+            known_definitions=get_custom_command_definitions(
                 config.get("definitions", [])
             ),
-            extension_definitions=dict(),
             list_expansion=ListExpansion(
                 config.get("list_expansion", ListExpansion.FavourInlining)
             ),
