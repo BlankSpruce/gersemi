@@ -56,23 +56,20 @@ def contains_line_comment(nodes) -> bool:
     return any(map(lambda node: isinstance(node, Tree) and visit(node), nodes))
 
 
-def is_keyword(keyword):
-    def impl(node):
-        if is_unquoted_argument(node):
-            return node.children[0] == keyword
+def is_keyword(keyword, node):
+    if is_unquoted_argument(node):
+        return node.children[0] == keyword
 
-        if is_quoted_argument(node):
-            return (len(node.children) > 0) and (node.children[0] == keyword)
+    if is_quoted_argument(node):
+        return (len(node.children) > 0) and (node.children[0] == keyword)
 
-        if is_bracket_argument(node):
-            return (len(node.children) > 0) and (node.children[0] == keyword)
+    if is_bracket_argument(node):
+        return (len(node.children) > 0) and (node.children[0] == keyword)
 
-        if is_commented_argument(node):
-            return (len(node.children) > 0) and impl(node.children[0])
+    if is_commented_argument(node):
+        return (len(node.children) > 0) and is_keyword(keyword, node.children[0])
 
-        return False
-
-    return impl
+    return False
 
 
 class KeywordMatcher:
@@ -82,13 +79,14 @@ class KeywordMatcher:
     def __call__(self, other):
         for k in self.keywords:
             if isinstance(k, str):
-                if is_keyword(k)(other):
+                if is_keyword(k, other):
                     return True
-
-            if isinstance(k, tuple) and is_keyword_argument(other):
-                front, *_, back = other.children
+            elif isinstance(k, tuple) and is_keyword_argument(other):
                 front_pattern, back_pattern = k
-                if is_keyword(front_pattern)(front) and is_keyword(back_pattern)(back):
+                if not is_keyword(front_pattern, other.children[0]):
+                    continue
+
+                if is_keyword(back_pattern, other.children[-1]):
                     return True
 
         return False

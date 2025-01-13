@@ -13,10 +13,10 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
         self.rhs = rhs
 
     def _is_lhs(self, node):
-        return is_keyword(self.lhs)(node)
+        return is_keyword(self.lhs, node)
 
     def _is_rhs(self, node):
-        return is_keyword(self.rhs)(node)
+        return is_keyword(self.rhs, node)
 
     def arguments(self, children):
         if len(children) <= 1:
