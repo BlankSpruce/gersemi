@@ -104,6 +104,42 @@ command_definitions = {
         },
     },
     #
+    # Sometimes keywords have broad scope when used standalone but narrow scope
+    # when used in section. Example:
+    #
+    #     install(TARGETS <target>... [EXPORT <export-name>]
+    #         [RUNTIME_DEPENDENCIES <arg>...|RUNTIME_DEPENDENCY_SET <set-name>]
+    #         [<artifact-option>...]
+    #         [<artifact-kind> <artifact-option>...]...
+    #         [INCLUDES DESTINATION [<dir> ...]]
+    #         )
+    #
+    #     """
+    #     The first <artifact-option>... group applies to target Output
+    #     Artifacts that do not have a dedicated group specified later
+    #     in the same call.
+    #     """
+    #
+    "example_common_keywords_in_standalone_and_in_section": {
+        "front_positional_arguments": ["front_1", "front_2"],
+        "back_positional_arguments": ["back_1", "back_2", "back_3"],
+        "options": ["OPTION_1", "OPTION_2"],
+        "one_value_keywords": ["ONE_VALUE_KEYWORD_1", "ONE_VALUE_KEYWORD_2"],
+        "multi_value_keywords": [
+            "MULTI_VALUE_KEYWORD_1",
+            "SECTION_KEYWORD",
+        ],
+        "sections": {
+            "SECTION_KEYWORD": {
+                "front_positional_arguments": ["section_front_1"],
+                "back_positional_arguments": ["section_back_1", "section_back_2"],
+                "options": ["OPTION_1", "OPTION_2"],
+                "one_value_keywords": ["ONE_VALUE_KEYWORD_1", "ONE_VALUE_KEYWORD_2"],
+                "multi_value_keywords": ["MULTI_VALUE_KEYWORD_1"],
+            }
+        },
+    },
+    #
     # Nested sections are supported but perhaps it's better to avoid designing
     # such commands.
     #

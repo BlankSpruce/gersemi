@@ -94,3 +94,13 @@ class KeywordMatcher:
 
 def is_one_of_keywords(keywords):
     return KeywordMatcher(keywords)
+
+
+def make_tree(name: str):
+    return lambda children: Tree(name, children)
+
+
+option_argument = make_tree("option_argument")
+one_value_argument = make_tree("one_value_argument")
+multi_value_argument = make_tree("multi_value_argument")
+positional_arguments = make_tree("positional_arguments")

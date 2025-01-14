@@ -97,6 +97,35 @@ example_unnamed_positional_arguments(
     back_2
 )
 
+# command with common keywords in standalone and in section mode
+example_common_keywords_in_standalone_and_in_section(
+    front_1
+    front_2
+    OPTION_1
+    OPTION_2
+    ONE_VALUE_KEYWORD_2 foo
+    ONE_VALUE_KEYWORD_1 foo
+    MULTI_VALUE_KEYWORD_1
+        foo
+        bar
+        baz
+    SECTION_KEYWORD
+        section_front_1
+        OPTION_1
+        OPTION_2
+        ONE_VALUE_KEYWORD_2 foo
+        ONE_VALUE_KEYWORD_1 foo
+        MULTI_VALUE_KEYWORD_1
+            foo
+            bar
+            baz
+        section_back_1
+        section_back_2
+    back_1
+    back_2
+    back_3
+)
+
 # command with nested sections
 example_nested_sections(
     foo # level_0_arg_1

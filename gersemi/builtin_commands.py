@@ -41,6 +41,11 @@ _Install_TARGETS_kinds: List[KeywordMatcher] = [
     _FILE_SET_Any,
     "CXX_MODULES_BMI",
 ]
+_Install_TARGETS_artifact_option_group = {
+    "options": ["OPTIONAL", "EXCLUDE_FROM_ALL", "NAMELINK_ONLY", "NAMELINK_SKIP"],
+    "one_value_keywords": ["DESTINATION", "COMPONENT", "NAMELINK_COMPONENT"],
+    "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
+}
 _Install_IMPORTED_RUNTIME_ARTIFACTS_kinds = [
     "LIBRARY",
     "RUNTIME",
@@ -1275,27 +1280,17 @@ builtin_commands_impl = {
         "signatures": {
             "TARGETS": {
                 "sections": {
-                    kind: {
-                        "options": [
-                            "OPTIONAL",
-                            "EXCLUDE_FROM_ALL",
-                            "NAMELINK_ONLY",
-                            "NAMELINK_SKIP",
-                        ],
-                        "one_value_keywords": [
-                            "DESTINATION",
-                            "COMPONENT",
-                            "NAMELINK_COMPONENT",
-                        ],
-                        "multi_value_keywords": ["PERMISSIONS", "CONFIGURATIONS"],
-                    }
+                    kind: _Install_TARGETS_artifact_option_group
                     for kind in _Install_TARGETS_kinds
                 },
+                "options": _Install_TARGETS_artifact_option_group["options"],
                 "one_value_keywords": [
+                    *_Install_TARGETS_artifact_option_group["one_value_keywords"],
                     "EXPORT",
                     "RUNTIME_DEPENDENCY_SET",
                 ],
                 "multi_value_keywords": [
+                    *_Install_TARGETS_artifact_option_group["multi_value_keywords"],
                     "TARGETS",
                     _INCLUDES_DESTINATION,
                     "RUNTIME_DEPENDENCIES",
@@ -1398,11 +1393,6 @@ builtin_commands_impl = {
                     }
                     for kind in _Install_RUNTIME_DEPENDENCY_SET_kinds
                 },
-                "options": [
-                    "LIBRARY",
-                    "RUNTIME",
-                    "FRAMEWORK",
-                ],
                 "multi_value_keywords": [
                     "PRE_INCLUDE_REGEXES",
                     "PRE_EXCLUDE_REGEXES",
@@ -1411,6 +1401,7 @@ builtin_commands_impl = {
                     "POST_INCLUDE_FILES",
                     "POST_EXCLUDE_FILES",
                     "DIRECTORIES",
+                    "RUNTIME_DEPENDENCY_SET",
                     *_Install_RUNTIME_DEPENDENCY_SET_kinds,
                 ],
             },

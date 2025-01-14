@@ -1,4 +1,8 @@
 # Changelog
+## [0.18.1] 2025-01-13
+### Fixed
+- Proper formatting of first `<artifact-option>...` group in `INSTALL(TARGETS)` command. (#51)
+
 ## [0.18.0] 2025-01-10
 ### Added
 - Add support for extensions and provide example extension as a template.

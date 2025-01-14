@@ -9,6 +9,10 @@ from gersemi.ast_helpers import (
     is_option_argument,
     is_positional_arguments,
     is_section,
+    option_argument,
+    one_value_argument,
+    multi_value_argument,
+    positional_arguments,
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keywords import KeywordMatcher
@@ -26,16 +30,6 @@ def is_non_empty_group(group: Sized) -> bool:
         return is_non_empty(group.children)
 
     return is_non_empty(group)
-
-
-def make_tree(name: str):
-    return lambda children: Tree(name, children)
-
-
-option_argument = make_tree("option_argument")
-one_value_argument = make_tree("one_value_argument")
-multi_value_argument = make_tree("multi_value_argument")
-positional_arguments = make_tree("positional_arguments")
 
 
 class PositionalArguments(list):
