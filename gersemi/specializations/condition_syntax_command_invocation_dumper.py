@@ -1,7 +1,11 @@
 from typing import List
 from lark import Tree
 from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
-from gersemi.ast_helpers import contains_line_comment, is_one_of_keywords, is_comment
+from gersemi.ast_helpers import (
+    is_line_comment_in,
+    is_one_of_keywords,
+    is_comment,
+)
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.configuration import Spaces
 from gersemi.types import Nodes
@@ -136,7 +140,7 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
 
         arg, *_ = rest
         if (
-            (not contains_line_comment([operation]))
+            (not is_line_comment_in(operation))
             and isinstance(self.indent_type, Spaces)
             and (len(formatted_operation.strip()) < self.indent_type)
         ):

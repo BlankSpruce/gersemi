@@ -4,7 +4,7 @@ from textwrap import indent
 from typing import Optional
 from lark import Tree
 from lark.visitors import Interpreter
-from gersemi.ast_helpers import contains_line_comment
+from gersemi.ast_helpers import is_line_comment_in
 from gersemi.configuration import Indent, ListExpansion, Tabs
 from gersemi.types import Nodes
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
@@ -14,6 +14,10 @@ def get_indent(indent_type: Indent) -> str:
     if isinstance(indent_type, Tabs):
         return "\t"
     return " " * indent_type
+
+
+class WontFit(Exception):
+    pass
 
 
 class BaseDumper(Interpreter):
@@ -35,21 +39,40 @@ class BaseDumper(Interpreter):
     def _indent(self, text: str):
         return indent(text, self.indent_symbol)
 
+    def _single_line_helper(self, children, offset):
+        width = offset
+        for c in children:
+            if isinstance(c, Tree):
+                if is_line_comment_in(c):
+                    raise WontFit()
+
+                result = self.visit(c)
+            else:
+                result = c
+
+            if "\n" in result:
+                raise WontFit()
+
+            width += len(result)
+            if width > self.width:
+                raise WontFit()
+
+            yield result
+            width += 1
+
     def _try_to_format_into_single_line(
         self, children: Nodes, prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
         if self.favour_expansion:
             return None
 
-        if not contains_line_comment(children):
+        try:
+            reserved_space = len(prefix) + len(postfix) + len(self.indent_symbol)
             with self.not_indented():
-                formatted_children = " ".join(
-                    self.visit(c) if isinstance(c, Tree) else c for c in children
-                )
-            result = self._indent(f"{prefix}{formatted_children}{postfix}")
-            if len(result) <= self.width and "\n" not in result:
-                return result
-        return None
+                formatted = " ".join(self._single_line_helper(children, reserved_space))
+            return f"{self.indent_symbol}{prefix}{formatted}{postfix}"
+        except WontFit:
+            return None
 
     @contextmanager
     def with_indent_level(self, indent_level):

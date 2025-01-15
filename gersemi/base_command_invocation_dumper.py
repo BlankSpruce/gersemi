@@ -1,4 +1,4 @@
-from gersemi.ast_helpers import contains_line_comment
+from gersemi.ast_helpers import is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
 from gersemi.types import Nodes
@@ -9,7 +9,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         with self.indented():
             formatted_arguments = self.visit(arguments).lstrip()
         if (
-            not contains_line_comment(arguments.children)
+            not is_line_comment_in_any_of(arguments.children)
             and "\n" not in formatted_arguments
         ):
             return "".join([self._indent(begin), formatted_arguments, end])

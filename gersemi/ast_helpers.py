@@ -51,9 +51,14 @@ class ContainsLineComment(Interpreter):
     binary_operation = _visit
 
 
-def contains_line_comment(nodes) -> bool:
-    visit = ContainsLineComment().visit
-    return any(map(lambda node: isinstance(node, Tree) and visit(node), nodes))
+def is_line_comment_in(node) -> bool:
+    return ContainsLineComment().visit(node)
+
+
+def is_line_comment_in_any_of(nodes) -> bool:
+    return any(
+        map(lambda node: isinstance(node, Tree) and is_line_comment_in(node), nodes)
+    )
 
 
 def is_keyword(keyword, node):
