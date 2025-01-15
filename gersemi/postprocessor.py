@@ -143,3 +143,9 @@ class PostProcessorStageOne(
 class SimplifyQuotedArguments(Transformer_InPlace):
     def quoted_argument(self, children):
         return Tree("quoted_argument", ["".join(children[1:-1])])
+
+
+def postprocess(code, definitions, tree):
+    stage_one = PostProcessorStageOne(code, definitions)
+    stage_two = SimplifyQuotedArguments()
+    return stage_two.transform(stage_one.transform(tree))

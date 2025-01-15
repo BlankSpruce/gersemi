@@ -30,6 +30,6 @@ def check_abstract_syntax_trees_equivalence(lhs, rhs):
         raise ASTMismatch
 
 
-def check_code_equivalence(parser, lhs, rhs):
-    lhs_parsed, rhs_parsed = parser.parse(lhs), parser.parse(rhs)
+def check_code_equivalence(parser, lhs_parsed, rhs):
+    rhs_parsed = parser.parse(rhs)
     check_abstract_syntax_trees_equivalence(lhs_parsed, rhs_parsed)

@@ -23,7 +23,8 @@ def test_formatter_idempotence(formatter_creator, case):
 def test_abstract_syntax_tree_equivalence(parser, parser_with_simple_grammar, case):
     for p in [parser, parser_with_simple_grammar]:
         try:
-            check_code_equivalence(p, case.given, case.expected)
+            parsed = p.parse(case.given)
+            check_code_equivalence(p, parsed, case.expected)
         except ASTMismatch:
             pytest.fail("ASTs mismatch")
             raise

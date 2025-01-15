@@ -1,7 +1,9 @@
+from copy import deepcopy
 from typing import Tuple
 from gersemi.configuration import Indent, ListExpansion
 from gersemi.dumper import Dumper
-from gersemi.parser import BARE_PARSER, PARSER
+from gersemi.parser import BARE_PARSER
+from gersemi.postprocessor import postprocess
 from gersemi.sanity_checker import check_code_equivalence
 from gersemi.warnings import FormatterWarnings
 
@@ -26,14 +28,16 @@ class Formatter:
         self.list_expansion = list_expansion
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:
+        tree = BARE_PARSER.parse(code)
+        original = deepcopy(tree)
         dumper = Dumper(
             self.line_length,
             self.indent_type,
             self.known_definitions,
             self.list_expansion,
         )
-        result = dumper.visit(PARSER.parse(code, self.known_definitions))
-        self.sanity_checker(BARE_PARSER, code, result)
+        result = dumper.visit(postprocess(code, self.known_definitions, tree))
+        self.sanity_checker(BARE_PARSER, original, result)
         return result, dumper.get_warnings()
 
 
