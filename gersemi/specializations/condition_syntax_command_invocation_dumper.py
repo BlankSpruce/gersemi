@@ -125,7 +125,7 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
     _inhibit_favour_expansion = True
 
     def unary_operation(self, tree):
-        result = self._try_to_format_into_single_line(tree.children, separator=" ")
+        result = self._try_to_format_into_single_line(tree.children)
         if result is not None:
             return result
 
@@ -147,7 +147,7 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
         return f"{formatted_operation}\n{formatted_arg}"
 
     def binary_operation(self, tree):
-        result = self._try_to_format_into_single_line(tree.children, separator=" ")
+        result = self._try_to_format_into_single_line(tree.children)
         if result is not None:
             return result
 
@@ -171,7 +171,7 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
     def complex_argument(self, tree):
         arguments, *_ = tree.children
         result = self._try_to_format_into_single_line(
-            arguments.children, separator=" ", prefix="(", postfix=")"
+            arguments.children, prefix="(", postfix=")"
         )
         if result is not None:
             return result

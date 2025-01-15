@@ -19,9 +19,7 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
     _keyword_formatters = {"PROPERTY": "_format_property"}
 
     def _format_property(self, args):
-        result = self._try_to_format_into_single_line(
-            args, separator=" ", prefix="", postfix=""
-        )
+        result = self._try_to_format_into_single_line(args, prefix="", postfix="")
         if result is not None:
             return result
 

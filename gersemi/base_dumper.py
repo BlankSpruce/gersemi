@@ -36,14 +36,14 @@ class BaseDumper(Interpreter):
         return indent(text, self.indent_symbol)
 
     def _try_to_format_into_single_line(
-        self, children: Nodes, separator: str = "", prefix: str = "", postfix: str = ""
+        self, children: Nodes, prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
         if self.favour_expansion:
             return None
 
         if not contains_line_comment(children):
             with self.not_indented():
-                formatted_children = separator.join(
+                formatted_children = " ".join(
                     self.visit(c) if isinstance(c, Tree) else c for c in children
                 )
             result = self._indent(f"{prefix}{formatted_children}{postfix}")

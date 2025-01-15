@@ -45,7 +45,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         end = ")"
         if self._inlining_condition(arguments):
             result = self._try_to_format_into_single_line(
-                arguments.children, separator=" ", prefix=begin, postfix=end
+                arguments.children, prefix=begin, postfix=end
             )
             if result is not None:
                 return result
@@ -69,7 +69,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         arguments, *_ = tree.children
         if len(arguments.children) <= 4:
             result = self._try_to_format_into_single_line(
-                arguments.children, separator=" ", prefix="(", postfix=")"
+                arguments.children, prefix="(", postfix=")"
             )
             if result is not None:
                 return result

@@ -119,7 +119,7 @@ class PreservingCommandInvocationDumper(BaseDumper):
 
         with self.not_indented():
             result = self._try_to_format_into_single_line(
-                formatted_arguments.children, separator=" ", prefix=begin, postfix=")"
+                formatted_arguments.children, prefix=begin, postfix=")"
             )
         if result is not None:
             return result

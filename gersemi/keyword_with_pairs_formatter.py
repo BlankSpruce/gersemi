@@ -4,7 +4,7 @@ from gersemi.base_dumper import BaseDumper
 
 class KeywordWithPairsFormatter(BaseDumper):
     def _format_pair(self, key, value):
-        result = self._try_to_format_into_single_line([key, value], separator=" ")
+        result = self._try_to_format_into_single_line([key, value])
         if result is not None:
             return result
 

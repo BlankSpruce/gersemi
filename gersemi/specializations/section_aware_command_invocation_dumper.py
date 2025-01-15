@@ -142,7 +142,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
         )
 
     def section(self, tree):
-        result = self._try_to_format_into_single_line(tree.children, separator=" ")
+        result = self._try_to_format_into_single_line(tree.children)
         if result is not None:
             return result
 

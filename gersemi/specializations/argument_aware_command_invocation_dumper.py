@@ -107,7 +107,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return "\n".join(map(self.visit, tree.children))
 
     def _format_non_option(self, tree):
-        result = self._try_to_format_into_single_line(tree.children, separator=" ")
+        result = self._try_to_format_into_single_line(tree.children)
         if result is not None:
             return result
 
@@ -121,9 +121,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         )
         if can_be_inlined:
             with self.select_inlining_strategy():
-                result = self._try_to_format_into_single_line(
-                    tree.children, separator=" "
-                )
+                result = self._try_to_format_into_single_line(tree.children)
                 if result is not None:
                     return result
 
