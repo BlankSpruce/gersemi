@@ -616,6 +616,10 @@ builtin_commands_impl = {
                 "one_value_keywords": ["INPUT", "DESTINATION"],
                 "multi_value_keywords": ["PATTERNS"],
             },
+            "REMOVE": {},
+            "REMOVE_RECURSE": {},
+            "TOUCH": {},
+            "TOUCH_NOCREATE": {},
         },
     },
     "find_file": {
@@ -1069,6 +1073,7 @@ builtin_commands_impl = {
         "front_positional_arguments": ["<variable>"],
         "options": ["CACHE", "PARENT_SCOPE"],
     },
+    "variable_watch": {},
     #
     ## Project Commands
     #
@@ -1218,6 +1223,7 @@ builtin_commands_impl = {
         "multi_value_keywords": ["BRIEF_DOCS", "FULL_DOCS"],
     },
     "enable_language": {},
+    "enable_testing": {},
     "export": {
         "signatures": {
             "EXPORT": {
@@ -1879,6 +1885,9 @@ builtin_commands_impl = {
     # (&)
     "check_library_exists": {},
     #
+    ### CheckLinkerFlag
+    "check_linker_flag": {},
+    #
     ### CheckOBJCCompilerFlag
     "check_objc_compiler_flag": {},
     #
@@ -1897,6 +1906,9 @@ builtin_commands_impl = {
     "check_objcxx_source_compiles": {
         "multi_value_keywords": ["FAIL_REGEX"],
     },
+    #
+    ### CheckOBJCXXSourceRuns
+    "check_objcxx_source_runs": {},
     #
     ### CheckPIESupported
     "check_pie_supported": {
@@ -2134,6 +2146,9 @@ builtin_commands_impl = {
             "DISPLAY_NAME",
         ],
     },
+    #
+    ### CPackIFWConfigureFile
+    "cpack_ifw_configure_file": {},
     #
     ### CPack
     #### no commands
@@ -2457,6 +2472,7 @@ builtin_commands_impl = {
             "CUSTOM_CONTENT_FROM_VARIABLE",
         ],
     },
+    "add_compiler_export_flags": {},
     #
     ### GetPrerequisites
     "get_prerequisites": {},
@@ -2698,6 +2714,7 @@ builtin_commands_impl = {
     "flex_target": {
         "one_value_keywords": ["COMPILE_FLAGS", "DEFINES_FILE"],
     },
+    "add_flex_bison_dependency": {},
     #
     ### FindFLTK2
     #
@@ -3024,6 +3041,7 @@ builtin_commands_impl = {
     "qt4_add_resources": {
         "multi_value_keywords": ["OPTIONS"],
     },
+    "qt4_add_translation": {},
     "qt4_generate_moc": {
         "one_value_keywords": ["TARGET"],
     },

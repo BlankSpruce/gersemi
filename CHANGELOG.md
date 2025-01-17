@@ -1,4 +1,8 @@
 # Changelog
+## [0.18.2] 2025-01-17
+### Fixed
+- Fix "unknown command" regression. (#52)
+
 ## [0.18.1] 2025-01-13
 ### Fixed
 - Proper formatting of first `<artifact-option>...` group in `INSTALL(TARGETS)` command. (#51)
