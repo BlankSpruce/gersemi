@@ -1,5 +1,6 @@
 import argparse
 from collections import defaultdict, ChainMap
+import collections.abc
 from functools import partial
 from hashlib import sha1
 from itertools import chain
@@ -62,6 +63,24 @@ class WarningSink:
         self.at_least_one_warning_issued = True
         if not self.quiet:
             print_to_stderr(*args, **kwargs)
+
+
+class StatusCode:
+    def __init__(self):
+        self.value = SUCCESS
+
+    def __iadd__(self, other):
+        if isinstance(other, int):
+            self.value = max(self.value, other)
+            return self
+
+        if isinstance(other, collections.abc.Iterable):
+            for item in other:
+                self += item
+
+            return self
+
+        raise RuntimeError(f"Invalid type: {type(other)}")
 
 
 def get_files(paths: Iterable[Path]) -> Iterable[Path]:
@@ -242,10 +261,6 @@ def store_files_in_cache(
         cache.store_files(configuration_summary, files)
 
 
-def compute_error_code(collection):
-    return max(collection, default=SUCCESS)
-
-
 def select_task_for_already_formatted_files(mode: Mode):
     return {
         Mode.ForwardToStdout: forward_to_stdout,
@@ -257,7 +272,7 @@ def handle_already_formatted_files(
     configuration: Configuration,
     warning_sink: WarningSink,
     already_formatted_files: Iterable[Path],
-) -> int:
+) -> Iterable[int]:
     task = select_task_for_already_formatted_files(mode)
     formatter = NullFormatter()
     execute = partial(run_task, formatter=formatter, task=task)
@@ -265,7 +280,7 @@ def handle_already_formatted_files(
         consume_task_result(result, configuration, warning_sink)
         for result in map(execute, already_formatted_files)
     ]
-    return compute_error_code(code for _, code, _ in results)
+    return (code for _, code, _ in results)
 
 
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -275,7 +290,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     pool,
     warning_sink: WarningSink,
     files_to_format: Iterable[Path],
-) -> int:
+) -> Iterable[int]:
     custom_command_definitions = find_all_custom_command_definitions(
         set(configuration.outcome.definitions), pool, warning_sink
     )
@@ -307,7 +322,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
             if code == SUCCESS and path != Path("-") and (not has_warnings)
         ),
     )
-    return compute_error_code(code for _, code, _ in results)
+    return (code for _, code, _ in results)
 
 
 class GetConfiguration:
@@ -408,8 +423,7 @@ def run(args: argparse.Namespace):
         return SUCCESS
 
     with create_cache(control.cache) as cache, pool_cm() as pool:
-        error_code = SUCCESS
-
+        status_code = StatusCode()
         for config_file, files in buckets.items():
             config = get_configuration(config_file)
             if config.outcome.disable_formatting:
@@ -419,31 +433,16 @@ def run(args: argparse.Namespace):
                 cache, config.outcome, files
             )
 
-            error_code = compute_error_code(
-                [
-                    error_code,
-                    handle_already_formatted_files(
-                        mode,
-                        config,
-                        warning_sink,
-                        already_formatted_files,
-                    ),
-                    handle_files_to_format(
-                        mode, config, cache, pool, warning_sink, files_to_format
-                    ),
-                ]
+            status_code += handle_already_formatted_files(
+                mode, config, warning_sink, already_formatted_files
+            )
+            status_code += handle_files_to_format(
+                mode, config, cache, pool, warning_sink, files_to_format
             )
 
-        return compute_error_code(
-            [
-                error_code,
-                (
-                    FAIL
-                    if (
-                        control.warnings_as_errors
-                        and warning_sink.at_least_one_warning_issued
-                    )
-                    else SUCCESS
-                ),
-            ]
+        status_code += (
+            FAIL
+            if (control.warnings_as_errors and warning_sink.at_least_one_warning_issued)
+            else SUCCESS
         )
+        return status_code.value
