@@ -258,6 +258,13 @@ def create_argparser():
     [default: omitted]
         """,
     )
+    control_configuration_group.add_argument(
+        "--warnings-as-errors",
+        dest="warnings_as_errors",
+        action="store_true",
+        default=None,
+        help=control_conf_doc["warnings_as_errors"],
+    )
 
     parser.add_argument(
         dest="sources",

@@ -8,6 +8,7 @@ import sys
 from typing import Iterable, Optional, Sequence, Tuple, Union
 import yaml
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
+from gersemi.return_codes import FAIL
 from gersemi.__version__ import __version__
 
 
@@ -247,6 +248,20 @@ class ControlConfiguration:
     file will be used for determining configuration for all sources
     instead of automatically found configuration files closest to
     each of the sources.
+                """
+            ),
+        ),
+    )
+
+    warnings_as_errors: bool = field(
+        default=False,
+        metadata=dict(
+            title="Warnings as errors",
+            description=doc(
+                f"""
+    Treat warnings as errors so that status code becomes {FAIL} when
+    at least one warning would be issued. This option is not inhibited
+    by --quiet.
                 """
             ),
         ),

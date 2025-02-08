@@ -33,7 +33,7 @@ from gersemi.parser import PARSER as parser
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import Result, Error, apply, get_error_message
-from gersemi.return_codes import SUCCESS, INTERNAL_ERROR
+from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
 from gersemi.task_result import TaskResult
 from gersemi.tasks.check_formatting import check_formatting
 from gersemi.tasks.do_nothing import do_nothing
@@ -51,6 +51,17 @@ CHUNKSIZE = 16
 
 print_to_stdout = partial(print, file=sys.stdout, end="")
 print_to_stderr = partial(print, file=sys.stderr)
+
+
+class WarningSink:
+    def __init__(self, quiet):
+        self.quiet = quiet
+        self.at_least_one_warning_issued = False
+
+    def __call__(self, *args, **kwargs):
+        self.at_least_one_warning_issued = True
+        if not self.quiet:
+            print_to_stderr(*args, **kwargs)
 
 
 def get_files(paths: Iterable[Path]) -> Iterable[Path]:
@@ -91,18 +102,18 @@ def find_custom_command_definitions_in_file(
     return apply(find_custom_command_definitions_in_file_impl, filepath)
 
 
-def check_conflicting_definitions(definitions):
+def check_conflicting_definitions(definitions, warning_sink: WarningSink):
     for name, info in definitions.items():
         if len(info) > 1:
-            print_to_stderr(f"Warning: conflicting definitions for '{name}':")
+            warning_sink(f"Warning: conflicting definitions for '{name}':")
             places = sorted(where for _, where in info)
             for index, where in enumerate(places):
                 kind = "(used)   " if index == 0 else "(ignored)"
-                print_to_stderr(f"{kind} {where}")
+                warning_sink(f"{kind} {where}")
 
 
 def find_all_custom_command_definitions(
-    paths: Iterable[Path], pool, quiet: bool
+    paths: Iterable[Path], pool, warning_sink: WarningSink
 ) -> Dict[str, Keywords]:
     result: Dict = {}
 
@@ -116,7 +127,7 @@ def find_all_custom_command_definitions(
 
     for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
         if isinstance(defs, Error):
-            print_to_stderr(get_error_message(defs))
+            warning_sink(get_error_message(defs))
             continue
 
         for name, info in defs.items():
@@ -125,8 +136,7 @@ def find_all_custom_command_definitions(
             else:
                 result[name] = info
 
-    if not quiet:
-        check_conflicting_definitions(result)
+    check_conflicting_definitions(result, warning_sink)
 
     return get_just_definitions(result)
 
@@ -158,7 +168,9 @@ def run_task(
 
 
 def consume_task_result(
-    task_result: TaskResult, configuration: Configuration
+    task_result: TaskResult,
+    configuration: Configuration,
+    warning_sink: WarningSink,
 ) -> Tuple[Path, int, bool]:
     if task_result.to_stdout != "":
         print_to_stdout(task_result.to_stdout)
@@ -169,12 +181,11 @@ def consume_task_result(
         else task_result.warnings
     )
 
-    if not configuration.control.quiet:
-        for warning in warnings:
-            print_to_stderr(warning.get_message(fromfile(task_result.path)))
+    for warning in warnings:
+        warning_sink(warning.get_message(fromfile(task_result.path)))
 
-        if task_result.to_stderr != "":
-            print_to_stderr(task_result.to_stderr)
+    if task_result.to_stderr != "":
+        warning_sink(task_result.to_stderr)
 
     return task_result.path, task_result.return_code, (len(warnings) > 0)
 
@@ -242,27 +253,31 @@ def select_task_for_already_formatted_files(mode: Mode):
 
 
 def handle_already_formatted_files(
-    mode: Mode, configuration: Configuration, already_formatted_files: Iterable[Path]
+    mode: Mode,
+    configuration: Configuration,
+    warning_sink: WarningSink,
+    already_formatted_files: Iterable[Path],
 ) -> int:
     task = select_task_for_already_formatted_files(mode)
     formatter = NullFormatter()
     execute = partial(run_task, formatter=formatter, task=task)
     results = [
-        consume_task_result(result, configuration)
+        consume_task_result(result, configuration, warning_sink)
         for result in map(execute, already_formatted_files)
     ]
     return compute_error_code(code for _, code, _ in results)
 
 
-def handle_files_to_format(
+def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     mode: Mode,
     configuration: Configuration,
     cache,
     pool,
+    warning_sink: WarningSink,
     files_to_format: Iterable[Path],
 ) -> int:
     custom_command_definitions = find_all_custom_command_definitions(
-        set(configuration.outcome.definitions), pool, configuration.control.quiet
+        set(configuration.outcome.definitions), pool, warning_sink
     )
     extension_definitions = load_definitions_from_extensions(
         configuration.outcome.extensions
@@ -279,7 +294,7 @@ def handle_files_to_format(
     execute = partial(run_task, formatter=formatter, task=task)
 
     results = [
-        consume_task_result(result, configuration)
+        consume_task_result(result, configuration, warning_sink)
         for result in pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE)
     ]
     store_files_in_cache(
@@ -296,14 +311,19 @@ def handle_files_to_format(
 
 
 class GetConfiguration:
-    def __init__(self, args: argparse.Namespace, control: ControlConfiguration):
+    def __init__(
+        self,
+        args: argparse.Namespace,
+        control: ControlConfiguration,
+        warning_sink: WarningSink,
+    ):
         self.args = args
         self.control = control
         self.processed_configuration_files: List[Path] = []
+        self.warning_sink = warning_sink
 
     def _warn(self, item: NotSupportedKeys, text: str):
-        if not self.control.quiet:
-            print_to_stderr(f"{item.path}:", text)
+        self.warning_sink(f"{item.path}:", text)
 
     def _inform_about_not_supported_keys(self, item: NotSupportedKeys):
         if item.path in self.processed_configuration_files:
@@ -375,13 +395,14 @@ def run(args: argparse.Namespace):
 
     mode = get_mode(args)
     control = make_control_configuration(args)
+    warning_sink = WarningSink(control.quiet)
     pool_cm = create_pool(
         is_stdin_in_sources=(Path("-") in requested_files),
         workers=control.workers,
     )
 
     buckets = split_files_by_configuration_file(requested_files, control)
-    get_configuration = GetConfiguration(args, control)
+    get_configuration = GetConfiguration(args, control, warning_sink)
     if mode == Mode.PrintConfig:
         print_configuration_report(args.print_config, buckets, get_configuration)
         return SUCCESS
@@ -402,10 +423,27 @@ def run(args: argparse.Namespace):
                 [
                     error_code,
                     handle_already_formatted_files(
-                        mode, config, already_formatted_files
+                        mode,
+                        config,
+                        warning_sink,
+                        already_formatted_files,
                     ),
-                    handle_files_to_format(mode, config, cache, pool, files_to_format),
+                    handle_files_to_format(
+                        mode, config, cache, pool, warning_sink, files_to_format
+                    ),
                 ]
             )
 
-        return error_code
+        return compute_error_code(
+            [
+                error_code,
+                (
+                    FAIL
+                    if (
+                        control.warnings_as_errors
+                        and warning_sink.at_least_one_warning_issued
+                    )
+                    else SUCCESS
+                ),
+            ]
+        )

@@ -3,6 +3,7 @@ import pathlib
 import shutil
 import pytest
 from gersemi.configuration import indent_type, ListExpansion
+from gersemi.noop import noop
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.formatter import create_formatter
 from gersemi.runner import find_all_custom_command_definitions
@@ -35,7 +36,11 @@ def get_custom_command_definitions(configuration_definitions):
             yield from map(func, files)
 
     paths = [pathlib.Path(d).resolve() for d in configuration_definitions]
-    return find_all_custom_command_definitions(paths=paths, quiet=False, pool=Pool())
+    return find_all_custom_command_definitions(
+        paths=paths,
+        pool=Pool(),
+        warning_sink=noop,
+    )
 
 
 @pytest.fixture(scope="module")

@@ -8,7 +8,8 @@ import sqlite3
 from stat import S_IREAD, S_IRGRP, S_IROTH
 import yaml
 import pytest
-from tests.fixtures.app import success, fail, match_not
+from gersemi.return_codes import FAIL, SUCCESS
+from tests.fixtures.app import ExpectedOutcome, fail, match_not, success
 
 
 def compare_directories(left, right):
@@ -675,11 +676,27 @@ def test_cache_is_not_updated_when_input_is_from_stdin(app, cache):
     assert len(cache.get_formatted()) == 0
 
 
-def test_check_project_with_conflicting_command_definitions(app, testfiles):
+warning_params = [
+    ("default", (), SUCCESS),
+    ("warnings as errors", ("--warnings-as-errors",), FAIL),
+]
+
+
+@pytest.mark.parametrize(
+    ["warning_args", "returncode"],
+    [rest for __, *rest in warning_params],
+    ids=[name for name, *__ in warning_params],
+)
+def test_check_project_with_conflicting_command_definitions(
+    app, testfiles, warning_args, returncode
+):
     base = testfiles / "conflicting_definitions"
     foo1 = (base / "foo1.cmake").resolve()
     foo2 = (base / "foo2.cmake").resolve()
-    assert app("--check", base, "--definitions", base) == success(
+    assert app(
+        "--check", base, "--definitions", base, *warning_args
+    ) == ExpectedOutcome(
+        returncode=returncode,
         stdout="",
         stderr=f"""Warning: conflicting definitions for 'foo':
 (used)    {foo1}:1:10
@@ -689,7 +706,10 @@ def test_check_project_with_conflicting_command_definitions(app, testfiles):
 """,
     )
 
-    assert app("--check", "--no-quiet", base, "--definitions", base) == success(
+    assert app(
+        "--check", "--no-quiet", base, "--definitions", base, *warning_args
+    ) == ExpectedOutcome(
+        returncode=returncode,
         stdout="",
         stderr=f"""Warning: conflicting definitions for 'foo':
 (used)    {foo1}:1:10
@@ -710,7 +730,14 @@ def test_check_project_with_conflicting_command_definitions_dont_warn_when_quiet
     )
 
 
-def test_format_file_with_conflicting_command_definitions(app, testfiles):
+@pytest.mark.parametrize(
+    ["warning_args", "returncode"],
+    [rest for __, *rest in warning_params],
+    ids=[name for name, *__ in warning_params],
+)
+def test_format_file_with_conflicting_command_definitions(
+    app, testfiles, warning_args, returncode
+):
     base = testfiles / "conflicting_definitions"
     foo1 = (base / "foo1.cmake").resolve()
     foo2 = (base / "foo2.cmake").resolve()
@@ -719,7 +746,9 @@ def test_format_file_with_conflicting_command_definitions(app, testfiles):
         "--definitions",
         base,
         "--list-expansion=favour-expansion",
-    ) == success(
+        *warning_args,
+    ) == ExpectedOutcome(
+        returncode=returncode,
         stdout="""foo(ONE
     TWO x
     THREE
@@ -747,6 +776,11 @@ def test_cached_result_doesnt_inhibit_printing_in_stdout_mode(app, testfiles):
 
 
 @pytest.mark.parametrize(
+    ["warning_args", "returncode"],
+    [rest for __, *rest in warning_params],
+    ids=[name for name, *__ in warning_params],
+)
+@pytest.mark.parametrize(
     ["args", "check_cache"],
     [
         ((), False),
@@ -757,7 +791,9 @@ def test_cached_result_doesnt_inhibit_printing_in_stdout_mode(app, testfiles):
         (("--diff",), False),
     ],
 )
-def test_warn_about_unknown_commands(app, testfiles, cache, args, check_cache):
+def test_warn_about_unknown_commands(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    app, testfiles, cache, args, check_cache, warning_args, returncode
+):
     target = testfiles / "warn_about_unknown_commands"
     cmakelists = target / "CMakeLists.txt"
     definitions = target / "watch_movies.cmake"
@@ -765,7 +801,9 @@ def test_warn_about_unknown_commands(app, testfiles, cache, args, check_cache):
     if check_cache:
         cache.assert_that_has_no_tables()
 
-    assert app(*args, cmakelists, "--definitions", definitions) == success(stderr="")
+    assert app(
+        *args, cmakelists, "--definitions", definitions, *warning_args
+    ) == success(stderr="")
 
     if check_cache:
         cache.assert_that_has_initialized_tables()
@@ -777,7 +815,8 @@ def test_warn_about_unknown_commands(app, testfiles, cache, args, check_cache):
     if check_cache:
         cache.assert_that_has_no_tables()
 
-    assert app(*args, cmakelists) == success(
+    assert app(*args, cmakelists, *warning_args) == ExpectedOutcome(
+        returncode=returncode,
         stderr=f"""Warning: unknown command 'watch_nolan_movies' used at:
 {str(cmakelists.resolve())}:3:1
 {str(cmakelists.resolve())}:8:5
@@ -786,7 +825,7 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 {str(cmakelists.resolve())}:6:5
 {str(cmakelists.resolve())}:11:1
 
-"""
+""",
     )
 
     if check_cache:
@@ -796,6 +835,11 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 
 
 @pytest.mark.parametrize(
+    ["warning_args", "returncode"],
+    [rest for __, *rest in warning_params],
+    ids=[name for name, *__ in warning_params],
+)
+@pytest.mark.parametrize(
     ["args"],
     [
         ((),),
@@ -803,17 +847,20 @@ Warning: unknown command 'watch_tarantino_movies' used at:
         (("--diff",),),
     ],
 )
-def test_warn_about_unknown_commands_with_stdin(app, testfiles, args):
+def test_warn_about_unknown_commands_with_stdin(
+    app, testfiles, args, warning_args, returncode
+):
     target = testfiles / "warn_about_unknown_commands"
     definitions = target / "watch_movies.cmake"
     with open(target / "CMakeLists.txt", "r", encoding="utf-8") as f:
         content = f.read()
 
-    assert app(*args, "-", "--definitions", definitions, input=content) == success(
-        stderr=""
-    )
+    assert app(
+        *args, "-", "--definitions", definitions, *warning_args, input=content
+    ) == success(stderr="")
 
-    assert app(*args, "-", input=content) == success(
+    assert app(*args, "-", *warning_args, input=content) == ExpectedOutcome(
+        returncode=returncode,
         stderr="""Warning: unknown command 'watch_nolan_movies' used at:
 <stdin>:3:1
 <stdin>:8:5
@@ -822,7 +869,7 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 <stdin>:6:5
 <stdin>:11:1
 
-"""
+""",
     )
 
 

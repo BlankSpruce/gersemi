@@ -2,14 +2,11 @@ from copy import deepcopy
 from typing import Tuple
 from gersemi.configuration import Indent, ListExpansion
 from gersemi.dumper import Dumper
+from gersemi.noop import noop
 from gersemi.parser import BARE_PARSER
 from gersemi.postprocessor import postprocess
 from gersemi.sanity_checker import check_code_equivalence
 from gersemi.warnings import FormatterWarnings
-
-
-def noop(*_):
-    pass
 
 
 class Formatter:
