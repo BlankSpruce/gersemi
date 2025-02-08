@@ -1,3 +1,4 @@
+from gersemi.configuration import OutcomeConfiguration
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
@@ -30,7 +31,10 @@ custom_command_properly_formatted = """Seven_Samurai(
 
 
 def create_dumper(custom_command_definitions):
-    return Dumper(width=80, indent_size=4, known_definitions=custom_command_definitions)
+    return Dumper(
+        configuration=OutcomeConfiguration(line_length=80, indent=4),
+        known_definitions=custom_command_definitions,
+    )
 
 
 def test_custom_command_generated_dumper(

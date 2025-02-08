@@ -299,11 +299,8 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     )
 
     formatter = create_formatter(
-        not configuration.outcome.unsafe,
-        configuration.outcome.line_length,
-        configuration.outcome.indent,
+        configuration.outcome,
         ChainMap(custom_command_definitions, extension_definitions),
-        configuration.outcome.list_expansion,
     )
     task = select_task(mode, configuration)
     execute = partial(run_task, formatter=formatter, task=task)

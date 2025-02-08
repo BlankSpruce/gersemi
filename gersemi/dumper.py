@@ -3,20 +3,14 @@ from itertools import chain
 from gersemi.base_dumper import BaseDumper
 from gersemi.builtin_commands import builtin_commands
 from gersemi.command_invocation_dumper import CommandInvocationDumper
-from gersemi.configuration import ListExpansion
+from gersemi.configuration import OutcomeConfiguration
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
-    def __init__(
-        self,
-        width,
-        indent_size,
-        known_definitions,
-        list_expansion=ListExpansion.FavourInlining,
-    ):
+    def __init__(self, configuration: OutcomeConfiguration, known_definitions):
         self.known_definitions = ChainMap(known_definitions, builtin_commands)
-        self.list_expansion = list_expansion
-        super().__init__(width, indent_size)
+        self.list_expansion = configuration.list_expansion
+        super().__init__(configuration.line_length, configuration.indent)
 
     def file(self, tree):
         result = self.__default__(tree)

@@ -1,9 +1,17 @@
 import pytest
+from gersemi.configuration import OutcomeConfiguration
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
 from gersemi.dumper import Dumper
+
+
+def create_dumper(definitions):
+    return Dumper(
+        configuration=OutcomeConfiguration(line_length=80, indent=4),
+        known_definitions=definitions,
+    )
 
 
 def test_custom_command_without_keyworded_arguments_formatting(
@@ -38,7 +46,7 @@ some_custom_command_without_keyworded_arguments(
 
     parsed = parser_with_postprocessing.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
-    dumper = Dumper(width=80, indent_size=4, known_definitions=definitions)
+    dumper = create_dumper(definitions)
 
     parsed_again = parser_with_postprocessing.parse(given, definitions)
     formatted = dumper.visit(parsed_again)
@@ -76,7 +84,7 @@ some_custom_command_without_keyworded_arguments(long____________________________
 
     parsed = parser_with_postprocessing.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
-    dumper = Dumper(width=80, indent_size=4, known_definitions=definitions)
+    dumper = create_dumper(definitions)
 
     parsed_again = parser_with_postprocessing.parse(given, definitions)
     formatted = dumper.visit(parsed_again)
@@ -110,7 +118,7 @@ endfunction()
 
     parsed = parser_with_postprocessing.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
-    dumper = Dumper(width=80, indent_size=4, known_definitions=definitions)
+    dumper = create_dumper(definitions)
 
     parsed_again = parser_with_postprocessing.parse(given, definitions)
     formatted = dumper.visit(parsed_again)

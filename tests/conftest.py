@@ -2,7 +2,7 @@ import os
 import pathlib
 import shutil
 import pytest
-from gersemi.configuration import indent_type, ListExpansion
+from gersemi.configuration import indent_type, ListExpansion, OutcomeConfiguration
 from gersemi.noop import noop
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.formatter import create_formatter
@@ -47,14 +47,16 @@ def get_custom_command_definitions(configuration_definitions):
 def formatter_creator():
     def creator(config):
         return create_formatter(
-            do_sanity_check=not config.get("unsafe", False),
-            line_length=config.get("line_length", 80),
-            indent=indent_type(config.get("indent", 4)),
+            OutcomeConfiguration(
+                unsafe=config.get("unsafe", False),
+                line_length=config.get("line_length", 80),
+                indent=indent_type(config.get("indent", 4)),
+                list_expansion=ListExpansion(
+                    config.get("list_expansion", ListExpansion.FavourInlining)
+                ),
+            ),
             known_definitions=get_custom_command_definitions(
                 config.get("definitions", [])
-            ),
-            list_expansion=ListExpansion(
-                config.get("list_expansion", ListExpansion.FavourInlining)
             ),
         )
 
