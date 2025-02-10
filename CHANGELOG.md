@@ -1,4 +1,8 @@
 # Changelog
+## [0.19.0] 2025-02-10
+### Added
+- Add `--warnings-as-errors`. (#57)
+
 ## [0.18.2] 2025-01-17
 ### Fixed
 - Fix "unknown command" regression. (#52)

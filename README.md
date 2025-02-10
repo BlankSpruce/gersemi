@@ -22,6 +22,7 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [--warn-about-unknown-commands] [--disable-formatting]
                [--extensions extension-name [extension-name ...]] [-q] [--color]
                [-w (INTEGER | max)] [--cache] [--config CONFIGURATION_FILE]
+               [--warnings-as-errors]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -121,6 +122,10 @@ control configuration:
                         will be used for determining configuration for all sources
                         instead of automatically found configuration files closest to
                         each of the sources. [default: omitted]
+  --warnings-as-errors  Treat warnings as errors so that status code becomes 1 when at
+                        least one warning would be issued. This option is not inhibited
+                        by --quiet.
+
 ```
 ### [pre-commit](https://pre-commit.com/) hook
 
@@ -129,7 +134,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.18.2
+  rev: 0.19.0
   hooks:
   - id: gersemi
 ```
@@ -145,7 +150,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.18.2
+  rev: 0.19.0
   hooks:
   - id: gersemi
     additional_dependencies:
