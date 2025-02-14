@@ -68,6 +68,7 @@ def create_argparser():
     Check if files require reformatting.
     Return {SUCCESS} when there's nothing to reformat.
     Return {FAIL} when some files would be reformatted.
+    It can be used together with --diff.
             """,
     )
     modes_group.add_argument(
@@ -81,7 +82,10 @@ def create_argparser():
         "--diff",
         dest="show_diff",
         action="store_true",
-        help="Show diff on stdout for each formatted file instead.",
+        help="""
+    Show diff on stdout for each formatted file instead.
+    It can be used together with --check.
+        """,
     )
     modes_group.add_argument(
         "--print-config",

@@ -1,4 +1,8 @@
 # Changelog
+## [0.19.1] 2025-02-14
+### Fixed
+- Make `--diff` usable with `--check`. (#58)
+
 ## [0.19.0] 2025-02-10
 ### Added
 - Add `--warnings-as-errors`. (#57)

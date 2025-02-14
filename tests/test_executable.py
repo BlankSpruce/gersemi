@@ -81,7 +81,32 @@ def test_check_on_formatted_file_should_return_zero(app, testfiles):
 
 
 def test_check_on_not_formatted_file_should_return_one(app, testfiles):
-    assert app("--check", testfiles / "not_formatted_file.cmake") == fail()
+    target = (testfiles / "not_formatted_file.cmake").resolve()
+    assert app("--check", target) == fail(
+        stdout="",
+        stderr=f"""{target} would be reformatted
+""",
+    )
+
+
+def test_diff_on_not_formatted_files_should_return_zero(app, testfiles):
+    target = testfiles / "directory_with_not_formatted_files"
+    assert app("--diff", target) == success(stdout=match_not(""), stderr="")
+
+
+def test_check_with_diff_on_not_formatted_files_should_return_one(app, testfiles):
+    target = testfiles / "directory_with_not_formatted_files"
+    file1 = (target / "file1.cmake").resolve()
+    file2 = (target / "file2.cmake").resolve()
+    file3 = (target / "file3.cmake").resolve()
+
+    assert app("--check", "--diff", target) == fail(
+        stdout=match_not(""),
+        stderr=f"""{file1} would be reformatted
+{file2} would be reformatted
+{file3} would be reformatted
+""",
+    )
 
 
 def test_format_file_in_place(app, testfiles):

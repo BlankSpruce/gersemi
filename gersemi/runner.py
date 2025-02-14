@@ -37,11 +37,12 @@ from gersemi.result import Result, Error, apply, get_error_message
 from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
 from gersemi.task_result import TaskResult
 from gersemi.tasks.check_formatting import check_formatting
+from gersemi.tasks.check_and_show_diff import check_and_show_diff
 from gersemi.tasks.do_nothing import do_nothing
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.format_file import format_file
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
-from gersemi.tasks.show_diff import show_colorized_diff, show_diff
+from gersemi.tasks.show_diff import show_diff
 from gersemi.utils import fromfile, smart_open
 from gersemi.keywords import Keywords
 from gersemi.warnings import UnknownCommandWarning
@@ -58,11 +59,16 @@ class WarningSink:
     def __init__(self, quiet):
         self.quiet = quiet
         self.at_least_one_warning_issued = False
+        self.records = []
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, s: str):
         self.at_least_one_warning_issued = True
         if not self.quiet:
-            print_to_stderr(*args, **kwargs)
+            self.records.append(s)
+
+    def flush(self):
+        for s in self.records:
+            print_to_stderr(s)
 
 
 class StatusCode:
@@ -162,13 +168,14 @@ def find_all_custom_command_definitions(
 
 def select_task(mode: Mode, configuration: Configuration):
     return {
-        Mode.ForwardToStdout: lambda _: forward_to_stdout,
-        Mode.RewriteInPlace: lambda _: rewrite_in_place,
-        Mode.CheckFormatting: lambda _: check_formatting,
-        Mode.ShowDiff: lambda config: (
-            show_colorized_diff if config.control.color else show_diff
+        Mode.ForwardToStdout: forward_to_stdout,
+        Mode.RewriteInPlace: rewrite_in_place,
+        Mode.CheckFormatting: check_formatting,
+        Mode.ShowDiff: partial(show_diff, configuration.control.color),
+        Mode.CheckFormattingAndShowDiff: partial(
+            check_and_show_diff, configuration.control.color
         ),
-    }[mode](configuration)
+    }[mode]
 
 
 def run_task(
@@ -257,7 +264,11 @@ def split_files_by_formatting_state(
 def store_files_in_cache(
     mode: Mode, cache, configuration_summary: str, files: Iterable[Path]
 ) -> None:
-    if mode in [Mode.CheckFormatting, Mode.RewriteInPlace]:
+    if mode in [
+        Mode.CheckFormatting,
+        Mode.CheckFormattingAndShowDiff,
+        Mode.RewriteInPlace,
+    ]:
         cache.store_files(configuration_summary, files)
 
 
@@ -335,7 +346,7 @@ class GetConfiguration:
         self.warning_sink = warning_sink
 
     def _warn(self, item: NotSupportedKeys, text: str):
-        self.warning_sink(f"{item.path}:", text)
+        self.warning_sink(f"{item.path}: {text}")
 
     def _inform_about_not_supported_keys(self, item: NotSupportedKeys):
         if item.path in self.processed_configuration_files:
@@ -442,4 +453,5 @@ def run(args: argparse.Namespace):
             if (control.warnings_as_errors and warning_sink.at_least_one_warning_issued)
             else SUCCESS
         )
+        warning_sink.flush()
         return status_code.value

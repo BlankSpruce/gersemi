@@ -7,9 +7,12 @@ class Mode(Enum):
     CheckFormatting = 2
     ShowDiff = 3
     PrintConfig = 4
+    CheckFormattingAndShowDiff = 5
 
 
 def get_mode(args) -> Mode:
+    if args.check_formatting and args.show_diff:
+        return Mode.CheckFormattingAndShowDiff
     if args.show_diff:
         return Mode.ShowDiff
     if args.check_formatting:

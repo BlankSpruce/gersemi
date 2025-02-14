@@ -36,9 +36,10 @@ positional arguments:
 modes:
   -c, --check           Check if files require reformatting. Return 0 when there's
                         nothing to reformat. Return 1 when some files would be
-                        reformatted.
+                        reformatted. It can be used together with --diff.
   -i, --in-place        Format files in-place.
-  --diff                Show diff on stdout for each formatted file instead.
+  --diff                Show diff on stdout for each formatted file instead. It can be
+                        used together with --check.
   --print-config {minimal,verbose,default}
                         Print configuration for files. With "minimal" prints source of
                         outcome configuration (configuration file or defaults) and the
@@ -134,7 +135,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.19.0
+  rev: 0.19.1
   hooks:
   - id: gersemi
 ```
@@ -150,7 +151,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.19.0
+  rev: 0.19.1
   hooks:
   - id: gersemi
     additional_dependencies:
