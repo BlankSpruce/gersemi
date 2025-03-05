@@ -2227,6 +2227,7 @@ builtin_commands_impl = {
             "BUILD_ALWAYS",
             "BUILD_JOB_SERVER_AWARE",
             # Install Step
+            "INSTALL_JOB_SERVER_AWARE",
             # Test Step
             "TEST_BEFORE_INSTALL",
             "TEST_AFTER_INSTALL",
@@ -2652,6 +2653,7 @@ builtin_commands_impl = {
             "VERBOSE",
             "REPORT_FILE",
         ],
+        "multi_value_keywords": ["OPTIONS"],
     },
     #
     ### FindBLAS
@@ -2713,6 +2715,7 @@ builtin_commands_impl = {
     ### FindFLEX
     "flex_target": {
         "one_value_keywords": ["COMPILE_FLAGS", "DEFINES_FILE"],
+        "multi_value_keywords": ["OPTIONS"],
     },
     "add_flex_bison_dependency": {},
     #
@@ -3001,6 +3004,9 @@ builtin_commands_impl = {
             "PLUGIN",
             "PLUGIN_OPTIONS",
             "DEPENDENCIES",
+            "PROTOC_EXE",
+        ],
+        "multi_value_keywords": [
             "PROTOS",
             "IMPORT_DIRS",
             "GENERATE_EXTENSIONS",

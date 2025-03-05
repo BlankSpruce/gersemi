@@ -1,4 +1,11 @@
 # Changelog
+## [0.19.2] 2025-03-05
+### Added
+- Support for new keywords in native commands available in CMake 4.0.
+
+### Fixed
+- Correctly recognize multi value keywords of `protobuf_generate`.
+
 ## [0.19.1] 2025-02-14
 ### Fixed
 - Make `--diff` usable with `--check`. (#58)
