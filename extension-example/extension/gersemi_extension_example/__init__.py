@@ -1,6 +1,7 @@
 """
 Extension module has to follow the naming convention gersemi_{module_name} like
-gersemi_example_module, gersemi_acme_corporation, gersemi_qt etc.
+gersemi_example_module, gersemi_acme_corporation, gersemi_qt etc. or it has to be
+path to file ending with .py extension like example_file.py, acme_corporation.py, qt.py
 """
 
 command_definitions = {

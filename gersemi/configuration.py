@@ -8,6 +8,7 @@ import sys
 from typing import Iterable, Optional, Sequence, Tuple, Union
 import yaml
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
+from gersemi.extension_type import FileExtension, ModuleExtension
 from gersemi.return_codes import FAIL
 from gersemi.__version__ import __version__
 
@@ -290,6 +291,12 @@ class CustomizedSafeDumper(yaml.SafeDumper):
         if isinstance(data, EnumWithMetadata):
             return self.represent_data(data.value)
 
+        if isinstance(data, ModuleExtension):
+            return self.represent_data(str(data))
+
+        if isinstance(data, FileExtension):
+            return self.represent_data(str(data))
+
         return super().represent_data(data)
 
 
@@ -347,6 +354,25 @@ def normalize_definitions(definitions):
         raise Exception(f"Definition path doesn't exist: {e.filename}") from e
 
 
+def normalize_extensions_impl(extensions):
+    for extension in extensions:
+        if extension.endswith(".py"):
+            yield FileExtension(extension)
+        else:
+            yield ModuleExtension(extension)
+
+
+def normalize_extensions(extensions):
+    if extensions is None:
+        return extensions
+
+    try:
+        return tuple(normalize_extensions_impl(extensions))
+    except FileNotFoundError as e:
+        # pylint: disable=broad-exception-raised
+        raise Exception(f"Extension path doesn't exist: {e.filename}") from e
+
+
 def sanitize_list_expansion(list_expansion):
     if list_expansion is None:
         return list_expansion
@@ -401,6 +427,8 @@ def load_configuration_from_file(
                 )
             if "indent" in config:
                 config["indent"] = indent_type(config["indent"])
+            if "extensions" in config:
+                config["extensions"] = normalize_extensions(config["extensions"])
         return OutcomeConfiguration(**config), not_supported_keys
 
 

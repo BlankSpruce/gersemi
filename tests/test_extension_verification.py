@@ -1,9 +1,10 @@
 import re
 import pytest
 from gersemi.extensions import verify, VerificationFailure
+from gersemi.extension_type import ModuleExtension
 
 
-defs = "gersemi_foo.command_definitions"
+defs = "gersemi_foo:command_definitions"
 ab = f"{defs}['ab']"
 ab_sections = f"{ab}['sections']"
 ab_signatures = f"{ab}['signatures']"
@@ -26,7 +27,7 @@ ab_signatures = f"{ab}['signatures']"
 )
 def test_extension_passes_verification(definition):
     try:
-        verify("foo", definition)
+        verify(ModuleExtension("foo"), definition)
     except VerificationFailure as e:
         pytest.fail(f"{repr(definition)} should pass verification but doesn't: {e}")
 
@@ -110,4 +111,4 @@ def test_extension_passes_verification(definition):
 )
 def test_extension_fails_verification(definition, outcome):
     with pytest.raises(VerificationFailure, match=re.escape(outcome)):
-        verify("foo", definition)
+        verify(ModuleExtension("foo"), definition)

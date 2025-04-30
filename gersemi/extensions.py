@@ -4,6 +4,7 @@ from functools import lru_cache
 import importlib
 import string
 from gersemi.builtin_commands import preprocess_definitions
+from gersemi.extension_type import FileExtension
 
 
 class VerificationFailure(Exception):
@@ -29,7 +30,7 @@ def is_identifier(identifier):
 
 class Verifier:
     def __init__(self, extension):
-        self.base = f"gersemi_{extension}.command_definitions"
+        self.base = f"{extension.qualified_name}:command_definitions"
 
     @contextmanager
     def element(self, name):
@@ -125,24 +126,38 @@ def verify(extension, thing):
     verifier(thing)
 
 
+def load_extension(extension):
+    if isinstance(extension, FileExtension):
+        spec = importlib.util.spec_from_file_location(str(extension), extension.path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    else:
+        module = importlib.import_module(f"gersemi_{extension}")
+
+    return module
+
+
 @lru_cache(maxsize=None)
 def load_definitions_from_extension(extension):
     try:
-        module = importlib.import_module(f"gersemi_{extension}")
+        module = load_extension(extension)
     except ModuleNotFoundError:
-        return None, f"Missing extension {extension}"
+        return None, f"Missing extension {extension.name}"
 
     try:
         command_definitions = module.command_definitions
     except AttributeError:
-        return None, f"Extension {extension} doesn't implement command_definitions"
+        return (
+            None,
+            f"Extension {extension.name} doesn't implement command_definitions",
+        )
 
     try:
         verify(extension, command_definitions)
     except VerificationFailure as failure:
         return (
             None,
-            f"""Verification failed for extension {extension}:
+            f"""Verification failed for extension {extension.name}:
 {failure}""",
         )
 

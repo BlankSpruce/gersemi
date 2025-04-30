@@ -56,10 +56,34 @@ Missing extension foo
     )
 
 
+@pytest.fixture(scope="function")
+def kim_dokja_company_as_module():
+    return {
+        "name": "kim_dokja_company",
+        "qualified_name": "gersemi_kim_dokja_company",
+    }
+
+
+@pytest.fixture(scope="function")
+def kim_dokja_company_as_file(testfiles):
+    value = str(testfiles / "extensions" / "kim_dokja_company_as_file.py")
+    return {"name": value, "qualified_name": value}
+
+
+@pytest.mark.parametrize(
+    "extension_fixture",
+    [
+        "kim_dokja_company_as_module",
+        "kim_dokja_company_as_file",
+    ],
+)
 class TestExtensionExists:
     @pytest.fixture(autouse=True)
-    def _fixtures(self, app, testfiles):
-        self.app = partial(app, "--check", "--extensions", "kim_dokja_company")
+    def _fixtures(self, app, testfiles, request, extension_fixture):
+        extension = request.getfixturevalue(extension_fixture)
+        self.extension_name = extension["name"]
+        self.extension_qualified_name = extension["qualified_name"]
+        self.app = partial(app, "--check", "--extensions", self.extension_name)
 
         base_directory = (
             testfiles
@@ -73,14 +97,14 @@ class TestExtensionExists:
 
     def test_doesnt_have_command_definitions(self):
         assert self.app() == fail(
-            stderr="Extension kim_dokja_company doesn't implement command_definitions\n"
+            stderr=f"Extension {self.extension_name} doesn't implement command_definitions\n"
         )
 
     @pytest.mark.parametrize("fake_extension", [BAD_EXTENSION])
     def test_fails_verification(self):
         assert self.app() == fail(
-            stderr="""Verification failed for extension kim_dokja_company:
-gersemi_kim_dokja_company.command_definitions: is not a mapping
+            stderr=f"""Verification failed for extension {self.extension_name}:
+{self.extension_qualified_name}:command_definitions: is not a mapping
 """
         )
 
@@ -141,7 +165,7 @@ Warning: unknown command 'add_nebula' used at:
             BAD_EXTENSION,
             """## - [kim_dokja_company] error:
 ##   Verification failed for extension kim_dokja_company:
-##   gersemi_kim_dokja_company.command_definitions: is not a mapping
+##   gersemi_kim_dokja_company:command_definitions: is not a mapping
 ##""",
         ),
     ],
