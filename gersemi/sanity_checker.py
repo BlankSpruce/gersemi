@@ -16,6 +16,9 @@ class DropWhitespaces(Transformer):
             return Discard
         return Tree("non_command_element", children)
 
+    def arguments(self, children):
+        return Tree("arguments", set(children))
+
     NEWLINE = _drop_node
     newline_or_gap = _drop_node
 

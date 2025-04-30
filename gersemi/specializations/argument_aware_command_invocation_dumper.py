@@ -16,7 +16,7 @@ from gersemi.ast_helpers import (
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keywords import KeywordMatcher
-from gersemi.keyword_kind import KeywordKind, kind_to_formatter
+from gersemi.keyword_kind import KeywordKind, kind_to_formatter, kind_to_preprocessor
 from gersemi.types import Nodes
 from gersemi.utils import pop_all
 
@@ -225,6 +225,14 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return self._format_non_option(tree)
 
     def multi_value_argument(self, tree):
+        keyword, *values = tree.children
+        keyword_as_value = keyword.children[0] if len(keyword.children) > 0 else None
+        preprocessor = kind_to_preprocessor(
+            self.keyword_kinds.get(keyword_as_value, None)
+        )
+        if preprocessor is not None:
+            tree.children = [keyword, *getattr(self, preprocessor)(values)]
+
         return self._format_non_option(tree)
 
     def arguments(self, tree):
