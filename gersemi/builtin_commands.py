@@ -114,7 +114,7 @@ _ExternalProject_Add_PatchStep = {
 }
 
 
-builtin_commands_impl = {
+builtin_commands = {
     #### Legend
     #### (&): canonical name used different than in the documentation
     #
@@ -3160,4 +3160,4 @@ def preprocess_definitions(definitions):
     )
 
 
-builtin_commands = preprocess_definitions(builtin_commands_impl)
+_builtin_commands = preprocess_definitions(builtin_commands)

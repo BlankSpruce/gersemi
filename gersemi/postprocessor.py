@@ -9,7 +9,7 @@ from gersemi.ast_helpers import (
     is_quoted_argument,
     is_unquoted_argument,
 )
-from gersemi.builtin_commands import builtin_commands
+from gersemi.builtin_commands import _builtin_commands
 from gersemi.types import Nodes
 
 
@@ -38,9 +38,9 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
         super().__init__()
         self.code = code
         self.known_definitions = (
-            builtin_commands
+            _builtin_commands
             if known_definitions is None
-            else ChainMap(known_definitions, builtin_commands)
+            else ChainMap(known_definitions, _builtin_commands)
         )
 
     def _get_original_formatting(self, lparen, rparen):
