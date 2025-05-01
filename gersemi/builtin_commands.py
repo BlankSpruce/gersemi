@@ -2320,8 +2320,8 @@ builtin_commands_impl = {
         ],
         "keyword_kinds": {"COMMAND": KeywordKind.CommandLine},
     },
-    "ExternalProject_Add_Stepdependencies": {},
-    "ExternalProject_Add_Steptargets": {},
+    "ExternalProject_Add_StepDependencies": {},
+    "ExternalProject_Add_StepTargets": {},
     "ExternalProject_Get_Property": {},
     #
     ### FeatureSummary

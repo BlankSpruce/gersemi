@@ -1,4 +1,8 @@
 # Changelog
+## [0.19.3] 2025-05-01
+### Fixed
+- Canoncial casing of `ExternalProject_Add_StepDependencies` and `ExternalProject_Add_StepTargets`. (#61)
+
 ## [0.19.2] 2025-03-05
 ### Added
 - Support for new keywords in native commands available in CMake 4.0.
