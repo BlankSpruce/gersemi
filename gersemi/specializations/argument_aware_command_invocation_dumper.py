@@ -2,6 +2,7 @@ from collections.abc import Sized
 from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Tuple
 from lark import Tree
 from gersemi.ast_helpers import (
+    get_value,
     is_comment,
     is_multi_value_argument,
     is_one_of_keywords,
@@ -112,7 +113,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             return result
 
         keyword, *values = tree.children
-        keyword_as_value = keyword.children[0] if len(keyword.children) > 0 else None
+        keyword_as_value = get_value(keyword, None)
 
         can_be_inlined = (not self.favour_expansion) or (
             self.favour_expansion
@@ -226,9 +227,8 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
 
     def multi_value_argument(self, tree):
         keyword, *values = tree.children
-        keyword_as_value = keyword.children[0] if len(keyword.children) > 0 else None
         preprocessor = kind_to_preprocessor(
-            self.keyword_kinds.get(keyword_as_value, None)
+            self.keyword_kinds.get(get_value(keyword, None), None)
         )
         if preprocessor is not None:
             tree.children = [keyword, *getattr(self, preprocessor)(values)]

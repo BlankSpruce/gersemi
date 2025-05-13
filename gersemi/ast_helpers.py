@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 from lark import Tree, Token
 from lark.visitors import Interpreter
 from gersemi.types import Node
@@ -109,3 +109,7 @@ option_argument = make_tree("option_argument")
 one_value_argument = make_tree("one_value_argument")
 multi_value_argument = make_tree("multi_value_argument")
 positional_arguments = make_tree("positional_arguments")
+
+
+def get_value(node: Tree, default: Any):
+    return node.children[0] if node.children else default

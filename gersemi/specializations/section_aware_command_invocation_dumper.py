@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from typing import Iterable, Mapping
 from lark import Tree
 from gersemi.ast_helpers import (
+    get_value,
     is_one_value_argument,
     is_multi_value_argument,
     is_one_of_keywords,
@@ -9,6 +10,7 @@ from gersemi.ast_helpers import (
     is_section,
     positional_arguments,
 )
+from gersemi.keyword_kind import kind_to_preprocessor
 from gersemi.keywords import KeywordMatcher
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
@@ -142,11 +144,17 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
         )
 
     def section(self, tree):
+        header, *rest = tree.children
+        preprocessor = kind_to_preprocessor(
+            self.keyword_kinds.get(get_value(header, None), None)
+        )
+        if preprocessor is not None:
+            rest = getattr(self, preprocessor)(rest)
+
         result = self._try_to_format_into_single_line(tree.children)
         if result is not None:
             return result
 
-        header, *rest = tree.children
         begin = self.visit(header)
         if len(rest) == 0:
             return begin

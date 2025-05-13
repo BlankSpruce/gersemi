@@ -1,7 +1,7 @@
 import yaml
 from lark import Discard
 from lark.visitors import Interpreter, Transformer
-from gersemi.ast_helpers import is_keyword
+from gersemi.ast_helpers import get_value, is_keyword
 from gersemi.immutable import make_immutable
 from gersemi.keywords import Hint, Keywords
 
@@ -177,7 +177,7 @@ class CMakeInterpreter(Interpreter):
         return tree.children[0]
 
     def quoted_argument(self, tree):
-        return tree.children[0] if tree.children else ""
+        return get_value(tree, "")
 
     bracket_argument = _join
     commented_argument = _join
