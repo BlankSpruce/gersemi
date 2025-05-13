@@ -113,6 +113,15 @@ _ExternalProject_Add_PatchStep = {
     "multi_value_keywords": ["PATCH_COMMAND"],
 }
 
+_target_sources_FILE_SET = {
+    "multi_value_keywords": [_FILE_SET_Any],
+    "sections": {
+        _FILE_SET_Any: {
+            "one_value_keywords": ["TYPE"],
+            "multi_value_keywords": ["BASE_DIRS", "FILES"],
+        }
+    },
+}
 
 builtin_commands = {
     #### Legend
@@ -1525,21 +1534,13 @@ builtin_commands = {
         "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
     },
     "target_sources": {
+        "_two_words_keywords": [_FILE_SET_Any],
         "front_positional_arguments": ["<target>"],
         "multi_value_keywords": ["INTERFACE", "PUBLIC", "PRIVATE"],
         "sections": {
-            "INTERFACE": {
-                "one_value_keywords": ["FILE_SET", "TYPE"],
-                "multi_value_keywords": ["BASE_DIRS", "FILES"],
-            },
-            "PUBLIC": {
-                "one_value_keywords": ["FILE_SET", "TYPE"],
-                "multi_value_keywords": ["BASE_DIRS", "FILES"],
-            },
-            "PRIVATE": {
-                "one_value_keywords": ["FILE_SET", "TYPE"],
-                "multi_value_keywords": ["BASE_DIRS", "FILES"],
-            },
+            "INTERFACE": _target_sources_FILE_SET,
+            "PUBLIC": _target_sources_FILE_SET,
+            "PRIVATE": _target_sources_FILE_SET,
         },
     },
     "try_compile": {
