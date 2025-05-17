@@ -6,7 +6,7 @@ from gersemi.utils import pop_all
 class SortingPreprocessor(BaseDumper):
     def _get_bucket_value(self, bucket):
         *comments, node = bucket
-        return self.visit(node), [self.visit(comment) for comment in comments]
+        return self.visit(node), tuple(self.visit(comment) for comment in comments)
 
     def _bucket_arguments_with_their_preceding_comments(self, args):
         result = []
@@ -26,3 +26,15 @@ class SortingPreprocessor(BaseDumper):
         sorted_buckets = sorted(buckets, key=self._get_bucket_value)
 
         return [arg for bucket in sorted_buckets for arg in bucket]
+
+    def _keep_unique_arguments(self, args):
+        buckets = self._bucket_arguments_with_their_preceding_comments(args)
+        known = set()
+        unique_buckets = []
+        for bucket in buckets:
+            value = self._get_bucket_value(bucket)
+            if value not in known:
+                known.add(value)
+                unique_buckets.append(bucket)
+
+        return [arg for bucket in unique_buckets for arg in bucket]
