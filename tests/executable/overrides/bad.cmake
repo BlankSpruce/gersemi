@@ -61,3 +61,20 @@ target_sources(
         ccc
         aaa
 )
+
+target_include_directories(
+    TGT
+    PUBLIC
+        zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+        bbb
+        ccc
+        aaa
+        zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+        bbb
+        ccc
+        aaa
+        zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+        bbb
+        ccc
+        aaa
+)

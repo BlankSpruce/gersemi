@@ -7,6 +7,7 @@ class KeywordKind(Enum):
     Pairs = "pairs"
     Sort = "sort"
     Unique = "unique"
+    SortAndUnique = "sort+unique"
 
 
 def get_kind(kind: Union[None, str, KeywordKind]) -> Optional[KeywordKind]:
@@ -35,4 +36,5 @@ def kind_to_preprocessor(kind: Union[None, str, KeywordKind]) -> Optional[str]:
     return {
         KeywordKind.Sort: "_sort_arguments",
         KeywordKind.Unique: "_keep_unique_arguments",
+        KeywordKind.SortAndUnique: "_sort_and_keep_unique_arguments",
     }.get(proper_kind, None)

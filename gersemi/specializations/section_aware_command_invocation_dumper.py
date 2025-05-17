@@ -149,6 +149,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
             self.keyword_kinds.get(get_value(header, None), None)
         )
         if preprocessor is not None:
+
             rest = getattr(self, preprocessor)(rest)
 
         result = self._try_to_format_into_single_line(tree.children)

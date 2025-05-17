@@ -21,8 +21,14 @@ target_sources["keyword_kinds"] = {
     for key in ["INTERFACE", "PRIVATE", "PUBLIC", "TYPE", "BASE_DIRS", "FILES"]
 }
 
+target_include_directories = builtin_commands["target_include_directories"]
+target_include_directories["keyword_kinds"] = {
+    key: "sort+unique" for key in ["INTERFACE", "PRIVATE", "PUBLIC"]
+}
+
 command_definitions = {
     "target_compile_definitions": target_compile_definitions,
     "target_link_libraries": target_link_libraries,
     "target_sources": target_sources,
+    "target_include_directories": target_include_directories,
 }

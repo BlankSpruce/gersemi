@@ -3,7 +3,7 @@ from gersemi.base_dumper import BaseDumper
 from gersemi.utils import pop_all
 
 
-class SortingPreprocessor(BaseDumper):
+class KeywordPreprocessor(BaseDumper):
     def _get_bucket_value(self, bucket):
         *comments, node = bucket
         return self.visit(node), tuple(self.visit(comment) for comment in comments)
@@ -38,3 +38,6 @@ class SortingPreprocessor(BaseDumper):
                 unique_buckets.append(bucket)
 
         return [arg for bucket in unique_buckets for arg in bucket]
+
+    def _sort_and_keep_unique_arguments(self, args):
+        return self._sort_arguments(self._keep_unique_arguments(args))

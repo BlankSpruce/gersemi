@@ -61,3 +61,12 @@ target_sources(
         ccc
         zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
 )
+
+target_include_directories(
+    TGT
+    PUBLIC
+        aaa
+        bbb
+        ccc
+        zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+)
