@@ -31,7 +31,8 @@ def create_section_patch(section, old_class):
         one_value_keywords = get("one_value_keywords", [])
         multi_value_keywords = get("multi_value_keywords", [])
         sections = get("sections", dict())
-        keyword_kinds = get("keyword_kinds", dict())
+        keyword_formatters = get("keyword_formatters", dict())
+        keyword_preprocessors = get("keyword_preprocessors", dict())
 
     return Impl
 
@@ -146,7 +147,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
     def section(self, tree):
         header, *rest = tree.children
         preprocessor = kind_to_preprocessor(
-            self.keyword_kinds.get(get_value(header, None), None)
+            self.keyword_preprocessors.get(get_value(header, None), None)
         )
         if preprocessor is not None:
 

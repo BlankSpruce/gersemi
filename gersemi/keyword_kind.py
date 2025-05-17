@@ -2,39 +2,62 @@ from enum import Enum
 from typing import Optional, Union
 
 
-class KeywordKind(Enum):
+class KeywordFormatter(Enum):
     CommandLine = "command_line"
     Pairs = "pairs"
+
+
+class KeywordPreprocessor(Enum):
     Sort = "sort"
     Unique = "unique"
     SortAndUnique = "sort+unique"
 
 
-def get_kind(kind: Union[None, str, KeywordKind]) -> Optional[KeywordKind]:
-    if isinstance(kind, KeywordKind):
+KeywordKind = Union[KeywordFormatter, KeywordPreprocessor]
+
+
+def get_formatter_kind(
+    kind: Union[None, str, KeywordFormatter],
+) -> Optional[KeywordFormatter]:
+    if isinstance(kind, KeywordFormatter):
         return kind
 
-    return KeywordKind(kind) if kind in [e.value for e in KeywordKind] else None
+    return (
+        KeywordFormatter(kind) if kind in [e.value for e in KeywordFormatter] else None
+    )
 
 
-def kind_to_formatter(kind: Union[None, str, KeywordKind]) -> Optional[str]:
-    proper_kind = get_kind(kind)
+def kind_to_formatter(kind: Union[None, str, KeywordFormatter]) -> Optional[str]:
+    proper_kind = get_formatter_kind(kind)
     if proper_kind is None:
         return None
 
     return {
-        KeywordKind.CommandLine: "_format_command_line",
-        KeywordKind.Pairs: "_format_keyword_with_pairs",
+        KeywordFormatter.CommandLine: "_format_command_line",
+        KeywordFormatter.Pairs: "_format_keyword_with_pairs",
     }.get(proper_kind, None)
 
 
-def kind_to_preprocessor(kind: Union[None, str, KeywordKind]) -> Optional[str]:
-    proper_kind = get_kind(kind)
+def get_preprocessor_kind(
+    kind: Union[None, str, KeywordPreprocessor],
+) -> Optional[KeywordPreprocessor]:
+    if isinstance(kind, KeywordPreprocessor):
+        return kind
+
+    return (
+        KeywordPreprocessor(kind)
+        if kind in [e.value for e in KeywordPreprocessor]
+        else None
+    )
+
+
+def kind_to_preprocessor(kind: Union[None, str, KeywordPreprocessor]) -> Optional[str]:
+    proper_kind = get_preprocessor_kind(kind)
     if proper_kind is None:
         return None
 
     return {
-        KeywordKind.Sort: "_sort_arguments",
-        KeywordKind.Unique: "_keep_unique_arguments",
-        KeywordKind.SortAndUnique: "_sort_and_keep_unique_arguments",
+        KeywordPreprocessor.Sort: "_sort_arguments",
+        KeywordPreprocessor.Unique: "_keep_unique_arguments",
+        KeywordPreprocessor.SortAndUnique: "_sort_and_keep_unique_arguments",
     }.get(proper_kind, None)

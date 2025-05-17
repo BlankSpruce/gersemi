@@ -4,6 +4,7 @@ from lark.visitors import Interpreter, Transformer
 from gersemi.ast_helpers import get_value, is_keyword
 from gersemi.immutable import make_immutable
 from gersemi.keywords import Hint, Keywords
+from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
 
 
 class IgnoreThisDefinition:
@@ -196,7 +197,16 @@ def create_command(canonical_name, positional_arguments, keywords):
         "options": keywords.options,
         "one_value_keywords": keywords.one_value_keywords,
         "multi_value_keywords": keywords.multi_value_keywords,
-        "keyword_kinds": {hint.keyword: hint.kind for hint in keywords.hints},
+        "keyword_formatters": {
+            hint.keyword: hint.kind
+            for hint in keywords.hints
+            if hint.kind in [e.value for e in KeywordFormatter]
+        },
+        "keyword_preprocessors": {
+            hint.keyword: hint.kind
+            for hint in keywords.hints
+            if hint.kind in [e.value for e in KeywordPreprocessor]
+        },
     }
 
 

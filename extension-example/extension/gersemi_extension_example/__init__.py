@@ -195,7 +195,7 @@ command_definitions = {
     },
     #
     # 7) Another kind of specialized formatting available for multi value
-    # keywords is specifying "keyword_kinds" entry. Available kinds:
+    # keywords is specifying "keyword_formatters" entry. Available kinds:
     # - "pairs": values after the keyword will be grouped into pairs
     # Example (PROPERTIES keyword):
     #
@@ -221,13 +221,13 @@ command_definitions = {
         "front_positional_arguments": ["movie-name"],
         "one_value_keywords": ["DIRECTOR"],
         "multi_value_keywords": ["AVAILABLE_SUBTITLES", "CAST", "SUMMARY"],
-        "keyword_kinds": {
+        "keyword_formatters": {
             "CAST": "pairs",
             "SUMMARY": "command_line",
         },
     },
     #
-    # "sections" take precedence over "keyword_kinds" because these properties
+    # "sections" take precedence over "keyword_formatters" because these properties
     # are mutually exclusive.
     #
     "example_keyword_cant_be_both_section_and_special_kind": {
@@ -237,7 +237,7 @@ command_definitions = {
             "CONFUSING_ARGUMENTS": {"one_value_keywords": ["ARG1", "ARG2"]},
         },
         # dead property
-        "keyword_kinds": {
+        "keyword_formatters": {
             "CONFUSING_ARGUMENTS": "command_line",
         },
     },

@@ -38,7 +38,8 @@ def create_standard_dumper(data):
         one_value_keywords = data.get("one_value_keywords", tuple())
         multi_value_keywords = data.get("multi_value_keywords", tuple())
         sections = data.get("sections", dict())
-        keyword_kinds = data.get("keyword_kinds", dict())
+        keyword_formatters = data.get("keyword_formatters", dict())
+        keyword_preprocessors = data.get("keyword_preprocessors", dict())
 
         if data_signatures is not None:
             signatures = data_signatures

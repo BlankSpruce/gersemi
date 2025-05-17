@@ -17,7 +17,12 @@ from gersemi.ast_helpers import (
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keywords import KeywordMatcher
-from gersemi.keyword_kind import KeywordKind, kind_to_formatter, kind_to_preprocessor
+from gersemi.keyword_kind import (
+    KeywordFormatter,
+    KeywordPreprocessor,
+    kind_to_formatter,
+    kind_to_preprocessor,
+)
 from gersemi.types import Nodes
 from gersemi.utils import pop_all
 
@@ -99,7 +104,8 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     options: Iterable[KeywordMatcher] = []
     one_value_keywords: Iterable[KeywordMatcher] = []
     multi_value_keywords: Iterable[KeywordMatcher] = []
-    keyword_kinds: Dict[str, KeywordKind] = {}
+    keyword_formatters: Dict[str, KeywordFormatter] = {}
+    keyword_preprocessors: Dict[str, KeywordPreprocessor] = {}
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
@@ -131,7 +137,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             return begin
 
         formatter_kind = kind_to_formatter(
-            self.keyword_kinds.get(keyword_as_value, None)
+            self.keyword_formatters.get(keyword_as_value, None)
         )
         if formatter_kind is None:
             formatter_kind = self._keyword_formatters.get(
@@ -228,7 +234,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def multi_value_argument(self, tree):
         keyword, *values = tree.children
         preprocessor = kind_to_preprocessor(
-            self.keyword_kinds.get(get_value(keyword, None), None)
+            self.keyword_preprocessors.get(get_value(keyword, None), None)
         )
         if preprocessor is not None:
             tree.children = [keyword, *getattr(self, preprocessor)(values)]
