@@ -25,3 +25,39 @@ target_link_libraries(
         ccc
         aaa
 )
+
+target_sources(
+    TGT
+    PUBLIC
+        FILE_SET FOO
+        TYPE BAR
+        BASE_DIRS BAZ QUX
+        FILES FOO BAR BAZ QUX FOO BAR BAZ
+    PRIVATE
+        FILE_SET long_arg____________________________________________________________
+        TYPE
+            bbb
+        BASE_DIRS
+            cccc____________________________________________________________
+            aaaa
+        FILES
+            bbb
+            zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+            ccc
+    INTERFACE FILE_SET FOO
+    PUBLIC
+        FILE_SET FOO
+        FILES
+            bbb
+            zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+            ccc
+)
+
+target_sources(
+    TGT
+    PUBLIC
+        zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+        bbb
+        ccc
+        aaa
+)

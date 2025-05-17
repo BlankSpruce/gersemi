@@ -5,6 +5,7 @@ import importlib
 import string
 from gersemi.builtin_commands import preprocess_definitions
 from gersemi.extension_type import FileExtension
+from gersemi.keywords import AnyMatcher
 
 
 class VerificationFailure(Exception):
@@ -54,6 +55,15 @@ class Verifier:
                     self.fail(f"argument ({repr(item)}) has to be a string")
 
     def verify_identifier(self, thing, keyword):
+        if isinstance(keyword, tuple):
+            for index, part in enumerate(keyword):
+                self.verify_identifier(f"{thing}[{index}]", part)
+
+            return
+
+        if isinstance(keyword, AnyMatcher):
+            return
+
         if not isinstance(keyword, str):
             self.fail(f"{thing} ({repr(keyword)}) has to be a string")
 
