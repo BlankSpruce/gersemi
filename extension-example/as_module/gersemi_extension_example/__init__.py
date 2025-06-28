@@ -4,6 +4,19 @@ gersemi_example_module, gersemi_acme_corporation, gersemi_qt etc. or it has to b
 path to file ending with .py extension like example_file.py, acme_corporation.py, qt.py
 """
 
+"""
+One can import builtin commands supported by gersemi to override some behaviours,
+extend list of keywords etc. Check example (10) below.
+"""
+from gersemi.builtin_commands import builtin_commands
+
+# mypy: disable-error-code="index"
+modified_target_sources = builtin_commands["target_sources"]
+modified_target_sources["keyword_preprocessors"] = {
+    key: "sort+unique" for key in modified_target_sources["multi_value_keywords"]
+}
+
+
 command_definitions = {
     #
     # Key defines canonical name. Usually builtin CMake commands are formatted
@@ -257,7 +270,7 @@ command_definitions = {
         },
     },
     #
-    # 9) Finally command can have multiple signatures which are selected
+    # 9) Command can have multiple signatures which are selected
     # through value of first argument. Example:
     #
     #     install(TARGETS <target>... [...])
@@ -307,4 +320,19 @@ command_definitions = {
         # dead property
         "options": ["THIS_KEYWORD_IS_NOT_RECOGNIZED", "THAT_ONE_AS_WELL"],
     },
+    #
+    # 10) Builtin commands can be completely overriden just as custom commands.
+    #
+    "target_link_libraries": {
+        "front_positional_arguments": ["<target>"],
+        # no keywords just for the sake of example
+        "multi_value_keywords": [],
+        "sections": {},
+    },
+    #
+    # Builtin commands can be also tweaked based on their original definition.
+    # In this case `target_sources` is tweaked in such a way that source files
+    # are sorted and unique.
+    #
+    "target_sources": modified_target_sources,
 }

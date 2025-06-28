@@ -218,3 +218,22 @@ example_dead_properties(
     OPTION_KEYWORD_SIGNATURE___1
     OPTION_KEYWORD_SIGNATURE___2
 )
+
+# builtin `target_link_libraries` but forced to not support any keywords
+target_link_libraries(
+    FOO
+    PUBLIC
+    Boost::Boost
+    PRIVATE
+    googletest
+    Abseil
+    bar
+    baz
+    qux
+)
+
+# builtin `target_sources` command with sorted and unique entries
+target_sources(
+    FOOBAR
+    PRIVATE a.cpp bb.cpp ccc.cpp dddd.cpp eeeee.cpp
+)
