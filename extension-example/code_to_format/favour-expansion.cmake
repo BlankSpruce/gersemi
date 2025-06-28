@@ -196,6 +196,22 @@ example_keyword_cant_be_both_section_and_special_kind(
         ARG2 bar__________________________________________________
 )
 
+# command with "keyword_preprocessors" property
+example_show_movie_credits(
+    Oppenheimer
+    ACTORS
+        "Alden Ehrenreich"
+        "Cillian Murphy"
+        "Emily Blunt"
+        "Matt Damon"
+        "Robert Downey Jr."
+        "Scott Grimes"
+    WRITERS
+        "Kai Bird"
+        "Christopher Nolan"
+        "Martin Sherwin"
+)
+
 # command with multiple signatures
 example_compute_value(
     SUM

@@ -10,8 +10,9 @@ def base_directory(testfiles):
 
 
 @pytest.fixture(scope="function")
-def app(app):
-    return partial(app, "--extensions", "extension_example")
+def app(app, base_directory):
+    extension = (base_directory / "as_file" / "acme_corporation.py").resolve()
+    return partial(app, "--extensions", extension)
 
 
 @pytest.mark.parametrize("case", ["favour-inlining", "favour-expansion"])

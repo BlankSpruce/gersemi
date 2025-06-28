@@ -242,7 +242,22 @@ command_definitions = {
         },
     },
     #
-    # 8) Finally command can have multiple signatures which are selected
+    # 8) Multi value keywords can be additionally preprocessed by specifying
+    # "keyword_preprocessors" entry. Available preprocessors:
+    # - "sort": arguments are sorted
+    # - "unique": only unique arguments are kept
+    # - "sort+unique": combination of "sort" and "unique"
+    #
+    "example_show_movie_credits": {
+        "front_positional_arguments": ["title"],
+        "multi_value_keywords": ["ACTORS", "WRITERS"],
+        "keyword_preprocessors": {
+            "ACTORS": "sort+unique",
+            "WRITERS": "unique",
+        },
+    },
+    #
+    # 9) Finally command can have multiple signatures which are selected
     # through value of first argument. Example:
     #
     #     install(TARGETS <target>... [...])
