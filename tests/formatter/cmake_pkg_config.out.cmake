@@ -28,3 +28,30 @@ cmake_pkg_config(
         /baz
         /foo__________________________________________________
 )
+
+cmake_pkg_config(
+    POPULATE foo 1.2.3
+    PREFIX bar
+    REQUIRED
+    ENV_MODE PKGCONF
+    PC_PATH
+        /foo/bar
+        /foo/baz
+        /bar
+        /baz
+        /foo__________________________________________________
+)
+
+cmake_pkg_config(
+    IMPORT foo 1.2.3
+    NAME bar
+    PREFIX baz
+    REQUIRED
+    ENV_MODE PKGCONF
+    PC_PATH
+        /foo/bar
+        /foo/baz
+        /bar
+        /baz
+        /foo__________________________________________________
+)

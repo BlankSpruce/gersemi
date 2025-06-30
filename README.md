@@ -136,7 +136,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.19.3
+  rev: 0.20.0
   hooks:
   - id: gersemi
 ```
@@ -152,7 +152,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.19.3
+  rev: 0.20.0
   hooks:
   - id: gersemi
     additional_dependencies:
@@ -754,6 +754,7 @@ You can extend gersemi capabilities through Python modules listed with `--extens
   - be module installed in gersemi's environment that follows naming convention `gersemi_{extension module name}`,
   - be file that ends with `.py` extension, for example: `acme_corporation.py`
 - implement `command_definitions` mapping, where key describes command in its canonical casing and value describes command properties,
+
 > [!IMPORTANT]
 1) Exact details on command properties are available in [extension example implementation](extension-example/extension/gersemi_extension_example/__init__.py).
 2) It's possible to override or tweak builtin commands. Extension example shows how to do that with `target_sources` command example. Use with caution.

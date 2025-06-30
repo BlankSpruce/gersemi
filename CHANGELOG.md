@@ -1,9 +1,10 @@
 # Changelog
-## [0.20.0] 2025-XX-XX
+## [0.20.0] 2025-06-30
 ### Added
 - Support extension files.
 - Support `sort`, `unique` and `sort+unique` hints for custom commands.
 - Support overriding and tweaking builtin commands through extensions.
+- Support for new keywords in native commands available in CMake 4.1.
 
 ### Fixed
 - Proper formatting of `FILE_SET` and associated keywords in `target_sources`.
