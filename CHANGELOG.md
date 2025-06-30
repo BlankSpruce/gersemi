@@ -1,4 +1,13 @@
 # Changelog
+## [0.20.0] 2025-XX-XX
+### Added
+- Support extension files.
+- Support `sort`, `unique` and `sort+unique` hints for custom commands.
+- Support overriding and tweaking builtin commands through extensions.
+
+### Fixed
+- Proper formatting of `FILE_SET` and associated keywords in `target_sources`.
+
 ## [0.19.3] 2025-05-01
 ### Fixed
 - Canoncial casing of `ExternalProject_Add_StepDependencies` and `ExternalProject_Add_StepTargets`. (#61)

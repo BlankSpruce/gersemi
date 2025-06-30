@@ -96,8 +96,9 @@ outcome configuration:
                         enabled, same as --warn-about-unknown-commands]
   --disable-formatting, --enable-formatting
                         Completely disable formatting. [default: formatting enabled]
-  --extensions extension-name [extension-name ...]
-                        Names of extensions. See: "Extensions" section in README.
+  --extensions extension-name-or-path [extension-name-or-path ...]
+                        Names of extension modules or paths to extension files. See:
+                        "Extensions" section in README.
 
 control configuration:
   These arguments control how gersemi operates rather than how it formats source code.
@@ -682,6 +683,9 @@ It should be still preferred simply to not provide that definition instead.
 If your definition has `# gersemi: hints` at the beginning then after `hints` you can provide YAML formatted pairs `<keyword>: <specialized_formatting>` to indicate how to treat specific multi-value arguments. `<specialized_formatting>` can be:
 - `pairs`: values after the keyword will be grouped into pairs, similar to how `set_target_properties(PROPERTIES)` is handled
 - `command_line`: values after the keyword will be treated like a sequence of words in command line, similar to how `add_custom_command(COMMAND)` is handled
+- `sort`: values after the keyword will be sorted in alphabetical order
+- `unique`: repeated values after the keyword will be removed during formatting
+- `sort+unique`: values will be sorted and repetitions will be removed
 
 <details>
 <summary>Example:</summary>
@@ -746,11 +750,13 @@ movie_description_with_hints(
 ### Extensions
 
 You can extend gersemi capabilities through Python modules listed with `--extensions`(command line)/`extensions` (configuration file). Such extension has to:
-- follow naming convention `gersemi_{extension module name}`,
-- be available in gersemi's environment,
+- either:
+  - be module installed in gersemi's environment that follows naming convention `gersemi_{extension module name}`,
+  - be file that ends with `.py` extension, for example: `acme_corporation.py`
 - implement `command_definitions` mapping, where key describes command in its canonical casing and value describes command properties,
 > [!IMPORTANT]
-Exact details on command properties are available in [extension example implementation](extension-example/extension/gersemi_extension_example/__init__.py).
+1) Exact details on command properties are available in [extension example implementation](extension-example/extension/gersemi_extension_example/__init__.py).
+2) It's possible to override or tweak builtin commands. Extension example shows how to do that with `target_sources` command example. Use with caution.
 
 - pass verification done once during runtime that checks whether `command_definitions` follows some basic constraints like "keyworded arguments are strings", ["command names don't start with a digit"](https://cmake.org/cmake/help/latest/manual/cmake-language.7.html#grammar-token-identifier) etc.
 

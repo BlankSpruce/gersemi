@@ -43,7 +43,7 @@
     },
     "extensions": {
       "default": [],
-      "description": "Names of extensions. See: \"Extensions\" section in README.",
+      "description": "Names of extension modules or paths to extension files. See: \"Extensions\" section in README.",
       "items": {"type": "string"},
       "title": "Extensions",
       "type": "array"

@@ -189,7 +189,7 @@ def create_argparser():
     outcome_configuration_group.add_argument(
         "--extensions",
         dest="extensions",
-        metavar="extension-name",
+        metavar="extension-name-or-path",
         default=None,
         nargs="+",
         type=str,

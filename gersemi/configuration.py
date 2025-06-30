@@ -175,7 +175,7 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
             title="Extensions",
             description=doc(
                 """
-    Names of extensions. See: "Extensions" section in README.
+    Names of extension modules or paths to extension files. See: "Extensions" section in README.
                 """
             ),
         ),
