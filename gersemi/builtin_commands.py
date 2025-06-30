@@ -314,23 +314,62 @@ builtin_commands = {
         },
     },
     "cmake_pkg_config": {
-        "options": ["REQUIRED", "EXACT", "QUIET"],
-        "one_value_keywords": [
-            "STRICTNESS",
-            "ENV_MODE",
-            "DISABLE_UNINSTALLED",
-            "PC_SYSROOT_DIR",
-            "TOP_BUILD_DIR",
-            "ALLOW_SYSTEM_INCLUDES",
-            "ALLOW_SYSTEM_LIBS",
-        ],
-        "multi_value_keywords": [
-            "EXTRACT",
-            "PC_LIBDIR",
-            "PC_PATH",
-            "SYSTEM_INCLUDE_DIRS",
-            "SYSTEM_LIBRARY_DIRS",
-        ],
+        "signatures": {
+            "EXTRACT": {
+                "options": ["REQUIRED", "EXACT", "QUIET"],
+                "one_value_keywords": [
+                    "STRICTNESS",
+                    "ENV_MODE",
+                    "DISABLE_UNINSTALLED",
+                    "PC_SYSROOT_DIR",
+                    "TOP_BUILD_DIR",
+                    "ALLOW_SYSTEM_INCLUDES",
+                    "ALLOW_SYSTEM_LIBS",
+                ],
+                "multi_value_keywords": [
+                    "EXTRACT",
+                    "PC_LIBDIR",
+                    "PC_PATH",
+                    "SYSTEM_INCLUDE_DIRS",
+                    "SYSTEM_LIBRARY_DIRS",
+                ],
+            },
+            "POPULATE": {
+                "options": ["REQUIRED", "EXACT", "QUIET"],
+                "one_value_keywords": [
+                    "PREFIX",
+                    "STRICTNESS",
+                    "ENV_MODE",
+                    "DISABLE_UNINSTALLED",
+                    "PC_SYSROOT_DIR",
+                    "TOP_BUILD_DIR",
+                ],
+                "multi_value_keywords": [
+                    "POPULATE",
+                    "BIND_PC_REQUIRES",
+                    "PC_LIBDIR",
+                    "PC_PATH",
+                ],
+            },
+            "IMPORT": {
+                "options": ["REQUIRED", "EXACT", "QUIET"],
+                "one_value_keywords": [
+                    "NAME",
+                    "PREFIX",
+                    "STRICTNESS",
+                    "ENV_MODE",
+                    "DISABLE_UNINSTALLED",
+                    "PC_SYSROOT_DIR",
+                    "TOP_BUILD_DIR",
+                ],
+                "multi_value_keywords": [
+                    "IMPORT",
+                    "BIND_PC_REQUIRES",
+                    "PC_LIBDIR",
+                    "PC_PATH",
+                ],
+            },
+        }
     },
     "cmake_policy": {
         "signatures": {
@@ -1336,6 +1375,7 @@ builtin_commands = {
                     "MESSAGE_NEVER",
                     "EXCLUDE_FROM_ALL",
                     "FILES_MATCHING",
+                    "EXCLUDE_EMPTY_DIRECTORIES",
                 ],
                 "one_value_keywords": ["TYPE", "DESTINATION", "COMPONENT"],
                 "multi_value_keywords": [
@@ -1457,7 +1497,12 @@ builtin_commands = {
     },
     "project": {
         "front_positional_arguments": ["<PROJECT-NAME>"],
-        "one_value_keywords": ["VERSION", "DESCRIPTION", "HOMEPAGE_URL"],
+        "one_value_keywords": [
+            "VERSION",
+            "DESCRIPTION",
+            "HOMEPAGE_URL",
+            "COMPAT_VERSION",
+        ],
         "multi_value_keywords": ["LANGUAGES"],
     },
     "remove_definitions": {},
@@ -3006,7 +3051,6 @@ builtin_commands = {
             "PROTOC_OUT_DIR",
             "PLUGIN",
             "PLUGIN_OPTIONS",
-            "DEPENDENCIES",
             "PROTOC_EXE",
         ],
         "multi_value_keywords": [
@@ -3014,6 +3058,7 @@ builtin_commands = {
             "IMPORT_DIRS",
             "GENERATE_EXTENSIONS",
             "PROTOC_OPTIONS",
+            "DEPENDENCIES",
         ],
     },
     #
