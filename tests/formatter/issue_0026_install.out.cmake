@@ -38,7 +38,7 @@ install(
     DIRECTORY "foobar"
     DESTINATION "/"
     PATTERN # comment
-    "something"
+        "something"
         PERMISSIONS
             OWNER_READ
             OWNER_WRITE
@@ -64,7 +64,7 @@ if(TRUE)
         DIRECTORY "foobar"
         DESTINATION "/"
         PATTERN
-        "really_long____________________________________________________________pattern"
+            "really_long____________________________________________________________pattern"
             EXCLUDE
             PERMISSIONS
                 OWNER_READ
@@ -75,8 +75,8 @@ if(TRUE)
                 WORLD_READ
                 WORLD_EXECUTE
         PATTERN
-        # line comment
-        "really_long_pattern_with_line_comment________________________________________"
+            # line comment
+            "really_long_pattern_with_line_comment________________________________________"
             PERMISSIONS
                 OWNER_READ
                 OWNER_WRITE
@@ -91,7 +91,7 @@ if(TRUE)
         DIRECTORY "foobar"
         DESTINATION "/"
         PATTERN
-        "really_long____________________________________________________________pattern"
+            "really_long____________________________________________________________pattern"
             EXCLUDE
             PERMISSIONS
                 OWNER_READ
@@ -102,10 +102,10 @@ if(TRUE)
                 WORLD_READ
                 WORLD_EXECUTE
         PATTERN
-        #[[ bracket
+            #[[ bracket
 
   comment ]]
-        "really_long_pattern_with_line_comment________________________________________"
+            "really_long_pattern_with_line_comment________________________________________"
             PERMISSIONS
                 OWNER_READ
                 OWNER_WRITE

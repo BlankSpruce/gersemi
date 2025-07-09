@@ -128,7 +128,7 @@ target_sources(
             FILES FOO BAR BAZ QUX FOO BAR BAZ
     PRIVATE
         FILE_SET
-        long_arg____________________________________________________________
+            long_arg____________________________________________________________
             TYPE
                 long_arg____________________________________________________________
             BASE_DIRS
@@ -153,7 +153,7 @@ target_sources(
     TGT # comment
     PUBLIC
         FILE_SET # comment
-        FOO
+            FOO
             TYPE BAR
             BASE_DIRS
                 BAZ # comment
@@ -161,7 +161,7 @@ target_sources(
             FILES FOO BAR BAZ QUX FOO BAR BAZ
     PRIVATE
         FILE_SET
-        long_arg____________________________________________________________ # comment
+            long_arg____________________________________________________________ # comment
             TYPE
                 long_arg____________________________________________________________
             BASE_DIRS

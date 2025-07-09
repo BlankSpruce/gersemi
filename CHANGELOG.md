@@ -1,4 +1,8 @@
 # Changelog
+## [0.20.1] 2025-07-09
+### Fixed
+- Proper line breaking for `FILE_SET` keyword in `target_sources`.
+
 ## [0.20.0] 2025-06-30
 ### Added
 - Support extension files.

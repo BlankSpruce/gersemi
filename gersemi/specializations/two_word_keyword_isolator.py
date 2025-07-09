@@ -57,8 +57,4 @@ class TwoWordKeywordIsolator(BaseCommandInvocationDumper):
         return preprocessed
 
     def keyword_argument(self, tree):
-        result = self._try_to_format_into_single_line(tree.children)
-        if result is not None:
-            return result
-
-        return "\n".join(map(self.visit, tree.children))
+        return self._format_non_option(tree)
