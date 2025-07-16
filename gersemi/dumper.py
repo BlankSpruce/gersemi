@@ -40,7 +40,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         return " ".join(self.visit(child) for child in tree.children)
 
     def line_comment(self, tree):
-        return self._indent(f"#{''.join(tree.children)}")
+        return self._indent(f"#{''.join(tree.children)}").rstrip()
 
     def preformatted_block(self, tree):
         disable_formatter, *body, enable_formatter = tree.children

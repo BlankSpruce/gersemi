@@ -7,6 +7,13 @@ class DropWhitespaces(Transformer):
     def _drop_node(self, _):
         return Discard
 
+    def line_comment(self, children):
+        if not children:
+            return Tree("line_comment", [])
+
+        comment_content, *_ = children
+        return Tree("line_comment", [comment_content.rstrip()])
+
     def command_invocation(self, children):
         command_name, *rest = children
         return Tree("command_invocation", [command_name.lower(), *rest])

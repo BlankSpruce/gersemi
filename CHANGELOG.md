@@ -1,7 +1,11 @@
 # Changelog
+## [0.21.0] 2025-07-16
+### Added
+- Trim whitespaces at the end of line comments except for comments inside list of arguments of unknown command. (#64)
+
 ## [0.20.1] 2025-07-09
 ### Fixed
-- Proper line breaking for `FILE_SET` keyword in `target_sources`.
+- Proper line breaking for `FILE_SET` keyword in `target_sources`. (#63)
 
 ## [0.20.0] 2025-06-30
 ### Added

@@ -8,7 +8,7 @@ set(bar "baz")
 
 #[=[    spaces     in     bracket    comments   untouched     ]=]
 
-#     spaces      in     line    comments     untouched    
+#     spaces      in     line    comments     untouched    except     for   the    end
 
 # To format
 
