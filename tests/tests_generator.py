@@ -23,8 +23,18 @@ def get_directory_path(directory):
 
 
 def get_files_with_extension(directory, extension):
-    files = os.listdir(get_directory_path(directory))
-    return list(filter(has_extension(extension), files))
+    result = []
+    directory_path = get_directory_path(directory)
+    for root, *_ in os.walk(directory_path):
+        files = os.listdir(root)
+        base = os.path.relpath(root, start=directory_path)
+        if base == ".":
+            prefix = ""
+        else:
+            prefix = f"{base}/"
+        result += [f"{prefix}{f}" for f in filter(has_extension(extension), files)]
+
+    return result
 
 
 def remove_extension(filename):

@@ -1,4 +1,4 @@
-### {definitions: [tests/formatter/custom_command_with_hints_in_definition.in.cmake]}
+### {definitions: [tests/formatter/custom_commands/with_hints_in_definition.in.cmake]}
 function(movie_description_without_hints)
 set(options "")
 set(oneValueArgs DIRECTOR)

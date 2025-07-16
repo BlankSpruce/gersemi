@@ -1,4 +1,4 @@
-### {definitions: [tests/formatter/issue_0039_nested_commands.in.cmake]}
+### {definitions: [tests/formatter/issues/0039_nested_commands.in.cmake]}
 function(Lord_of_the_Rings_Return_of_the_King)
     cmake_parse_arguments(inner "" "" "IN_MORDOR;IN_GONDOR"  ${ARGN})
 

@@ -1,4 +1,4 @@
-### {list_expansion: favour-expansion, definitions: [tests/formatter/custom_command_with_unique_hint_favour_expansion.in.cmake]}
+### {list_expansion: favour-expansion, definitions: [tests/formatter/custom_commands/with_unique_hint_favour_expansion.in.cmake]}
 function(my_custom_function target_name)
 # gersemi: hints { SOURCES: unique }
 set(options "")

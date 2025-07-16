@@ -1,4 +1,4 @@
-### {list_expansion: favour-inlining, definitions: [tests/formatter/custom_command_with_sort_hint_favour_inlining.in.cmake]}
+### {list_expansion: favour-inlining, definitions: [tests/formatter/custom_commands/with_sort_hint_favour_inlining.in.cmake]}
 function(my_custom_function target_name)
 # gersemi: hints { SOURCES: sort }
 set(options "")
