@@ -756,7 +756,7 @@ You can extend gersemi capabilities through Python modules listed with `--extens
 - implement `command_definitions` mapping, where key describes command in its canonical casing and value describes command properties,
 
 > [!IMPORTANT]
-> 1) Exact details on command properties are available in [extension example implementation](extension-example/extension/gersemi_extension_example/__init__.py).
+> 1) Exact details on command properties are available in [extension example implementation](extension-example/as_module/gersemi_extension_example/__init__.py).
 > 2) It's possible to override or tweak builtin commands. Extension example shows how to do that with `target_sources` command example. Use with caution.
 
 - pass verification done once during runtime that checks whether `command_definitions` follows some basic constraints like "keyworded arguments are strings", ["command names don't start with a digit"](https://cmake.org/cmake/help/latest/manual/cmake-language.7.html#grammar-token-identifier) etc.
