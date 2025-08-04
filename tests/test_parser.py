@@ -3,6 +3,7 @@ from gersemi.exceptions import (
     ParsingError,
     UnbalancedParentheses,
     UnbalancedBrackets,
+    UnbalancedBlock,
 )
 from .tests_generator import generate_input_only_tests
 
@@ -28,6 +29,46 @@ def test_parser(parser, case):
         ("foo([[foo]=])", UnbalancedBrackets),
         ("foo([=[bar]])", UnbalancedBrackets),
         ("foo(arg1 arg2 [==[arg3]===] arg4)", UnbalancedBrackets),
+        ("macro(foobar)", UnbalancedBlock),
+        ("function(foobar)", UnbalancedBlock),
+        (
+            """function()
+            set(FOO foo)""",
+            UnbalancedBlock,
+        ),
+        (
+            """function(foobar)
+            set(FOO foo)""",
+            UnbalancedBlock,
+        ),
+        (
+            """function()
+    set(SETTING "FOO")""",
+            UnbalancedBlock,
+        ),
+        (
+            """if()
+    set(SETTING "FOO")
+elseif()
+    set(SETTING "BAR")""",
+            UnbalancedBlock,
+        ),
+        (
+            """if()
+    set(SETTING "FOO")
+elseif()
+    set(SETTING "BAR")
+else()
+    set(SETTING "BAR")""",
+            UnbalancedBlock,
+        ),
+        (
+            """if()
+    set(SETTING "FOO")
+else()
+    set(SETTING "BAR")""",
+            UnbalancedBlock,
+        ),
     ],
 )
 def test_invalid_code_parsing_error(parser, invalid_code, expected_exception):

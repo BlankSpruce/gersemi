@@ -7,6 +7,7 @@ from gersemi.exceptions import (
     GenericParsingError,
     UnbalancedParentheses,
     UnbalancedBrackets,
+    UnbalancedBlock,
 )
 from gersemi.parsing_transformer import ParsingTransformer
 from gersemi.postprocessor import postprocess
@@ -49,8 +50,21 @@ def get_lark_parser(grammar_filename, custom_blocks: Sequence[CustomBlock]) -> L
         )
 
 
+@lru_cache(maxsize=None)
+def block_examples(block_start):
+    return (
+        f"{block_start}()",
+        f"""{block_start}()
+foobar()""",
+        f"""{block_start}()
+foobar(FOO foo)""",
+        f"""{block_start}()
+set(FOO "foo")""",
+    )
+
+
 class Parser:
-    examples = {
+    static_examples = {
         UnbalancedBrackets: [
             "foo(foo [[foo]=]",
             "foo([=[foo bar]])",
@@ -75,13 +89,45 @@ class Parser:
             "foo(commented_argument #[[foobar]]",
             "foo(almost_commented_argument #)",
         ],
+        UnbalancedBlock: [
+            """if()
+        else()""",
+            """if()
+        foo()
+        else()"""
+            """if()
+                    elseif()
+            set(FOO foo)""",
+            """if()
+            foo()
+                    elseif()
+            set(FOO foo)""",
+            """if()
+                    elseif()
+            set(FOO foo)
+                    else()
+            set(FOO foo)""",
+        ],
     }
+    static_block_starts = (
+        "block",
+        "foreach",
+        "function",
+        "if",
+        "macro",
+        "while",
+    )
 
     def __init__(self, grammar_filename):
         self.grammar_filename = grammar_filename
 
-    def _match_parsing_error(self, lark_parser, code, exception):
-        specific_error = exception.match_examples(lark_parser.parse, self.examples)
+    def _match_parsing_error(self, lark_parser, code, custom_blocks, exception):
+        specific_error = exception.match_examples(
+            lark_parser.parse,
+            self.examples(lark_parser, custom_blocks),
+            use_accepts=False,
+        )
+
         if not specific_error:
             raise GenericParsingError(
                 exception.get_context(code), exception.line, exception.column
@@ -89,6 +135,24 @@ class Parser:
         raise specific_error(
             exception.get_context(code), exception.line, exception.column
         )
+
+    def examples(self, lark_parser, custom_blocks):
+        result = self.static_examples.copy()
+        ub = UnbalancedBlock
+
+        for block_start in self.static_block_starts:
+            if ub not in result:
+                result[ub] = block_examples(block_start)
+            else:
+                result[ub].extend(block_examples(block_start))
+
+        for block in custom_blocks:
+            if ub not in result:
+                result[ub] = block_examples(block.start)
+            else:
+                result[ub].extend(block_examples(block.start))
+
+        return result
 
     def parse(  # pylint: disable=inconsistent-return-statements
         self, code, known_definitions=None
@@ -105,9 +169,9 @@ class Parser:
         lark_parser = get_lark_parser(self.grammar_filename, custom_blocks)
 
         try:
-            return lark_parser.parse(code)
+            return lark_parser.parse(code.strip())
         except UnexpectedInput as u:
-            self._match_parsing_error(lark_parser, code, u)
+            self._match_parsing_error(lark_parser, code, custom_blocks, u)
 
 
 class ParserWithPostProcessing:

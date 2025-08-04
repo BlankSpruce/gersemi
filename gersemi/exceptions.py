@@ -20,3 +20,7 @@ class UnbalancedParentheses(ParsingError):
 
 class UnbalancedBrackets(ParsingError):
     description = "unbalanced brackets"
+
+
+class UnbalancedBlock(ParsingError):
+    description = "unbalanced block"
