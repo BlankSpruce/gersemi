@@ -136,7 +136,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.21.0
+  rev: 0.22.0
   hooks:
   - id: gersemi
 ```
@@ -152,7 +152,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.21.0
+  rev: 0.22.0
   hooks:
   - id: gersemi
     additional_dependencies:
@@ -175,8 +175,8 @@ Changes to code might be destructive and you should always have a backup (versio
 
 The key goals:
 - Formatter should "just work" and should have as little configuration as possible so that you don't have to worry about fine-tuning formatter to your needs - as long as you embrace the `gersemi` style of formatting, similarly as `black` or `gofmt` do their job.
-- Only valid CMake language code is considered - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon. 
-- Only commands from CMake 3.0 onwards are supported and will be formatted properly - for instance [`exec_program` has been deprecated since CMake 3.0](https://cmake.org/cmake/help/latest/command/exec_program.html) so it won't be formatted. 
+- Only valid CMake language code is considered - `gersemi` might be able to format some particular cases of invalid code but it's not guaranteed and it shouldn't be relied upon.
+- Only commands from CMake 3.0 onwards are supported and will be formatted properly - for instance [`exec_program` has been deprecated since CMake 3.0](https://cmake.org/cmake/help/latest/command/exec_program.html) so it won't be formatted.
 - Formatter can be informed about commands not supported out of the box:
   - through command definition (see: [Let's make a deal](#lets-make-a-deal))
   - through extensions (see: [Extensions](#extensions))
@@ -746,6 +746,29 @@ movie_description_with_hints(
 
 </details>
 
+#### `gersemi: block_end`
+If your definition has `# gersemi: block_end` at the beginning then after `block_end` you can provide name of another command. This will form block-like structure that will be formatted similarly to the pair of `function`/`endfunction`.
+
+<details>
+<summary>Example:</summary>
+
+```cmake
+function(movie_prologue)
+    # gersemi: block_end movie_epilogue
+
+    # details of this function
+endfunction()
+
+function(movie_epilogue)
+    # details of this function
+endfunction()
+
+movie_prologue()
+    set(MOVIE_SETTING "Jury room on a hot summer day")
+movie_epilogue()
+```
+
+</details>
 
 ### Extensions
 

@@ -335,4 +335,23 @@ command_definitions = {
     # are sorted and unique.
     #
     "target_sources": modified_target_sources,
+    #
+    # 11) Commands can form block-like structure similar to pairs of builtin
+    # commands like function/endfunction, macro/endmacro and so on by specifying
+    # "block_end" property on command defining block beginning.
+    #
+    "example_movie_prologue": {
+        "block_end": "example_movie_epilogue",
+        "one_value_keywords": ["TITLE"],
+        "multi_value_keywords": ["MAIN_CAST"],
+        "keyword_formatters": {
+            "MAIN_CAST": "pairs",
+        },
+    },
+    "example_movie_epilogue": {
+        "multi_value_keywords": ["CREDITS"],
+        "keyword_formatters": {
+            "CREDITS": "pairs",
+        },
+    },
 }

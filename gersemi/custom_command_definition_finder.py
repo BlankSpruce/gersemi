@@ -11,6 +11,7 @@ class IgnoreThisDefinition:
     pass
 
 
+BLOCK_END = "gersemi: block_end "
 HINTS = "gersemi: hints"
 IGNORE = "gersemi: ignore"
 
@@ -18,6 +19,10 @@ IGNORE = "gersemi: ignore"
 class UseHint:
     def __init__(self, value):
         self.value = yaml.safe_load(value) or dict()
+
+
+class BlockEnd(str):
+    pass
 
 
 class DropIrrelevantElements(Transformer):
@@ -28,7 +33,7 @@ class DropIrrelevantElements(Transformer):
         if len(children) == 1:
             if any(
                 isinstance(children[0], helper_type)
-                for helper_type in [IgnoreThisDefinition, UseHint]
+                for helper_type in [IgnoreThisDefinition, UseHint, BlockEnd]
             ):
                 return children[0]
         return Discard
@@ -41,6 +46,9 @@ class DropIrrelevantElements(Transformer):
 
             if comment.startswith(HINTS):
                 return UseHint(value=comment[len(HINTS) :])
+
+            if comment.startswith(BLOCK_END):
+                return BlockEnd(comment[len(BLOCK_END) :])
 
         return Discard
 
@@ -105,21 +113,34 @@ class CMakeInterpreter(Interpreter):
             )
         return False
 
-    def _add_command(self, name, arguments):
+    def _add_command(self, name, arguments, block_end):
         key = name.lower()
         if key not in self.found_commands:
             self.found_commands[key] = []
 
         self.found_commands[key].append(
-            ((name, arguments), f"{self.filepath}:{name.line}:{name.column}")
+            (
+                (name, arguments, block_end),
+                f"{self.filepath}:{name.line}:{name.column}",
+            )
         )
 
     def _get_hint(self, block):
         _, *maybe_body, _ = block.children
         if maybe_body:
             body, *_ = maybe_body
-            if len(body.children) > 0 and isinstance(body.children[0], UseHint):
-                return body.children[0]
+            for child in body.children:
+                if isinstance(child, UseHint):
+                    return child
+        return None
+
+    def _get_block_end(self, block):
+        _, *maybe_body, _ = block.children
+        if maybe_body:
+            body, *_ = maybe_body
+            for child in body.children:
+                if isinstance(child, BlockEnd):
+                    return child
         return None
 
     def _add_hint(self, keywords, hint):
@@ -136,6 +157,7 @@ class CMakeInterpreter(Interpreter):
             return
 
         hint = self._get_hint(tree)
+        block_end = self._get_block_end(tree)
         subinterpreter = self._inner_scope
         block_begin, *body, _ = subinterpreter.visit_children(tree)
         self.found_commands.update(subinterpreter.found_commands)
@@ -148,10 +170,12 @@ class CMakeInterpreter(Interpreter):
         keywords, *_ = body
         if len(keywords) > 0:
             self._add_command(
-                name, (positional_arguments, self._add_hint(keywords[0], hint))
+                name,
+                (positional_arguments, self._add_hint(keywords[0], hint)),
+                block_end,
             )
         else:
-            self._add_command(name, (positional_arguments, Keywords()))
+            self._add_command(name, (positional_arguments, Keywords()), block_end)
 
     def block_body(self, tree):
         return [
@@ -190,7 +214,7 @@ def find_custom_command_definitions(tree, filepath="---"):
     return CMakeInterpreter(filepath).visit(tree)
 
 
-def create_command(canonical_name, positional_arguments, keywords):
+def create_command(canonical_name, positional_arguments, keywords, block_end):
     return {
         "_canonical_name": canonical_name,
         "front_positional_arguments": positional_arguments,
@@ -207,6 +231,7 @@ def create_command(canonical_name, positional_arguments, keywords):
             for hint in keywords.hints
             if hint.kind in [e.value for e in KeywordPreprocessor]
         },
+        "block_end": block_end,
     }
 
 
@@ -214,6 +239,10 @@ def get_just_definitions(definitions):
     result = {}
     for name, info in definitions.items():
         sorted_info = list(sorted(info, key=lambda item: item[1]))
-        (canonical_name, (positional_arguments, keywords)), _ = sorted_info[0]
-        result[name] = create_command(canonical_name, positional_arguments, keywords)
+        (canonical_name, (positional_arguments, keywords), block_end), _ = sorted_info[
+            0
+        ]
+        result[name] = create_command(
+            canonical_name, positional_arguments, keywords, block_end
+        )
     return make_immutable(result)

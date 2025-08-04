@@ -1,4 +1,8 @@
 # Changelog
+## [0.22.0] 2025-07-XX
+### Added
+- Support custom block-like pair of commands. (#67)
+
 ## [0.21.0] 2025-07-16
 ### Added
 - Trim whitespaces at the end of line comments except for comments inside list of arguments of unknown command. (#64)

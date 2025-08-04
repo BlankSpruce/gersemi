@@ -18,7 +18,7 @@ class Formatter:
         self.known_definitions = known_definitions
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:
-        tree = BARE_PARSER.parse(code)
+        tree = BARE_PARSER.parse(code, self.known_definitions)
         original = deepcopy(tree)
         dumper = Dumper(self.configuration, self.known_definitions)
         result = dumper.visit(postprocess(code, self.known_definitions, tree))

@@ -295,3 +295,41 @@ target_sources(
         dddd.cpp
         eeeee.cpp
 )
+
+# pair of commands forming block-like structure
+example_movie_prologue(
+    TITLE "12 Angry Men"
+    MAIN_CAST
+        "Lee J. Cobb"
+            "Juror 2"
+        "Henry Fonda"
+            "Juror 8"
+)
+    set(MOVIE_SETTING "Jury room on a hot summer day")
+example_movie_epilogue(
+    CREDITS
+        "Martin Balsam"
+            "Juror 1"
+        "John Fiedler"
+            "Juror 2"
+        "Lee J. Cobb"
+            "Juror 3"
+        "E. G. Marshall"
+            "Juror 4"
+        "Jack Klugman"
+            "Juror 5"
+        "Edward Binns"
+            "Juror 6"
+        "Jack Warden"
+            "Juror 7"
+        "Henry Fonda"
+            "Juror 8"
+        "Joseph Sweeney"
+            "Juror 9"
+        "Ed Begley"
+            "Juror 10"
+        "George Voskovec"
+            "Juror 11"
+        "Robert Webber"
+            "Juror 12"
+)

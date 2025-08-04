@@ -3,7 +3,7 @@ from lark.visitors import Transformer
 from gersemi.exceptions import ASTMismatch
 
 
-class DropWhitespaces(Transformer):
+class DropIrrelevantNodes(Transformer):
     def _drop_node(self, _):
         return Discard
 
@@ -23,20 +23,42 @@ class DropWhitespaces(Transformer):
             return Discard
         return Tree("non_command_element", children)
 
+    def command_element(self, children):
+        if len(children) == 1:
+            return children[0]
+        return Tree("command_element", children)
+
     def arguments(self, children):
         return Tree("arguments", set(children))
+
+    def _flatten_blocks(self, children):
+        for child in children:
+            if child.data in ("block", "block_body"):
+                yield from child.children
+            else:
+                yield child
+
+    def file(self, children):
+        return Tree("file", list(self._flatten_blocks(children)))
+
+    def block(self, children):
+        return Tree("block", list(self._flatten_blocks(children)))
+
+    def block_body(self, children):
+        return Tree("block_body", list(self._flatten_blocks(children)))
 
     NEWLINE = _drop_node
     newline_or_gap = _drop_node
 
 
-def drop_whitespaces(tree):
-    return DropWhitespaces(visit_tokens=True).transform(tree)
+def drop_irrelevant_nodes(tree):
+    return DropIrrelevantNodes(visit_tokens=True).transform(tree)
 
 
 def check_abstract_syntax_trees_equivalence(lhs, rhs):
-    preprocess = drop_whitespaces
-    if preprocess(lhs) != preprocess(rhs):
+    plhs = drop_irrelevant_nodes(lhs)
+    prhs = drop_irrelevant_nodes(rhs)
+    if plhs != prhs:
         raise ASTMismatch
 
 
