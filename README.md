@@ -687,6 +687,8 @@ If your definition has `# gersemi: hints` at the beginning then after `hints` yo
 - `unique`: repeated values after the keyword will be removed during formatting
 - `sort+unique`: values will be sorted and repetitions will be removed
 
+All line comments with `# gersemi: hints` prefix within custom command definition will be taken into consideration so it's possible to list all of the hints in more readable fashion.
+
 <details>
 <summary>Example:</summary>
 
@@ -701,6 +703,17 @@ endfunction()
 
 function(movie_description_with_hints)
 # gersemi: hints { CAST: pairs, SUMMARY: command_line }
+set(options "")
+set(oneValueArgs DIRECTOR)
+set(multiValueArgs CAST SUMMARY)
+
+cmake_parse_arguments(THIS_FUNCTION_PREFIX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+endfunction()
+
+# alternative definition with hints spread across multiple line comments
+function(movie_description_with_hints)
+# gersemi: hints { CAST: pairs }
+# gersemi: hints { SUMMARY: command_line }
 set(options "")
 set(oneValueArgs DIRECTOR)
 set(multiValueArgs CAST SUMMARY)

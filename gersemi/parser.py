@@ -124,7 +124,7 @@ class Parser:
     def _match_parsing_error(self, lark_parser, code, custom_blocks, exception):
         specific_error = exception.match_examples(
             lark_parser.parse,
-            self.examples(lark_parser, custom_blocks),
+            self.examples(custom_blocks),
             use_accepts=False,
         )
 
@@ -136,7 +136,7 @@ class Parser:
             exception.get_context(code), exception.line, exception.column
         )
 
-    def examples(self, lark_parser, custom_blocks):
+    def examples(self, custom_blocks):
         result = self.static_examples.copy()
         ub = UnbalancedBlock
 

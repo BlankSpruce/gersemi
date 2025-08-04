@@ -20,6 +20,9 @@ class UseHint:
     def __init__(self, value):
         self.value = yaml.safe_load(value) or dict()
 
+    def merge(self, other):
+        self.value.update(other.value)
+
 
 class BlockEnd(str):
     pass
@@ -127,12 +130,19 @@ class CMakeInterpreter(Interpreter):
 
     def _get_hint(self, block):
         _, *maybe_body, _ = block.children
+        result = None
         if maybe_body:
             body, *_ = maybe_body
             for child in body.children:
-                if isinstance(child, UseHint):
-                    return child
-        return None
+                if not isinstance(child, UseHint):
+                    continue
+
+                if result:
+                    result.merge(child)
+                else:
+                    result = child
+
+        return result
 
     def _get_block_end(self, block):
         _, *maybe_body, _ = block.children

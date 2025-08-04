@@ -1,7 +1,8 @@
 # Changelog
-## [0.22.0] 2025-07-XX
+## [0.22.0] 2025-08-04
 ### Added
 - Support custom block-like pair of commands. (#67)
+- Hints in custom commands can be listed in multiple line comments to improve readability.
 
 ## [0.21.0] 2025-07-16
 ### Added
