@@ -60,6 +60,17 @@ foobar()""",
 foobar(FOO foo)""",
         f"""{block_start}()
 set(FOO "foo")""",
+        f"""{block_start}()
+""",
+        f"""{block_start}()
+foobar()
+""",
+        f"""{block_start}()
+foobar(FOO foo)
+""",
+        f"""{block_start}()
+set(FOO "foo")
+""",
     )
 
 
@@ -107,6 +118,28 @@ class Parser:
             set(FOO foo)
                     else()
             set(FOO foo)""",
+            """if()
+        else()
+""",
+            """if()
+        foo()
+        else()
+"""
+            """if()
+                    elseif()
+            set(FOO foo)
+""",
+            """if()
+            foo()
+                    elseif()
+            set(FOO foo)
+""",
+            """if()
+                    elseif()
+            set(FOO foo)
+                    else()
+            set(FOO foo)
+""",
         ],
     }
     static_block_starts = (
@@ -169,7 +202,7 @@ class Parser:
         lark_parser = get_lark_parser(self.grammar_filename, custom_blocks)
 
         try:
-            return lark_parser.parse(code.strip())
+            return lark_parser.parse(code)
         except UnexpectedInput as u:
             self._match_parsing_error(lark_parser, code, custom_blocks, u)
 

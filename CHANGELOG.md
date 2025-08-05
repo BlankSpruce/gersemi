@@ -1,4 +1,8 @@
 # Changelog
+## [0.22.1] 2025-08-05
+### Fixed
+- Parsing regression regarding files with empty lines at the edges.
+
 ## [0.22.0] 2025-08-04
 ### Added
 - Support custom block-like pair of commands. (#67)
