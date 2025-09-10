@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init
 from functools import partial
+import os.path
 from pathlib import Path
 import pytest
 from tests.fixtures.app import Matcher, success
@@ -62,7 +63,8 @@ class TestPrintConfigMinimalWithoutConfigurationFile:
 class TestPrintConfigMinimalWithConfigurationFile:
     @pytest.fixture(autouse=True)
     def _fixtures(self, app, testfiles):
-        self.app = partial(app, "--print-config", "minimal")
+        self.cwd = testfiles
+        self.app = partial(app, "--print-config", "minimal", cwd=self.cwd)
         self.target = testfiles / "directory_with_formatted_files"
         self.elsewhere = testfiles / "directory_with_not_formatted_files"
         self.dotfile = (self.target / ".gersemirc").resolve()
@@ -148,6 +150,28 @@ class TestPrintConfigMinimalWithConfigurationFile:
                 stdout=args_equivalent_to_defaults(), stderr=""
             )
             assert self.app("--config", self.dotfile_elsewhere, self.target) == success(
+                stdout=self.file_differs(
+                    "disable_formatting: true\nline_length: 314",
+                    config_file=self.dotfile_elsewhere,
+                ),
+                stderr="",
+            )
+
+    def test_file_provided_through_config_arg_with_relative_path(self):
+        with create_dot_gersemirc(
+            where=self.elsewhere, line_length=314, disable_formatting=True
+        ):
+            assert self.app(self.target) == success(
+                stdout=args_equivalent_to_defaults(), stderr=""
+            )
+
+            relative_dotfile_elsewhere = os.path.relpath(
+                self.dotfile_elsewhere, self.cwd
+            )
+
+            assert self.app(
+                "--config", relative_dotfile_elsewhere, self.target
+            ) == success(
                 stdout=self.file_differs(
                     "disable_formatting: true\nline_length: 314",
                     config_file=self.dotfile_elsewhere,

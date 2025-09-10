@@ -6,6 +6,7 @@ from lark import __version__ as lark_version
 from gersemi.configuration import (
     normalize_definitions,
     normalize_extensions,
+    normalize_path,
     sanitize_list_expansion,
     ControlConfiguration,
     OutcomeConfiguration,
@@ -302,6 +303,9 @@ def postprocess_args(args):
     args.extensions = normalize_extensions(args.extensions)
     args.list_expansion = sanitize_list_expansion(args.list_expansion)
     args.print_config = print_config_kind(args.print_config)
+
+    if args.configuration_file is not None:
+        args.configuration_file = normalize_path(args.configuration_file)
 
 
 def error(text):

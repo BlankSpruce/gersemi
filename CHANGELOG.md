@@ -1,4 +1,8 @@
 # Changelog
+## [0.22.2] 2025-09-10
+### Fixed
+- Relative paths work with `--config`.
+
 ## [0.22.1] 2025-08-05
 ### Fixed
 - Parsing regression regarding files with empty lines at the edges.

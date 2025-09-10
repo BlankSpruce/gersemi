@@ -343,12 +343,16 @@ def enter_directory(target_directory):
         os.chdir(original)
 
 
+def normalize_path(p):
+    return Path(p).resolve(True)
+
+
 def normalize_definitions(definitions):
     if definitions is None:
         return definitions
 
     try:
-        return tuple(Path(d).resolve(True) for d in definitions)
+        return tuple(normalize_path(d) for d in definitions)
     except FileNotFoundError as e:
         # pylint: disable=broad-exception-raised
         raise Exception(f"Definition path doesn't exist: {e.filename}") from e
