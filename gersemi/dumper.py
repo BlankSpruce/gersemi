@@ -12,7 +12,7 @@ class Dumper(CommandInvocationDumper, BaseDumper):
         self.list_expansion = configuration.list_expansion
         super().__init__(configuration.line_length, configuration.indent)
 
-    def file(self, tree):
+    def start(self, tree):
         result = self.__default__(tree)
         if result.endswith("\n"):
             return result

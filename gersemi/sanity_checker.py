@@ -38,8 +38,8 @@ class DropIrrelevantNodes(Transformer):
             else:
                 yield child
 
-    def file(self, children):
-        return Tree("file", list(self._flatten_blocks(children)))
+    def start(self, children):
+        return Tree("start", list(self._flatten_blocks(children)))
 
     def block(self, children):
         return Tree("block", list(self._flatten_blocks(children)))

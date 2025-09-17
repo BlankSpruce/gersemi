@@ -19,8 +19,8 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
             children.pop()
         return list(dropwhile(is_newline, children))
 
-    def file(self, children) -> Tree:
-        return Tree("file", self._drop_edge_empty_lines(children))
+    def start(self, children) -> Tree:
+        return Tree("start", self._drop_edge_empty_lines(children))
 
     def block_body(self, children) -> Tree:
         return Tree("block_body", self._drop_edge_empty_lines(children))

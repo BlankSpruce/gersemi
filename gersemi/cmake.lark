@@ -1,6 +1,4 @@
-start: file
-
-file          : (_file_element newline_or_gap)* _file_element
+start         : (_file_element newline_or_gap)* _file_element
 _file_element : command_element
               | non_command_element
               | block

@@ -101,9 +101,6 @@ class CMakeInterpreter(Interpreter):
         return Keywords(options, one_value_keywords, multi_value_keywords)
 
     def start(self, tree):
-        return self.visit(tree.children[0])
-
-    def file(self, tree):
         self.visit_children(tree)
         return self.found_commands
 
