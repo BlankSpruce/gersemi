@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from textwrap import indent
 from typing import Optional
 from lark import Tree
-from lark.visitors import Interpreter
 from gersemi.ast_helpers import is_line_comment_in
 from gersemi.configuration import Indent, ListExpansion, Tabs
 from gersemi.types import Nodes
@@ -20,7 +19,7 @@ class WontFit(Exception):
     pass
 
 
-class BaseDumper(Interpreter):
+class BaseDumper:
     def __init__(self, width, indent_type):
         self.width = width
         self.indent_type = indent_type
@@ -31,6 +30,16 @@ class BaseDumper(Interpreter):
 
     def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))
+
+    def visit(self, tree):
+        f = getattr(self, tree.data, self.__default__)
+        return f(tree)
+
+    def visit_children(self, tree):
+        yield from (
+            self.visit(child) if isinstance(child, Tree) else child
+            for child in tree.children
+        )
 
     @property
     def indent_symbol(self):
