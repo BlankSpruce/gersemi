@@ -1,4 +1,5 @@
 from collections.abc import Sized
+from functools import partial
 from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Tuple
 from lark import Tree
 from gersemi.ast_helpers import (
@@ -44,9 +45,13 @@ class PositionalArguments(list):
 
 class KeywordSplitter:
     def __init__(self, options, one_value_keywords, multi_value_keywords):
-        self.is_one_of_options = is_one_of_keywords(options)
-        self.is_one_of_one_value_keywords = is_one_of_keywords(one_value_keywords)
-        self.is_one_of_multi_value_keywords = is_one_of_keywords(multi_value_keywords)
+        self.is_one_of_options = partial(is_one_of_keywords, options)
+        self.is_one_of_one_value_keywords = partial(
+            is_one_of_keywords, one_value_keywords
+        )
+        self.is_one_of_multi_value_keywords = partial(
+            is_one_of_keywords, multi_value_keywords
+        )
         self.groups: List[Nodes] = []
         self.accumulator: Nodes = []
         self.comment_accumulator: Nodes = []
@@ -161,10 +166,11 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return result
 
     def _separate_front(self, arguments: Nodes) -> Tuple[List[Nodes], Nodes]:
-        is_keyword = is_one_of_keywords(
+        is_keyword = partial(
+            is_one_of_keywords,
             list(self.options)
             + list(self.one_value_keywords)
-            + list(self.multi_value_keywords)
+            + list(self.multi_value_keywords),
         )
         for index, argument in enumerate(arguments):
             if is_keyword(argument):

@@ -46,8 +46,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
 
     def _get_signature_matcher(self, keyword):
         for item in self.signatures:
-            matcher = is_one_of_keywords([item])
-            if matcher(keyword):
+            if is_one_of_keywords([item], keyword):
                 return item
         return None
 

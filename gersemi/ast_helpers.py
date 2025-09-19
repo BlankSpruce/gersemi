@@ -62,43 +62,29 @@ def is_line_comment_in_any_of(nodes) -> bool:
 
 
 def is_keyword(keyword, node):
-    if is_unquoted_argument(node):
-        return node.children[0] == keyword
-
-    if is_quoted_argument(node):
-        return (len(node.children) > 0) and (node.children[0] == keyword)
-
-    if is_bracket_argument(node):
-        return (len(node.children) > 0) and (node.children[0] == keyword)
-
-    if is_commented_argument(node):
-        return (len(node.children) > 0) and is_keyword(keyword, node.children[0])
-
-    return False
-
-
-class KeywordMatcher:
-    def __init__(self, keywords):
-        self.keywords = keywords
-
-    def __call__(self, other):
-        for k in self.keywords:
-            if isinstance(k, str):
-                if is_keyword(k, other):
-                    return True
-            elif isinstance(k, tuple) and is_keyword_argument(other):
-                front_pattern, back_pattern = k
-                if not is_keyword(front_pattern, other.children[0]):
-                    continue
-
-                if is_keyword(back_pattern, other.children[-1]):
-                    return True
-
+    if not isinstance(node, Tree):
         return False
 
+    if node.data == "commented_argument":
+        return node.children and is_keyword(keyword, node.children[0])
 
-def is_one_of_keywords(keywords):
-    return KeywordMatcher(keywords)
+    return node.children and node.children[0] == keyword
+
+
+def is_one_of_keywords(keywords, node):
+    for k in keywords:
+        if isinstance(k, str):
+            if is_keyword(k, node):
+                return True
+        elif isinstance(k, tuple) and is_keyword_argument(node):
+            front_pattern, back_pattern = k
+            if not is_keyword(front_pattern, node.children[0]):
+                continue
+
+            if is_keyword(back_pattern, node.children[-1]):
+                return True
+
+    return False
 
 
 def make_tree(name: str):

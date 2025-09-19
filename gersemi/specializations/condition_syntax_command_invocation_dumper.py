@@ -21,9 +21,8 @@ class IsolateUnaryOperators(Transformer_InPlace):
 
         new_children: Nodes = []
         iterator = zip(children, children[1:])
-        is_one_of_unary_operators = is_one_of_keywords(self.unary_operators)
         for one_behind, current in iterator:
-            if is_one_of_unary_operators(one_behind):
+            if is_one_of_keywords(self.unary_operators, one_behind):
                 if is_comment(current):
                     new_children += [Tree("unary_operation", [one_behind])]
                     new_children += [current]
@@ -85,9 +84,8 @@ class IsolateBinaryTests(Transformer_InPlace):
 
         new_children: Nodes = []
         iterator = zip(children, children[1:], children[2:])
-        is_one_of_binary_operators = is_one_of_keywords(self.binary_operators)
         for two_behind, one_behind, current in iterator:
-            if is_one_of_binary_operators(one_behind):
+            if is_one_of_keywords(self.binary_operators, one_behind):
                 new_children += [
                     Tree("binary_operation", [two_behind, one_behind, current])
                 ]

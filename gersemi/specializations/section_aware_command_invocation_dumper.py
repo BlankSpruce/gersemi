@@ -51,8 +51,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
 
     def _get_matcher(self, keyword):
         for item in self.sections:
-            matcher = is_one_of_keywords([item])
-            if matcher(keyword):
+            if is_one_of_keywords([item], keyword):
                 return item
         return None
 
@@ -84,7 +83,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
                 self.one_value_keywords,
                 self.multi_value_keywords,
             ):
-                if is_one_of_keywords(keywords)(argument.children[0]):
+                if is_one_of_keywords(keywords, argument.children[0]):
                     return True
 
         return False
