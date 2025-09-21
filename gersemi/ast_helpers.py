@@ -98,4 +98,10 @@ positional_arguments = make_tree("positional_arguments")
 
 
 def get_value(node: Tree, default: Any):
-    return node.children[0] if node.children else default
+    if node.children:
+        if is_quoted_argument(node):
+            return node.children[0][1:-1]
+
+        return node.children[0]
+
+    return default

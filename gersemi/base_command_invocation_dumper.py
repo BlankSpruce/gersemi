@@ -87,7 +87,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         return self.indent_symbol + self.__default__(tree)
 
     def quoted_argument(self, tree):
-        return self.indent_symbol + f'"{self.__default__(tree)}"'
+        return self.indent_symbol + self.__default__(tree)
 
     def unquoted_argument(self, tree):
         return self._indent(self.__default__(tree))

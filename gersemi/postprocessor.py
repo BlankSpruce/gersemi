@@ -13,7 +13,7 @@ from gersemi.builtin_commands import _builtin_commands
 from gersemi.types import Nodes
 
 
-class RemoveSuperfluousEmptyLines(Transformer_InPlace):
+class PostProcessorStageOne(Transformer_InPlace):
     def _drop_edge_empty_lines(self, children) -> List:
         while len(children) > 0 and is_newline(children[-1]):
             children.pop()
@@ -25,15 +25,11 @@ class RemoveSuperfluousEmptyLines(Transformer_InPlace):
     def block_body(self, children) -> Tree:
         return Tree("block_body", self._drop_edge_empty_lines(children))
 
-
-class SimplifyParseTree(Transformer_InPlace):
     def non_command_element(self, children: Nodes):
         if len(children) == 0:
             return Discard
         return Tree("non_command_element", children)
 
-
-class PreserveCustomCommandFormatting(Transformer_InPlace):
     def __init__(self, code, known_definitions):
         super().__init__()
         self.code = code
@@ -73,8 +69,6 @@ class PreserveCustomCommandFormatting(Transformer_InPlace):
 
         return super().transform(self._make_custom_command(children))
 
-
-class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
     def _valid_pair(self, lhs, rhs):
         if is_commented_argument(rhs):
             argument, *__ = rhs.children
@@ -131,21 +125,6 @@ class RecognizeUnquotedLegacyArgument(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-class PostProcessorStageOne(
-    PreserveCustomCommandFormatting,
-    SimplifyParseTree,
-    RemoveSuperfluousEmptyLines,
-    RecognizeUnquotedLegacyArgument,
-):
-    pass
-
-
-class SimplifyQuotedArguments(Transformer_InPlace):
-    def quoted_argument(self, children):
-        return Tree("quoted_argument", ["".join(children[1:-1])])
-
-
 def postprocess(code, definitions, tree):
     stage_one = PostProcessorStageOne(code, definitions)
-    stage_two = SimplifyQuotedArguments()
-    return stage_two.transform(stage_one.transform(tree))
+    return stage_one.transform(tree)
