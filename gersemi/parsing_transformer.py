@@ -4,12 +4,6 @@ from gersemi.ast_helpers import is_newline
 from gersemi.types import Nodes
 
 
-class FlattenBracketComment(Transformer):
-    def bracket_comment(self, children) -> Tree:
-        *_, bracket_argument = children
-        return Tree("bracket_comment", bracket_argument.children)
-
-
 class CleanUpComplexArgument(Transformer):
     def complex_argument(self, children):
         return Tree("complex_argument", children[1:-1])
@@ -23,7 +17,5 @@ class CleanUpNewlines(Transformer):
         return Tree("arguments", [child for child in children if not is_newline(child)])
 
 
-class ParsingTransformer(
-    FlattenBracketComment, CleanUpComplexArgument, CleanUpNewlines
-):
+class ParsingTransformer(CleanUpComplexArgument, CleanUpNewlines):
     pass

@@ -42,8 +42,8 @@ class DropIrrelevantElements(Transformer):
         return Discard
 
     def line_comment(self, children):
-        if len(children) > 0:
-            comment = children[0].strip()
+        if len(children) > 1:
+            comment = children[1].strip()
             if comment == IGNORE:
                 return IgnoreThisDefinition()
 

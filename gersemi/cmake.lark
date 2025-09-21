@@ -69,7 +69,8 @@ _separation_atom    : bracket_comment
           | unquoted_argument
           | complex_argument
 
-bracket_argument : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
+bracket_argument : BRACKET_ARGUMENT
+BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
 quoted_argument     : QUOTED_ARGUMENT
 QUOTED_ARGUMENT     : QUOTATION_MARK QUOTED_ELEMENT* QUOTATION_MARK
@@ -91,14 +92,14 @@ complex_argument : LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
 
 ESCAPE_SEQUENCE: /\\([^A-Za-z0-9]|[nrt])/
 
-bracket_comment : _POUND_SIGN bracket_argument
-line_comment    : _POUND_SIGN [LINE_COMMENT_CONTENT]
+bracket_comment : POUND_SIGN BRACKET_ARGUMENT
+line_comment    : POUND_SIGN [LINE_COMMENT_CONTENT]
 LINE_COMMENT_CONTENT : /[^\n]+/
 
 BACKSLASH              : "\\"
 LEFT_PARENTHESIS       : "("
 NEWLINE                : "\n"
-_POUND_SIGN            : "#"
+POUND_SIGN             : "#"
 QUOTATION_MARK         : "\""
 RIGHT_PARENTHESIS      : ")"
 _SPACE                 : /[ \t]+/
