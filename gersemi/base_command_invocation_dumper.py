@@ -81,16 +81,16 @@ class BaseCommandInvocationDumper(BaseDumper):
         return f"{begin}{formatted_arguments}\n{end}"
 
     def bracket_comment(self, tree):
-        return self.indent_symbol + "#" + self.__default__(tree)
+        return f"{self.indent_symbol}#{tree.children[0]}"
 
     def bracket_argument(self, tree):
-        return self.indent_symbol + self.__default__(tree)
+        return f"{self.indent_symbol}{tree.children[0]}"
 
     def quoted_argument(self, tree):
-        return self.indent_symbol + self.__default__(tree)
+        return f"{self.indent_symbol}{tree.children[0]}"
 
     def unquoted_argument(self, tree):
-        return self._indent(self.__default__(tree))
+        return f"{self.indent_symbol}{tree.children[0]}"
 
     def _preprocess_arguments(self, arguments):
         return arguments
