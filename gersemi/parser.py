@@ -8,6 +8,7 @@ from gersemi.exceptions import (
     UnbalancedParentheses,
     UnbalancedBrackets,
     UnbalancedBlock,
+    UnbalancedQuotes,
 )
 from gersemi.parsing_transformer import ParsingTransformer
 from gersemi.postprocessor import postprocess
@@ -139,6 +140,11 @@ class Parser:
             set(FOO foo)
                     else()
             set(FOO foo)
+""",
+        ],
+        UnbalancedQuotes: [
+            'set(foo ")',
+            """set(foo ")
 """,
         ],
     }

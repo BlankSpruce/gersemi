@@ -24,3 +24,7 @@ class UnbalancedBrackets(ParsingError):
 
 class UnbalancedBlock(ParsingError):
     description = "unbalanced block"
+
+
+class UnbalancedQuotes(ParsingError):
+    description = "unbalanced quotes"
