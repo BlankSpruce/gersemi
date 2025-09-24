@@ -113,7 +113,7 @@ class IsolateOrExpressions(IsolateUnaryOperators):
     unary_operators: List[str] = ["OR"]
 
 
-def IsolateConditions() -> Transformer_InPlace:
+def IsolateConditions():
     return TransformerChain(
         IsolateUnaryTests(),
         IsolateBinaryTests(),

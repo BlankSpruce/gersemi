@@ -1,10 +1,10 @@
 from collections import defaultdict
 from contextlib import contextmanager
 from textwrap import indent
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 from lark import Tree
 from gersemi.ast_helpers import is_line_comment_in
-from gersemi.configuration import Indent, ListExpansion, Tabs
+from gersemi.configuration import Indent, ListExpansion, OutcomeConfiguration, Tabs
 from gersemi.types import Nodes
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
@@ -20,13 +20,14 @@ class WontFit(Exception):
 
 
 class BaseDumper:
-    def __init__(self, width, indent_type):
-        self.width = width
-        self.indent_type = indent_type
+    def __init__(self, configuration: OutcomeConfiguration):
+        self.width = configuration.line_length
+        self.indent_type = configuration.indent
         self._indent_symbol = get_indent(self.indent_type)
         self.indent_level = 0
         self.favour_expansion = False
-        self.unknown_commands_used = defaultdict(list)
+        self.unknown_commands_used: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
+        self.list_expansion = configuration.list_expansion
 
     def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))

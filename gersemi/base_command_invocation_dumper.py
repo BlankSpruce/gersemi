@@ -5,6 +5,8 @@ from gersemi.types import Nodes
 
 
 class BaseCommandInvocationDumper(BaseDumper):
+    _inhibit_favour_expansion: bool = False
+
     def format_command_with_short_name(self, begin, arguments, end):
         with self.indented():
             formatted_arguments = self.visit(arguments).lstrip()

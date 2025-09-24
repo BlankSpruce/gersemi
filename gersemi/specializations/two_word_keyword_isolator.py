@@ -1,7 +1,9 @@
 from typing import Sequence, Tuple, Union
 from lark import Tree
 from gersemi.ast_helpers import is_keyword, is_comment
-from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.specializations.argument_aware_command_invocation_dumper import (
+    ArgumentAwareCommandInvocationDumper,
+)
 from gersemi.keywords import AnyMatcher
 from gersemi.transformer import Transformer_InPlace
 
@@ -47,7 +49,7 @@ class IsolateTwoWordKeywords(Transformer_InPlace):
         return Tree("arguments", new_children)
 
 
-class TwoWordKeywordIsolator(BaseCommandInvocationDumper):
+class TwoWordKeywordIsolator(ArgumentAwareCommandInvocationDumper):
     _two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
 
     def _preprocess_arguments(self, arguments):

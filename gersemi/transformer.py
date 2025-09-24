@@ -19,11 +19,11 @@ class Transformer_InPlace:
             f = getattr(self, tree.data)
         except AttributeError:
             return tree
-        else:
-            try:
-                return f(tree.children)
-            except Exception as e:
-                raise VisitError(tree.data, tree, e)
+
+        try:
+            return f(tree.children)
+        except Exception as e:
+            raise VisitError(tree.data, tree, e) from e
 
 
 class TransformerChain:

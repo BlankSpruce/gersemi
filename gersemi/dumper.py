@@ -1,17 +1,9 @@
-from collections import ChainMap
 from itertools import chain
 from gersemi.base_dumper import BaseDumper
-from gersemi.builtin_commands import _builtin_commands
 from gersemi.command_invocation_dumper import CommandInvocationDumper
-from gersemi.configuration import OutcomeConfiguration
 
 
 class Dumper(CommandInvocationDumper, BaseDumper):
-    def __init__(self, configuration: OutcomeConfiguration, known_definitions):
-        self.known_definitions = ChainMap(known_definitions, _builtin_commands)
-        self.list_expansion = configuration.list_expansion
-        super().__init__(configuration.line_length, configuration.indent)
-
     def start(self, tree):
         result = self.__default__(tree)
         if result.endswith("\n"):
