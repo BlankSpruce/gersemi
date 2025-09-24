@@ -1,10 +1,11 @@
 import yaml
 from lark import Discard
-from lark.visitors import Interpreter, Transformer
+from lark.visitors import Interpreter
 from gersemi.ast_helpers import get_value, is_keyword
 from gersemi.immutable import make_immutable
 from gersemi.keywords import Hint, Keywords
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
+from gersemi.transformer import Transformer_InPlace
 
 
 class IgnoreThisDefinition:
@@ -28,7 +29,7 @@ class BlockEnd(str):
     pass
 
 
-class DropIrrelevantElements(Transformer):
+class DropIrrelevantElements(Transformer_InPlace):
     def _discard(self, _):
         return Discard
 
@@ -55,7 +56,6 @@ class DropIrrelevantElements(Transformer):
 
         return Discard
 
-    NEWLINE = _discard
     bracket_comment = _discard
 
 
@@ -217,7 +217,7 @@ class CMakeInterpreter(Interpreter):
 
 
 def find_custom_command_definitions(tree, filepath="---"):
-    tree = DropIrrelevantElements(visit_tokens=True).transform(tree)
+    tree = DropIrrelevantElements().transform(tree)
     return CMakeInterpreter(filepath).visit(tree)
 
 

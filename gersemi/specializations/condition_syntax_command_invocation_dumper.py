@@ -1,6 +1,6 @@
 from typing import List
 from lark import Tree
-from lark.visitors import Transformer, TransformerChain, Transformer_InPlace
+from gersemi.transformer import Transformer_InPlace, TransformerChain
 from gersemi.ast_helpers import (
     is_line_comment_in,
     is_one_of_keywords,
@@ -113,7 +113,7 @@ class IsolateOrExpressions(IsolateUnaryOperators):
     unary_operators: List[str] = ["OR"]
 
 
-def IsolateConditions() -> Transformer:
+def IsolateConditions() -> Transformer_InPlace:
     return TransformerChain(
         IsolateUnaryTests(),
         IsolateBinaryTests(),

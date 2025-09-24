@@ -1,9 +1,9 @@
 from typing import Sequence, Tuple, Union
 from lark import Tree
-from lark.visitors import Transformer_InPlace
 from gersemi.ast_helpers import is_keyword, is_comment
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keywords import AnyMatcher
+from gersemi.transformer import Transformer_InPlace
 
 
 class IsolateTwoWordKeywords(Transformer_InPlace):

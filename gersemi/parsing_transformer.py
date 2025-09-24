@@ -1,15 +1,15 @@
 from lark import Token, Tree
-from lark.visitors import Transformer
 from gersemi.ast_helpers import is_newline
+from gersemi.transformer import Transformer_InPlace
 from gersemi.types import Nodes
 
 
-class CleanUpComplexArgument(Transformer):
+class CleanUpComplexArgument(Transformer_InPlace):
     def complex_argument(self, children):
         return Tree("complex_argument", children[1:-1])
 
 
-class CleanUpNewlines(Transformer):
+class CleanUpNewlines(Transformer_InPlace):
     def newline_or_gap(self, children):
         return Token("NEWLINE", "".join(children)[:2])
 

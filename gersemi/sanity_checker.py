@@ -1,9 +1,18 @@
 from lark import Discard, Tree
-from lark.visitors import Transformer
+from gersemi.ast_helpers import is_newline
 from gersemi.exceptions import ASTMismatch
+from gersemi.transformer import Transformer_InPlace
 
 
-class DropIrrelevantNodes(Transformer):
+def is_not_newline(node):
+    return not is_newline(node)
+
+
+def remove_newlines(nodes):
+    yield from filter(is_not_newline, nodes)
+
+
+class DropIrrelevantNodes(Transformer_InPlace):
     def _drop_node(self, _):
         return Discard
 
@@ -18,6 +27,9 @@ class DropIrrelevantNodes(Transformer):
         command_name, *rest = children
         return Tree("command_invocation", [command_name.lower(), *rest])
 
+    def commented_argument(self, children):
+        return Tree("commented_argument", list(remove_newlines(children)))
+
     def non_command_element(self, children):
         if len(children) == 0:
             return Discard
@@ -29,30 +41,29 @@ class DropIrrelevantNodes(Transformer):
         return Tree("command_element", children)
 
     def arguments(self, children):
-        return Tree("arguments", set(children))
+        return Tree("arguments", set(remove_newlines(children)))
 
     def _flatten_blocks(self, children):
         for child in children:
-            if child.data in ("block", "block_body"):
+            if getattr(child, "data", None) in ("block", "block_body"):
                 yield from child.children
             else:
                 yield child
 
     def start(self, children):
-        return Tree("start", list(self._flatten_blocks(children)))
+        return Tree("start", list(remove_newlines(self._flatten_blocks(children))))
 
     def block(self, children):
-        return Tree("block", list(self._flatten_blocks(children)))
+        return Tree("block", list(remove_newlines(self._flatten_blocks(children))))
 
     def block_body(self, children):
-        return Tree("block_body", list(self._flatten_blocks(children)))
+        return Tree("block_body", list(remove_newlines(self._flatten_blocks(children))))
 
-    NEWLINE = _drop_node
     newline_or_gap = _drop_node
 
 
 def drop_irrelevant_nodes(tree):
-    return DropIrrelevantNodes(visit_tokens=True).transform(tree)
+    return DropIrrelevantNodes().transform(tree)
 
 
 def check_abstract_syntax_trees_equivalence(lhs, rhs):
