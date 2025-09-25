@@ -24,14 +24,3 @@ class Transformer_InPlace:
             return f(tree.children)
         except Exception as e:
             raise VisitError(tree.data, tree, e) from e
-
-
-class TransformerChain:
-    def __init__(self, *transformers):
-        self.transformers = transformers
-
-    def transform(self, tree: Tree):
-        for t in self.transformers:
-            tree = t.transform(tree)
-
-        return tree
