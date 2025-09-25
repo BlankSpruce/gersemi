@@ -108,8 +108,8 @@ class CMakeInterpreter(Interpreter):
         _, *maybe_body, _ = block.children
         if maybe_body:
             body, *_ = maybe_body
-            return len(body.children) > 0 and isinstance(
-                body.children[0], IgnoreThisDefinition
+            return body.children and any(
+                isinstance(c, IgnoreThisDefinition) for c in body.children
             )
         return False
 
@@ -190,7 +190,7 @@ class CMakeInterpreter(Interpreter):
         ][:1]
 
     def command_invocation(self, tree):
-        identifier, arguments = tree.children
+        identifier, _, arguments, _ = tree.children
         command_interpreters = {
             "cmake_parse_arguments": self._cmake_parse_arguments,
             "function": self._new_command,

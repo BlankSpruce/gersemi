@@ -16,6 +16,7 @@ def create_dumper(definitions):
 
 def test_custom_command_without_keyworded_arguments_formatting(
     parser_with_postprocessing,
+    parser,
 ):
     given = """function(some_custom_command_without_keyworded_arguments only positional arguments)
     message(STATUS "some_custom_command_without_keyworded_arguments")
@@ -44,7 +45,7 @@ some_custom_command_without_keyworded_arguments(
 )
 """
 
-    parsed = parser_with_postprocessing.parse(given)
+    parsed = parser.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
@@ -56,6 +57,7 @@ some_custom_command_without_keyworded_arguments(
 
 def test_custom_command_without_keyworded_arguments_with_disabled_reformatting(
     parser_with_postprocessing,
+    parser,
 ):
     given = """function(some_custom_command_without_keyworded_arguments only positional arguments)
     # gersemi: ignore
@@ -82,7 +84,7 @@ some_custom_command_without_keyworded_arguments(short positional arguments)
 some_custom_command_without_keyworded_arguments(long__________________________________________________ positional__________________________________________________ arguments__________________________________________________)
 """
 
-    parsed = parser_with_postprocessing.parse(given)
+    parsed = parser.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
@@ -105,7 +107,7 @@ endfunction()
     ],
 )
 def test_can_deal_with_empty_body_in_custom_command_definition(
-    parser_with_postprocessing, given
+    parser_with_postprocessing, parser, given
 ):
     expected = """function(
     some_custom_command_without_keyworded_arguments
@@ -116,7 +118,7 @@ def test_can_deal_with_empty_body_in_custom_command_definition(
 endfunction()
 """
 
-    parsed = parser_with_postprocessing.parse(given)
+    parsed = parser.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 

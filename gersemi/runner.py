@@ -30,7 +30,7 @@ from gersemi.custom_command_definition_finder import (
 from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import create_formatter, NullFormatter, Formatter
 from gersemi.mode import get_mode, Mode
-from gersemi.parser import PARSER as parser
+from gersemi.parser import BARE_PARSER as parser
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import Result, Error, apply, get_error_message
