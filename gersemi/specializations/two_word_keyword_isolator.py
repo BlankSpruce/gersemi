@@ -5,58 +5,38 @@ from gersemi.specializations.argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
 from gersemi.keywords import AnyMatcher
-from gersemi.transformer import Transformer_InPlace
 
 
-class IsolateTwoWordKeywords(Transformer_InPlace):
-    def __init__(self, lhs, rhs):
-        super().__init__()
-        self.lhs = lhs
-        self.rhs = rhs
-
-    def _is_lhs(self, node):
-        return is_keyword(self.lhs, node)
-
-    def _is_rhs(self, node):
-        return is_keyword(self.rhs, node)
-
-    def arguments(self, children):
-        if len(children) <= 1:
-            return Tree("arguments", children)
-
-        new_children = []
-        accumulator = []
-        iterator = iter(children)
-        for child in iterator:
-            if len(accumulator) > 0:
-                if is_comment(child):
-                    accumulator.append(child)
-                elif self._is_rhs(child):
-                    new_children.append(Tree("keyword_argument", [*accumulator, child]))
-                    accumulator = []
-                else:
-                    new_children.extend(accumulator)
-                    accumulator = [child]
+def isolate_two_word_keywords(lhs, rhs, children):
+    accumulator = []
+    for child in children:
+        if accumulator:
+            if is_comment(child):
+                accumulator.append(child)
+            elif is_keyword(rhs, child):
+                yield Tree("keyword_argument", [*accumulator, child])
+                accumulator = []
             else:
-                if self._is_lhs(child):
-                    accumulator = [child]
-                else:
-                    new_children.append(child)
+                yield from accumulator
+                accumulator = [child]
+        else:
+            if is_keyword(lhs, child):
+                accumulator = [child]
+            else:
+                yield child
 
-        if len(accumulator) > 0:
-            new_children.extend(accumulator)
-
-        return Tree("arguments", new_children)
+    yield from accumulator
 
 
 class TwoWordKeywordIsolator(ArgumentAwareCommandInvocationDumper):
     _two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
 
     def _preprocess_arguments(self, arguments):
-        preprocessed = arguments
+        preprocessed = arguments.children
         for lhs, rhs in self._two_words_keywords:
-            preprocessed = IsolateTwoWordKeywords(lhs, rhs).transform(preprocessed)
-        return preprocessed
+            preprocessed = isolate_two_word_keywords(lhs, rhs, preprocessed)
+        arguments.children = list(preprocessed)
+        return arguments
 
     def keyword_argument(self, tree):
         return self._format_non_option(tree)
