@@ -1,4 +1,8 @@
 # Changelog
+## [0.22.3] 2025-09-25
+### Added
+- Performance improvement.
+
 ## [0.22.2] 2025-09-10
 ### Fixed
 - Relative paths work with `--config`.
