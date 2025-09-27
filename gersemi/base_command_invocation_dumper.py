@@ -45,12 +45,12 @@ class BaseCommandInvocationDumper(BaseDumper):
         arguments = self._preprocess_arguments(arguments)
         begin = f"{identifier}("
         end = ")"
-        if self._inlining_condition(arguments):
-            result = self._try_to_format_into_single_line(
-                arguments.children, prefix=begin, postfix=end
-            )
-            if result is not None:
-                return result
+
+        result = self._try_to_format_into_single_line(
+            arguments.children, prefix=begin, postfix=end
+        )
+        if result is not None and self._inlining_condition(arguments):
+            return result
 
         with self.select_expansion_strategy():
             if isinstance(self.indent_type, Spaces) and len(begin) == self.indent_type:
