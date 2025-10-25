@@ -29,4 +29,4 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
         return f"{self.visit(name)}\n{formatted_rest}"
 
 
-set_property = {"set_property": SetProperty}
+set_property = {"set_property": {"__impl": SetProperty}}

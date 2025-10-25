@@ -1,5 +1,4 @@
 from collections import ChainMap
-import collections.abc
 from contextlib import contextmanager
 from functools import lru_cache
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
@@ -9,6 +8,7 @@ from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
 from gersemi.specializations.standard_command_dumper import (
+    create_specialized_dumper,
     create_standard_dumper,
 )
 
@@ -40,10 +40,14 @@ class CommandInvocationDumper(
 
     def _get_patch(self, raw_command_name):
         command = self.known_definitions.get(raw_command_name.lower(), None)
-        if isinstance(command, collections.abc.Mapping):
+        if command is None:
+            return None
+
+        impl = command.get("__impl", None)
+        if impl is None:
             return create_standard_dumper(command)
 
-        return command
+        return create_specialized_dumper(command)
 
     def command_invocation(self, tree):
         command_name, _ = tree.children

@@ -31,6 +31,12 @@ command_definitions = {
     #
     "ExampleSpecificCanonicalName": {},
     #
+    # Canonical name can have additional whitespace before parentheses.
+    #
+    "ExampleNameWithOneSpaceAtTheEnd ": {},
+    "ExampleNameWithThreeSpacesAtTheEnd   ": {},
+    "ExampleNameWithOneTabAtTheEnd\t": {},
+    #
     # In the simplest case commands can have one signature and such signature
     # will have the following properties:
     # 1) Front positional arguments: these are arguments appearing at the front
@@ -335,6 +341,15 @@ command_definitions = {
     # are sorted and unique.
     #
     "target_sources": modified_target_sources,
+    #
+    # In this case if/elseif/else/endif commands are changed in a way that
+    # whitespace is added after the name and all four commands have the same
+    # name length.
+    #
+    "if     ": builtin_commands["if"],
+    "elseif ": builtin_commands["elseif"],
+    "else   ": builtin_commands["else"],
+    "endif  ": builtin_commands["endif"],
     #
     # 11) Commands can form block-like structure similar to pairs of builtin
     # commands like function/endfunction, macro/endmacro and so on by specifying

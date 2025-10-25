@@ -250,12 +250,3 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)
         return "\n".join(map(self.visit, filter(None, groups)))
-
-    def format_command_name(self, identifier):
-        if self._canonical_name is None:
-            return super().format_command_name(identifier)
-
-        if self._canonical_name.lower() != identifier.lower():
-            raise RuntimeError
-
-        return self._canonical_name

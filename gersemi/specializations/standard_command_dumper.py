@@ -45,3 +45,11 @@ def create_standard_dumper(data):
             signatures = data_signatures
 
     return Impl
+
+
+@lru_cache(maxsize=None)
+def create_specialized_dumper(data):
+    class Impl(data["__impl"]):
+        _canonical_name = data.get("_canonical_name", None)
+
+    return Impl

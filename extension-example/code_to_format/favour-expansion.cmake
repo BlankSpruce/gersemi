@@ -3,6 +3,11 @@ project(ExtensionExample)
 # command with specific canonical name
 ExampleSpecificCanonicalName()
 
+# commands with additional whitespace
+ExampleNameWithOneSpaceAtTheEnd ()
+ExampleNameWithThreeSpacesAtTheEnd   ()
+ExampleNameWithOneTabAtTheEnd	()
+
 # command with standard properties
 example_pick_movie_to_watch(
     "Search IMDB"
@@ -295,6 +300,15 @@ target_sources(
         dddd.cpp
         eeeee.cpp
 )
+
+# builtin if/elseif/else/if commands have additional whitespace before parentheses
+if     (A)
+    ExampleSpecificCanonicalName()
+elseif (B)
+    ExampleSpecificCanonicalName()
+else   ()
+    ExampleSpecificCanonicalName()
+endif  ()
 
 # pair of commands forming block-like structure
 example_movie_prologue(

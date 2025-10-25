@@ -181,7 +181,7 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
 
 
 condition_syntax_commands = {
-    key: ConditionSyntaxCommandInvocationDumper
+    key: {"__impl": ConditionSyntaxCommandInvocationDumper}
     for key in (
         "elseif",
         "else",

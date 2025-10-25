@@ -2,6 +2,9 @@
 from dataclasses import asdict
 import json
 import os
+from pydantic.json_schema import GenerateJsonSchema
+from pydantic.version import version_short
+from pydantic import TypeAdapter
 import pytest
 from gersemi.configuration import (
     OutcomeConfiguration,
@@ -9,21 +12,6 @@ from gersemi.configuration import (
     make_configuration_file,
     Tabs,
 )
-
-try:
-    from pydantic.json_schema import GenerateJsonSchema
-    from pydantic.version import version_short
-    from pydantic import TypeAdapter
-except ImportError:
-
-    class GenerateJsonSchema:
-        pass
-
-    class TypeAdapter:
-        pass
-
-    def version_short() -> str:
-        return "0.0"
 
 
 def pydantic_version_as_tuple():

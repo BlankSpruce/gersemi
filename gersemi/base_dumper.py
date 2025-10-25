@@ -118,7 +118,15 @@ class BaseDumper:
             self.favour_expansion = old
 
     def format_command_name(self, identifier):
-        return identifier.lower()
+        try:
+            canonical_name = self._canonical_name
+        except AttributeError:
+            return identifier.lower()
+
+        if canonical_name.strip().lower() != identifier.strip().lower():
+            raise RuntimeError
+
+        return canonical_name
 
     def _record_unknown_command(self, command):
         self.unknown_commands_used[str(command)].append((command.line, command.column))

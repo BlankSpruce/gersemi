@@ -3202,7 +3202,7 @@ def add_canonical_name(value, canonical_name):
 def preprocess_definitions(definitions):
     return make_immutable(
         {
-            key.lower(): add_canonical_name(value, key)
+            key.strip().lower(): add_canonical_name(value, key)
             for key, value in definitions.items()
         }
     )

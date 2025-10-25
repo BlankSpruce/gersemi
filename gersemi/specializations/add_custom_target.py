@@ -23,4 +23,4 @@ class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper
         return super().positional_arguments(tree)
 
 
-add_custom_target = {"add_custom_target": AddCustomTarget}
+add_custom_target = {"add_custom_target": {"__impl": AddCustomTarget}}
