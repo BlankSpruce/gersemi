@@ -1,4 +1,3 @@
-from itertools import chain
 from gersemi.base_dumper import BaseDumper
 from gersemi.command_invocation_dumper import CommandInvocationDumper
 
@@ -33,13 +32,3 @@ class Dumper(CommandInvocationDumper, BaseDumper):
 
     def line_comment(self, tree):
         return self._indent("".join(tree.children)).rstrip()
-
-    def preformatted_block(self, tree):
-        disable_formatter, *body, enable_formatter = tree.children
-        return "".join(
-            chain(
-                [self._indent(disable_formatter)],
-                body,
-                [self._indent(enable_formatter)],
-            )
-        )

@@ -799,7 +799,7 @@ You can extend gersemi capabilities through Python modules listed with `--extens
 
 ### How to disable reformatting
 
-Gersemi can be disallowed to format block of code using pair of comments `# gersemi: off`/`# gersemi: on`. Example:
+Gersemi can be disallowed to format block of code using pair of fencing comments `# gersemi: off`/`# gersemi: on`. Example:
 
 ```cmake
 the_hobbit(
@@ -831,19 +831,28 @@ the_fellowship_of_the_ring     (
        Gandalf
        )
 # gersemi: on
-```
 
-Pair of comments should be in the same scope, so the following is not supported:
-```cmake
 # gersemi: off
-the_godfather()
+the_two_towers(
+            RING_BEARER Frodo
+        GARDENER Samwise
+    Merry Pippin Aragon
+    # gersemi: on
+    Boromir
+    Gimli
+    Legolas
+    Gandalf
+)
 
+# gersemi: off
 function(how_to_make_a_successful_movie args)
 step_one_have_a_good_scenario()
-# gersemi: on
-step_two_make_the_movie()
+    # gersemi: on
+    step_two_make_the_movie()
 endfunction()
 ```
+
+Fencing comments will be indented as usual comments (as in `the_two_towers` and `how_to_make_a_successful_movie` examples) so it's probably a good idea to disable formatting in code block representing the same semantic level.
 
 ## Contributing
 
