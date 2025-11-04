@@ -12,6 +12,7 @@ from gersemi.configuration import (
     OutcomeConfiguration,
     ListExpansion,
     indent_type,
+    line_ranges,
     workers_type,
 )
 from gersemi.configuration_reports import default_report
@@ -271,6 +272,14 @@ def create_argparser():
         default=None,
         help=control_conf_doc["warnings_as_errors"],
     )
+    control_configuration_group.add_argument(
+        "--line-ranges",
+        dest="line_ranges",
+        default=[],
+        type=line_ranges,
+        action="append",
+        help=control_conf_doc["line_ranges"],
+    )
 
     parser.add_argument(
         dest="sources",
@@ -306,6 +315,8 @@ def postprocess_args(args):
 
     if args.configuration_file is not None:
         args.configuration_file = normalize_path(args.configuration_file)
+
+    args.line_ranges = set(line_range for arg in args.line_ranges for line_range in arg)
 
 
 def error(text):

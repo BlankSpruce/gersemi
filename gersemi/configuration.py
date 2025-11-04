@@ -82,6 +82,35 @@ class ListExpansion(EnumWithMetadata):
 
 
 @dataclass
+class LineRange:
+    start: int
+    end: int
+
+    def __hash__(self):
+        return hash(astuple(self))
+
+
+LineRanges = Iterable[LineRange]
+
+
+def line_range(value: str) -> LineRange:
+    try:
+        start, end = map(int, value.split("-"))
+        assert start > 0
+        assert end > 0
+        assert end >= start
+
+        return LineRange(start=start, end=end)
+    except Exception as e:
+        # pylint: disable=broad-exception-raised
+        raise Exception(f"Invalid format of line range: {value}") from e
+
+
+def line_ranges(value: str) -> LineRanges:
+    return tuple(map(line_range, filter(None, value.split(","))))
+
+
+@dataclass
 class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
     """
     These arguments control how gersemi formats source code.
@@ -263,6 +292,27 @@ class ControlConfiguration:
     Treat warnings as errors so that status code becomes {FAIL} when
     at least one warning would be issued. This option is not inhibited
     by --quiet.
+                """
+            ),
+        ),
+    )
+
+    line_ranges: LineRanges = field(
+        default=tuple(),
+        metadata=dict(
+            title="Line ranges to format",
+            description=doc(
+                """
+    Try to format code only in specified line ranges.
+    This option works only with one input file.
+    Range is specified as pairs of integers indicating line numbers (1-based)
+    joined with `-` (dash) and each pair must be separated by comma.
+    Examples of valid values of this option:
+    a) single line range: 13-21
+    b) multiple line ranges: 10-49,51-100,111-123
+    c) single line: 7-7.
+    This option can be specified multiple times and union of ranges will be considered, example:
+    `--line-ranges 10-49 --line-ranges 51-100` is the same as `--line-ranges 10-49,51-100`
                 """
             ),
         ),

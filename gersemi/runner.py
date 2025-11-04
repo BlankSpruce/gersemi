@@ -14,6 +14,7 @@ from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
     find_closest_dot_gersemirc,
+    LineRanges,
     make_control_configuration,
     make_outcome_configuration,
     MaxWorkers,
@@ -89,7 +90,7 @@ class StatusCode:
         raise RuntimeError(f"Invalid type: {type(other)}")
 
 
-def get_files(paths: Iterable[Path]) -> Iterable[Path]:
+def get_files(paths: Iterable[Path]) -> List[Path]:
     def get_files_from_single_path(path):
         if path.is_dir():
             return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"))
@@ -301,6 +302,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     pool,
     warning_sink: WarningSink,
     files_to_format: Iterable[Path],
+    lines_to_format: LineRanges,
 ) -> Iterable[int]:
     custom_command_definitions = find_all_custom_command_definitions(
         set(configuration.outcome.definitions), pool, warning_sink
@@ -312,6 +314,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     formatter = create_formatter(
         configuration.outcome,
         ChainMap(custom_command_definitions, extension_definitions),
+        lines_to_format,
     )
     task = select_task(mode, configuration)
     execute = partial(run_task, formatter=formatter, task=task)
@@ -416,6 +419,10 @@ def run(args: argparse.Namespace):
         # pylint: disable=broad-exception-raised
         raise Exception(f"Source path doesn't exist: {e.filename}") from e
 
+    if args.line_ranges and len(requested_files) > 1:
+        # pylint: disable=broad-exception-raised
+        raise Exception("Line range formatting available only with one source file")
+
     mode = get_mode(args)
     control = make_control_configuration(args)
     warning_sink = WarningSink(control.quiet)
@@ -430,7 +437,8 @@ def run(args: argparse.Namespace):
         print_configuration_report(args.print_config, buckets, get_configuration)
         return SUCCESS
 
-    with create_cache(control.cache) as cache, pool_cm() as pool:
+    enable_cache = control.cache and (not control.line_ranges)
+    with create_cache(enable_cache) as cache, pool_cm() as pool:
         status_code = StatusCode()
         for config_file, files in buckets.items():
             config = get_configuration(config_file)
@@ -445,7 +453,13 @@ def run(args: argparse.Namespace):
                 mode, config, warning_sink, already_formatted_files
             )
             status_code += handle_files_to_format(
-                mode, config, cache, pool, warning_sink, files_to_format
+                mode,
+                config,
+                cache,
+                pool,
+                warning_sink,
+                files_to_format,
+                control.line_ranges,
             )
 
         status_code += (
