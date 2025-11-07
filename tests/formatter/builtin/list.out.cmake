@@ -156,7 +156,7 @@ list(
 list(
     TRANSFORM
         long_list_name____________________________________________________________
-    APPEND value1 value2 value3 value4 long_value_________________________
+    APPEND long_value_________________________
 )
 
 list(TRANSFORM FOO APPEND bar)
@@ -189,4 +189,29 @@ list(
     COMPARE FILE_BASENAME
     CASE INSENSITIVE
     ORDER DESCENDING
+)
+
+list(
+    TRANSFORM
+        long_list_name____________________________________________________________
+    REPLACE expression replace_expression
+    AT 0 1 2 314159
+    OUTPUT_VARIABLE
+        long_output_variable_name____________________________________________________________
+)
+
+list(
+    TRANSFORM
+        long_list_name____________________________________________________________
+    REPLACE
+        long_expression____________________________________________________________
+        replace_expression
+    AT
+        0
+        1
+        2
+        long_index____________________________________________________________
+        314159
+    OUTPUT_VARIABLE
+        long_output_variable_name____________________________________________________________
 )

@@ -873,16 +873,15 @@ builtin_commands = {
             "REMOVE_DUPLICATES": {"front_positional_arguments": ["<list>"]},
             "TRANSFORM": {
                 "front_positional_arguments": ["<list>"],
-                "one_value_keywords": ["OUTPUT_VARIABLE", "TRANSFORM"],
-                "multi_value_keywords": [
+                "options": ["TOLOWER", "TOUPPER", "STRIP", "GENEX_STRIP"],
+                "one_value_keywords": [
                     "APPEND",
                     "PREPEND",
-                    "TOLOWER",
-                    "TOUPPER",
-                    "STRIP",
-                    "GENEX_STRIP",
-                    "REPLACE",
+                    "OUTPUT_VARIABLE",
+                    "TRANSFORM",
+                    "REGEX",
                 ],
+                "multi_value_keywords": ["REPLACE", "AT", "FOR"],
             },
             # Ordering
             "REVERSE": {"front_positional_arguments": ["<list>"]},
