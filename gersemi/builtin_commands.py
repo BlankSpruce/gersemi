@@ -123,6 +123,8 @@ _target_sources_FILE_SET = {
     },
 }
 
+_VERSION_Any = ("VERSION", AnyMatcher())
+
 builtin_commands = {
     #### Legend
     #### (&): canonical name used different than in the documentation
@@ -1524,14 +1526,36 @@ builtin_commands = {
     "enable_language": {},
     "enable_testing": {},
     "export": {
+        "_two_words_keywords": [_VERSION_Any],
         "signatures": {
             "EXPORT": {
-                "options": ["EXPORT_PACKAGE_DEPENDENCIES"],
+                "options": [
+                    "EXPORT_PACKAGE_DEPENDENCIES",
+                    "NO_PROJECT_METADATA",
+                    "LOWER_CASE_FILE",
+                ],
                 "one_value_keywords": [
                     "EXPORT",  # <export-name>
                     "NAMESPACE",
                     "FILE",
+                    "PACKAGE_INFO",
+                    "PROJECT",
+                    "APPENDIX",
+                    "LICENSE",
+                    "DEFAULT_LICENSE",
+                    "DESCRIPTION",
+                    "HOMEPAGE_URL",
                 ],
+                "multi_value_keywords": [
+                    _VERSION_Any,
+                    "DEFAULT_TARGETS",
+                    "DEFAULT_CONFIGURATIONS",
+                ],
+                "sections": {
+                    _VERSION_Any: {
+                        "one_value_keywords": ["COMPAT_VERSION", "VERSION_SCHEMA"],
+                    }
+                },
             },
             "TARGETS": {
                 "options": ["APPEND", "EXPORT_LINK_INTERFACE_LIBRARIES"],
@@ -1593,6 +1617,7 @@ builtin_commands = {
             _FILE_SET_Any,
             _PATTERN_Any,
             _REGEX_Any,
+            _VERSION_Any,
         ],
         "signatures": {
             "TARGETS": {
@@ -1725,7 +1750,7 @@ builtin_commands = {
             },
             "PACKAGE_INFO": {
                 "sections": {
-                    "VERSION": {
+                    _VERSION_Any: {
                         "one_value_keywords": ["COMPAT_VERSION", "VERSION_SCHEMA"]
                     },
                 },
@@ -1738,7 +1763,7 @@ builtin_commands = {
                     "COMPONENT",
                 ],
                 "multi_value_keywords": [
-                    "VERSION",
+                    _VERSION_Any,
                     "DEFAULT_TARGETS",
                     "DEFAULT_CONFIGURATIONS",
                     "PERMISSIONS",

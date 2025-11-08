@@ -727,8 +727,7 @@ install(
     PACKAGE_INFO foo
     EXPORT bar
     LOWER_CASE_FILE
-    VERSION
-        1.2.3
+    VERSION 1.2.3
         COMPAT_VERSION 1.2.1
         VERSION_SCHEMA foo__________________________________________________
     PERMISSIONS foo bar baz
