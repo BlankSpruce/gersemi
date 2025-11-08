@@ -154,23 +154,31 @@ builtin_commands = {
     },
     "cmake_language": {
         "_two_words_keywords": [_EVAL_CODE],
-        "one_value_keywords": [
-            "DIRECTORY",
-            "ID",
-            "ID_VAR",
-            "GET_CALL_IDS",
-            "GET_CALL",
-            "SET_DEPENDENCY_PROVIDER",
-            "GET_MESSAGE_LOG_LEVEL",
-            "EXIT",
-        ],
-        "multi_value_keywords": [
-            "DEFER",
-            "CALL",
-            "CANCEL_CALL",
-            "SUPPORTED_METHODS",
-            _EVAL_CODE,
-        ],
+        "signatures": {
+            "CALL": {
+                "one_value_keywords": ["CALL"],
+            },
+            _EVAL_CODE: {
+                "multi_value_keywords": [_EVAL_CODE],
+            },
+            "DEFER": {
+                "one_value_keywords": ["CALL", "GET_CALL_IDS"],
+                "multi_value_keywords": ["DEFER", "GET_CALL", "CANCEL_CALL"],
+                "sections": {
+                    "DEFER": {
+                        "one_value_keywords": ["DIRECTORY", "ID", "ID_VAR"],
+                    }
+                },
+            },
+            "SET_DEPENDENCY_PROVIDER": {
+                "one_value_keywords": ["SET_DEPENDENCY_PROVIDER"],
+                "multi_value_keywords": ["SUPPORTED_METHODS"],
+            },
+            "GET_MESSAGE_LOG_LEVEL": {},
+            "EXIT": {
+                "one_value_keywords": ["EXIT"],
+            },
+        },
     },
     "cmake_minimum_required": {
         "options": ["FATAL_ERROR"],
