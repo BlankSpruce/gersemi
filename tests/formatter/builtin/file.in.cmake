@@ -78,11 +78,11 @@ file(INSTALL foo bar DESTINATION baz FILE_PERMISSIONS qux DIRECTORY_PERMISSIONS 
 
 file(SIZE foo bar)
 
-file(SIZE long_filename__________________________ long_filename__________________________)
+file(SIZE long_filename__________________________ long_out_var__________________________)
 
 file(READ_SYMLINK foo bar)
 
-file(READ_SYMLINK long_filename__________________________ long_filename__________________________)
+file(READ_SYMLINK long_filename__________________________ long_out_var__________________________)
 
 file(CREATE_LINK foo bar)
 
@@ -106,9 +106,9 @@ file(DOWNLOAD url file)
 
 file(DOWNLOAD url file INACTIVITY_TIMEOUT 100 LOG foo SHOW_PROGRESS STATUS bar TIMEOUT 100 USERPWD root:root HTTPHEADER header NETRC REQUIRED NETRC_FILE foo EXPECTED_HASH ALGO=bar EXPECTED_MD5 md5 TLS_VERIFY ON TLS_CAINFO baz)
 
-file(UPLOAD url file)
+file(UPLOAD file url)
 
-file(UPLOAD url file INACTIVITY_TIMEOUT 100 LOG foo SHOW_PROGRESS STATUS bar TIMEOUT 100 USERPWD root:root HTTPHEADER header NETRC REQUIRED NETRC_FILE foo)
+file(UPLOAD file url INACTIVITY_TIMEOUT 100 LOG foo SHOW_PROGRESS STATUS bar TIMEOUT 100 USERPWD root:root HTTPHEADER header NETRC REQUIRED NETRC_FILE foo)
 
 file(LOCK foo)
 

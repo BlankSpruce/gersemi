@@ -38,8 +38,7 @@ file(
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/foo"
 )
 list(
-    APPEND
-    foo
+    APPEND foo
     "BAR"
     "BAZ"
 )

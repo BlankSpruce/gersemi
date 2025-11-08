@@ -1,16 +1,14 @@
 list(LENGTH FOO BAR)
 
 list(
-    LENGTH
-    long_list_name_________________________
+    LENGTH long_list_name_________________________
     long_variable_name_________________________
 )
 
 list(GET FOO 1 BAR)
 
 list(
-    GET
-    long_list_name_________________________
+    GET long_list_name_________________________
     1
     2
     3
@@ -24,8 +22,7 @@ list(
 list(JOIN FOO bar BAZ)
 
 list(
-    JOIN
-    long_list_name_________________________
+    JOIN long_list_name_________________________
     long_glue_________________________
     long_variable_name_________________________
 )
@@ -33,8 +30,7 @@ list(
 list(SUBLIST FOO 0 5 BAR)
 
 list(
-    SUBLIST
-    long_list_name_________________________
+    SUBLIST long_list_name_________________________
     0
     5
     long_variable_name_________________________
@@ -43,8 +39,7 @@ list(
 list(FIND FOO 42 BAR)
 
 list(
-    FIND
-    long_list_name_________________________
+    FIND long_list_name_________________________
     42
     long_variable_name_________________________
 )
@@ -52,8 +47,7 @@ list(
 list(APPEND FOO bar)
 
 list(
-    APPEND
-    long_list_name_________________________
+    APPEND long_list_name_________________________
     arg1
     arg2
     arg3
@@ -74,8 +68,7 @@ list(
 list(INSERT FOO 42 element1)
 
 list(
-    INSERT
-    long_list_name_________________________
+    INSERT long_list_name_________________________
     42
     element1
     element2
@@ -87,8 +80,7 @@ list(
 list(POP_BACK FOO bar)
 
 list(
-    POP_BACK
-    long_list_name_________________________
+    POP_BACK long_list_name_________________________
     out_var1
     out_var2
     out_var3
@@ -99,8 +91,7 @@ list(
 list(POP_FRONT FOO bar)
 
 list(
-    POP_FRONT
-    long_list_name_________________________
+    POP_FRONT long_list_name_________________________
     out_var1
     out_var2
     out_var3
@@ -111,8 +102,7 @@ list(
 list(PREPEND FOO element1)
 
 list(
-    PREPEND
-    long_list_name_________________________
+    PREPEND long_list_name_________________________
     element1
     element2
     element3
@@ -123,8 +113,7 @@ list(
 list(REMOVE_ITEM FOO value1)
 
 list(
-    REMOVE_ITEM
-    long_list_name_________________________
+    REMOVE_ITEM long_list_name_________________________
     value1
     value2
     value3
@@ -137,8 +126,7 @@ list(REMOVE_AT FOO 1)
 list(REMOVE_AT FOO 1 2 3 4)
 
 list(
-    REMOVE_AT
-    FOO
+    REMOVE_AT FOO
     1
     2
     3
@@ -150,7 +138,7 @@ list(REMOVE_DUPLICATES FOO)
 
 list(
     REMOVE_DUPLICATES
-    long_list_name____________________________________________________________
+        long_list_name____________________________________________________________
 )
 
 list(

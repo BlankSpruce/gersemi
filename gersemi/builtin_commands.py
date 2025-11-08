@@ -200,8 +200,8 @@ builtin_commands = {
         "signatures": {
             # Decomposition
             "GET": {
-                "front_positional_arguments": ["<path-var>"],
                 "one_value_keywords": [
+                    "GET",  # <path-var>
                     "ROOT_NAME",
                     "ROOT_DIRECTORY",
                     "ROOT_PATH",
@@ -252,60 +252,87 @@ builtin_commands = {
             },
             # Modification
             "SET": {
-                "front_positional_arguments": ["<path-var>"],
                 "back_positional_arguments": ["<input>"],
                 "options": ["NORMALIZE"],
+                "one_value_keywords": [
+                    "SET",  # <path-var>
+                ],
             },
             "APPEND": {
-                "front_positional_arguments": ["<path-var>"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "APPEND",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "APPEND_STRING": {
-                "front_positional_arguments": ["<path-var>"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "APPEND_STRING",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "REMOVE_FILENAME": {
-                "front_positional_arguments": ["<path-var>"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "REMOVE_FILENAME",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "REPLACE_FILENAME": {
-                "front_positional_arguments": ["<path-var>", "<input>"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "REPLACE_FILENAME",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "REMOVE_EXTENSION": {
-                "front_positional_arguments": ["<path-var>"],
                 "options": ["LAST_ONLY"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "REMOVE_EXTENSION",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "REPLACE_EXTENSION": {
-                "front_positional_arguments": ["<path-var>"],
                 "options": ["LAST_ONLY"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "REPLACE_EXTENSION",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             # Generation
             "NORMAL_PATH": {
-                "front_positional_arguments": ["<path-var>"],
-                "one_value_keywords": ["OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "NORMAL_PATH",  # <path-var>
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "RELATIVE_PATH": {
-                "front_positional_arguments": ["<path-var>"],
-                "one_value_keywords": ["BASE_DIRECTORY", "OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "RELATIVE_PATH",  # <path-var>
+                    "BASE_DIRECTORY",
+                    "OUTPUT_VARIABLE",
+                ],
             },
             "ABSOLUTE_PATH": {
-                "front_positional_arguments": ["<path-var>"],
                 "options": ["NORMALIZE"],
-                "one_value_keywords": ["BASE_DIRECTORY", "OUTPUT_VARIABLE"],
+                "one_value_keywords": [
+                    "ABSOLUTE_PATH",  # <path-var>
+                    "BASE_DIRECTORY",
+                    "OUTPUT_VARIABLE",
+                ],
             },
             # Native Conversion
             "NATIVE_PATH": {
-                "front_positional_arguments": ["<path-var>"],
                 "back_positional_arguments": ["<out-var>"],
                 "options": ["NORMALIZE"],
+                "one_value_keywords": [
+                    "NATIVE_PATH",  # <path-var>
+                ],
             },
             "CONVERT": {
-                "front_positional_arguments": ["<input>"],
                 "options": ["NORMALIZE"],
-                "one_value_keywords": ["TO_CMAKE_PATH_LIST", "TO_NATIVE_PATH_LIST"],
+                "one_value_keywords": [
+                    "CONVERT",  # <input>
+                    "TO_CMAKE_PATH_LIST",
+                    "TO_NATIVE_PATH_LIST",
+                ],
             },
             # Hashing
             "HASH": {
@@ -429,14 +456,17 @@ builtin_commands = {
         "signatures": {
             # Reading
             "READ": {
-                "front_positional_arguments": ["<filename>", "<variable>"],
                 "options": ["HEX"],
-                "one_value_keywords": ["OFFSET", "LIMIT"],
+                "one_value_keywords": [
+                    "READ",  # <filename>
+                    "OFFSET",
+                    "LIMIT",
+                ],
             },
             "STRINGS": {
-                "front_positional_arguments": ["<filename>", "<variable>"],
                 "options": ["NEWLINE_CONSUME", "NO_HEX_CONVERSION"],
                 "one_value_keywords": [
+                    "STRINGS",  # <filename>
                     "LENGTH_MAXIMUM",
                     "LENGTH_MINIMUM",
                     "LIMIT_COUNT",
@@ -446,26 +476,70 @@ builtin_commands = {
                     "ENCODING",
                 ],
             },
-            "MD5": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA1": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA224": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA256": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA384": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA512": {"front_positional_arguments": ["<output_variable>", "<input>"]},
+            "MD5": {
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "MD5",  # "<filename>"
+                ],
+            },
+            "SHA1": {
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA1",  # "<filename>"
+                ],
+            },
+            "SHA224": {
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA224",  # "<filename>"
+                ],
+            },
+            "SHA256": {
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA256",  # "<filename>"
+                ],
+            },
+            "SHA384": {
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA384",  # "<filename>"
+                ],
+            },
+            "SHA512": {
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA512",  # "<filename>"
+                ],
+            },
             "SHA3_224": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA3_224",  # "<filename>"
+                ],
             },
             "SHA3_256": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA3_256",  # "<filename>"
+                ],
             },
             "SHA3_384": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA3_384",  # "<filename>"
+                ],
             },
             "SHA3_512": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "back_positional_arguments": ["<variable>"],
+                "one_value_keywords": [
+                    "SHA3_512",  # "<filename>"
+                ],
             },
             "TIMESTAMP": {
-                "front_positional_arguments": ["<filename>", "<variable>", "<format>"],
+                "one_value_keywords": [
+                    "TIMESTAMP",  # <filename>
+                ],
                 "options": ["UTC"],
             },
             "GET_RUNTIME_DEPENDENCIES": {
@@ -489,12 +563,20 @@ builtin_commands = {
                 ],
             },
             # Writing
-            "WRITE": {"front_positional_arguments": ["<filename>"]},
-            "APPEND": {"front_positional_arguments": ["<filename>"]},
+            "WRITE": {
+                "one_value_keywords": [
+                    "WRITE",  # <filename>
+                ]
+            },
+            "APPEND": {
+                "one_value_keywords": [
+                    "APPEND",  # <filename>
+                ]
+            },
             _GENERATE_OUTPUT: {
-                "front_positional_arguments": ["output-file"],
                 "options": ["NO_SOURCE_PERMISSIONS", "USE_SOURCE_PERMISSIONS"],
                 "one_value_keywords": [
+                    _GENERATE_OUTPUT,  # output-file
                     "INPUT",
                     "CONTENT",
                     "CONDITION",
@@ -509,23 +591,31 @@ builtin_commands = {
             },
             # Filesystem
             "GLOB": {
-                "front_positional_arguments": ["<variable>"],
                 "options": ["CONFIGURE_DEPENDS"],
-                "one_value_keywords": ["GLOB", "LIST_DIRECTORIES", "RELATIVE"],
+                "one_value_keywords": [
+                    "GLOB",  # <variable>
+                    "LIST_DIRECTORIES",
+                    "RELATIVE",
+                ],
             },
             "GLOB_RECURSE": {
-                "front_positional_arguments": ["<variable>"],
                 "options": ["CONFIGURE_DEPENDS", "FOLLOW_SYMLINKS"],
-                "one_value_keywords": ["GLOB_RECURSE", "LIST_DIRECTORIES", "RELATIVE"],
+                "one_value_keywords": [
+                    "GLOB_RECURSE",  # <variable>
+                    "LIST_DIRECTORIES",
+                    "RELATIVE",
+                ],
             },
             "MAKE_DIRECTORY": {
                 "one_value_keywords": ["RESULT"],
                 "multi_value_keywords": ["MAKE_DIRECTORY"],
             },
             "RENAME": {
-                "front_positional_arguments": ["<oldname>", "<newname>"],
                 "options": ["NO_REPLACE"],
-                "one_value_keywords": ["RESULT"],
+                "one_value_keywords": [
+                    "RENAME",  # <oldname>
+                    "RESULT",
+                ],
             },
             "COPY": {
                 "options": [
@@ -544,9 +634,11 @@ builtin_commands = {
                 ],
             },
             "COPY_FILE": {
-                "front_positional_arguments": ["<oldname>", "<newname>"],
                 "options": ["ONLY_IF_DIFFERENT"],
-                "one_value_keywords": ["RESULT"],
+                "one_value_keywords": [
+                    "COPY_FILE",  # <oldname>
+                    "RESULT",
+                ],
             },
             "INSTALL": {
                 "options": [
@@ -564,12 +656,17 @@ builtin_commands = {
                     "PERMISSIONS",
                 ],
             },
-            "SIZE": {"front_positional_arguments": ["<filename>", "<variable>"]},
+            "SIZE": {
+                "one_value_keywords": [
+                    "SIZE",  # <filename>
+                ]
+            },
             "READ_SYMLINK": {
-                "front_positional_arguments": ["<linkname>", "<variable>"]
+                "one_value_keywords": [
+                    "READ_SYMLINK",  # <filename>
+                ],
             },
             "CREATE_LINK": {
-                "front_positional_arguments": ["<original>", "<linkname>"],
                 "options": ["COPY_ON_ERROR", "SYMBOLIC"],
                 "one_value_keywords": ["RESULT"],
                 "multi_value_keywords": ["CREATE_LINK"],
@@ -590,9 +687,11 @@ builtin_commands = {
             },
             # Path Conversion
             "REAL_PATH": {
-                "front_positional_arguments": ["<path>", "<out-var>"],
                 "options": ["EXPAND_TILDE"],
-                "one_value_keywords": ["BASE_DIRECTORY"],
+                "one_value_keywords": [
+                    "REAL_PATH",  # <path>
+                    "BASE_DIRECTORY",
+                ],
             },
             "RELATIVE_PATH": {
                 "front_positional_arguments": ["<variable>", "<directory>", "<file>"]
@@ -601,9 +700,9 @@ builtin_commands = {
             "TO_NATIVE_PATH": {"front_positional_arguments": ["<path>", "<variable>"]},
             # Transfer
             "DOWNLOAD": {
-                "front_positional_arguments": ["<url>", "<file>"],
                 "options": ["SHOW_PROGRESS"],
                 "one_value_keywords": [
+                    "DOWNLOAD",  # <url>
                     "INACTIVITY_TIMEOUT",
                     "LOG",
                     "STATUS",
@@ -623,9 +722,9 @@ builtin_commands = {
                 "multi_value_keywords": ["DOWNLOAD"],
             },
             "UPLOAD": {
-                "front_positional_arguments": ["<file>", "<url>"],
                 "options": ["SHOW_PROGRESS"],
                 "one_value_keywords": [
+                    "UPLOAD",  # <file>
                     "INACTIVITY_TIMEOUT",
                     "LOG",
                     "STATUS",
@@ -638,13 +737,16 @@ builtin_commands = {
                     "TLS_CAINFO",
                     "TLS_VERSION",
                 ],
-                "multi_value_keywords": ["UPLOAD"],
             },
             # Locking
             "LOCK": {
-                "front_positional_arguments": ["<path>"],
                 "options": ["DIRECTORY", "RELEASE"],
-                "one_value_keywords": ["LOCK", "GUARD", "RESULT_VARIABLE", "TIMEOUT"],
+                "one_value_keywords": [
+                    "LOCK",  # <path>
+                    "GUARD",
+                    "RESULT_VARIABLE",
+                    "TIMEOUT",
+                ],
             },
             # Archiving
             "ARCHIVE_CREATE": {
@@ -838,54 +940,114 @@ builtin_commands = {
     "list": {
         "signatures": {
             # Reading
-            "LENGTH": {"front_positional_arguments": ["<list>", "<output variable>"]},
-            "GET": {
-                "front_positional_arguments": ["<list>"],
+            "LENGTH": {
                 "back_positional_arguments": ["<output variable>"],
+                "one_value_keywords": [
+                    "LENGTH",  # <list>
+                ],
+            },
+            "GET": {
+                "back_positional_arguments": ["<output variable>"],
+                "one_value_keywords": [
+                    "GET",  # <list>
+                ],
             },
             "JOIN": {
-                "front_positional_arguments": ["<list>", "<glue", "<output variable>"]
+                "back_positional_arguments": ["<glue", "<output variable>"],
+                "one_value_keywords": [
+                    "JOIN",  # <list>
+                ],
             },
             "SUBLIST": {
-                "front_positional_arguments": [
-                    "<list>",
+                "back_positional_arguments": [
                     "<begin>",
                     "<length>",
                     "<out-var>",
-                ]
+                ],
+                "one_value_keywords": [
+                    "SUBLIST",  # <list>
+                ],
             },
             # Search
             "FIND": {
-                "front_positional_arguments": ["<list>", "<value>", "<output variable>"]
+                "back_positional_arguments": ["<value>", "<output variable>"],
+                "one_value_keywords": [
+                    "FIND",  # <list>
+                ],
             },
             # Modification
-            "APPEND": {"front_positional_arguments": ["<list>"]},
+            "APPEND": {
+                "one_value_keywords": [
+                    "APPEND",  # <list>
+                ]
+            },
             "FILTER": {
                 "options": ["INCLUDE", "EXCLUDE"],
-                "one_value_keywords": ["FILTER", "REGEX"],
+                "one_value_keywords": [
+                    "FILTER",  # <list>
+                    "REGEX",
+                ],
             },
-            "INSERT": {"front_positional_arguments": ["<list>", "<element_index>"]},
-            "POP_BACK": {"front_positional_arguments": ["<list>"]},
-            "POP_FRONT": {"front_positional_arguments": ["<list>"]},
-            "PREPEND": {"front_positional_arguments": ["<list>"]},
-            "REMOVE_ITEM": {"front_positional_arguments": ["<list>"]},
-            "REMOVE_AT": {"front_positional_arguments": ["<list>"]},
-            "REMOVE_DUPLICATES": {"front_positional_arguments": ["<list>"]},
+            "INSERT": {
+                "one_value_keywords": [
+                    "INSERT",  # <list>
+                ],
+            },
+            "POP_BACK": {
+                "one_value_keywords": [
+                    "POP_BACK",  # <list>
+                ],
+            },
+            "POP_FRONT": {
+                "one_value_keywords": [
+                    "POP_FRONT",  # <list>
+                ],
+            },
+            "PREPEND": {
+                "one_value_keywords": [
+                    "PREPEND",  # <list>
+                ],
+            },
+            "REMOVE_ITEM": {
+                "one_value_keywords": [
+                    "REMOVE_ITEM",  # <list>
+                ],
+            },
+            "REMOVE_AT": {
+                "one_value_keywords": [
+                    "REMOVE_AT",  # <list>
+                ],
+            },
+            "REMOVE_DUPLICATES": {
+                "one_value_keywords": [
+                    "REMOVE_DUPLICATES",  # <list>
+                ],
+            },
             "TRANSFORM": {
-                "front_positional_arguments": ["<list>"],
                 "options": ["TOLOWER", "TOUPPER", "STRIP", "GENEX_STRIP"],
                 "one_value_keywords": [
                     "APPEND",
                     "PREPEND",
                     "OUTPUT_VARIABLE",
-                    "TRANSFORM",
+                    "TRANSFORM",  # <list>
                     "REGEX",
                 ],
                 "multi_value_keywords": ["REPLACE", "AT", "FOR"],
             },
             # Ordering
-            "REVERSE": {"front_positional_arguments": ["<list>"]},
-            "SORT": {"one_value_keywords": ["SORT", "COMPARE", "CASE", "ORDER"]},
+            "REVERSE": {
+                "one_value_keywords": [
+                    "REVERSE",  # <list>
+                ]
+            },
+            "SORT": {
+                "one_value_keywords": [
+                    "SORT",  # <list>
+                    "COMPARE",
+                    "CASE",
+                    "ORDER",
+                ]
+            },
         },
     },
     "macro": {
@@ -952,12 +1114,10 @@ builtin_commands = {
         "signatures": {
             # Search and Replace
             "FIND": {
-                "front_positional_arguments": [
-                    "<string>",
-                    "<substring>",
-                    "<output variable>",
-                ],
                 "options": ["REVERSE"],
+                "one_value_keywords": [
+                    "FIND",  # <string>
+                ],
             },
             "REPLACE": {
                 "front_positional_arguments": [
@@ -987,35 +1147,75 @@ builtin_commands = {
                 ]
             },
             # Manipulation
-            "APPEND": {"front_positional_arguments": ["<string_variable>"]},
-            "PREPEND": {"front_positional_arguments": ["<string_variable>"]},
-            "CONCAT": {"front_positional_arguments": ["<output_variable>"]},
-            "JOIN": {"front_positional_arguments": ["<glue>", "<output_variable>"]},
+            "APPEND": {
+                "one_value_keywords": [
+                    "APPEND",  # <string_variable>
+                ],
+            },
+            "PREPEND": {
+                "one_value_keywords": [
+                    "PREPEND",  # <string_variable>
+                ],
+            },
+            "CONCAT": {
+                "one_value_keywords": [
+                    "CONCAT",  # <output_variable>
+                ],
+            },
+            "JOIN": {
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "JOIN",  # <glue>
+                ],
+            },
             "TOLOWER": {
-                "front_positional_arguments": ["<string>", "<output_variable>"]
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "TOLOWER",  # <string>
+                ],
             },
             "TOUPPER": {
-                "front_positional_arguments": ["<string>", "<output_variable>"]
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "TOUPPER",  # <string>
+                ],
             },
-            "LENGTH": {"front_positional_arguments": ["<string>", "<output_variable>"]},
+            "LENGTH": {
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "LENGTH",  # <string>
+                ],
+            },
             "SUBSTRING": {
-                "front_positional_arguments": [
-                    "<string>",
+                "back_positional_arguments": [
                     "<begin>",
                     "<length>",
                     "<output_variable>",
-                ]
+                ],
+                "one_value_keywords": [
+                    "SUBSTRING",  # <string>
+                ],
             },
-            "STRIP": {"front_positional_arguments": ["<string>", "<output_variable>"]},
+            "STRIP": {
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "STRIP",  # <string>
+                ],
+            },
             "GENEX_STRIP": {
-                "front_positional_arguments": ["<string>", "<output_variable>"]
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "GENEX_STRIP",  # <string>
+                ],
             },
             "REPEAT": {
-                "front_positional_arguments": [
-                    "<string>",
+                "back_positional_arguments": [
                     "<count>",
                     "<output_variable>",
-                ]
+                ],
+                "one_value_keywords": [
+                    "REPEAT",  # <string>
+                ],
             },
             # Comparison
             _COMPARE_LESS: {
@@ -1061,48 +1261,100 @@ builtin_commands = {
                 ]
             },
             # Hashing
-            "MD5": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA1": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA224": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA256": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA384": {"front_positional_arguments": ["<output_variable>", "<input>"]},
-            "SHA512": {"front_positional_arguments": ["<output_variable>", "<input>"]},
+            "MD5": {
+                "one_value_keywords": [
+                    "MD5",  # <output_variable>
+                ]
+            },
+            "SHA1": {
+                "one_value_keywords": [
+                    "SHA1",  # <output_variable>
+                ]
+            },
+            "SHA224": {
+                "one_value_keywords": [
+                    "SHA224",  # <output_variable>
+                ]
+            },
+            "SHA256": {
+                "one_value_keywords": [
+                    "SHA256",  # <output_variable>
+                ]
+            },
+            "SHA384": {
+                "one_value_keywords": [
+                    "SHA384",  # <output_variable>
+                ]
+            },
+            "SHA512": {
+                "one_value_keywords": [
+                    "SHA512",  # <output_variable>
+                ]
+            },
             "SHA3_224": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "one_value_keywords": [
+                    "SHA3_224",  # <output_variable>
+                ]
             },
             "SHA3_256": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "one_value_keywords": [
+                    "SHA3_256",  # <output_variable>
+                ]
             },
             "SHA3_384": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "one_value_keywords": [
+                    "SHA3_384",  # <output_variable>
+                ]
             },
             "SHA3_512": {
-                "front_positional_arguments": ["<output_variable>", "<input>"]
+                "one_value_keywords": [
+                    "SHA3_512",  # <output_variable>
+                ]
             },
             # Generation
-            "ASCII": {"back_positional_arguments": ["<output_variable>"]},
-            "HEX": {"front_positional_arguments": ["<string>", "<output_variable>"]},
+            "ASCII": {
+                "back_positional_arguments": ["<output_variable>"],
+                "multi_value_keywords": [
+                    "ASCII",  # <number>...
+                ],
+            },
+            "HEX": {
+                "back_positional_arguments": ["<output_variable>"],
+                "one_value_keywords": [
+                    "HEX",  # <string>
+                ],
+            },
             "CONFIGURE": {
-                "front_positional_arguments": ["<string>", "<output_variable>"],
+                "one_value_keywords": [
+                    "CONFIGURE",  # <string>
+                ],
                 "options": ["@ONLY", "ESCAPE_QUOTES"],
             },
             "MAKE_C_IDENTIFIER": {
-                "front_positional_arguments": ["<string>", "<output_variable>"]
+                "one_value_keywords": [
+                    "MAKE_C_IDENTIFIER",  # <string>
+                ],
             },
             "RANDOM": {"one_value_keywords": ["LENGTH", "ALPHABET", "RANDOM_SEED"]},
             "TIMESTAMP": {
-                "front_positional_arguments": ["<filename>", "<variable>", "<format>"],
                 "options": ["UTC"],
+                "one_value_keywords": [
+                    "TIMESTAMP",  # <output_variable>
+                ],
             },
             "UUID": {
-                "front_positional_arguments": ["<output_variable>"],
                 "options": ["UPPER"],
-                "one_value_keywords": ["NAMESPACE", "NAME", "TYPE"],
+                "one_value_keywords": [
+                    "UUID",  # <output_variable>
+                    "NAMESPACE",
+                    "NAME",
+                    "TYPE",
+                ],
             },
             # JSON
             "JSON": {
-                "front_positional_arguments": ["<out-var>"],
                 "one_value_keywords": [
+                    "JSON",  # <out-var>
                     "ERROR_VARIABLE",
                     "GET",
                     "TYPE",
@@ -1275,16 +1527,28 @@ builtin_commands = {
         "signatures": {
             "EXPORT": {
                 "options": ["EXPORT_PACKAGE_DEPENDENCIES"],
-                "one_value_keywords": ["EXPORT", "NAMESPACE", "FILE"],
+                "one_value_keywords": [
+                    "EXPORT",  # <export-name>
+                    "NAMESPACE",
+                    "FILE",
+                ],
             },
             "TARGETS": {
                 "options": ["APPEND", "EXPORT_LINK_INTERFACE_LIBRARIES"],
                 "one_value_keywords": ["NAMESPACE", "FILE", "ANDROID_MK"],
-                "multi_value_keywords": ["TARGETS"],
+                "multi_value_keywords": [
+                    "TARGETS",  # <target>...
+                ],
             },
-            "PACKAGE": {"one_value_keywords": ["PACKAGE"]},
+            "PACKAGE": {
+                "one_value_keywords": [
+                    "PACKAGE",  # <PackageName>
+                ]
+            },
             "SETUP": {
-                "one_value_keywords": ["SETUP"],
+                "one_value_keywords": [
+                    "SETUP",  # <export-name>
+                ],
                 "multi_value_keywords": ["PACKAGE_DEPENDENCY", "TARGET"],
                 "sections": {
                     "PACKAGE_DEPENDENCY": {

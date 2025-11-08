@@ -94,6 +94,8 @@ string(ASCII 1 2 3 foo)
 
 string(ASCII 1 2 3 long_argument______________________________________________________________)
 
+string(ASCII 1 2 3 long_index____________________________________________________________ long_argument______________________________________________________________)
+
 string(CONFIGURE foo bar @ONLY ESCAPE_QUOTES)
 
 string(CONFIGURE long_argument______________________________________________________________ long_argument______________________________________________________________ @ONLY ESCAPE_QUOTES)

@@ -1,8 +1,7 @@
 file(READ foo bar OFFSET 0 LIMIT 100 HEX)
 
 file(
-    READ
-    long_filename__________________________
+    READ long_filename__________________________
     long_variable_name_________________________
     OFFSET 0
     LIMIT 100
@@ -12,8 +11,7 @@ file(
 file(STRINGS foo bar LENGTH_MAXIMUM 100)
 
 file(
-    STRINGS
-    foo
+    STRINGS foo
     bar
     LENGTH_MAXIMUM 100
     LENGTH_MINIMUM 100
@@ -26,15 +24,13 @@ file(
 )
 
 file(
-    STRINGS
-    long_filename__________________________
+    STRINGS long_filename__________________________
     long_variable_name_________________________
     LENGTH_MAXIMUM 100
 )
 
 file(
-    STRINGS
-    long_filename__________________________
+    STRINGS long_filename__________________________
     long_variable_name_________________________
     LENGTH_MAXIMUM 100
     LENGTH_MINIMUM 100
@@ -49,16 +45,14 @@ file(
 file(MD5 foo bar)
 
 file(
-    MD5
-    long_filename__________________________
+    MD5 long_filename__________________________
     long_variable_name_________________________
 )
 
 file(TIMESTAMP foo bar format UTC)
 
 file(
-    TIMESTAMP
-    long_filename__________________________
+    TIMESTAMP long_filename__________________________
     long_variable_name_________________________
     long_format_________________________
     UTC
@@ -85,16 +79,14 @@ file(
 file(WRITE foo bar)
 
 file(
-    WRITE
-    long_filename__________________________
+    WRITE long_filename__________________________
     long_content________________________________________________
 )
 
 file(APPEND foo bar)
 
 file(
-    APPEND
-    long_filename__________________________
+    APPEND long_filename__________________________
     long_content________________________________________________
 )
 
@@ -119,8 +111,7 @@ file(GENERATE OUTPUT foo INPUT bar CONDITION baz)
 file(GENERATE OUTPUT foo CONTENT bar CONDITION baz)
 
 file(
-    GENERATE OUTPUT
-    long_filename__________________________
+    GENERATE OUTPUT long_filename__________________________
     INPUT long_filename__________________________
     CONDITION long_condition__________________________
 )
@@ -207,17 +198,15 @@ file(
 file(SIZE foo bar)
 
 file(
-    SIZE
-    long_filename__________________________
-    long_filename__________________________
+    SIZE long_filename__________________________
+    long_out_var__________________________
 )
 
 file(READ_SYMLINK foo bar)
 
 file(
-    READ_SYMLINK
-    long_filename__________________________
-    long_filename__________________________
+    READ_SYMLINK long_filename__________________________
+    long_out_var__________________________
 )
 
 file(CREATE_LINK foo bar)
@@ -261,7 +250,8 @@ file(
 file(DOWNLOAD url file)
 
 file(
-    DOWNLOAD url file
+    DOWNLOAD url
+    file
     INACTIVITY_TIMEOUT 100
     LOG foo
     SHOW_PROGRESS
@@ -277,10 +267,11 @@ file(
     TLS_CAINFO baz
 )
 
-file(UPLOAD url file)
+file(UPLOAD file url)
 
 file(
-    UPLOAD url file
+    UPLOAD file
+    url
     INACTIVITY_TIMEOUT 100
     LOG foo
     SHOW_PROGRESS
