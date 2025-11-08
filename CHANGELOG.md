@@ -1,11 +1,25 @@
 # Changelog
+## [0.23.0] 2025-11-08
+### Added
+- Formatting of line range through `--line-ranges`. (#72)
+- Whitespace can be added at the end of canonical name in extension. (#73)
+- Support for new keywords in native commands available in CMake 4.2.
+
+### Changed
+- Some builtin commands, like `list(APPEND)` or `string(APPEND)`, are formatted in a way that signature keyword is considered a proper keyword with usually semantic of one value keyword. (#74)
+- Formatting can be disabled with pair of comments `# gersemi: off`/`# gersemi: on` in more contexts.
+
+### Fixed
+- Support missing keywords in `export(EXPORT)`.
+- Support missing keywords in `list(TRANSFORM)`. (#77)
+
 ## [0.22.3] 2025-09-25
 ### Added
 - Performance improvement.
 
 ## [0.22.2] 2025-09-10
 ### Fixed
-- Relative paths work with `--config`.
+- Relative paths work with `--config`. (#69)
 
 ## [0.22.1] 2025-08-05
 ### Fixed

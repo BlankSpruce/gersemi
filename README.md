@@ -20,9 +20,9 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}]
                [--warn-about-unknown-commands] [--disable-formatting]
-               [--extensions extension-name [extension-name ...]] [-q] [--color]
-               [-w (INTEGER | max)] [--cache] [--config CONFIGURATION_FILE]
-               [--warnings-as-errors]
+               [--extensions extension-name-or-path [extension-name-or-path ...]] [-q]
+               [--color] [-w (INTEGER | max)] [--cache] [--config CONFIGURATION_FILE]
+               [--warnings-as-errors] [--line-ranges LINE_RANGES]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -65,7 +65,7 @@ outcome configuration:
   configuration file. Precedence: (command line arguments) > (configuration file) >
   (defaults)
 
-  -l INTEGER, --line-length INTEGER
+  -l, --line-length INTEGER
                         Maximum line length in characters. [default: 80]
   --indent (INTEGER | tabs)
                         Number of spaces used to indent or 'tabs' for indenting with
@@ -112,7 +112,7 @@ control configuration:
   --color, --no-color   If --diff is selected showed diff is colorized. Colorama has to
                         be installed for this option to work.
                         [default: don't colorize diff, same as --no-color]
-  -w (INTEGER | max), --workers (INTEGER | max)
+  -w, --workers (INTEGER | max)
                         Explicit number of workers or 'max' for maximum possible number
                         of workers on given machine used to format multiple files in
                         parallel. [default: max]
@@ -127,6 +127,16 @@ control configuration:
   --warnings-as-errors  Treat warnings as errors so that status code becomes 1 when at
                         least one warning would be issued. This option is not inhibited
                         by --quiet.
+  --line-ranges LINE_RANGES
+                        Try to format code only in specified line ranges. This option
+                        works only with one input file. Range is specified as pairs of
+                        integers indicating line numbers (1-based) joined with `-`
+                        (dash) and each pair must be separated by comma. Examples of
+                        valid values of this option: a) single line range: 13-21 b)
+                        multiple line ranges: 10-49,51-100,111-123 c) single line: 7-7.
+                        This option can be specified multiple times and union of ranges
+                        will be considered, example: `--line-ranges 10-49 --line-ranges
+                        51-100` is the same as `--line-ranges 10-49,51-100`
 
 ```
 ### [pre-commit](https://pre-commit.com/) hook
@@ -136,7 +146,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.22.3
+  rev: 0.23.0
   hooks:
   - id: gersemi
 ```
@@ -152,7 +162,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.22.3
+  rev: 0.23.0
   hooks:
   - id: gersemi
     additional_dependencies:
