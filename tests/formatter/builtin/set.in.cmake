@@ -86,3 +86,9 @@ set(ENV{FOO} bar)
 if(TRUE)
 set(FOO "item1" "item2" "item3" "item4" "item5")
 endif()
+
+set(CACHE{foo} TYPE INTERNAL HELP help FORCE VALUE foo bar baz)
+
+set(CACHE{foo_________________________________________________________________} TYPE INTERNAL HELP help FORCE VALUE foo bar baz)
+
+set(CACHE{foo_________________________________________________________________} TYPE INTERNAL HELP help___________________________________________________________________________ FORCE VALUE foo_________________________________________________________________ bar_________________________________________________________________ baz_________________________________________________________________)

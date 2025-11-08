@@ -116,4 +116,8 @@ string(UUID foo NAMESPACE bar NAME baz TYPE MD5 UPPER)
 
 string(UUID long_argument______________________________________________________________ NAMESPACE long_argument______________________________________________________________ NAME long_argument______________________________________________________________ TYPE SHA1 UPPER)
 
+string(REGEX QUOTE foo bar)
 
+string(REGEX QUOTE foo bar_________________________________________________________________)
+
+string(REGEX QUOTE foo_________________________________________________________________ bar_________________________________________________________________)

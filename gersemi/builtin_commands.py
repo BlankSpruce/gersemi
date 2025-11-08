@@ -124,6 +124,7 @@ _target_sources_FILE_SET = {
 }
 
 _VERSION_Any = ("VERSION", AnyMatcher())
+_REGEX_QUOTE = ("REGEX", "QUOTE")
 
 builtin_commands = {
     #### Legend
@@ -178,6 +179,7 @@ builtin_commands = {
             "EXIT": {
                 "one_value_keywords": ["EXIT"],
             },
+            "TRACE": {"options": ["ON", "OFF", "EXPAND"]},
         },
     },
     "cmake_minimum_required": {
@@ -1107,7 +1109,8 @@ builtin_commands = {
     "set": {
         "front_positional_arguments": ["<variable>"],
         "options": ["PARENT_SCOPE", "FORCE"],
-        "one_value_keywords": ["CACHE"],
+        "one_value_keywords": ["CACHE", "TYPE", "HELP"],
+        "multi_value_keywords": ["VALUE"],
     },
     "string": {
         "_two_words_keywords": [
@@ -1120,6 +1123,7 @@ builtin_commands = {
             _COMPARE_NOTEQUAL,
             _COMPARE_LESS_EQUAL,
             _COMPARE_GREATER_EQUAL,
+            _REGEX_QUOTE,
         ],
         "signatures": {
             # Search and Replace
@@ -1226,6 +1230,9 @@ builtin_commands = {
                 "one_value_keywords": [
                     "REPEAT",  # <string>
                 ],
+            },
+            _REGEX_QUOTE: {
+                "one_value_keywords": [_REGEX_QUOTE],
             },
             # Comparison
             _COMPARE_LESS: {
@@ -2286,7 +2293,7 @@ builtin_commands = {
     ### CheckTypeSize
     "check_type_size": {
         "options": ["BUILTIN_TYPES_ONLY"],
-        "one_value_keywords": ["LANGUAGE"],
+        "one_value_keywords": ["LANGUAGE", "RESULT_VARIABLE"],
     },
     #
     ### CheckVariableExists
@@ -2955,7 +2962,13 @@ builtin_commands = {
     ### UseSWIG
     "swig_add_library": {
         "options": ["NO_PROXY"],
-        "one_value_keywords": ["TYPE", "LANGUAGE", "OUTPUT_DIR", "OUTFILE_DIR"],
+        "one_value_keywords": [
+            "TYPE",
+            "LANGUAGE",
+            "OUTPUT_DIR",
+            "OUTFILE_DIR",
+            "DEBUG_POSTFIX",
+        ],
         "multi_value_keywords": ["SOURCES"],
     },
     "swig_link_libraries": {},
