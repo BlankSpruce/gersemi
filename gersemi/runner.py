@@ -5,7 +5,6 @@ from functools import partial
 from hashlib import sha1
 from itertools import chain
 import multiprocessing as mp
-import multiprocessing.dummy as mp_dummy
 from pathlib import Path
 import sys
 from typing import Callable, Dict, List, Iterable, Optional, Tuple, Union
@@ -151,7 +150,7 @@ def find_all_custom_command_definitions(
 
     find = find_custom_command_definitions_in_file
 
-    for defs in pool.imap_unordered(find, files, chunksize=CHUNKSIZE):
+    for defs in pool.imap_unordered(find, files):
         if isinstance(defs, Error):
             warning_sink(get_error_message(defs))
             continue
@@ -217,19 +216,22 @@ def consume_task_result(
     return task_result.path, task_result.return_code, (len(warnings) > 0)
 
 
-def create_pool(is_stdin_in_sources, workers: Workers):
-    if is_stdin_in_sources:
-        return mp_dummy.Pool
+class AdaptivePool:
+    def __init__(self, workers: Workers):
+        self.workers = (
+            max_number_of_workers()
+            if isinstance(workers, MaxWorkers)
+            else max(1, workers)
+        )
 
-    if isinstance(workers, MaxWorkers):
-        value = max_number_of_workers()
-    else:
-        if workers <= 1:
-            return mp_dummy.Pool
+    def imap_unordered(self, func, iterable):
+        processes = min(self.workers, (len(iterable) + CHUNKSIZE - 1) // CHUNKSIZE)
+        if processes <= 1:
+            yield from map(func, iterable)
+            return
 
-        value = workers
-
-    return partial(mp.Pool, processes=value)
+        with mp.Pool(processes=processes) as pool:
+            yield from pool.imap_unordered(func, iterable, CHUNKSIZE)
 
 
 def summarize_configuration(configuration, extension_definitions):
@@ -321,7 +323,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
 
     results = [
         consume_task_result(result, configuration, warning_sink)
-        for result in pool.imap_unordered(execute, files_to_format, chunksize=CHUNKSIZE)
+        for result in pool.imap_unordered(execute, files_to_format)
     ]
     store_files_in_cache(
         mode,
@@ -426,10 +428,7 @@ def run(args: argparse.Namespace):
     mode = get_mode(args)
     control = make_control_configuration(args)
     warning_sink = WarningSink(control.quiet)
-    pool_cm = create_pool(
-        is_stdin_in_sources=(Path("-") in requested_files),
-        workers=control.workers,
-    )
+    pool = AdaptivePool(workers=control.workers)
 
     buckets = split_files_by_configuration_file(requested_files, control)
     get_configuration = GetConfiguration(args, control, warning_sink)
@@ -438,7 +437,7 @@ def run(args: argparse.Namespace):
         return SUCCESS
 
     enable_cache = control.cache and (not control.line_ranges)
-    with create_cache(enable_cache) as cache, pool_cm() as pool:
+    with create_cache(enable_cache) as cache:
         status_code = StatusCode()
         for config_file, files in buckets.items():
             config = get_configuration(config_file)
