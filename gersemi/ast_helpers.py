@@ -97,8 +97,11 @@ multi_value_argument = make_tree("multi_value_argument")
 positional_arguments = make_tree("positional_arguments")
 
 
-def get_value(node: Tree, default: Any):
+def get_value(node, default: Any):
     if node.children:
+        if is_commented_argument(node):
+            return get_value(node.children[0], default)
+
         if is_quoted_argument(node):
             return node.children[0][1:-1]  # type: ignore
 

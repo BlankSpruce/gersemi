@@ -1,4 +1,8 @@
 # Changelog
+## [0.23.1] 2025-11-08
+### Fixed
+- Comments no longer break keyword formatters. (#78)
+
 ## [0.23.0] 2025-11-08
 ### Added
 - Formatting of line range through `--line-ranges`. (#72)
