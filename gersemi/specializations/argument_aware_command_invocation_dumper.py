@@ -100,7 +100,6 @@ class KeywordSplitter:
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
-    _inhibit_favour_expansion: bool = False
     _keyword_formatters: Dict[str, str] = {}
     _canonical_name: Optional[str] = None
 
@@ -111,6 +110,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     multi_value_keywords: Iterable[KeywordMatcher] = []
     keyword_formatters: Dict[str, KeywordFormatter] = {}
     keyword_preprocessors: Dict[str, KeywordPreprocessor] = {}
+    inlining_heuristic: Optional[int] = None
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
