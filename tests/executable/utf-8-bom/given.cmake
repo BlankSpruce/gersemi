@@ -1,0 +1,7 @@
+﻿project(
+
+    "demo-project"
+
+
+
+)

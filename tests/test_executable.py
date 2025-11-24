@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+import codecs
 from contextlib import contextmanager, ExitStack
 import filecmp
 from functools import partial
@@ -1245,3 +1246,31 @@ def test_config_parameter(app, testfiles):
 {configuration_file}: these options are not supported: kambei
 """
         )
+
+
+def test_utf_8_bom_file_is_properly_handled(app, testfiles):
+    given = (testfiles / "utf-8-bom" / "given.cmake").resolve()
+    expected = (testfiles / "utf-8-bom" / "expected.cmake").resolve()
+    assert app("--check", given) == fail(
+        stderr=f"""{given} would be reformatted
+"""
+    )
+    assert app("--in-place", given) == success(stderr="")
+    assert app("--check", given) == success(stderr="")
+
+    with open(given, "rb") as g, open(expected, "rb") as e:
+        assert g.read() == e.read()
+
+
+def test_utf_8_bom_stdin_is_properly_handled(app):
+    BOM = codecs.BOM_UTF8.decode()
+    given = f"""{BOM}project( "demo-project" )"""
+    expected = f"""{BOM}project("demo-project")
+"""
+
+    assert app("--check", "-", input=given) == fail(
+        stderr="""<stdin> would be reformatted
+"""
+    )
+
+    assert app("-", input=given) == success(stdout=expected, stderr="")
