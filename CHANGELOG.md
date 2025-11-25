@@ -1,4 +1,9 @@
 # Changelog
+## [0.23.2] 2025-11-25
+### Fixed
+- Allow omitting signature keyword in extensions. (#82)
+- Support files starting with BOM. (#83)
+
 ## [0.23.1] 2025-11-08
 ### Fixed
 - Comments no longer break keyword formatters. (#78)

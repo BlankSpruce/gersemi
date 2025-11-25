@@ -54,10 +54,10 @@ class Verifier:
                 with self.element(index):
                     self.fail(f"argument ({repr(item)}) has to be a string")
 
-    def verify_identifier(self, thing, keyword):
+    def verify_keyword(self, thing, keyword):
         if isinstance(keyword, tuple):
             for index, part in enumerate(keyword):
-                self.verify_identifier(f"{thing}[{index}]", part)
+                self.verify_keyword(f"{thing}[{index}]", part)
 
             return
 
@@ -67,9 +67,13 @@ class Verifier:
         if not isinstance(keyword, str):
             self.fail(f"{thing} ({repr(keyword)}) has to be a string")
 
-        if not is_identifier(keyword):
+    def verify_identifier(self, thing, identifier):
+        if not isinstance(identifier, str):
+            self.fail(f"{thing} ({repr(identifier)}) has to be a string")
+
+        if not is_identifier(identifier):
             self.fail(
-                f"{thing} ({repr(keyword)}) has to start with a letter or underscore"
+                f"{thing} ({repr(identifier)}) has to start with a letter or underscore"
             )
 
     def verify_collection_of_keywords(self, collection):
@@ -77,7 +81,7 @@ class Verifier:
             self.fail(f"is not a collection of strings ({repr(collection)})")
 
         for keyword in collection:
-            self.verify_identifier("keyword", keyword)
+            self.verify_keyword("keyword", keyword)
 
     def verify_is_mapping(self, thing):
         if not isinstance(thing, Mapping):
@@ -99,7 +103,7 @@ class Verifier:
             self.verify_is_mapping(subsections)
 
             for keyword, subsection in subsections.items():
-                self.verify_identifier("keyword", keyword)
+                self.verify_keyword("keyword", keyword)
 
                 with self.element(keyword):
                     self.verify_section(subsection)
@@ -108,7 +112,9 @@ class Verifier:
         self.verify_is_mapping(signatures)
 
         for signature_name, signature in signatures.items():
-            self.verify_identifier("signature", signature_name)
+            if signature_name is not None:
+                self.verify_keyword("signature", signature_name)
+
             with self.element(signature_name):
                 self.verify_section(signature)
 
