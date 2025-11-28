@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from pathlib import Path
 import sqlite3
 from typing import Dict, Iterable, Tuple
-from appdirs import user_cache_dir
+from platformdirs import user_cache_dir
 from gersemi.__version__ import __author__, __title__, __version__
 
 

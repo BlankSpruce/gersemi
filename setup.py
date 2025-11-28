@@ -23,7 +23,7 @@ setup(
     packages=find_packages(include=["gersemi", "gersemi.*"]),
     package_data={"gersemi": ["cmake.lark"]},
     install_requires=[
-        "appdirs",
+        "platformdirs",
         "lark>=1.0",
         "pyyaml>=5,<7",
     ],
