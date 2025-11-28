@@ -437,7 +437,7 @@ def run(args: argparse.Namespace):
         return SUCCESS
 
     enable_cache = control.cache and (not control.line_ranges)
-    with create_cache(enable_cache) as cache:
+    with create_cache(enable_cache, control.cache_dir) as cache:
         status_code = StatusCode()
         for config_file, files in buckets.items():
             config = get_configuration(config_file)

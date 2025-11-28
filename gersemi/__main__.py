@@ -256,6 +256,16 @@ def create_argparser():
         """,
     )
     control_configuration_group.add_argument(
+        "--cache-dir",
+        dest="cache_dir",
+        type=pathlib.Path,
+        default=None,
+        help=f"""
+    {control_conf_doc["cache_dir"]}
+    [default: omitted]
+        """,
+    )
+    control_configuration_group.add_argument(
         "--config",
         dest="configuration_file",
         type=pathlib.Path,

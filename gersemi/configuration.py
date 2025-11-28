@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 from typing import Iterable, Optional, Sequence, Tuple, Union
 import yaml
+from gersemi.cache import default_cache_dir
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
 from gersemi.extension_type import FileExtension, ModuleExtension
 from gersemi.return_codes import FAIL
@@ -212,7 +213,7 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
 
 
 @dataclass
-class ControlConfiguration:
+class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
     """
     These arguments control how gersemi operates rather than how it formats source code.
     Values for these options are not read from configuration file.
@@ -263,6 +264,19 @@ class ControlConfiguration:
                 """
     Enables cache with data about files that are known
     to be formatted to speed up execution.
+                """
+            ),
+        ),
+    )
+
+    cache_dir: Path = field(
+        default=default_cache_dir(),
+        metadata=dict(
+            title="Cache directory",
+            description=doc(
+                """
+    Directory used to store cache file when cache is enabled.
+    When omitted platform specific default cache directory will be used instead.
                 """
             ),
         ),

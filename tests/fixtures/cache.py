@@ -2,12 +2,13 @@ import sqlite3
 
 
 class Cache:
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, directory):
+        self.directory = directory
+        self.path = directory / "cache.db"
         self.clear()
 
     def __str__(self):
-        return str(self.path)
+        return str(self.directory)
 
     def clear(self):
         with open(self.path, "w") as f:

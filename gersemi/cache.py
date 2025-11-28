@@ -6,12 +6,15 @@ from appdirs import user_cache_dir
 from gersemi.__version__ import __author__, __title__, __version__
 
 
-def cache_path() -> Path:
-    directory = Path(
+def default_cache_dir() -> Path:
+    return Path(
         user_cache_dir(appname=__title__, appauthor=__author__, version=__version__)
     )
-    directory.mkdir(parents=True, exist_ok=True)
-    return directory / "cache.db"
+
+
+def cache_path(cache_dir: Path) -> Path:
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir / "cache.db"
 
 
 def create_tables(cursor: sqlite3.Cursor):
@@ -92,13 +95,13 @@ class DummyCache:
 
 
 @contextmanager
-def create_cache(enable_cache):
+def create_cache(enable_cache: bool, cache_dir: Path):
     if not enable_cache:
         yield DummyCache()
         return
 
     try:
-        with database_cursor(cache_path()) as cursor:
+        with database_cursor(cache_path(cache_dir)) as cursor:
             yield Cache(cursor)
     except sqlite3.Error:
         yield DummyCache()

@@ -2,7 +2,6 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import subprocess
-import sys
 from typing import Optional, Union
 from tests.utils import preprocess
 
@@ -88,11 +87,11 @@ class App:
         if "cwd" not in kwargs:
             kwargs["cwd"] = self.fallback_cwd
 
-        kwargs["input"] = str(self.cache) + "\n" + kwargs.get("input", "")
+        kwargs["env"] = {**os.environ, **kwargs.get("env", {})}
 
         return outcome(
             subprocess.run(
-                [sys.executable, HERE / "patched_gersemi", *map(str, args)],
+                ["gersemi", "--cache-dir", str(self.cache), *map(str, args)],
                 check=False,
                 encoding="utf8",
                 text=True,

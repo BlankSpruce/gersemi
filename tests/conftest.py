@@ -66,7 +66,7 @@ def formatter_creator():
 
 @pytest.fixture(scope="function")
 def cache(tmpdir):
-    return Cache(pathlib.Path(tmpdir) / "temporary_cache.db")
+    return Cache(pathlib.Path(tmpdir))
 
 
 @pytest.fixture(scope="function")
