@@ -12,6 +12,8 @@ disable=
 
     fixme,
 
+    import-outside-toplevel,
+
     invalid-name,
 
     missing-class-docstring,

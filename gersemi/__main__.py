@@ -21,8 +21,8 @@ from gersemi.return_codes import SUCCESS, FAIL
 from gersemi.runner import run, print_to_stderr
 from gersemi.__version__ import __title__, __version__
 
+FROZEN = getattr(sys, "frozen", False)
 MISSING = "(missing)"
-
 
 try:
     from colorama import __version__ as colorama_version
@@ -33,7 +33,8 @@ except ImportError:
 
 class ShowVersion(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        print(f"{__title__} {__version__}")
+        frozen_suffix = " (frozen)" if FROZEN else ""
+        print(f"{__title__} {__version__}{frozen_suffix}")
         print(f"lark {lark_version}")
         print(f"colorama {colorama_version}")
         print(f"Python {sys.version}")
@@ -335,6 +336,11 @@ def error(text):
 
 
 def main():
+    if FROZEN:
+        from multiprocessing import freeze_support
+
+        freeze_support()
+
     try:
         argparser = create_argparser()
         args = argparser.parse_args()
