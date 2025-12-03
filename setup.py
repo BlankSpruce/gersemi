@@ -27,7 +27,9 @@ setup(
         "lark>=1.0",
         "pyyaml>=5,<7",
     ],
-    extras_requires=["colorama>=0.4"],
+    extras_require={
+        "color": ["colorama>=0.4"],
+    },
     python_requires=">=3.8",
     entry_points={"console_scripts": ["gersemi = gersemi.__main__:main"]},
     license=about["__license__"],

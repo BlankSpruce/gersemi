@@ -4,7 +4,6 @@ import collections.abc
 from functools import partial
 from hashlib import sha1
 from itertools import chain
-import multiprocessing as mp
 from pathlib import Path
 import sys
 from typing import Callable, Dict, List, Iterable, Optional, Tuple, Union
@@ -230,7 +229,9 @@ class AdaptivePool:
             yield from map(func, iterable)
             return
 
-        with mp.Pool(processes=processes) as pool:
+        import multiprocessing
+
+        with multiprocessing.Pool(processes=processes) as pool:
             yield from pool.imap_unordered(func, iterable, CHUNKSIZE)
 
 

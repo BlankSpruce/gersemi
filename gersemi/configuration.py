@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from dataclasses import astuple, dataclass, field, fields
 from functools import lru_cache
-import multiprocessing
 import os
 from pathlib import Path
 import sys
@@ -15,6 +14,8 @@ from gersemi.__version__ import __version__
 
 
 def max_number_of_workers():
+    import multiprocessing
+
     result = multiprocessing.cpu_count()
     if sys.platform == "win32":
         # https://bugs.python.org/issue26903

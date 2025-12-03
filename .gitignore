@@ -2,5 +2,8 @@
 .mypy_cache
 .tox
 *.egg-info
+*.spec
 __pycache__
+build/
+dist/
 prof/
