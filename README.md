@@ -21,8 +21,9 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [--list-expansion {favour-inlining,favour-expansion}]
                [--warn-about-unknown-commands] [--disable-formatting]
                [--extensions extension-name-or-path [extension-name-or-path ...]] [-q]
-               [--color] [-w (INTEGER | max)] [--cache] [--config CONFIGURATION_FILE]
-               [--warnings-as-errors] [--line-ranges LINE_RANGES]
+               [--color] [-w (INTEGER | max)] [--cache] [--cache-dir CACHE_DIR]
+               [--config CONFIGURATION_FILE] [--warnings-as-errors]
+               [--line-ranges LINE_RANGES]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -119,6 +120,11 @@ control configuration:
   --cache, --no-cache   Enables cache with data about files that are known to be
                         formatted to speed up execution.
                         [default: cache enabled, same as --cache]
+  --cache-dir CACHE_DIR
+                        Directory used to store cache file when cache is enabled. When
+                        omitted platform specific default cache directory will be used
+                        instead.
+                        [default: omitted]
   --config CONFIGURATION_FILE
                         Path to configuration file. When present this configuration file
                         will be used for determining configuration for all sources
@@ -146,7 +152,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.23.2
+  rev: 0.24.0
   hooks:
   - id: gersemi
 ```
@@ -162,7 +168,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.23.2
+  rev: 0.24.0
   hooks:
   - id: gersemi
     additional_dependencies:

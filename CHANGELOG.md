@@ -1,4 +1,12 @@
 # Changelog
+## [0.24.0] 2025-12-07
+### Added
+- Cache directory can be changed with `--cache-dir`. (#86)
+- Single file executables are published since this release.
+
+### Changed
+- Replaced deprecated `appdirs` dependency with `platformdirs`.
+
 ## [0.23.2] 2025-11-25
 ### Fixed
 - Allow omitting signature keyword in extensions. (#82)
