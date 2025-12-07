@@ -1,0 +1,47 @@
+name: Publish executables
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, ubuntu-24.04-arm, windows-11-arm, macos-latest]
+        include:
+          - os: ubuntu-24.04
+            executable-name: gersemi-linux
+          - os: windows-2025
+            executable-name: gersemi-windows.exe
+          - os: ubuntu-24.04-arm
+            executable-name: gersemi-linux-arm
+          - os: windows-11-arm
+            executable-name: gersemi-windows-arm.exe
+          - os: macos-latest
+            executable-name: gersemi-macos
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up latest Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade setuptools pip wheel tox
+
+      - name: Build and test executable
+        run: tox -e build-executable -- ${{ matrix.executable-name }}
+
+      - name: Upload executable as release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ matrix.executable-name }}
