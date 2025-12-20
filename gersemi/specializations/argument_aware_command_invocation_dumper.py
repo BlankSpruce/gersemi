@@ -9,6 +9,7 @@ from gersemi.ast_helpers import (
     is_one_of_keywords,
     is_one_value_argument,
     is_option_argument,
+    is_pair,
     is_positional_arguments,
     is_section,
     option_argument,
@@ -129,6 +130,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         can_be_inlined = (not self.favour_expansion) or (
             self.favour_expansion
             and keyword is not None
+            and (not is_pair(tree))
             and keyword_as_value not in self.multi_value_keywords
         )
         if can_be_inlined:
@@ -141,9 +143,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         if len(values) == 0:
             return begin
 
-        formatter_kind = kind_to_formatter(
-            self.keyword_formatters.get(keyword_as_value, None)
-        )
+        formatter_kind = self._get_formatter(keyword_as_value)
         if formatter_kind is None:
             formatter_kind = self._keyword_formatters.get(
                 keyword_as_value, "_default_format_values"
@@ -237,11 +237,22 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def one_value_argument(self, tree):
         return self._format_non_option(tree)
 
+    def pair(self, tree):
+        return self._format_non_option(tree)
+
+    def _get_formatter(self, tree):
+        return kind_to_formatter(
+            self.keyword_formatters.get(get_value(tree, None), None)
+        )
+
+    def _get_preprocessor(self, tree):
+        return kind_to_preprocessor(
+            self.keyword_preprocessors.get(get_value(tree, None), None)
+        )
+
     def multi_value_argument(self, tree):
         keyword, *values = tree.children
-        preprocessor = kind_to_preprocessor(
-            self.keyword_preprocessors.get(get_value(keyword, None), None)
-        )
+        preprocessor = self._get_preprocessor(keyword)
         if preprocessor is not None:
             tree.children = [keyword, *getattr(self, preprocessor)(values)]
 

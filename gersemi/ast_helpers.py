@@ -26,6 +26,7 @@ is_quoted_argument = is_tree("quoted_argument")
 is_section = is_tree("section")
 is_two_word_argument = is_tree("two_word_argument")
 is_unquoted_argument = is_tree("unquoted_argument")
+is_pair = is_tree("pair")
 
 is_newline = is_token("NEWLINE")
 
@@ -95,9 +96,13 @@ option_argument = make_tree("option_argument")
 one_value_argument = make_tree("one_value_argument")
 multi_value_argument = make_tree("multi_value_argument")
 positional_arguments = make_tree("positional_arguments")
+pair = make_tree("pair")
 
 
 def get_value(node, default: Any):
+    if isinstance(node, str):
+        return str(node)
+
     if node.children:
         if is_commented_argument(node):
             return get_value(node.children[0], default)
