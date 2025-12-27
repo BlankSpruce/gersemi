@@ -1,12 +1,15 @@
 start         : (_file_element NEWLINE)* _file_element
 _file_element : command_element
               | non_command_element
+              | standalone_identifier
+
+standalone_identifier: [_SPACE] IDENTIFIER
 
 command_element     : [_SPACE] command_invocation [_SPACE] [line_comment]
 non_command_element : (bracket_comment | _SPACE)* [line_comment]
 
 command_invocation  : IDENTIFIER [_SPACE] _LEFT_PARENTHESIS arguments _RIGHT_PARENTHESIS
-IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
+IDENTIFIER          : /[A-Za-z_@][A-Za-z0-9_@]*/
 arguments           : [_separation] (argument [_separation])*
 _separation         : _separation_atom+
 _separation_atom    : _SPACE

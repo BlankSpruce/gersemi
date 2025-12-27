@@ -298,8 +298,8 @@ def create_argparser():
         nargs="*",
         type=pathlib.Path,
         help="""
-    File or directory to format. When directory is provided then CMakeLists.txt
-    and files with .cmake extension are automatically discovered.
+    File or directory to format. When directory is provided then CMakeLists.txt,
+    CMakeLists.txt.in and files with .cmake/.cmake.in extension are automatically discovered.
     If only `-` is provided, input is taken from stdin instead.
             """,
     )

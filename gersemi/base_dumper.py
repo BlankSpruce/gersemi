@@ -121,6 +121,9 @@ class BaseDumper:
         try:
             canonical_name = self._canonical_name
         except AttributeError:
+            if "@" in identifier:
+                return identifier
+
             return identifier.lower()
 
         if canonical_name.strip().lower() != identifier.strip().lower():

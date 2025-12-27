@@ -25,7 +25,7 @@ def test_parser(parser, case):
         ("bar)", UnbalancedParentheses),
         ("bar(FOO BAR (BAZ OR FOO)))", UnbalancedParentheses),
         ("another_command #(", UnbalancedParentheses),
-        ("foo_command", UnbalancedParentheses),
+        ("foo_command bar_command", UnbalancedParentheses),
         ("foo([[foo]=])", UnbalancedBrackets),
         ("foo([=[bar]])", UnbalancedBrackets),
         ("foo(arg1 arg2 [==[arg3]===] arg4)", UnbalancedBrackets),

@@ -3,7 +3,6 @@ from collections import defaultdict, ChainMap
 import collections.abc
 from functools import partial
 from hashlib import sha1
-from itertools import chain
 from pathlib import Path
 import sys
 from typing import Callable, Dict, List, Iterable, Optional, Tuple, Union
@@ -91,8 +90,15 @@ class StatusCode:
 def get_files(paths: Iterable[Path]) -> List[Path]:
     def get_files_from_single_path(path):
         if path.is_dir():
-            return chain(path.rglob("CMakeLists.txt"), path.rglob("*.cmake"))
-        return [path]
+            for pattern in (
+                "CMakeLists.txt",
+                "CMakeLists.txt.in",
+                "*.cmake",
+                "*.cmake.in",
+            ):
+                yield from path.rglob(pattern)
+            return
+        yield path
 
     return sorted(
         set(

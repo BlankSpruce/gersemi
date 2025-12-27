@@ -2,6 +2,9 @@ start         : (_file_element newline_or_gap)* _file_element
 _file_element : command_element
               | non_command_element
               | block
+              | standalone_identifier
+
+standalone_identifier: IDENTIFIER
 
 ?command_element    : command_invocation [line_comment]
 non_command_element : bracket_comment* [line_comment]
@@ -49,7 +52,7 @@ WHILE       : "while"i
 
 command_invocation  : IDENTIFIER _invocation_part
 _invocation_part    : [_SPACE] LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
-IDENTIFIER          : /[A-Za-z_][A-Za-z0-9_]*/
+IDENTIFIER          : /[A-Za-z_@][A-Za-z0-9_@]*/
 arguments           : (commented_argument | _separation)*
 _separation         : _separation_atom+
 _separation_atom    : bracket_comment

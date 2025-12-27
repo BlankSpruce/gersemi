@@ -32,3 +32,6 @@ class Dumper(CommandInvocationDumper, BaseDumper):
 
     def line_comment(self, tree):
         return self._indent("".join(tree.children)).rstrip()
+
+    def standalone_identifier(self, tree):
+        return self.unquoted_argument(tree)
