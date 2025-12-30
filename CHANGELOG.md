@@ -1,4 +1,10 @@
 # Changelog
+## [0.25.0] 2025-12-30
+### Added
+- Template files like those supported used with `configure_file` which use `@`-based substitution can be formatted in most circumstances. (#92)
+- Automatic file discovery will also consider `CMakeLists.txt.in` and `*.cmake.in` files. (#92)
+- Ignore files are respected by default when source or definition argument is a directory. (#91)
+
 ## [0.24.0] 2025-12-07
 ### Added
 - Cache directory can be changed with `--cache-dir`. (#86)

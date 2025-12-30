@@ -333,6 +333,21 @@ class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
+    respect_ignore_files: bool = field(
+        default=True,
+        metadata=dict(
+            title="Respect ignore files",
+            description=doc(
+                """
+    When directory is passed as a source argument gersemi will automatically discover
+    relevant CMake files while respecting rules in the following ignore files:
+    .ignore, .gitignore, .git/info/exclude and global gitignore globs.
+    See: https://docs.rs/ignore/latest/ignore/index.html
+                """
+            ),
+        ),
+    )
+
 
 @dataclass
 class Configuration:

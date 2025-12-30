@@ -6,6 +6,7 @@ from hashlib import sha1
 from pathlib import Path
 import sys
 from typing import Callable, Dict, List, Iterable, Optional, Tuple, Union
+from ignore import WalkBuilder  # pylint: disable=no-name-in-module
 from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
@@ -47,6 +48,7 @@ from gersemi.warnings import UnknownCommandWarning
 
 
 CHUNKSIZE = 16
+FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
 
 
 print_to_stdout = partial(print, file=sys.stdout, end="")
@@ -87,24 +89,35 @@ class StatusCode:
         raise RuntimeError(f"Invalid type: {type(other)}")
 
 
-def get_files(paths: Iterable[Path]) -> List[Path]:
-    def get_files_from_single_path(path):
-        if path.is_dir():
-            for pattern in (
-                "CMakeLists.txt",
-                "CMakeLists.txt.in",
-                "*.cmake",
-                "*.cmake.in",
-            ):
-                yield from path.rglob(pattern)
-            return
-        yield path
+def get_files_from_directory(path: Path, respect_ignore_files: bool) -> Iterable[Path]:
+    if not respect_ignore_files:
+        for pattern in FILE_PATTERNS:
+            yield from path.rglob(pattern)
 
+        return
+
+    for entry in WalkBuilder(path).require_git(False).build():
+        path = entry.path().resolve(True)
+        if any(path.match(pattern) for pattern in FILE_PATTERNS):
+            yield path
+
+
+def get_files_from_single_path(
+    path: Path, respect_ignore_files: bool
+) -> Iterable[Path]:
+    if path.is_dir():
+        yield from get_files_from_directory(path, respect_ignore_files)
+        return
+
+    yield path
+
+
+def get_files(paths: Iterable[Path], respect_ignore_files: bool) -> List[Path]:
     return sorted(
         set(
             item.resolve(True) if item != Path("-") else item
             for path in paths
-            for item in get_files_from_single_path(path)
+            for item in get_files_from_single_path(path, respect_ignore_files)
         )
     )
 
@@ -143,12 +156,18 @@ def check_conflicting_definitions(definitions, warning_sink: WarningSink):
 
 
 def find_all_custom_command_definitions(
-    paths: Iterable[Path], pool, warning_sink: WarningSink
+    paths: Iterable[Path],
+    pool,
+    warning_sink: WarningSink,
+    respect_ignore_files: bool,
 ) -> Dict[str, Keywords]:
     result: Dict = {}
 
     try:
-        files = get_files(paths)
+        files = get_files(
+            paths,
+            respect_ignore_files=respect_ignore_files,
+        )
     except FileNotFoundError as e:
         # pylint: disable=broad-exception-raised
         raise Exception(f"Definition path doesn't exist: {e.filename}") from e
@@ -314,7 +333,10 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     lines_to_format: LineRanges,
 ) -> Iterable[int]:
     custom_command_definitions = find_all_custom_command_definitions(
-        set(configuration.outcome.definitions), pool, warning_sink
+        set(configuration.outcome.definitions),
+        pool,
+        warning_sink,
+        configuration.control.respect_ignore_files,
     )
     extension_definitions = load_definitions_from_extensions(
         configuration.outcome.extensions
@@ -422,8 +444,13 @@ def print_configuration_report(
 
 # pylint: disable=too-many-locals
 def run(args: argparse.Namespace):
+    control = make_control_configuration(args)
+
     try:
-        requested_files = get_files(args.sources)
+        requested_files = get_files(
+            args.sources,
+            respect_ignore_files=control.respect_ignore_files,
+        )
     except FileNotFoundError as e:
         # pylint: disable=broad-exception-raised
         raise Exception(f"Source path doesn't exist: {e.filename}") from e
@@ -433,7 +460,6 @@ def run(args: argparse.Namespace):
         raise Exception("Line range formatting available only with one source file")
 
     mode = get_mode(args)
-    control = make_control_configuration(args)
     warning_sink = WarningSink(control.quiet)
     pool = AdaptivePool(workers=control.workers)
 

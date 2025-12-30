@@ -23,16 +23,16 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [--extensions extension-name-or-path [extension-name-or-path ...]] [-q]
                [--color] [-w (INTEGER | max)] [--cache] [--cache-dir CACHE_DIR]
                [--config CONFIGURATION_FILE] [--warnings-as-errors]
-               [--line-ranges LINE_RANGES]
+               [--line-ranges LINE_RANGES] [--respect-ignore-files]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
 
 positional arguments:
   src                   File or directory to format. When directory is provided then
-                        CMakeLists.txt and files with .cmake extension are automatically
-                        discovered. If only `-` is provided, input is taken from stdin
-                        instead.
+                        CMakeLists.txt, CMakeLists.txt.in and files with
+                        .cmake/.cmake.in extension are automatically discovered. If only
+                        `-` is provided, input is taken from stdin instead.
 
 modes:
   -c, --check           Check if files require reformatting. Return 0 when there's
@@ -143,7 +143,13 @@ control configuration:
                         This option can be specified multiple times and union of ranges
                         will be considered, example: `--line-ranges 10-49 --line-ranges
                         51-100` is the same as `--line-ranges 10-49,51-100`
-
+  --respect-ignore-files, --no-respect-ignore-files
+                        When directory is passed as a source argument gersemi will
+                        automatically discover relevant CMake files while respecting
+                        rules in the following ignore files: .ignore, .gitignore,
+                        .git/info/exclude and global gitignore globs. See:
+                        https://docs.rs/ignore/latest/ignore/index.html
+                        [default: respect ignore files, same as --respect-ignore-files]
 ```
 ### [pre-commit](https://pre-commit.com/) hook
 
@@ -152,7 +158,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.24.0
+  rev: 0.25.0
   hooks:
   - id: gersemi
 ```
@@ -168,7 +174,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.24.0
+  rev: 0.25.0
   hooks:
   - id: gersemi
     additional_dependencies:

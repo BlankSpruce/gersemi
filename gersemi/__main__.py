@@ -291,6 +291,18 @@ def create_argparser():
         action="append",
         help=control_conf_doc["line_ranges"],
     )
+    control_configuration_group.add_argument(
+        "--respect-ignore-files",
+        "--no-respect-ignore-files",
+        dest="respect_ignore_files",
+        action=toggle_with_no_prefix,
+        nargs=0,
+        default=None,
+        help=f"""
+    {control_conf_doc["respect_ignore_files"]}
+    [default: respect ignore files, same as --respect-ignore-files]
+        """,
+    )
 
     parser.add_argument(
         dest="sources",

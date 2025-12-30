@@ -107,3 +107,10 @@ def success(stdout=None, stderr=None):
 
 def fail(stdout=None, stderr=None):
     return ExpectedOutcome(returncode=1, stdout=stdout, stderr=stderr)
+
+
+def reformatted(*files):
+    return "".join(
+        f"{f.resolve() if isinstance(f, Path) else f} would be reformatted\n"
+        for f in sorted(files)
+    )

@@ -2,7 +2,7 @@
 from functools import partial
 import json
 import pytest
-from tests.fixtures.app import success, fail
+from tests.fixtures.app import success, fail, reformatted
 from tests.test_executable_print_config import ignore_schema
 
 
@@ -139,15 +139,13 @@ Warning: unknown command 'add_constellation' used at:
 Warning: unknown command 'add_nebula' used at:
 {self.wrong_formatting}:1:1
 
-{self.wrong_formatting} would be reformatted
-""",
+{reformatted(self.wrong_formatting)}""",
         )
 
     @pytest.mark.parametrize("fake_extension", [GOOD_EXTENSION])
     def test_all_commands_are_implemented(self):
         assert self.app() == fail(
-            stderr=f"""{self.wrong_formatting} would be reformatted
-""",
+            stderr=reformatted(self.wrong_formatting),
         )
 
 

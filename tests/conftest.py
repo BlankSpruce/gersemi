@@ -40,6 +40,7 @@ def get_custom_command_definitions(configuration_definitions):
         paths=paths,
         pool=Pool(),
         warning_sink=noop,
+        respect_ignore_files=False,
     )
 
 

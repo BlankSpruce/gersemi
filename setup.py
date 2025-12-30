@@ -26,6 +26,7 @@ setup(
         "platformdirs",
         "lark>=1.0",
         "pyyaml>=5,<7",
+        "ignore-python>=0.3,<0.4",
     ],
     extras_require={
         "color": ["colorama>=0.4"],

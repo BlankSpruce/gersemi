@@ -10,7 +10,7 @@ from stat import S_IREAD, S_IRGRP, S_IROTH
 import yaml
 import pytest
 from gersemi.return_codes import FAIL, SUCCESS
-from tests.fixtures.app import ExpectedOutcome, fail, match_not, success
+from tests.fixtures.app import ExpectedOutcome, fail, match_not, reformatted, success
 
 
 def compare_directories(left, right):
@@ -85,8 +85,7 @@ def test_check_on_not_formatted_file_should_return_one(app, testfiles):
     target = (testfiles / "not_formatted_file.cmake").resolve()
     assert app("--check", target) == fail(
         stdout="",
-        stderr=f"""{target} would be reformatted
-""",
+        stderr=reformatted(target),
     )
 
 
@@ -97,16 +96,14 @@ def test_diff_on_not_formatted_files_should_return_zero(app, testfiles):
 
 def test_check_with_diff_on_not_formatted_files_should_return_one(app, testfiles):
     target = testfiles / "directory_with_not_formatted_files"
-    file1 = (target / "file1.cmake").resolve()
-    file2 = (target / "file2.cmake").resolve()
-    file3 = (target / "file3.cmake").resolve()
 
     assert app("--check", "--diff", target) == fail(
         stdout=match_not(""),
-        stderr=f"""{file1} would be reformatted
-{file2} would be reformatted
-{file3} would be reformatted
-""",
+        stderr=reformatted(
+            target / "file1.cmake",
+            target / "file2.cmake",
+            target / "file3.cmake",
+        ),
     )
 
 
@@ -1251,10 +1248,7 @@ def test_config_parameter(app, testfiles):
 def test_utf_8_bom_file_is_properly_handled(app, testfiles):
     given = (testfiles / "utf-8-bom" / "given.cmake").resolve()
     expected = (testfiles / "utf-8-bom" / "expected.cmake").resolve()
-    assert app("--check", given) == fail(
-        stderr=f"""{given} would be reformatted
-"""
-    )
+    assert app("--check", given) == fail(stdout="", stderr=reformatted(given))
     assert app("--in-place", given) == success(stderr="")
     assert app("--check", given) == success(stderr="")
 
@@ -1269,8 +1263,8 @@ def test_utf_8_bom_stdin_is_properly_handled(app):
 """
 
     assert app("--check", "-", input=given) == fail(
-        stderr="""<stdin> would be reformatted
-"""
+        stdout="",
+        stderr=reformatted("<stdin>"),
     )
 
     assert app("-", input=given) == success(stdout=expected, stderr="")
