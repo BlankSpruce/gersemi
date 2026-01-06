@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gersemi"
+version = "0.25.0"
+authors = [
+    { name = "Blank Spruce", email = "blankspruce@protonmail.com" }
+]
+description = "A formatter to make your CMake code the real treasure"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "ignore-python>=0.3,<0.4",
+    "lark>=1.0",
+    "platformdirs",
+    "pyyaml>=5,<7",
+]
+license = { text = "MPL-2.0" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.optional-dependencies]
+color = ["colorama>=0.4"]
+
+[project.scripts]
+gersemi = "gersemi.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/BlankSpruce/gersemi"
+
+[[tool.mypy.overrides]]
+module = [
+    "colorama",
+    "platformdirs",
+    "pytest",
+]
+ignore_missing_imports = true
+
+[tool.pylint.MASTER]
+load-plugins = 'pylint.extensions.mccabe'
+
+[tool.pylint.DESIGN]
+max-complexity=10
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = '''use-dict-literal,
+
+    duplicate-code,
+
+    fixme,
+
+    import-outside-toplevel,
+
+    invalid-name,
+
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+
+    too-few-public-methods,
+    too-many-ancestors,
+
+    unsubscriptable-object,
+
+    use-dict-literal
+'''
+
+[tool.setuptools.packages.find]
+include = ["gersemi", "gersemi.*"]
+
+[tool.setuptools.package-data]
+gersemi = ["cmake.lark"]
