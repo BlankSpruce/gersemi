@@ -21,7 +21,7 @@ class Cache:
         connection.close()
 
     def _get_tables(self):
-        return list(
+        return [
             name
             for (name,) in self._execute(
                 """
@@ -30,7 +30,7 @@ class Cache:
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 """
             )
-        )
+        ]
 
     def assert_that_has_no_tables(self):
         assert len(self._get_tables()) == 0
@@ -39,7 +39,7 @@ class Cache:
         assert self._get_tables() == ["files", "formatted"]
 
     def get_files(self):
-        return list(fields for fields in self._execute("SELECT * FROM files"))
+        return list(self._execute("SELECT * FROM files"))
 
     def get_formatted(self):
-        return list(fields for fields in self._execute("SELECT * FROM formatted"))
+        return list(self._execute("SELECT * FROM formatted"))
