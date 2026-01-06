@@ -57,9 +57,7 @@ def is_line_comment_in(node) -> bool:
 
 
 def is_line_comment_in_any_of(nodes) -> bool:
-    return any(
-        map(lambda node: isinstance(node, Tree) and is_line_comment_in(node), nodes)
-    )
+    return any(isinstance(node, Tree) and is_line_comment_in(node) for node in nodes)
 
 
 def is_keyword(keyword, node):

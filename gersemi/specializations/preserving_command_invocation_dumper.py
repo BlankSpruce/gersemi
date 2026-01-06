@@ -54,9 +54,7 @@ def indent_segment(segment, indent_symbol):
 
 def safe_indent(string, indent_symbol):
     segments = split_into_segments(string)
-    return "".join(
-        map(lambda segment: indent_segment(segment, indent_symbol), segments)
-    )
+    return "".join(indent_segment(segment, indent_symbol) for segment in segments)
 
 
 def strip_empty_lines_from_edges(s):

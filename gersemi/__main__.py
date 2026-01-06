@@ -96,7 +96,7 @@ def create_argparser():
         dest="print_config",
         choices=[e.value for e in PrintConfigKind],
         help=f"""Print configuration for files.
-        {" ".join(map(lambda attr: attr.description, PrintConfigKind))}
+        {" ".join(attr.description for attr in PrintConfigKind)}
         Command line arguments are taken into consideration just
         as they would be for formatting.
         When configuration file is found values in "definitions" are printed as relative
@@ -161,7 +161,7 @@ def create_argparser():
         choices=["favour-inlining", "favour-expansion"],
         help=f"""
     {outcome_conf_doc['list_expansion']}
-    {" ".join(map(lambda attr: attr.description, ListExpansion))}
+    {" ".join(attr.description for attr in ListExpansion)}
     [default: {OutcomeConfiguration.list_expansion.value}]
             """,
     )
