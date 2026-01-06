@@ -28,8 +28,8 @@ def command_definitions_impl():
             implementation: get_implementation(implementation)
             for implementation in settings.get("implementations", [])
         }
-    else:
-        return Frombulate()
+
+    return Frombulate()
 
 
 if settings.get("implementation_present", False):
