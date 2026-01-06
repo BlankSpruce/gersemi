@@ -339,7 +339,7 @@ def postprocess_args(args):
     if args.configuration_file is not None:
         args.configuration_file = normalize_path(args.configuration_file)
 
-    args.line_ranges = set(line_range for arg in args.line_ranges for line_range in arg)
+    args.line_ranges = {line_range for arg in args.line_ranges for line_range in arg}
 
 
 def error(text):

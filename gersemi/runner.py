@@ -114,11 +114,11 @@ def get_files_from_single_path(
 
 def get_files(paths: Iterable[Path], respect_ignore_files: bool) -> List[Path]:
     return sorted(
-        set(
+        {
             item.resolve(True) if item != Path("-") else item
             for path in paths
             for item in get_files_from_single_path(path, respect_ignore_files)
-        )
+        }
     )
 
 
