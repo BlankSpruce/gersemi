@@ -14,10 +14,10 @@ ab_signatures = f"{ab}['signatures']"
 @pytest.mark.parametrize(
     "definition",
     [
-        dict(),
+        {},
         {"ab": {}},
         {"ab": {"options": set()}},
-        {"ab": {"options": tuple()}},
+        {"ab": {"options": ()}},
         {"ab": {"options": []}},
         {"ab": {"options": ("ONE", "TWO", "THREE")}},
         {"ab": {"unsupported_entry": {}, "foobar": {}}},
@@ -38,7 +38,7 @@ def test_extension_passes_verification(definition):
 @pytest.mark.parametrize(
     ["definition", "outcome"],
     [
-        (tuple(), f"{defs}: is not a mapping"),
+        ((), f"{defs}: is not a mapping"),
         ({12: 34}, f"{defs}: command name (12) has to be a string"),
         (
             {"": 34},
@@ -70,7 +70,7 @@ def test_extension_passes_verification(definition):
             f"{ab}['front_positional_arguments'][2]: argument (34) has to be a string",
         ),
         (
-            {"ab": {"sections": tuple()}},
+            {"ab": {"sections": ()}},
             f"{ab_sections}: is not a mapping",
         ),
         (
@@ -86,10 +86,10 @@ def test_extension_passes_verification(definition):
             f"{ab_sections}['ABC']: is not a mapping",
         ),
         (
-            {"ab": {"sections": {"ABC": {"sections": tuple()}}}},
+            {"ab": {"sections": {"ABC": {"sections": ()}}}},
             f"{ab_sections}['ABC']['sections']: is not a mapping",
         ),
-        ({"ab": {"signatures": tuple()}}, f"{ab_signatures}: is not a mapping"),
+        ({"ab": {"signatures": ()}}, f"{ab_signatures}: is not a mapping"),
         (
             {"ab": {"signatures": {12: 34}}},
             f"{ab_signatures}: signature (12) has to be a string",

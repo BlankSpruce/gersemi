@@ -59,7 +59,7 @@ def formatter_creator():
             known_definitions=get_custom_command_definitions(
                 config.get("definitions", [])
             ),
-            lines_to_format=tuple(),
+            lines_to_format=(),
         )
 
     return creator

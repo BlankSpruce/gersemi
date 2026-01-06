@@ -19,7 +19,7 @@ IGNORE = "gersemi: ignore"
 
 class UseHint:
     def __init__(self, value):
-        self.value = yaml.safe_load(value) or dict()
+        self.value = yaml.safe_load(value) or {}
 
     def merge(self, other):
         self.value.update(other.value)

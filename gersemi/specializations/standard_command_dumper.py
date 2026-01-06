@@ -30,16 +30,16 @@ def create_standard_dumper(data):
     class Impl(*bases):
         _canonical_name = data.get("_canonical_name", None)
         _inhibit_favour_expansion = data.get("_inhibit_favour_expansion", False)
-        _two_words_keywords = data.get("_two_words_keywords", tuple())
+        _two_words_keywords = data.get("_two_words_keywords", ())
 
-        front_positional_arguments = data.get("front_positional_arguments", tuple())
-        back_positional_arguments = data.get("back_positional_arguments", tuple())
-        options = data.get("options", tuple())
-        one_value_keywords = data.get("one_value_keywords", tuple())
-        multi_value_keywords = data.get("multi_value_keywords", tuple())
-        sections = data.get("sections", dict())
-        keyword_formatters = data.get("keyword_formatters", dict())
-        keyword_preprocessors = data.get("keyword_preprocessors", dict())
+        front_positional_arguments = data.get("front_positional_arguments", ())
+        back_positional_arguments = data.get("back_positional_arguments", ())
+        options = data.get("options", ())
+        one_value_keywords = data.get("one_value_keywords", ())
+        multi_value_keywords = data.get("multi_value_keywords", ())
+        sections = data.get("sections", {})
+        keyword_formatters = data.get("keyword_formatters", {})
+        keyword_preprocessors = data.get("keyword_preprocessors", {})
 
         if data_signatures is not None:
             signatures = data_signatures

@@ -203,7 +203,7 @@ class Parser:
                 if d.get("block_end", None)
             )
         else:
-            custom_blocks = tuple()
+            custom_blocks = ()
 
         lark_parser = get_lark_parser(self.grammar_filename, custom_blocks)
 

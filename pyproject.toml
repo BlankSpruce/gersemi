@@ -85,6 +85,7 @@ disable = '''use-dict-literal,
 extend-select = [
     "B",
     "C401",
+    "C408",    
     "E",
     "F",
     "W",

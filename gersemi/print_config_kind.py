@@ -1,3 +1,4 @@
+# ruff: noqa: C408
 from gersemi.enum_with_metadata import EnumWithMetadata
 
 

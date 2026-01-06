@@ -14,7 +14,7 @@ from gersemi.configuration import (
 )
 
 
-def pydantic_version_as_tuple():
+def pydantic_version_as_():
     return tuple(map(int, version_short().split(".")))
 
 
@@ -45,7 +45,7 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
 
 
 @pytest.mark.skipif(
-    pydantic_version_as_tuple() < (2, 9), reason="At least pydantic 2.9 is required"
+    pydantic_version_as_() < (2, 9), reason="At least pydantic 2.9 is required"
 )
 def test_schema_in_repository_is_consistent_with_configuration_definition():
     this_file_dir = os.path.dirname(os.path.realpath(__file__))

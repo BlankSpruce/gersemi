@@ -1,3 +1,4 @@
+# ruff: noqa: C408
 from contextlib import contextmanager
 from dataclasses import astuple, dataclass, field, fields
 from functools import lru_cache
@@ -151,7 +152,7 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
     )
 
     definitions: Iterable[Path] = field(
-        default=tuple(),
+        default=(),
         metadata=dict(
             title="Definitions",
             description=doc(
@@ -201,7 +202,7 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
     )
 
     extensions: Iterable[str] = field(
-        default=tuple(),
+        default=(),
         metadata=dict(
             title="Extensions",
             description=doc(
@@ -313,7 +314,7 @@ class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
     )
 
     line_ranges: LineRanges = field(
-        default=tuple(),
+        default=(),
         metadata=dict(
             title="Line ranges to format",
             description=doc(
@@ -385,7 +386,7 @@ SCHEMA = f"# yaml-language-server: $schema=https://raw.githubusercontent.com/Bla
 
 
 def make_configuration_file(configuration_dict, add_schema_link=False):
-    if configuration_dict == dict():
+    if configuration_dict == {}:
         return ""
 
     result = yaml.dump(configuration_dict, Dumper=CustomizedSafeDumper)
@@ -472,8 +473,8 @@ def sanitize_list_expansion(list_expansion):
 @dataclass
 class NotSupportedKeys:
     path: Optional[Path] = None
-    unknown: Sequence[str] = tuple()
-    command_line_only: Sequence[str] = tuple()
+    unknown: Sequence[str] = ()
+    command_line_only: Sequence[str] = ()
 
 
 def get_not_supported_keys(path, content):
@@ -493,7 +494,7 @@ def load_configuration_from_file(
 
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
-            configuration_file_content = yaml.safe_load(f.read()) or dict()
+            configuration_file_content = yaml.safe_load(f.read()) or {}
             config = {
                 key: value
                 for key, value in configuration_file_content.items()

@@ -28,7 +28,7 @@ def prepare_configuration_for_report(
     if configuration_file is not None:
         result["definitions"] = tuple(
             os.path.relpath(p, configuration_file.parent)
-            for p in result.get("definitions", tuple())
+            for p in result.get("definitions", ())
         )
 
     return result
@@ -44,7 +44,7 @@ def minimal_report(
         if value != keys[name].default:
             filtered[name] = value
 
-    if filtered == dict():
+    if not filtered:
         comparison = "none of the defaults are overridden.\n"
     else:
         comparison = f"""following options differ from default configuration:

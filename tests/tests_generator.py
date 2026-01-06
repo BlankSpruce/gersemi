@@ -77,7 +77,7 @@ def make_input_output_case(input_filename, output_extension, where):
 
         config = yaml.safe_load(head[3:])
     else:
-        config = dict()
+        config = {}
 
     return InputOutputCase(
         remove_extension(input_filename),

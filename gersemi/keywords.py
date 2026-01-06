@@ -21,7 +21,7 @@ KeywordMatcher = Union[str, Tuple[str, Union[str, AnyMatcher]]]
 
 @dataclass
 class Keywords:
-    options: Tuple[str, ...] = tuple()
-    one_value_keywords: Tuple[KeywordMatcher, ...] = tuple()
-    multi_value_keywords: Tuple[KeywordMatcher, ...] = tuple()
-    hints: Tuple[Hint, ...] = tuple()
+    options: Tuple[str, ...] = ()
+    one_value_keywords: Tuple[KeywordMatcher, ...] = ()
+    multi_value_keywords: Tuple[KeywordMatcher, ...] = ()
+    hints: Tuple[Hint, ...] = ()

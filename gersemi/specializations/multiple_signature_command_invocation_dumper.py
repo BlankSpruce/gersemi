@@ -21,9 +21,9 @@ def create_signature_patch(signature, old_class):
         options = get("options")
         one_value_keywords = get("one_value_keywords")
         multi_value_keywords = get("multi_value_keywords")
-        sections = get("sections", dict())
-        keyword_formatters = get("keyword_formatters", dict())
-        keyword_preprocessors = get("keyword_preprocessors", dict())
+        sections = get("sections", {})
+        keyword_formatters = get("keyword_formatters", {})
+        keyword_preprocessors = get("keyword_preprocessors", {})
 
     return Impl
 
