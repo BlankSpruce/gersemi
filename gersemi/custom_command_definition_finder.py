@@ -245,7 +245,7 @@ def create_command(canonical_name, positional_arguments, keywords, block_end):
 def get_just_definitions(definitions):
     result = {}
     for name, info in definitions.items():
-        sorted_info = list(sorted(info, key=lambda item: item[1]))
+        sorted_info = sorted(info, key=lambda item: item[1])
         (canonical_name, (positional_arguments, keywords), block_end), _ = sorted_info[
             0
         ]

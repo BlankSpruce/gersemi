@@ -84,10 +84,7 @@ disable = '''use-dict-literal,
 [tool.ruff.lint]
 extend-select = [
     "B",
-    "C400",
-    "C401",
-    "C408",    
-    "C417",
+    "C",
     "E",
     "F",
     "W",

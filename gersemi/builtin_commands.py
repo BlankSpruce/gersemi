@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+# ruff: noqa: C420
 from typing import Iterable, List, Mapping
 from gersemi.immutable import make_immutable
 from gersemi.specializations.add_custom_target import add_custom_target

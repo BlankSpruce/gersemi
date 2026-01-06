@@ -1,4 +1,5 @@
 # type: ignore
+# ruff: noqa: C420
 from gersemi.builtin_commands import builtin_commands
 
 target_compile_definitions = builtin_commands["target_compile_definitions"]
