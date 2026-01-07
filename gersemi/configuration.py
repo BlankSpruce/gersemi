@@ -416,7 +416,7 @@ def find_closest_dot_gersemirc(path: Path) -> Optional[Path]:
 
 @contextmanager
 def enter_directory(target_directory):
-    original = Path().resolve()
+    original = Path.cwd()
     try:
         os.chdir(target_directory)
         yield
