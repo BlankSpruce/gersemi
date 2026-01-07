@@ -25,7 +25,7 @@ def compare_directories(left, right):
 
 @contextmanager
 def create_dot_gersemirc(where, **kwargs):
-    p = os.path.join(where, ".gersemirc")
+    p = where / ".gersemirc"
     try:
         with open(p, "w", encoding="utf-8") as f:
             f.write(yaml.dump(kwargs))
@@ -36,9 +36,9 @@ def create_dot_gersemirc(where, **kwargs):
 
 @contextmanager
 def create_fake_definitions(where, name):
-    p = os.path.join(where, name)
+    p = Path(where) / name
     try:
-        with open(os.path.join(where, name), "w", encoding="utf-8") as f:
+        with open(p, "w", encoding="utf-8") as f:
             f.write("\n")
         yield p
     finally:
@@ -516,8 +516,8 @@ def test_use_absolute_paths_as_definitions_in_configuration_file(app, testfiles)
         return {
             "line_length": 100,
             "definitions": [
-                os.path.join(dirname, "back_to_the_future.cmake"),
-                os.path.join(dirname, "back_to_the_future_sequels.cmake"),
+                str(dirname / "back_to_the_future.cmake"),
+                str(dirname / "back_to_the_future_sequels.cmake"),
             ],
         }
 

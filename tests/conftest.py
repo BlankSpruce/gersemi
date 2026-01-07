@@ -1,4 +1,3 @@
-import os
 import pathlib
 import shutil
 import pytest
@@ -18,8 +17,8 @@ def parser():
 
 @pytest.fixture(scope="module")
 def parser_with_simple_grammar():
-    this_file_dir = os.path.dirname(os.path.realpath(__file__))
-    grammar = os.path.join(this_file_dir, "simple_cmake.lark")
+    this_file_dir = pathlib.Path(__file__).resolve().parent
+    grammar = this_file_dir / "simple_cmake.lark"
     return create_parser(grammar)
 
 
@@ -77,8 +76,7 @@ def app(cache, tmpdir):  # pylint: disable=redefined-outer-name
 
 @pytest.fixture(scope="function")
 def testfiles(tmpdir):
-    original = pathlib.Path(os.path.dirname(os.path.realpath(__file__))) / "executable"
-    original_base = os.path.basename(original)
-    copy = os.path.join(tmpdir, original_base)
+    original = pathlib.Path(__file__).parent / "executable"
+    copy = tmpdir / original.name
     shutil.copytree(original, copy)
     return pathlib.Path(copy)

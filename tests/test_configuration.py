@@ -1,7 +1,7 @@
 # mypy: disable-error-code="no-redef"
 from dataclasses import asdict
 import json
-import os
+from pathlib import Path
 from pydantic.json_schema import GenerateJsonSchema
 from pydantic.version import version_short
 from pydantic import TypeAdapter
@@ -48,8 +48,8 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
     pydantic_version_as_() < (2, 9), reason="At least pydantic 2.9 is required"
 )
 def test_schema_in_repository_is_consistent_with_configuration_definition():
-    this_file_dir = os.path.dirname(os.path.realpath(__file__))
-    schema_path = os.path.join(this_file_dir, "configuration.schema.json")
+    this_file_dir = Path(__file__).parent
+    schema_path = this_file_dir / "configuration.schema.json"
     with open(schema_path, "r", encoding="utf-8") as f:
         schema = json.load(f)
 
@@ -59,8 +59,8 @@ def test_schema_in_repository_is_consistent_with_configuration_definition():
 
 
 def test_example_file_in_repository_is_consistent_with_configuration_definition():
-    this_file_dir = os.path.dirname(os.path.realpath(__file__))
-    example_path = os.path.join(this_file_dir, ".gersemirc.example")
+    this_file_dir = Path(__file__).parent
+    example_path = this_file_dir / ".gersemirc.example"
     with open(example_path, "r", encoding="utf-8") as f:
         example = f.read()
 

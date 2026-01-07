@@ -75,7 +75,7 @@ def outcome(completed_process):
     )
 
 
-HERE = Path(os.path.dirname(os.path.realpath(__file__)))
+HERE = Path(__file__).parent
 
 
 class App:

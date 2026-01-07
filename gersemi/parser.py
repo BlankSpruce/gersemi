@@ -1,6 +1,6 @@
 from dataclasses import astuple, dataclass
 from functools import lru_cache
-import os
+from pathlib import Path
 from typing import Sequence
 from lark import Lark, UnexpectedInput
 from gersemi.exceptions import (
@@ -221,8 +221,8 @@ class ParserWithPostProcessing:
         return postprocess(code, known_definitions, self.parser.parse(code))
 
 
-HERE = os.path.dirname(os.path.realpath(__file__))
-GRAMMAR = os.path.join(HERE, "cmake.lark")
+HERE = Path(__file__).resolve().parent
+GRAMMAR = HERE / "cmake.lark"
 
 
 def create_parser(grammar_filename=GRAMMAR):

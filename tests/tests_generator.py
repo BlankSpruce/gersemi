@@ -1,6 +1,6 @@
 import collections
 import os
-import pathlib
+from pathlib import Path
 import yaml
 
 
@@ -12,14 +12,14 @@ InputOutputCase = collections.namedtuple(
 
 def has_extension(expected_extension):
     def verify(filename):
-        extension = "".join(pathlib.Path(filename).suffixes)
+        extension = "".join(Path(filename).suffixes)
         return extension == expected_extension
 
     return verify
 
 
 def get_directory_path(directory):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), directory)
+    return Path(__file__).resolve().parent / directory
 
 
 def get_files_with_extension(directory, extension):
@@ -38,11 +38,11 @@ def get_files_with_extension(directory, extension):
 
 
 def remove_extension(filename):
-    return filename.replace("".join(pathlib.Path(filename).suffixes), "")
+    return filename.replace("".join(Path(filename).suffixes), "")
 
 
 def get_content(filename, directory):
-    filepath = os.path.join(get_directory_path(directory), filename)
+    filepath = get_directory_path(directory) / filename
     with open(filepath, "r", encoding="utf-8") as opened_file:
         return opened_file.read()
 
