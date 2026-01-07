@@ -64,17 +64,17 @@ def formatter_creator():
     return creator
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def cache(tmpdir):
     return Cache(pathlib.Path(tmpdir))
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app(cache, tmpdir):  # pylint: disable=redefined-outer-name
     return App(cache=cache, fallback_cwd=tmpdir)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def testfiles(tmpdir):
     original = pathlib.Path(__file__).parent / "executable"
     copy = tmpdir / original.name

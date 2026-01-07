@@ -4,18 +4,18 @@ import pytest
 from tests.fixtures.app import success
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app(app, testfiles):
     extension = (testfiles / "overrides" / "extension.py").resolve()
     return partial(app, "--extensions", extension)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def bad_file(testfiles):
     return (testfiles / "overrides" / "bad.cmake").resolve()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def good_file(testfiles):
     return (testfiles / "overrides" / "good.cmake").resolve()
 

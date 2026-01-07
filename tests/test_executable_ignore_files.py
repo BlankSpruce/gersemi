@@ -9,7 +9,7 @@ from tests.fixtures.app import fail, Matcher, reformatted, success
 IGNORE_FILES = (".ignore", ".gitignore", ".git/info/exclude")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def testdir(testfiles):
     return (testfiles / "directory_with_some_not_formatted_files").resolve()
 
@@ -45,12 +45,12 @@ class Repo(os.PathLike):
             f.write(content)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def not_initialized_repo(testdir):
     return Repo(testdir)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def repo(not_initialized_repo):
     subprocess.check_call(["git", "init", "-q"], cwd=not_initialized_repo)
     return not_initialized_repo
@@ -200,7 +200,7 @@ not formatted file*
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def second_repo(repo):
     result = repo.path.with_name(repo.path.name + "_2")
     assert str(repo) < str(result)

@@ -18,17 +18,17 @@ BAD_EXTENSION = {"implementation_present": True}
 GOOD_EXTENSION = extension(["add_constellation", "add_nebula"])
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def extensions_directory():
     return "extension_exists"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def fake_extension():
     return {}
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app(extensions_directory, fake_extension, testfiles, app):
     return lambda *args, **kwargs: app(
         *args,
@@ -56,7 +56,7 @@ Missing extension foo
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def kim_dokja_company_as_module():
     return {
         "name": "kim_dokja_company",
@@ -64,7 +64,7 @@ def kim_dokja_company_as_module():
     }
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def kim_dokja_company_as_file(testfiles):
     value = str(testfiles / "extensions" / "kim_dokja_company_as_file.py")
     return {"name": value, "qualified_name": value}

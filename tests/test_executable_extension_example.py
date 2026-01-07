@@ -4,12 +4,12 @@ import pytest
 from tests.fixtures.app import success
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def base_directory(testfiles):
     return testfiles / "extensions" / "example"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app(app, base_directory):
     extension = (base_directory / "as_file" / "acme_corporation.py").resolve()
     return partial(app, "--extensions", extension)
