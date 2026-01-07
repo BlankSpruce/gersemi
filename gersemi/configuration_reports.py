@@ -38,11 +38,8 @@ def minimal_report(
     configuration_file: Optional[Path], configuration: OutcomeConfiguration
 ) -> str:
     c = prepare_configuration_for_report(configuration_file, configuration)
-    filtered = {}
     keys = {f.name: f for f in fields(OutcomeConfiguration)}
-    for name, value in c.items():
-        if value != keys[name].default:
-            filtered[name] = value
+    filtered = {name: value for name, value in c.items() if value != keys[name].default}
 
     if not filtered:
         comparison = "none of the defaults are overridden.\n"

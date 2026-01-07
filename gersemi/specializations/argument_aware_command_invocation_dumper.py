@@ -156,9 +156,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
 
     def _split_positional_arguments(self, arguments: Nodes, known_positional_arguments):
         last_index = min(len(arguments), len(known_positional_arguments))
-        result = []
-        for i in range(last_index):
-            result.append(positional_arguments([arguments[i]]))
+        result = [positional_arguments([arguments[i]]) for i in range(last_index)]
 
         rest = arguments[last_index:]
         if len(rest) > 0:

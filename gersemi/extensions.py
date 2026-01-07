@@ -185,6 +185,7 @@ def load_definitions_from_extensions(extensions):
     errors = []
 
     for extension in extensions:
+        # ruff: noqa: PERF203
         try:
             definitions, error = load_definitions_from_extension(extension)
             if error is not None:
