@@ -87,10 +87,7 @@ extend-select = [
     "C",
     "E",
     "F",
-    "PTH101",
-    "PTH107",
-    "PTH120",
-    "PTH201",
+    "PTH",
     "RET",
     "W",
 ]
@@ -101,6 +98,7 @@ ignore = [
     # project specific
     "E266",
     "E731",
+    "PTH123",
 ]
 
 [tool.setuptools.packages.find]

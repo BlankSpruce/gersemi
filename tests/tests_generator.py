@@ -1,5 +1,4 @@
 import collections
-import os
 from pathlib import Path
 import yaml
 
@@ -23,18 +22,9 @@ def get_directory_path(directory):
 
 
 def get_files_with_extension(directory, extension):
-    result = []
     directory_path = get_directory_path(directory)
-    for root, *_ in os.walk(directory_path):
-        files = os.listdir(root)
-        base = os.path.relpath(root, start=directory_path)
-        if base == ".":
-            prefix = ""
-        else:
-            prefix = f"{base}/"
-        result += [f"{prefix}{f}" for f in filter(has_extension(extension), files)]
-
-    return result
+    for p in directory_path.rglob(f"*{extension}"):
+        yield str(p.relative_to(directory_path))
 
 
 def remove_extension(filename):
@@ -88,8 +78,8 @@ def make_input_output_case(input_filename, output_extension, where):
 
 
 def discover_input_output_cases(where, input_extension, output_extension):
-    input_files = get_files_with_extension(where, input_extension)
-    output_files = get_files_with_extension(where, output_extension)
+    input_files = list(get_files_with_extension(where, input_extension))
+    output_files = list(get_files_with_extension(where, output_extension))
     for inp in input_files:
         matching_output_file = get_matching_output_filename(inp, output_extension)
         assert (
