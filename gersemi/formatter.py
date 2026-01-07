@@ -90,7 +90,7 @@ def add_line_range_fences_impl(lines: List[str], lines_to_format: LineRanges):
 def add_line_range_fences(code: str, lines_to_format: LineRanges) -> str:
     lines = code.splitlines(keepends=True)
     N = len(lines)
-    if N < max(r.end for r in lines_to_format):
+    if max(r.end for r in lines_to_format) > N:
         return code
 
     return "".join(add_line_range_fences_impl(lines, lines_to_format))

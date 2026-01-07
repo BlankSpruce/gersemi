@@ -91,6 +91,7 @@ extend-select = [
     "PT",
     "PTH",
     "RET",
+    "SIM",
     "W",
 ]
 ignore = [

@@ -66,15 +66,19 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
             return []
 
         signature_node, *rest = arguments
-        if isinstance(signature_node, Tree):
-            if len(signature_node.children) > 0:
+        if (
+            isinstance(signature_node, Tree)
+            and signature_node.children
+            and any(
+                is_one_of_keywords(keywords, signature_node)
                 for keywords in (
                     self.options,
                     self.one_value_keywords,
                     self.multi_value_keywords,
-                ):
-                    if is_one_of_keywords(keywords, signature_node):
-                        return super()._split_arguments(arguments)
+                )
+            )
+        ):
+            return super()._split_arguments(arguments)
 
         return [
             Tree("positional_arguments", [signature_node]),

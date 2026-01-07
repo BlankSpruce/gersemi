@@ -5,10 +5,7 @@ from lark.exceptions import VisitError
 class Transformer_InPlace:
     def _transform_children(self, children):
         for c in children:
-            if isinstance(c, Tree):
-                res = self.transform(c)
-            else:
-                res = c
+            res = self.transform(c) if isinstance(c, Tree) else c
 
             if res is not Discard:
                 yield res

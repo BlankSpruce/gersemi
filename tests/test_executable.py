@@ -445,37 +445,38 @@ def test_best_definitions_in_configuration_file_but_overridden_by_command_line(
     def creator(dirname):
         return {"definitions": [str(dirname)]}
 
-    with create_configuration_files([not_formatted, formatted], creator):
-        with ExitStack() as fake_definitions:
-            definitions_in_not_formatted, definitions_in_formatted = [
-                fake_definitions.enter_context(
-                    create_fake_definitions(where=dirname, name="definitions.cmake")
-                )
-                for dirname in map(str, [not_formatted, formatted])
-            ]
+    with create_configuration_files(
+        [not_formatted, formatted], creator
+    ), ExitStack() as fake_definitions:
+        definitions_in_not_formatted, definitions_in_formatted = [
+            fake_definitions.enter_context(
+                create_fake_definitions(where=dirname, name="definitions.cmake")
+            )
+            for dirname in map(str, [not_formatted, formatted])
+        ]
 
-            assert (
-                app("--check", formatted, "--definitions", definitions_in_formatted)
-                == success()
+        assert (
+            app("--check", formatted, "--definitions", definitions_in_formatted)
+            == success()
+        )
+        assert (
+            app(
+                "--check",
+                not_formatted,
+                "--definitions",
+                definitions_in_not_formatted,
             )
-            assert (
-                app(
-                    "--check",
-                    not_formatted,
-                    "--definitions",
-                    definitions_in_not_formatted,
-                )
-                == fail()
+            == fail()
+        )
+        assert (
+            app(
+                "--in-place",
+                not_formatted,
+                "--definitions",
+                definitions_in_not_formatted,
             )
-            assert (
-                app(
-                    "--in-place",
-                    not_formatted,
-                    "--definitions",
-                    definitions_in_not_formatted,
-                )
-                == success()
-            )
+            == success()
+        )
 
     assert_that_directories_differ(not_formatted, formatted)
 

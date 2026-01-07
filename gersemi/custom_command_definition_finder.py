@@ -34,12 +34,11 @@ class DropIrrelevantElements(Transformer_InPlace):
         return Discard
 
     def non_command_element(self, children):
-        if len(children) == 1:
-            if any(
-                isinstance(children[0], helper_type)
-                for helper_type in [IgnoreThisDefinition, UseHint, BlockEnd]
-            ):
-                return children[0]
+        if (len(children) == 1) and any(
+            isinstance(children[0], helper_type)
+            for helper_type in [IgnoreThisDefinition, UseHint, BlockEnd]
+        ):
+            return children[0]
         return Discard
 
     def line_comment(self, children):
