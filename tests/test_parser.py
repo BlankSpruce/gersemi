@@ -72,11 +72,10 @@ else()
     ],
 )
 def test_invalid_code_parsing_error(parser, invalid_code, expected_exception):
-    try:
+    with pytest.raises(ParsingError) as exc_info:
         parser.parse(invalid_code)
-        raise AssertionError("Parser should throw an exception")
-    except ParsingError as e:
-        assert isinstance(e, expected_exception)
+
+    assert exc_info.type is expected_exception
 
 
 pytest_generate_tests = generate_input_only_tests(
