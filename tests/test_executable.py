@@ -3,7 +3,6 @@ import codecs
 from contextlib import contextmanager, ExitStack
 import filecmp
 from functools import partial
-import os
 from pathlib import Path
 import sqlite3
 from stat import S_IREAD, S_IRGRP, S_IROTH
@@ -25,13 +24,13 @@ def compare_directories(left, right):
 
 @contextmanager
 def create_dot_gersemirc(where, **kwargs):
-    p = where / ".gersemirc"
+    p = Path(where / ".gersemirc")
     try:
         with open(p, "w", encoding="utf-8") as f:
             f.write(yaml.dump(kwargs))
         yield
     finally:
-        os.remove(p)
+        p.unlink()
 
 
 @contextmanager
@@ -42,7 +41,7 @@ def create_fake_definitions(where, name):
             f.write("\n")
         yield p
     finally:
-        os.remove(p)
+        p.unlink()
 
 
 @contextmanager
@@ -660,7 +659,7 @@ def test_no_files_are_stored_in_cache_on_diff(app, cache, testfiles):
 
 def test_when_cache_cant_be_modified_it_is_ignored(app, cache, testfiles):
     d = testfiles / "custom_project" / "formatted"
-    os.chmod(cache.path, S_IREAD | S_IRGRP | S_IROTH)
+    cache.path.chmod(S_IREAD | S_IRGRP | S_IROTH)
 
     cache.assert_that_has_no_tables()
     assert app("--check", d, "--definitions", d) == success(stdout="", stderr="")

@@ -87,6 +87,8 @@ extend-select = [
     "C",
     "E",
     "F",
+    "PTH101",
+    "PTH107",
     "PTH120",
     "PTH201",
     "RET",
