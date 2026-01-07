@@ -34,7 +34,7 @@ valid_line_ranges = [
 
 
 @pytest.mark.parametrize(
-    ["given", "expected"],
+    ("given", "expected"),
     valid_line_ranges,
     ids=[given for given, _ in valid_line_ranges],
 )
@@ -53,7 +53,7 @@ invalid_line_ranges = [
 
 
 @pytest.mark.parametrize(
-    ["given", "warning"],
+    ("given", "warning"),
     invalid_line_ranges,
     ids=[given for given, _ in invalid_line_ranges],
 )

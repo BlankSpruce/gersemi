@@ -17,7 +17,7 @@ def test_parser(parser, case):
 
 
 @pytest.mark.parametrize(
-    ["invalid_code", "expected_exception"],
+    ("invalid_code", "expected_exception"),
     [
         ("set(FOO BAR", UnbalancedParentheses),
         ("message(FOO BAR (BAZ AND FOO)", UnbalancedParentheses),

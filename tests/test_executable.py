@@ -705,7 +705,7 @@ warning_params = [
 
 
 @pytest.mark.parametrize(
-    ["warning_args", "returncode"],
+    ("warning_args", "returncode"),
     [rest for __, *rest in warning_params],
     ids=[name for name, *__ in warning_params],
 )
@@ -753,7 +753,7 @@ def test_check_project_with_conflicting_command_definitions_dont_warn_when_quiet
 
 
 @pytest.mark.parametrize(
-    ["warning_args", "returncode"],
+    ("warning_args", "returncode"),
     [rest for __, *rest in warning_params],
     ids=[name for name, *__ in warning_params],
 )
@@ -798,12 +798,12 @@ def test_cached_result_doesnt_inhibit_printing_in_stdout_mode(app, testfiles):
 
 
 @pytest.mark.parametrize(
-    ["warning_args", "returncode"],
+    ("warning_args", "returncode"),
     [rest for __, *rest in warning_params],
     ids=[name for name, *__ in warning_params],
 )
 @pytest.mark.parametrize(
-    ["args", "check_cache"],
+    ("args", "check_cache"),
     [
         ((), False),
         (("--check",), True),
@@ -857,16 +857,16 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 
 
 @pytest.mark.parametrize(
-    ["warning_args", "returncode"],
+    ("warning_args", "returncode"),
     [rest for __, *rest in warning_params],
     ids=[name for name, *__ in warning_params],
 )
 @pytest.mark.parametrize(
-    ["args"],
+    "args",
     [
-        ((),),
-        (("--check",),),
-        (("--diff",),),
+        (),
+        ("--check",),
+        ("--diff",),
     ],
 )
 def test_warn_about_unknown_commands_with_stdin(
@@ -896,7 +896,7 @@ Warning: unknown command 'watch_tarantino_movies' used at:
 
 
 @pytest.mark.parametrize(
-    ["args", "check_cache"],
+    ("args", "check_cache"),
     [
         ((), False),
         (("--check",), True),

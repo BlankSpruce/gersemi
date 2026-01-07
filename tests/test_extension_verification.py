@@ -36,7 +36,7 @@ def test_extension_passes_verification(definition):
 
 
 @pytest.mark.parametrize(
-    ["definition", "outcome"],
+    ("definition", "outcome"),
     [
         ((), f"{defs}: is not a mapping"),
         ({12: 34}, f"{defs}: command name (12) has to be a string"),
@@ -110,7 +110,7 @@ def test_extension_fails_verification(definition, outcome):
 
 
 @pytest.mark.parametrize(
-    ["command", "definition"],
+    ("command", "definition"),
     list(builtin_commands.items()),
     ids=list(builtin_commands),
 )

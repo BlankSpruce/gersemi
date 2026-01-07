@@ -150,7 +150,7 @@ Warning: unknown command 'add_nebula' used at:
 
 
 @pytest.mark.parametrize(
-    ["fake_extension", "outcome"],
+    ("fake_extension", "outcome"),
     [
         (
             GOOD_EXTENSION,
