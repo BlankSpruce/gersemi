@@ -1,8 +1,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
-from tests.fixtures.app import success, fail
+from tests.fixtures.app import fail, success
 from tests.tests_generator import generate_input_output_tests
-
 
 LR = "--line-ranges"
 

@@ -2,14 +2,13 @@
 # ruff: noqa: C420
 from typing import Iterable, List, Mapping
 from gersemi.immutable import make_immutable
+from gersemi.keyword_kind import KeywordFormatter
+from gersemi.keywords import AnyMatcher, KeywordMatcher
 from gersemi.specializations.add_custom_target import add_custom_target
 from gersemi.specializations.condition_syntax_command_invocation_dumper import (
     condition_syntax_commands,
 )
 from gersemi.specializations.set_property import set_property
-from gersemi.keywords import AnyMatcher, KeywordMatcher
-from gersemi.keyword_kind import KeywordFormatter
-
 
 _COMPARE_EQUAL = ("COMPARE", "EQUAL")
 _COMPARE_GREATER = ("COMPARE", "GREATER")

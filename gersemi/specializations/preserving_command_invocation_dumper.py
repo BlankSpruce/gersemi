@@ -2,7 +2,6 @@ import re
 from textwrap import indent
 from gersemi.base_dumper import BaseDumper
 
-
 BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
 QUOTED_ARGUMENT_REGEX = r'("(?:[^\\\"]|\n|(?:\\(?:[^A-Za-z0-9]|[nrt]))|\\\n)*")'
 LINE_COMMENT_BEGIN = "#"

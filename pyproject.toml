@@ -88,6 +88,7 @@ extend-select = [
     "E",
     "F",
     "FURB",
+    "I",
     "PERF",
     "PT",
     "PTH",
@@ -103,6 +104,16 @@ ignore = [
     "E266",
     "E731",
     "PTH123",
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+no-lines-before = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder"
 ]
 
 [tool.setuptools.packages.find]

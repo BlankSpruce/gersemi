@@ -2,15 +2,15 @@
 from dataclasses import asdict
 import json
 from pathlib import Path
+from pydantic import TypeAdapter
 from pydantic.json_schema import GenerateJsonSchema
 from pydantic.version import version_short
-from pydantic import TypeAdapter
 import pytest
 from gersemi.configuration import (
-    OutcomeConfiguration,
     ListExpansion,
-    make_configuration_file,
+    OutcomeConfiguration,
     Tabs,
+    make_configuration_file,
 )
 
 

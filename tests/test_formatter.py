@@ -1,8 +1,8 @@
 import pytest
 from gersemi.exceptions import ASTMismatch
 from gersemi.sanity_checker import check_code_equivalence
-from tests.utils import preprocess
 from tests.tests_generator import generate_input_output_tests
+from tests.utils import preprocess
 
 
 def test_formatter(formatter_creator, case):

@@ -1,13 +1,13 @@
 # pylint: disable=too-many-lines
 import codecs
-from contextlib import contextmanager, ExitStack
+from contextlib import ExitStack, contextmanager
 import filecmp
 from functools import partial
 from pathlib import Path
 import sqlite3
 from stat import S_IREAD, S_IRGRP, S_IROTH
-import yaml
 import pytest
+import yaml
 from gersemi.return_codes import FAIL, SUCCESS
 from tests.fixtures.app import ExpectedOutcome, fail, match_not, reformatted, success
 

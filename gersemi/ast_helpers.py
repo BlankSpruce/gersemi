@@ -1,5 +1,5 @@
 from typing import Any, Callable
-from lark import Tree, Token
+from lark import Token, Tree
 from lark.visitors import Interpreter
 from gersemi.types import Node
 

@@ -3,11 +3,10 @@ import os
 from pathlib import Path
 from typing import Iterable, Optional
 from gersemi.configuration import (
-    make_configuration_file,
     OutcomeConfiguration,
+    make_configuration_file,
 )
 from gersemi.extensions import load_definitions_from_extension
-
 
 NL = "\n"
 

@@ -3,8 +3,7 @@ import os
 import shutil
 import subprocess
 import pytest
-from tests.fixtures.app import fail, Matcher, reformatted, success
-
+from tests.fixtures.app import Matcher, fail, reformatted, success
 
 IGNORE_FILES = (".ignore", ".gitignore", ".git/info/exclude")
 

@@ -2,9 +2,9 @@ from contextlib import contextmanager
 from typing import Iterable, Mapping
 from lark import Tree
 from gersemi.ast_helpers import (
-    is_one_value_argument,
     is_multi_value_argument,
     is_one_of_keywords,
+    is_one_value_argument,
     is_positional_arguments,
     is_section,
     positional_arguments,
@@ -13,7 +13,6 @@ from gersemi.keywords import KeywordMatcher
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-
 
 Sections = Mapping[KeywordMatcher, Mapping[KeywordMatcher, Iterable[KeywordMatcher]]]
 

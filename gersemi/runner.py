@@ -1,51 +1,50 @@
 import argparse
-from collections import defaultdict, ChainMap
+from collections import ChainMap, defaultdict
 import collections.abc
 from functools import partial
 from hashlib import sha1
 from pathlib import Path
 import sys
-from typing import Callable, Dict, List, Iterable, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 from ignore import WalkBuilder  # pylint: disable=no-name-in-module
 from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
-    find_closest_dot_gersemirc,
     LineRanges,
-    make_control_configuration,
-    make_outcome_configuration,
     MaxWorkers,
-    max_number_of_workers,
     NotSupportedKeys,
     OutcomeConfiguration,
     Workers,
+    find_closest_dot_gersemirc,
+    make_control_configuration,
+    make_outcome_configuration,
+    max_number_of_workers,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
-from gersemi.formatted_file import FormattedFile
-from gersemi.formatter import create_formatter, NullFormatter, Formatter
-from gersemi.mode import get_mode, Mode
-from gersemi.parser import BARE_PARSER as parser
 from gersemi.extensions import load_definitions_from_extensions
+from gersemi.formatted_file import FormattedFile
+from gersemi.formatter import Formatter, NullFormatter, create_formatter
+from gersemi.keywords import Keywords
+from gersemi.mode import Mode, get_mode
+from gersemi.parser import BARE_PARSER as parser
 from gersemi.print_config_kind import PrintConfigKind
-from gersemi.result import Result, Error, apply, get_error_message
+from gersemi.result import Error, Result, apply, get_error_message
 from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
 from gersemi.task_result import TaskResult
-from gersemi.tasks.check_formatting import check_formatting
 from gersemi.tasks.check_and_show_diff import check_and_show_diff
+from gersemi.tasks.check_formatting import check_formatting
 from gersemi.tasks.do_nothing import do_nothing
-from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.format_file import format_file
+from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_diff
 from gersemi.utils import fromfile, smart_open
-from gersemi.keywords import Keywords
 from gersemi.warnings import UnknownCommandWarning
-
 
 CHUNKSIZE = 16
 FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")

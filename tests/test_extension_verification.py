@@ -1,9 +1,8 @@
 import re
 import pytest
 from gersemi.builtin_commands import builtin_commands
-from gersemi.extensions import verify, VerificationFailure
 from gersemi.extension_type import ModuleExtension
-
+from gersemi.extensions import VerificationFailure, verify
 
 defs = "gersemi_foo:command_definitions"
 ab = f"{defs}['ab']"

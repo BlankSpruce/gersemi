@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Sequence, Tuple, Union
 
-
 Position = Tuple[int, int]
 
 

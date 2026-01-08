@@ -1,6 +1,6 @@
 from collections.abc import Sized
 from functools import partial
-from typing import Dict, Iterator, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 from lark import Tree
 from gersemi.ast_helpers import (
     get_value,
@@ -12,19 +12,19 @@ from gersemi.ast_helpers import (
     is_pair,
     is_positional_arguments,
     is_section,
-    option_argument,
-    one_value_argument,
     multi_value_argument,
+    one_value_argument,
+    option_argument,
     positional_arguments,
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.keywords import KeywordMatcher
 from gersemi.keyword_kind import (
     KeywordFormatter,
     KeywordPreprocessor,
     kind_to_formatter,
     kind_to_preprocessor,
 )
+from gersemi.keywords import KeywordMatcher
 from gersemi.types import Nodes
 from gersemi.utils import pop_all
 

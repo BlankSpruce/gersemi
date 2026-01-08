@@ -10,7 +10,6 @@ from gersemi.postprocessor import postprocess
 from gersemi.sanity_checker import check_code_equivalence
 from gersemi.warnings import FormatterWarnings
 
-
 GERSEMI_OFF = "# gersemi: off"
 GERSEMI_ON = "# gersemi: on"
 BUG = "#-#-# gersemi: If you see this there is a bug in gersemi, please report it.#-#-#"

@@ -2,7 +2,7 @@
 from functools import partial
 import json
 import pytest
-from tests.fixtures.app import success, fail, reformatted
+from tests.fixtures.app import fail, reformatted, success
 from tests.test_executable_print_config import ignore_schema
 
 

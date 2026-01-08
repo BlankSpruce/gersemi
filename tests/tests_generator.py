@@ -2,7 +2,6 @@ import collections
 from pathlib import Path
 import yaml
 
-
 InputOnlyCase = collections.namedtuple("InputOnlyCase", ["name", "content"])
 InputOutputCase = collections.namedtuple(
     "InputOutputCase", ["name", "given", "expected", "config"]

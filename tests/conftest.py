@@ -1,10 +1,10 @@
 import pathlib
 import shutil
 import pytest
-from gersemi.configuration import indent_type, ListExpansion, OutcomeConfiguration
+from gersemi.configuration import ListExpansion, OutcomeConfiguration, indent_type
+from gersemi.formatter import create_formatter
 from gersemi.noop import noop
 from gersemi.parser import create_parser, create_parser_with_postprocessing
-from gersemi.formatter import create_formatter
 from gersemi.runner import find_all_custom_command_definitions
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache

@@ -1,10 +1,10 @@
-import yaml
 from lark import Discard
 from lark.visitors import Interpreter
+import yaml
 from gersemi.ast_helpers import get_value, is_keyword
 from gersemi.immutable import make_immutable
-from gersemi.keywords import Hint, Keywords
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
+from gersemi.keywords import Hint, Keywords
 from gersemi.transformer import Transformer_InPlace
 
 

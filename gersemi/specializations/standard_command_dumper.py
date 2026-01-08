@@ -1,7 +1,7 @@
 from functools import lru_cache
 from gersemi.command_line_formatter import CommandLineFormatter
-from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from gersemi.keyword_preprocessor import KeywordPreprocessor
+from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )

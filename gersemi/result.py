@@ -4,7 +4,6 @@ from typing import Callable, TypeVar, Union
 from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.utils import fromfile
 
-
 T_co = TypeVar("T_co", covariant=True)
 
 

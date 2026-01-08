@@ -1,9 +1,9 @@
 from typing import List
 from lark import Tree
 from gersemi.ast_helpers import (
+    is_comment,
     is_line_comment_in,
     is_one_of_keywords,
-    is_comment,
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.configuration import Spaces

@@ -5,9 +5,9 @@ from typing import Sequence
 from lark import Lark, UnexpectedInput
 from gersemi.exceptions import (
     GenericParsingError,
-    UnbalancedParentheses,
-    UnbalancedBrackets,
     UnbalancedBlock,
+    UnbalancedBrackets,
+    UnbalancedParentheses,
     UnbalancedQuotes,
 )
 from gersemi.parsing_transformer import ParsingTransformer

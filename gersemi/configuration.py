@@ -7,11 +7,11 @@ from pathlib import Path
 import sys
 from typing import Iterable, Optional, Sequence, Tuple, Union
 import yaml
+from gersemi.__version__ import __version__
 from gersemi.cache import default_cache_dir
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
 from gersemi.extension_type import FileExtension, ModuleExtension
 from gersemi.return_codes import FAIL
-from gersemi.__version__ import __version__
 
 
 def max_number_of_workers():

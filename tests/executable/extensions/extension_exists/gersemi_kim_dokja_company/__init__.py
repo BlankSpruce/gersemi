@@ -1,7 +1,6 @@
 import json
 import os
 
-
 settings = json.loads(os.environ["GERSEMI_FAKE_EXTENSION_SETTINGS"])
 
 

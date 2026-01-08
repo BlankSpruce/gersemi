@@ -1,10 +1,10 @@
 from typing import Sequence, Tuple, Union
 from lark import Tree
-from gersemi.ast_helpers import is_keyword, is_comment
+from gersemi.ast_helpers import is_comment, is_keyword
+from gersemi.keywords import AnyMatcher
 from gersemi.specializations.argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-from gersemi.keywords import AnyMatcher
 
 
 def isolate_two_word_keywords(lhs, rhs, children):

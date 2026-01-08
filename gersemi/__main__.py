@@ -3,23 +3,23 @@ from dataclasses import fields
 import pathlib
 import sys
 from lark import __version__ as lark_version
+from gersemi.__version__ import __title__, __version__
 from gersemi.configuration import (
+    ControlConfiguration,
+    ListExpansion,
+    OutcomeConfiguration,
+    indent_type,
+    line_ranges,
     normalize_definitions,
     normalize_extensions,
     normalize_path,
     sanitize_list_expansion,
-    ControlConfiguration,
-    OutcomeConfiguration,
-    ListExpansion,
-    indent_type,
-    line_ranges,
     workers_type,
 )
 from gersemi.configuration_reports import default_report
 from gersemi.print_config_kind import PrintConfigKind, print_config_kind
-from gersemi.return_codes import SUCCESS, FAIL
-from gersemi.runner import run, print_to_stderr
-from gersemi.__version__ import __title__, __version__
+from gersemi.return_codes import FAIL, SUCCESS
+from gersemi.runner import print_to_stderr, run
 
 FROZEN = getattr(sys, "frozen", False)
 MISSING = "(missing)"

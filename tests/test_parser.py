@@ -1,9 +1,9 @@
 import pytest
 from gersemi.exceptions import (
     ParsingError,
-    UnbalancedParentheses,
-    UnbalancedBrackets,
     UnbalancedBlock,
+    UnbalancedBrackets,
+    UnbalancedParentheses,
 )
 from .tests_generator import generate_input_only_tests
 

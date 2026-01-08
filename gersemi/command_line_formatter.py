@@ -1,4 +1,4 @@
-from gersemi.ast_helpers import is_line_comment, is_commented_argument
+from gersemi.ast_helpers import is_commented_argument, is_line_comment
 from gersemi.base_dumper import BaseDumper
 
 

@@ -1,7 +1,7 @@
 from collections import ChainMap
 from itertools import dropwhile
 from typing import List
-from lark import Discard, Tree, Token
+from lark import Discard, Token, Tree
 from gersemi.ast_helpers import (
     is_commented_argument,
     is_newline,

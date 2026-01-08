@@ -6,7 +6,6 @@ from gersemi.custom_command_definition_finder import (
 from gersemi.dumper import Dumper
 from .tests_generator import generate_input_only_tests
 
-
 custom_command_to_format = """
 seven_samurai(
 three standalone arguments

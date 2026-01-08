@@ -1,4 +1,4 @@
-from collections.abc import Mapping, Collection
+from collections.abc import Collection, Mapping
 from contextlib import contextmanager
 from functools import lru_cache
 import importlib
