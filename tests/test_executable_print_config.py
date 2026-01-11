@@ -115,7 +115,7 @@ class TestPrintConfigMinimalWithConfigurationFile:
                 stdout=self.file_differs(
                     f"""definitions:
 - {Path()}
-- {Path('../directory_with_not_formatted_files')}"""
+- {Path("../directory_with_not_formatted_files")}"""
                 ),
                 stderr="",
             )
@@ -365,7 +365,7 @@ class TestPrintConfigVerboseWithConfigurationFile:
                 stdout=self.based_on_file(
                     definitions=f"""
 - {Path()}
-- {Path('../directory_with_not_formatted_files')}"""
+- {Path("../directory_with_not_formatted_files")}"""
                 ),
                 stderr="",
             )

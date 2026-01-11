@@ -36,9 +36,7 @@ def create_dumper(custom_command_definitions):
     )
 
 
-def test_custom_command_generated_dumper(
-    parser_with_postprocessing, parser, case
-):  # pylint: disable=redefined-outer-name
+def test_custom_command_generated_dumper(parser_with_postprocessing, parser, case):  # pylint: disable=redefined-outer-name
     parsed_function_def = parser.parse(case.content)
     definitions = get_just_definitions(
         find_custom_command_definitions(parsed_function_def)

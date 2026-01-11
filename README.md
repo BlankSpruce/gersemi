@@ -1,6 +1,6 @@
 # gersemi
 
-[![Status](https://github.com/BlankSpruce/gersemi/workflows/Tests/badge.svg)](https://github.com/BlankSpruce/gersemi/actions) [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Status](https://github.com/BlankSpruce/gersemi/workflows/Tests/badge.svg)](https://github.com/BlankSpruce/gersemi/actions) [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 A formatter to make your CMake code the real treasure.
 
@@ -158,7 +158,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.25.0
+  rev: 0.25.1
   hooks:
   - id: gersemi
 ```
@@ -174,7 +174,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.25.0
+  rev: 0.25.1
   hooks:
   - id: gersemi
     additional_dependencies:

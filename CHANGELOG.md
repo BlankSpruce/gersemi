@@ -1,4 +1,8 @@
 # Changelog
+## [0.25.1] 2026-01-11
+### Changed
+- Switch from `setup.py` to `pyproject.toml`.
+
 ## [0.25.0] 2025-12-30
 ### Added
 - Template files like those supported used with `configure_file` which use `@`-based substitution can be formatted in most circumstances. (#92)

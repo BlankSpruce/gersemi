@@ -160,7 +160,7 @@ def create_argparser():
         dest="list_expansion",
         choices=["favour-inlining", "favour-expansion"],
         help=f"""
-    {outcome_conf_doc['list_expansion']}
+    {outcome_conf_doc["list_expansion"]}
     {" ".join(attr.description for attr in ListExpansion)}
     [default: {OutcomeConfiguration.list_expansion.value}]
             """,
@@ -229,7 +229,7 @@ def create_argparser():
         nargs=0,
         default=None,
         help=f"""
-        {control_conf_doc['color']}
+        {control_conf_doc["color"]}
         {warn_about_missing_colorama}
         [default: don't colorize diff, same as --no-color]
         """,
@@ -241,7 +241,7 @@ def create_argparser():
         dest="workers",
         type=workers_type,
         help=f"""
-    {control_conf_doc['workers']} [default: {repr(ControlConfiguration.workers)}]
+    {control_conf_doc["workers"]} [default: {repr(ControlConfiguration.workers)}]
         """,
     )
     control_configuration_group.add_argument(

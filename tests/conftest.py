@@ -29,9 +29,7 @@ def parser_with_postprocessing(parser):  # pylint: disable=redefined-outer-name
 
 def get_custom_command_definitions(configuration_definitions):
     class Pool:
-        def imap_unordered(
-            self, func, files, *args, **kwargs
-        ):  # pylint: disable=unused-argument
+        def imap_unordered(self, func, files, *args, **kwargs):  # pylint: disable=unused-argument
             yield from map(func, files)
 
     paths = [pathlib.Path(d).resolve() for d in configuration_definitions]

@@ -81,9 +81,9 @@ def discover_input_output_cases(where, input_extension, output_extension):
     output_files = list(get_files_with_extension(where, output_extension))
     for inp in input_files:
         matching_output_file = get_matching_output_filename(inp, output_extension)
-        assert (
-            matching_output_file in output_files
-        ), f"Incomplete input-output pair, missing {matching_output_file}"
+        assert matching_output_file in output_files, (
+            f"Incomplete input-output pair, missing {matching_output_file}"
+        )
 
     return [make_input_output_case(inp, output_extension, where) for inp in input_files]
 
