@@ -9,17 +9,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.14']
         executable-name: [gersemi]
         os: [ubuntu-latest]
         include:
-          - python-version: '3.12'
+          - python-version: '3.13'
             os: windows-latest
             executable-name: gersemi.exe
-          - python-version: '3.12'
+          - python-version: '3.13'
             os: macos-latest
             executable-name: gersemi
-          - python-version: '3.12'
+          - python-version: '3.13'
             os: ubuntu-latest
             executable-name: gersemi
             name: 'Quality tests'
