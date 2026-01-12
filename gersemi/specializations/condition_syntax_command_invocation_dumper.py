@@ -8,7 +8,7 @@ from gersemi.ast_helpers import (
 from gersemi.base_command_invocation_dumper import (
     BaseCommandInvocationDumper,
     ExpansionLimits,
-    EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION,
+    EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION,
 )
 from gersemi.configuration import Spaces
 from gersemi.types import Nodes
@@ -122,7 +122,7 @@ def isolate_conditions(arguments: Nodes) -> Nodes:
 
 
 class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
-    expansion_limits: ExpansionLimits = EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION
+    expansion_limits: ExpansionLimits = EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION
 
     def unary_operation(self, tree):
         result = self._try_to_format_into_single_line(tree.children)

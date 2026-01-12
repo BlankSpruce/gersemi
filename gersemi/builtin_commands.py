@@ -4,7 +4,9 @@ from typing import Iterable, List, Mapping
 from gersemi.immutable import make_immutable
 from gersemi.keyword_kind import KeywordFormatter
 from gersemi.keywords import AnyMatcher, KeywordMatcher
-from gersemi.base_command_invocation_dumper import EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION)
+from gersemi.base_command_invocation_dumper import (
+    EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION,
+)
 from gersemi.specializations.add_custom_target import add_custom_target
 from gersemi.specializations.condition_syntax_command_invocation_dumper import (
     condition_syntax_commands,
@@ -136,7 +138,7 @@ builtin_commands = {
     ## Scripting Commands
     #
     "block": {
-        "expansion_limits": EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION,
+        "expansion_limits": EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION,
         "multi_value_keywords": ["SCOPE_FOR", "PROPAGATE"],
     },
     "break": {},
@@ -895,13 +897,13 @@ builtin_commands = {
         "multi_value_keywords": ["NAMES", "HINTS", "PATHS", "PATH_SUFFIXES"],
     },
     "foreach": {
-        "expansion_limits": EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION,
+        "expansion_limits": EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION,
         "front_positional_arguments": ["<loop_var>"],
         "options": ["IN"],
         "multi_value_keywords": ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"],
     },
     "function": {
-        "expansion_limits": EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION,
+        "expansion_limits": EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION,
         "front_positional_arguments": ["<name>"],
     },
     "get_cmake_property": {
@@ -1064,7 +1066,7 @@ builtin_commands = {
         },
     },
     "macro": {
-        "expansion_limits": EXPANSION_LIMIT_INHIBIT_FAVOUR_EXPANSION,
+        "expansion_limits": EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION,
         "front_positional_arguments": ["<name>"],
     },
     "mark_as_advanced": {

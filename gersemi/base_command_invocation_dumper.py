@@ -62,7 +62,7 @@ class BaseCommandInvocationDumper(BaseDumper):
         groups = self._split_arguments(arguments.children)
         group_sizes = list(map(self.group_size, groups))
 
-        favour_expansion = (self.list_expansion == ListExpansion.FavourExpansion)
+        favour_expansion = self.list_expansion == ListExpansion.FavourExpansion
         limit = get_expansion_limit(
             self.expansion_limits, favour_expansion=favour_expansion
         )
