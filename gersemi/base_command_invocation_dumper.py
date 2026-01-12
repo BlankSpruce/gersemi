@@ -2,10 +2,39 @@ from gersemi.ast_helpers import is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
 from gersemi.types import Nodes
+from typing import TypedDict, Union
+
+
+class _ExpansionLimitsDict(TypedDict, total=False):
+    favour_expansion_limit: int
+    favour_inlining_limit: int
+
+
+ExpansionLimits = Union[int, _ExpansionLimitsDict]
+
+DEFAULT_FAVOUR_INLINING_EXPANSION_LIMIT_SIZE = 4
+DEFAULT_FAVOUR_EXPANSION_EXPANSION_LIMIT_SIZE = 1
+
+# Inhibit favour expansion by always using the favour inlining limit
+EXPANSION_LIMITS_INHIBIT_FAVOUR_EXPANSION: ExpansionLimits = (
+    DEFAULT_FAVOUR_INLINING_EXPANSION_LIMIT_SIZE
+)
+
+
+def get_expansion_limit(limits: ExpansionLimits, *, favour_expansion: bool) -> int:
+    if isinstance(limits, int):
+        return limits
+    else:
+        key, default = (
+            ("favour_expansion_limit", DEFAULT_FAVOUR_EXPANSION_EXPANSION_LIMIT_SIZE)
+            if favour_expansion
+            else ("favour_inlining_limit", DEFAULT_FAVOUR_INLINING_EXPANSION_LIMIT_SIZE)
+        )
+        return limits.get(key, default)
 
 
 class BaseCommandInvocationDumper(BaseDumper):
-    _inhibit_favour_expansion: bool = False
+    expansion_limits: ExpansionLimits = {}
 
     def format_command_with_short_name(self, begin, arguments, end):
         with self.indented():
@@ -32,12 +61,12 @@ class BaseCommandInvocationDumper(BaseDumper):
     def _inlining_condition(self, arguments):
         groups = self._split_arguments(arguments.children)
         group_sizes = list(map(self.group_size, groups))
-        if (
-            self.list_expansion == ListExpansion.FavourExpansion
-            and not self._inhibit_favour_expansion
-        ):
-            return all(size < 2 for size in group_sizes)
-        return all(size <= 4 for size in group_sizes)
+
+        favour_expansion = (self.list_expansion == ListExpansion.FavourExpansion)
+        limit = get_expansion_limit(
+            self.expansion_limits, favour_expansion=favour_expansion
+        )
+        return all(size <= limit for size in group_sizes)
 
     def format_command(self, tree):
         raw_identifier, arguments = tree.children
