@@ -1426,6 +1426,7 @@ builtin_commands = {
                 "keyword_formatters": {
                     "COMMAND": KeywordFormatter.CommandLine,
                     "ARGS": KeywordFormatter.CommandLine,
+                    "IMPLICIT_DEPENDS": KeywordFormatter.Pairs,
                 },
             },
             "TARGET": {
