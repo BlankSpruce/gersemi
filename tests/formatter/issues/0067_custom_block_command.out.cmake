@@ -71,7 +71,8 @@ prologue(
     CHARACTERS
         "Bilbo Baggins" "Hobbit"
         "Gandalf" "Wizard_____________________________________________"
-    DESCRIPTION Certain wizard visits a hobbit
+    DESCRIPTION
+        Certain wizard visits a hobbit
 )
     require("thirdparty_lib")
     require("my_lib")
@@ -82,7 +83,8 @@ epilogue(
     CHARACTERS
         "Bilbo Baggins" "Hobbit"
         "Gandalf" "Wizard_____________________________________________"
-    DESCRIPTION Certain wizard visits a hobbit
+    DESCRIPTION
+        Certain wizard visits a hobbit
 )
 require("foobar")
 
@@ -91,7 +93,8 @@ prologue(
     CHARACTERS
         "Bilbo Baggins" "Hobbit"
         "Gandalf" "Wizard_____________________________________________"
-    DESCRIPTION Certain wizard visits a hobbit
+    DESCRIPTION
+        Certain wizard visits a hobbit
 )
     begin_target(EXE)
         require("thirdparty_lib")
@@ -106,7 +109,8 @@ epilogue(
         "Bilbo Baggins" "Hobbit"
         "Gandalf" "Wizard_____________________________________________"
         "Balin" "The dwarf"
-    DESCRIPTION Certain wizard and certain dwarf visit a friend
+    DESCRIPTION
+        Certain wizard and certain dwarf visit a friend
 )
 require("foobar")
 

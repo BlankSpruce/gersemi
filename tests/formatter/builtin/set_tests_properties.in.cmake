@@ -2,7 +2,7 @@ set_tests_properties(FOO PROPERTIES BAR BAZ)
 
 set_tests_properties(FOO BAR BAZ PROPERTIES FOO BAR BAZ FOO)
 
-set_tests_properties(FOO BAR BAZ FOO BAR BAZ PROPERTIES FOO BAR BAZ FOO BAR BAZ FOO BAR)
+set_tests_properties(FOO BAR BAZ FOO BAR BAZ PROPERTIES FOO BAR BAZ FOO)
 
 set_tests_properties(FOO PROPERTIES
     BAR BAZ

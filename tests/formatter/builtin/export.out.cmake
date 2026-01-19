@@ -96,7 +96,10 @@ export(
 
 export(
     SETUP foo
-    PACKAGE_DEPENDENCY bar ENABLED AUTO EXTRA_ARGS baz qux foo
+    PACKAGE_DEPENDENCY
+        bar
+        ENABLED AUTO
+        EXTRA_ARGS baz qux foo
     TARGET bar XCFRAMEWORK_LOCATION baz
 )
 
@@ -121,7 +124,9 @@ export(
     PROJECT projectname
     APPENDIX appendixname
     LOWER_CASE_FILE
-    VERSION foo COMPAT_VERSION bar VERSION_SCHEMA baz
+    VERSION foo
+        COMPAT_VERSION bar
+        VERSION_SCHEMA baz
     DEFAULT_TARGETS foo bar baz
     DEFAULT_CONFIGURATIONS foo bar baz
     LICENSE license

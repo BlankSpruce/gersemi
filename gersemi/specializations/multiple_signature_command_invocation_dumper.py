@@ -12,18 +12,21 @@ from .section_aware_command_invocation_dumper import Sections
 
 
 def create_signature_patch(signature, old_class):
-    def get(key, default_value=None):
-        return signature.get(key, [] if default_value is None else default_value)
+    get = signature.get
+
+    def get_or_inherit(key, default_value):
+        return get(key, getattr(old_class, key, default_value))
 
     class Impl(old_class):
-        front_positional_arguments = get("front_positional_arguments")
-        back_positional_arguments = get("back_positional_arguments")
-        options = get("options")
-        one_value_keywords = get("one_value_keywords")
-        multi_value_keywords = get("multi_value_keywords")
+        front_positional_arguments = get("front_positional_arguments", [])
+        back_positional_arguments = get("back_positional_arguments", [])
+        options = get("options", [])
+        one_value_keywords = get("one_value_keywords", [])
+        multi_value_keywords = get("multi_value_keywords", [])
         sections = get("sections", {})
         keyword_formatters = get("keyword_formatters", {})
         keyword_preprocessors = get("keyword_preprocessors", {})
+        inlining_heuristic = get_or_inherit("inlining_heuristic", None)
 
     return Impl
 

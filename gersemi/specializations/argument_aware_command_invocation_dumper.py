@@ -101,7 +101,6 @@ class KeywordSplitter:
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
-    _inhibit_favour_expansion: bool = False
     _keyword_formatters: Dict[str, str] = {}
     _canonical_name: Optional[str] = None
 
@@ -112,6 +111,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     multi_value_keywords: Iterable[KeywordMatcher] = []
     keyword_formatters: Dict[str, KeywordFormatter] = {}
     keyword_preprocessors: Dict[str, KeywordPreprocessor] = {}
+    inlining_heuristic: Optional[int] = None
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
@@ -120,19 +120,23 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         return "\n".join(map(self.visit, tree.children))
 
     def _format_non_option(self, tree):
-        result = self._try_to_format_into_single_line(tree.children)
-        if result is not None:
-            return result
+        if self.group_size(tree) <= self.inlining_limit:
+            result = self._try_to_format_into_single_line(tree.children)
+            if result is not None:
+                return result
 
         keyword, *values = tree.children
         keyword_as_value = get_value(keyword, None)
 
-        can_be_inlined = (not self.favour_expansion) or (
-            self.favour_expansion
-            and keyword is not None
-            and (not is_pair(tree))
-            and keyword_as_value not in self.multi_value_keywords
-        )
+        if self.favour_expansion:
+            can_be_inlined = (
+                (keyword is not None)
+                and (not is_pair(tree))
+                and (keyword_as_value not in self.multi_value_keywords)
+            )
+        else:
+            can_be_inlined = self.group_size(tree) <= self.inlining_limit
+
         if can_be_inlined:
             with self.select_inlining_strategy():
                 result = self._try_to_format_into_single_line(tree.children)

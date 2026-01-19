@@ -369,4 +369,77 @@ command_definitions = {
             "CREDITS": "pairs",
         },
     },
+    #
+    # 12) TODO
+    #
+    "inlining_heuristic_small": {
+        "inlining_heuristic": 1,
+        "front_positional_arguments": ["<movie-title>"],
+        "multi_value_keywords": ["ACTORS"],
+    },
+    "inlining_heuristic_large": {
+        "inlining_heuristic": 6,
+        "front_positional_arguments": ["<movie-title>"],
+        "multi_value_keywords": ["ACTORS"],
+    },
+    "inlining_heuristic_different_per_section": {
+        "inlining_heuristic": 3,
+        "front_positional_arguments": ["<target>"],
+        "multi_value_keywords": [
+            "HEURISTIC_1",
+            "HEURISTIC_6",
+            "HEURISTIC_COMMON",
+        ],
+        "sections": {
+            "HEURISTIC_1": {
+                "inlining_heuristic": 1,
+            },
+            "HEURISTIC_6": {
+                "inlining_heuristic": 6,
+            },
+        },
+    },
+    "inlining_heuristic_different_per_signature": {
+        "inlining_heuristic": 3,
+        "signatures": {
+            "HEURISTIC_1": {
+                "inlining_heuristic": 1,
+                "one_value_keywords": ["HEURISTIC_1"],
+                "multi_value_keywords": ["THINGS"],
+            },
+            "HEURISTIC_6": {
+                "inlining_heuristic": 6,
+                "one_value_keywords": ["HEURISTIC_6"],
+                "multi_value_keywords": ["THINGS"],
+            },
+            "HEURISTIC_COMMON": {
+                "one_value_keywords": ["HEURISTIC_COMMON"],
+                "multi_value_keywords": ["THINGS"],
+            },
+        },
+    },
+    "inlining_heuristic_complex_example": {
+        "inlining_heuristic": 3,
+        "signatures": {
+            "SIGNATURE_HEURISTIC_1": {
+                "inlining_heuristic": 1,
+                "one_value_keywords": ["SIGNATURE_HEURISTIC_1"],
+                "multi_value_keywords": ["SECTION_HEURISTIC_2", "THINGS"],
+                "sections": {
+                    "SECTION_HEURISTIC_2": {
+                        "inlining_heuristic": 2,
+                    }
+                },
+            },
+            "SIGNATURE_HEURISTIC_COMMON": {
+                "one_value_keywords": ["SIGNATURE_HEURISTIC_COMMON"],
+                "multi_value_keywords": ["SECTION_HEURISTIC_5", "THINGS"],
+                "sections": {
+                    "SECTION_HEURISTIC_5": {
+                        "inlining_heuristic": 5,
+                    }
+                },
+            },
+        },
+    },
 }

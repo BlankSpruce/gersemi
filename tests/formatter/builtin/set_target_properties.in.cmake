@@ -2,7 +2,7 @@ set_target_properties(FOO PROPERTIES BAR BAZ)
 
 set_target_properties(FOO BAR BAZ PROPERTIES FOO BAR BAZ FOO)
 
-set_target_properties(FOO BAR BAZ FOO BAR BAZ PROPERTIES FOO BAR BAZ FOO BAR BAZ FOO BAR)
+set_target_properties(FOO BAR BAZ FOO BAR BAZ PROPERTIES FOO BAR BAZ FOO)
 
 set_target_properties(FOO PROPERTIES FOO BAR # after value
 BAZ # after key

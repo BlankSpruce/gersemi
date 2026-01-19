@@ -1,3 +1,4 @@
+from typing import Optional
 from gersemi.ast_helpers import is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
@@ -5,7 +6,7 @@ from gersemi.types import Nodes
 
 
 class BaseCommandInvocationDumper(BaseDumper):
-    _inhibit_favour_expansion: bool = False
+    inlining_heuristic: Optional[int] = False
 
     def format_command_with_short_name(self, begin, arguments, end):
         with self.indented():
@@ -29,15 +30,20 @@ class BaseCommandInvocationDumper(BaseDumper):
     def group_size(self, group):
         return len(group)
 
+    @property
+    def inlining_limit(self):
+        if self.inlining_heuristic is not None:
+            return self.inlining_heuristic
+
+        if self.list_expansion == ListExpansion.FavourExpansion:
+            return 1
+
+        return 4
+
     def _inlining_condition(self, arguments):
         groups = self._split_arguments(arguments.children)
         group_sizes = list(map(self.group_size, groups))
-        if (
-            self.list_expansion == ListExpansion.FavourExpansion
-            and not self._inhibit_favour_expansion
-        ):
-            return all(size < 2 for size in group_sizes)
-        return all(size <= 4 for size in group_sizes)
+        return all(size <= self.inlining_limit for size in group_sizes)
 
     def format_command(self, tree):
         raw_identifier, arguments = tree.children
@@ -69,7 +75,7 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children
-        if len(arguments.children) <= 4:
+        if len(arguments.children) <= self.inlining_limit:
             result = self._try_to_format_into_single_line(
                 arguments.children, prefix="(", postfix=")"
             )

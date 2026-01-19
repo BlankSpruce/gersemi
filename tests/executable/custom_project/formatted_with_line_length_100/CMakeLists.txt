@@ -12,8 +12,8 @@ back_to_the_future(
     foo
     DELOREAN
     FLUX_CAPACITOR 1.21gigawatts
-    MARTY_MCFLY one two three four five six seven eight nine ten
-    EMMETT_BROWN One Two Three Four Five
+    MARTY_MCFLY one two three four
+    EMMETT_BROWN One Two Three Four
 )
 
 back_to_the_future_part_ii(
@@ -33,14 +33,7 @@ back_to_the_future_part_iii(
     DOC_BROWN "trapped in 1885"
     DELOREAN "pushed by locomotive"
     MARTY "returns to 1985 without Doc"
-    CLARA_CLAYTON
-        one
-        two
-        three__________________________________________________
-        four
-        five
-        six
-        seven
+    CLARA_CLAYTON one two three__________________________________________________ four
     FLUX_CAPACITOR
         "attached to flying steam locomotive manned by Doc who took Clara"
         "and their children for a time travel ride"

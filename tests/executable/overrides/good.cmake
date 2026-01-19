@@ -32,7 +32,14 @@ target_sources(
         FILE_SET FOO
             TYPE BAR
             BASE_DIRS BAZ QUX
-            FILES BAR BAR BAZ BAZ FOO FOO QUX
+            FILES
+                BAR
+                BAR
+                BAZ
+                BAZ
+                FOO
+                FOO
+                QUX
     PRIVATE
         FILE_SET
             long_arg____________________________________________________________

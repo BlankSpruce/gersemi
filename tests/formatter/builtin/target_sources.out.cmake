@@ -125,7 +125,7 @@ target_sources(
         FILE_SET FOO
             TYPE BAR
             BASE_DIRS BAZ QUX
-            FILES FOO BAR BAZ QUX FOO BAR BAZ
+            FILES FOO BAR BAZ QUX
     PRIVATE
         FILE_SET
             long_arg____________________________________________________________
@@ -158,7 +158,7 @@ target_sources(
             BASE_DIRS
                 BAZ # comment
                 QUX
-            FILES FOO BAR BAZ QUX FOO BAR BAZ
+            FILES FOO BAR BAZ QUX
     PRIVATE
         FILE_SET
             long_arg____________________________________________________________ # comment

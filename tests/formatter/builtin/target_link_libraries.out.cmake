@@ -22,17 +22,34 @@ target_link_libraries(
 target_link_libraries(TGT LINK_INTERFACE_LIBRARIES FOO)
 
 target_link_libraries(
-    TGT
-    LINK_INTERFACE_LIBRARIES FOO BAR BAZ QUX FOO BAR BAZ QUX
+    TGT__________________________________________________
+    LINK_INTERFACE_LIBRARIES FOO BAR BAZ QUX
 )
 
 target_link_libraries(TGT PUBLIC debug FOO optimized BAR general BAZ)
 
 target_link_libraries(
     TGT
-    PUBLIC FOO debug BAR optimized BAZ QUX general FOO
-    PRIVATE FOO debug BAR optimized BAZ QUX general FOO BAR
-    INTERFACE FOO debug BAR optimized BAZ QUX general FOO BAR
+    PUBLIC
+        FOO
+        debug BAR
+        optimized BAZ
+        QUX
+        general FOO
+    PRIVATE
+        FOO
+        debug BAR
+        optimized BAZ
+        QUX
+        general FOO
+        BAR
+    INTERFACE
+        FOO
+        debug BAR
+        optimized BAZ
+        QUX
+        general FOO
+        BAR
 )
 
 target_link_libraries(

@@ -11,7 +11,7 @@ try_compile(
     BAZ
     QUX
     FOO
-    CMAKE_FLAGS FOO BAR BAZ QUX FOO BAR
+    CMAKE_FLAGS FOO BAR BAZ QUX____________________
     OUTPUT_VARIABLE FOO
 )
 

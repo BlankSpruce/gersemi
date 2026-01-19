@@ -12,7 +12,7 @@ target_link_libraries(TGT LINK_PUBLIC FOO BAR BAZ QUX LINK_PRIVATE FOO BAR BAZ Q
 
 target_link_libraries(TGT LINK_INTERFACE_LIBRARIES FOO)
 
-target_link_libraries(TGT LINK_INTERFACE_LIBRARIES FOO BAR BAZ QUX FOO BAR BAZ QUX)
+target_link_libraries(TGT__________________________________________________ LINK_INTERFACE_LIBRARIES FOO BAR BAZ QUX)
 
 target_link_libraries(TGT PUBLIC debug FOO optimized BAR general BAZ)
 

@@ -18,8 +18,10 @@ Sections = Mapping[KeywordMatcher, Mapping[KeywordMatcher, Iterable[KeywordMatch
 
 
 def create_section_patch(section, old_class):
-    def get(key, default_value):
-        return section.get(key, default_value)
+    get = section.get
+
+    def get_or_inherit(key, default_value):
+        return get(key, getattr(old_class, key, default_value))
 
     class Impl(old_class):
         front_positional_arguments = get("front_positional_arguments", [])
@@ -30,6 +32,7 @@ def create_section_patch(section, old_class):
         sections = get("sections", {})
         keyword_formatters = get("keyword_formatters", {})
         keyword_preprocessors = get("keyword_preprocessors", {})
+        inlining_heuristic = get_or_inherit("inlining_heuristic", None)
 
     return Impl
 
@@ -39,6 +42,10 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
 
     @contextmanager
     def _update_section_characteristics(self, keyword):
+        if keyword is None:
+            yield
+            return
+
         old_class = type(self)
         try:
             self.__class__ = create_section_patch(self.sections[keyword], old_class)
@@ -68,7 +75,9 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
 
                 subarguments.extend(arg.children)
 
-            return Tree("section", subarguments)
+            result = Tree("section", subarguments)
+            result.original_tree = tree
+            return result
 
     def _is_among_section_keywords(self, section_matcher, argument):
         if section_matcher is None:
@@ -140,20 +149,33 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
             for child in preprocessed
         )
 
+    def _flat_section_size(self, tree):
+        return (
+            sum(
+                len(child.children) if child.data in ("keyword_argument,") else 1
+                for child in tree.children
+            )
+            - 1
+        )
+
     def section(self, tree):
         header, *rest = tree.children
         preprocessor = self._get_preprocessor(header)
         if preprocessor is not None:
             rest = getattr(self, preprocessor)(rest)
 
-        result = self._try_to_format_into_single_line(tree.children)
-        if result is not None:
-            return result
+        keyword_matcher = self._get_matcher(header)
+        with self._update_section_characteristics(keyword_matcher):
+            flat_size = self._flat_section_size(tree.original_tree)
+            if flat_size <= self.inlining_limit:
+                result = self._try_to_format_into_single_line(tree.children)
+                if result is not None:
+                    return result
 
-        begin = self.visit(header)
-        if len(rest) == 0:
-            return begin
+            begin = self.visit(header)
+            if len(rest) == 0:
+                return begin
 
-        with self.indented():
-            formatted_values = "\n".join(map(self.visit, rest))
-        return f"{begin}\n{formatted_values}"
+            with self.indented():
+                formatted_values = "\n".join(map(self.visit, rest))
+            return f"{begin}\n{formatted_values}"

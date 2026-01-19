@@ -20,14 +20,16 @@ add_custom_target(FOO ALL COMMAND BAR)
 add_custom_target(
     FOO
     ALL
-    COMMAND BAR BAZ FOO BAR BAZ
+    COMMAND
+        BAR BAZ FOO BAR BAZ
 )
 
 add_custom_target(
     FOO
     ALL
     BAR BAZ FOO BAR BAZ
-    COMMAND BAR BAZ FOO BAR BAZ
+    COMMAND
+        BAR BAZ FOO BAR BAZ
 )
 
 add_custom_target(

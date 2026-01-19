@@ -30,7 +30,14 @@ my_custom_function(
 my_custom_function(
     not_sorted_with_duplicates
     KIND foo
-    SOURCES a.cpp a.cpp b.cpp b.cpp c.cpp c.cpp c.cpp
+    SOURCES
+        a.cpp
+        a.cpp
+        b.cpp
+        b.cpp
+        c.cpp
+        c.cpp
+        c.cpp
     PROPERTIES foo bar baz
 )
 

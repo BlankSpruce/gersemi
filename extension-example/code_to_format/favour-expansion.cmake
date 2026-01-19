@@ -75,7 +75,8 @@ example_rate_movies(
         RATING 0.57721
     MOVIE
         "Lord of the Rings: Fellowship of the Ring"
-        ALTERNATIVE_TITLES "Fellowship of the Ring"
+        ALTERNATIVE_TITLES
+            "Fellowship of the Ring"
         RATING 1.618033
         ROUND_DOWN
     MOVIE
@@ -149,7 +150,10 @@ example_nested_sections(
             LEVEL_2___OPTION_3
             LEVEL_2___OPTION_1
             LEVEL_2___OPTION_2
-            LEVEL_2___MULTI_VALUE_KEYWORD foo bar baz
+            LEVEL_2___MULTI_VALUE_KEYWORD
+                foo
+                bar
+                baz
             LEVEL_2___ONE_VALUE_KEYWORD
                 foobar__________________________________________________
             LEVEL_2___MULTI_VALUE_KEYWORD
@@ -226,12 +230,6 @@ example_compute_value(
         2
         3
         4
-        5
-        6
-        7
-        8
-        9
-        10
 )
 
 example_compute_value(
@@ -258,10 +256,6 @@ example_compute_value(
         4
         9
         16
-        25
-        36
-        100
-        10000
 )
 
 # command with dead properties
@@ -346,4 +340,191 @@ example_movie_epilogue(
             "Juror 11"
         "Robert Webber"
             "Juror 12"
+)
+
+# inlining_heuristic examples
+inlining_heuristic_small(
+    "The Banshees of Inisherin"
+    ACTORS
+        Farrell
+        Gleeson
+        Condon
+        Keoghan
+        Lydon
+        Shortt
+)
+
+inlining_heuristic_large(
+    "The Banshees of Inisherin"
+    ACTORS
+        Farrell
+        Gleeson
+        Condon
+        Keoghan
+        Lydon
+        Shortt
+)
+
+inlining_heuristic_small(
+    "The Grand Budapest Hotel"
+    ACTORS
+        Fiennes
+        Abraham
+        Amalric
+        Brody
+        Dafoe
+        Goldblum
+        Keitel
+)
+
+inlining_heuristic_large(
+    "The Grand Budapest Hotel"
+    ACTORS
+        Fiennes
+        Abraham
+        Amalric
+        Brody
+        Dafoe
+        Goldblum
+        Keitel
+)
+
+inlining_heuristic_different_per_section(
+    foobar
+    HEURISTIC_1
+        foo
+    HEURISTIC_6
+        foo
+        bar
+        baz
+        qux
+        foo
+        bar
+    HEURISTIC_COMMON
+        foo
+        bar
+        baz
+)
+
+inlining_heuristic_different_per_section(
+    foobar
+    HEURISTIC_1
+        foo
+        bar
+    HEURISTIC_6
+        foo
+        bar
+        baz
+        qux
+        foo
+        bar
+        baz
+    HEURISTIC_COMMON
+        foo
+        bar
+        baz
+        qux
+)
+
+inlining_heuristic_different_per_signature(
+    HEURISTIC_1 foobar______________________________
+    THINGS
+        FOO
+)
+
+inlining_heuristic_different_per_signature(
+    HEURISTIC_1 foobar
+    THINGS
+        FOO
+        BAR
+)
+
+inlining_heuristic_different_per_signature(
+    HEURISTIC_6 foobar
+    THINGS
+        FOO
+        BAR
+        BAZ
+        QUX
+        FOO
+        BAR
+)
+
+inlining_heuristic_different_per_signature(
+    HEURISTIC_6 foobar
+    THINGS
+        FOO
+        BAR
+        BAZ
+        QUX
+        FOO
+        BAR
+        BAZ
+)
+
+inlining_heuristic_different_per_signature(
+    HEURISTIC_COMMON foobar
+    THINGS
+        FOO
+        BAR
+        BAZ
+)
+
+inlining_heuristic_different_per_signature(
+    HEURISTIC_COMMON foobar
+    THINGS
+        FOO
+        BAR
+        BAZ
+        QUX
+)
+
+inlining_heuristic_complex_example(
+    SIGNATURE_HEURISTIC_1 foobar
+    THINGS
+        FOO
+    SECTION_HEURISTIC_2
+        FOO
+        BAR
+)
+
+inlining_heuristic_complex_example(
+    SIGNATURE_HEURISTIC_1 foobar
+    THINGS
+        FOO
+        BAR
+    SECTION_HEURISTIC_2
+        FOO
+        BAR
+        BAZ
+)
+
+inlining_heuristic_complex_example(
+    SIGNATURE_HEURISTIC_COMMON foobar
+    THINGS
+        FOO
+        BAR
+        BAZ
+    SECTION_HEURISTIC_5
+        FOO
+        BAR
+        BAZ
+        QUX
+        FOO
+)
+
+inlining_heuristic_complex_example(
+    SIGNATURE_HEURISTIC_COMMON foobar
+    THINGS
+        FOO
+        BAR
+        BAZ
+        QUX
+    SECTION_HEURISTIC_5
+        FOO
+        BAR
+        BAZ
+        QUX
+        FOO
+        BAR
 )

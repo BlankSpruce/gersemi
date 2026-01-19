@@ -118,7 +118,7 @@ def isolate_conditions(arguments: Nodes) -> Nodes:
 
 
 class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
-    _inhibit_favour_expansion = True
+    inlining_heuristic = 4
 
     def unary_operation(self, tree):
         result = self._try_to_format_into_single_line(tree.children)

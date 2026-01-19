@@ -5,7 +5,7 @@ try_compile(FOO BAR BAZ QUX FOO)
 
 try_compile(FOO BAR BAZ QUX FOO CMAKE_FLAGS FOO BAR OUTPUT_VARIABLE FOO)
 
-try_compile(FOO BAR BAZ QUX FOO CMAKE_FLAGS FOO BAR BAZ QUX FOO BAR OUTPUT_VARIABLE FOO)
+try_compile(FOO BAR BAZ QUX FOO CMAKE_FLAGS FOO BAR BAZ QUX____________________ OUTPUT_VARIABLE FOO)
 
 try_compile(long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________ long_arg____________________________________________________________)
 

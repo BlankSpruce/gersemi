@@ -4,7 +4,7 @@ source_group(FOO BAR)
 
 source_group(FOO FILES BAR BAZ QUX REGULAR_EXPRESSION FOO)
 
-source_group(FOO FILES BAR BAZ QUX FOO BAR BAZ QUX FOO BAR BAZ REGULAR_EXPRESSION FOO)
+source_group(FOO__________________________________________________ FILES BAR BAZ QUX FOO REGULAR_EXPRESSION FOO)
 
 source_group(long_arg____________________________________________________________)
 

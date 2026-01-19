@@ -73,7 +73,12 @@ endmacro()
 # reunion in Fangorn
 the_two_towers(
     ARAGORN you have my sword
-    LEGOLAS and you have my bow
+    LEGOLAS
+        and
+        you
+        have
+        my
+        bow
     GIMLI and my axe
     GANDALF_THE_WHITE more powerful
 )

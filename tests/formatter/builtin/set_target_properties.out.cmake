@@ -9,7 +9,7 @@ set_target_properties(
     FOO
     BAR
     BAZ
-    PROPERTIES FOO BAR BAZ FOO BAR BAZ FOO BAR
+    PROPERTIES FOO BAR BAZ FOO
 )
 
 set_target_properties(

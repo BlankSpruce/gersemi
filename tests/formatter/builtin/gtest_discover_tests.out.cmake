@@ -4,12 +4,14 @@ gtest_discover_tests(FOOBAR EXTRA_ARGS arg1 arg2 arg3 arg4)
 
 gtest_discover_tests(
     FOOBAR
-    EXTRA_ARGS arg1 arg2 arg3 arg4 arg5
+    EXTRA_ARGS
+        arg1 arg2 arg3 arg4 arg5
 )
 
 gtest_discover_tests(
     FOOBAR
-    EXTRA_ARGS arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+    EXTRA_ARGS
+        arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
 )
 
 gtest_discover_tests(
@@ -24,7 +26,11 @@ gtest_discover_tests(FOOBAR PROPERTIES key1 value1 key2 value2)
 
 gtest_discover_tests(
     FOOBAR
-    PROPERTIES key1 value1 key2 value2 key3 value3 key4 value4
+    PROPERTIES
+        key1 value1
+        key2 value2
+        key3 value3
+        key4 value4
 )
 
 gtest_discover_tests(

@@ -60,5 +60,11 @@ endfunction()
 
 Lord_of_the_Rings_Return_of_the_King(
     IN_MORDOR Frodo Sam
-    IN_GONDOR Merry Pippin Aragorn Gimli Legolas Gandalf
+    IN_GONDOR
+        Merry
+        Pippin
+        Aragorn
+        Gimli
+        Legolas
+        Gandalf
 )
