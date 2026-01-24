@@ -153,7 +153,7 @@ _LEFT_PAREN = terminal("_LEFT_PARENTHESIS", r"\(")
 _RIGHT_PAREN = terminal("_RIGHT_PARENTHESIS", r"\)")
 IDENTIFIER = terminal("IDENTIFIER", r"[A-Za-z_@][A-Za-z0-9_@]*")
 NEWLINE = terminal("NEWLINE", r"\n+")
-_NEWLINE = terminal("_NEWLINE", r"\n+")
+_NEWLINE = terminal("_NEWLINE", r"[\n \t]+")
 POUND_SIGN = terminal("POUND_SIGN", r"#")
 LINE_COMMENT_CONTENT = terminal("LINE_COMMENT_CONTENT", r"[^\n]*")
 ESCAPE_SEQUENCE_R = r"\\([^A-Za-z0-9]|[nrt])"
@@ -201,8 +201,9 @@ argument = choice(
     bracket_argument, quoted_argument, unquoted_argument, complex_argument
 )
 _separation_atom = choice(
-    rule("_atom_separation_atom", bracket_comment),
-    rule("_atom_separation_atom", maybe(line_comment), _NEWLINE),
+    bracket_comment,
+    line_comment,
+    _NEWLINE,
 )
 _separation = plus("_separation", _separation_atom)
 
@@ -216,7 +217,7 @@ def _commented_argument_atom(text, offset):
         return None
 
     parser = choice(
-        rule("_atom_commented_argument_atom", bracket_comment),
+        bracket_comment,
         rule("_atom_commented_argument_atom", line_comment, NEWLINE),
     )
     return parser(text, offset)
