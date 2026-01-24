@@ -7,8 +7,8 @@ DROP = None, 0
 def terminal(name, pattern):
     prog = re.compile(pattern)
 
-    def parser(text):
-        m = prog.match(text)
+    def parser(text, offset):
+        m = prog.match(text, offset)
         if m is None or not m.group(0):
             return None
 
@@ -21,8 +21,8 @@ _SPACE = re.compile("[ \t]+")
 
 
 def maybe(original_parser):
-    def parser(text):
-        matched = original_parser(text)
+    def parser(text, offset):
+        matched = original_parser(text, offset)
         if matched is None:
             return DROP
 
@@ -61,24 +61,23 @@ def tree(name, children):
 
 
 def rule(name, *rules):
-    def parser(text):
-        result, offset = [], 0
+    def parser(text, offset):
+        result = []
         for rule_parser in rules:
-            matched = rule_parser(text[offset:])
+            matched = rule_parser(text, offset)
             if matched is None:
-                matched_space = _SPACE.match(text[offset:])
+                matched_space = _SPACE.match(text, offset)
                 if matched_space is None:
                     return None
 
-                offset += matched_space.end()
-                matched = rule_parser(text[offset:])
+                offset = matched_space.end()
+                matched = rule_parser(text, offset)
                 if matched is None:
                     return None
 
             if matched != DROP:
-                node, node_offset = matched
+                node, offset = matched
                 result.append(node)
-                offset += node_offset
 
         return tree(name, result), offset
 
@@ -86,9 +85,9 @@ def rule(name, *rules):
 
 
 def choice(*parsers):
-    def parser(text):
+    def parser(text, offset):
         for p in parsers:
-            matched = p(text)
+            matched = p(text, offset)
             if matched is not None:
                 return matched
 
@@ -98,16 +97,15 @@ def choice(*parsers):
 
 
 def star(name, original_parser):
-    def parser(text):
-        result, offset = [], 0
+    def parser(text, offset):
+        result = []
         while True:
-            matched = original_parser(text[offset:])
+            matched = original_parser(text, offset)
             if matched is None:
                 break
 
-            node, node_offset = matched
+            node, offset = matched
             result.append(node)
-            offset += node_offset
 
         return tree(name, result), offset
 
@@ -117,8 +115,8 @@ def star(name, original_parser):
 def plus(name, original_parser):
     star_ = star(name, original_parser)
 
-    def parser(text):
-        matched = star_(text)
+    def parser(text, offset):
+        matched = star_(text, offset)
         if matched is None:
             return None
 
@@ -134,8 +132,8 @@ def plus(name, original_parser):
 BRACKET_ARGUMENT_START = re.compile(r"\[(=*?)\[")
 
 
-def BRACKET_ARGUMENT(text):
-    m = BRACKET_ARGUMENT_START.match(text)
+def BRACKET_ARGUMENT(text, offset):
+    m = BRACKET_ARGUMENT_START.match(text, offset)
     if m is None:
         return None
 
@@ -145,7 +143,7 @@ def BRACKET_ARGUMENT(text):
     right_bracket = re.escape(f"]{equal_signs}]")
 
     pattern = rf"{left_bracket}[\s\S]+?{right_bracket}"
-    return terminal("BRACKET_ARGUMENT", pattern)(text)
+    return terminal("BRACKET_ARGUMENT", pattern)(text, offset)
 
 
 QUOTATION_MARK = terminal("QUOTATION_MARK", r"\"")
@@ -194,8 +192,8 @@ quoted_argument = rule("quoted_argument", QUOTED_ARGUMENT)
 bracket_argument = rule("bracket_argument", BRACKET_ARGUMENT)
 
 
-def arguments(text):
-    return arguments_impl(text)
+def arguments(text, offset):
+    return arguments_impl(text, offset)
 
 
 complex_argument = rule("complex_argument", _LEFT_PAREN, arguments, _RIGHT_PAREN)
@@ -212,8 +210,8 @@ _separation = plus("_separation", _separation_atom)
 POUND_SIGN_RE = re.compile(r"[ \t]*#")
 
 
-def _commented_argument_atom(text):
-    matched = POUND_SIGN_RE.match(text)
+def _commented_argument_atom(text, offset):
+    matched = POUND_SIGN_RE.match(text, offset)
     if matched is None:
         return None
 
@@ -221,7 +219,7 @@ def _commented_argument_atom(text):
         rule("_atom_commented_argument_atom", bracket_comment),
         rule("_atom_commented_argument_atom", line_comment, NEWLINE),
     )
-    return parser(text)
+    return parser(text, offset)
 
 
 commented_argument = rule(
@@ -235,12 +233,12 @@ command_element = rule("?command_element", command_invocation, maybe(line_commen
 
 
 def _file_element_until(until_rule):
-    def parser(text):
-        matched = until_rule(text)
+    def parser(text, offset):
+        matched = until_rule(text, offset)
         if matched is not None:
             return None
 
-        return _file_element(text)
+        return _file_element(text, offset)
 
     return parser
 
@@ -249,14 +247,14 @@ _newline = rule("_newline", NEWLINE)
 _newline_or_gap = plus("_newline_or_gap", _newline)
 
 
-def newline_or_gap(text):
-    matched = _newline_or_gap(text)
+def newline_or_gap(text, offset):
+    matched = _newline_or_gap(text, offset)
     if matched is None:
         return None
 
-    node, node_offset = matched
+    node, offset = matched
     node = flatten_helper_nodes(node)
-    return Token("NEWLINE", "".join(node.children)[:2]), node_offset
+    return Token("NEWLINE", "".join(node.children)[:2]), offset
 
 
 def _block_body_atom(until_rule):
@@ -311,12 +309,12 @@ ENDIF = element_template("ENDIF", "(?i)endif")
 
 
 def split_if_body(original_parser):
-    def parser(text):
-        matched = original_parser(text)
+    def parser(text, offset):
+        matched = original_parser(text, offset)
         if matched is None:
             return None
 
-        node, node_offset = matched
+        node, offset = matched
         if_k, body, endif = flatten_helper_nodes(node).children
 
         children = [if_k]
@@ -349,7 +347,7 @@ def split_if_body(original_parser):
 
         children.append(endif)
 
-        return tree("block", children), node_offset
+        return tree("block", children), offset
 
     return parser
 
@@ -376,5 +374,5 @@ start = rule("start", star("_atom_start", _start_atom), _file_element)
 
 
 def parse(text):
-    result, _ = start(text)
+    result, _ = start(text, 0)
     return flatten_helper_nodes(result)
