@@ -17,7 +17,7 @@ def terminal(name, pattern):
     return parser
 
 
-_SPACE = terminal("_SPACE", r"[ \t]+")
+_SPACE = re.compile("[ \t]+")
 
 
 def maybe(original_parser):
@@ -66,12 +66,11 @@ def rule(name, *rules):
         for rule_parser in rules:
             matched = rule_parser(text[offset:])
             if matched is None:
-                matched_space = _SPACE(text[offset:])
+                matched_space = _SPACE.match(text[offset:])
                 if matched_space is None:
                     return None
 
-                _, space_offset = matched_space
-                offset += space_offset
+                offset += matched_space.end()
                 matched = rule_parser(text[offset:])
                 if matched is None:
                     return None
