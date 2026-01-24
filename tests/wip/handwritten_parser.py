@@ -158,30 +158,23 @@ NEWLINE = terminal("NEWLINE", r"\n+")
 _NEWLINE = terminal("_NEWLINE", r"\n+")
 POUND_SIGN = terminal("POUND_SIGN", r"#")
 LINE_COMMENT_CONTENT = terminal("LINE_COMMENT_CONTENT", r"[^\n]*")
-ESCAPE_SEQUENCE = terminal("ESCAPE_SEQUENCE", r"\\([^A-Za-z0-9]|[nrt])")
-MAKE_STYLE_REFERENCE = terminal("MAKE_STYLE_REFERENCE", r"\$\([^\)\n\"#]+?\)")
-
-
-UNQUOTED_ELEMENT = choice(
-    MAKE_STYLE_REFERENCE,
-    ESCAPE_SEQUENCE,
-    terminal("UNQUOTED_ELEMENT", r"[^\$\s\(\)#\"\\]+"),
-    terminal("UNQUOTED_ELEMENT", r"[^\s\(\)#\"\\]"),
+ESCAPE_SEQUENCE_R = r"\\([^A-Za-z0-9]|[nrt])"
+ESCAPE_SEQUENCE = terminal("ESCAPE_SEQUENCE", ESCAPE_SEQUENCE_R)
+MAKE_STYLE_REFERENCE_R = r"\$\([^\)\n\"#]+?\)"
+MAKE_STYLE_REFERENCE = terminal("MAKE_STYLE_REFERENCE", MAKE_STYLE_REFERENCE_R)
+UNQUOTED_ARGUMENT_R = (
+    "("
+    + "|".join(
+        (
+            MAKE_STYLE_REFERENCE_R,
+            ESCAPE_SEQUENCE_R,
+            r"[^\$\s\(\)#\"\\]+",
+            r"[^\s\(\)#\"\\]",
+        )
+    )
+    + ")+"
 )
-
-
-def UNQUOTED_ARGUMENT(text):
-    matched = star("impl", UNQUOTED_ELEMENT)(text)
-    if matched is None:
-        return None
-
-    node, node_offset = matched
-    if node is not None and node_offset:
-        return Token("UNQUOTED_ARGUMENT", text[:node_offset]), node_offset
-
-    return None
-
-
+UNQUOTED_ARGUMENT = terminal("UNQUOTED_ARGUMENT", UNQUOTED_ARGUMENT_R)
 QUOTED_CONTINUATION = terminal("QUOTED_CONTINUATION", r"\\\n")
 QUOTED_ELEMENT = choice(
     terminal("QUOTED_ELEMENT", r"([^\\\"]|\n)+"),
@@ -203,7 +196,9 @@ def QUOTED_ARGUMENT(text):
 line_comment = rule("line_comment", POUND_SIGN, maybe(LINE_COMMENT_CONTENT))
 bracket_comment = rule("bracket_comment", POUND_SIGN, BRACKET_ARGUMENT)
 non_command_element = rule(
-    "non_command_element", star("_atom", bracket_comment), maybe(line_comment)
+    "non_command_element",
+    star("_atom_non_command_element", bracket_comment),
+    maybe(line_comment),
 )
 unquoted_argument = rule("unquoted_argument", UNQUOTED_ARGUMENT)
 quoted_argument = rule("quoted_argument", QUOTED_ARGUMENT)
@@ -219,14 +214,27 @@ argument = choice(
     bracket_argument, quoted_argument, unquoted_argument, complex_argument
 )
 _separation_atom = choice(
-    rule("_atom", bracket_comment),
-    rule("_atom", maybe(line_comment), _NEWLINE),
+    rule("_atom_separation_atom", bracket_comment),
+    rule("_atom_separation_atom", maybe(line_comment), _NEWLINE),
 )
 _separation = plus("_separation", _separation_atom)
-_commented_argument_atom = choice(
-    rule("_atom", bracket_comment),
-    rule("_atom", line_comment, NEWLINE),
-)
+
+
+POUND_SIGN_RE = re.compile(r"[ \t]*#")
+
+
+def _commented_argument_atom(text):
+    matched = POUND_SIGN_RE.match(text)
+    if matched is None:
+        return None
+
+    parser = choice(
+        rule("_atom_commented_argument_atom", bracket_comment),
+        rule("_atom_commented_argument_atom", line_comment, NEWLINE),
+    )
+    return parser(text)
+
+
 commented_argument = rule(
     "?commented_argument", argument, maybe(_commented_argument_atom)
 )
@@ -263,13 +271,15 @@ def newline_or_gap(text):
 
 
 def _block_body_atom(until_rule):
-    return rule("_atom", newline_or_gap, _file_element_until(until_rule))
+    return rule(
+        "_atom_block_body_atom", newline_or_gap, _file_element_until(until_rule)
+    )
 
 
 def block_body(until_rule):
     return rule(
         "block_body",
-        star("_atom", _block_body_atom(until_rule)),
+        star("_atom_block_body", _block_body_atom(until_rule)),
         newline_or_gap,
     )
 
@@ -372,8 +382,8 @@ _file_element = choice(
 )
 
 
-_start_atom = rule("_atom", _file_element, newline_or_gap)
-start = rule("start", star("_atom", _start_atom), _file_element)
+_start_atom = rule("_atom_start_atom", _file_element, newline_or_gap)
+start = rule("start", star("_atom_start", _start_atom), _file_element)
 
 
 def parse(text):
