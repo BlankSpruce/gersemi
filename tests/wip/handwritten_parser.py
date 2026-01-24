@@ -159,9 +159,7 @@ _NEWLINE = terminal("_NEWLINE", r"\n+")
 POUND_SIGN = terminal("POUND_SIGN", r"#")
 LINE_COMMENT_CONTENT = terminal("LINE_COMMENT_CONTENT", r"[^\n]*")
 ESCAPE_SEQUENCE_R = r"\\([^A-Za-z0-9]|[nrt])"
-ESCAPE_SEQUENCE = terminal("ESCAPE_SEQUENCE", ESCAPE_SEQUENCE_R)
 MAKE_STYLE_REFERENCE_R = r"\$\([^\)\n\"#]+?\)"
-MAKE_STYLE_REFERENCE = terminal("MAKE_STYLE_REFERENCE", MAKE_STYLE_REFERENCE_R)
 UNQUOTED_ARGUMENT_R = (
     "("
     + "|".join(
@@ -175,22 +173,13 @@ UNQUOTED_ARGUMENT_R = (
     + ")+"
 )
 UNQUOTED_ARGUMENT = terminal("UNQUOTED_ARGUMENT", UNQUOTED_ARGUMENT_R)
-QUOTED_CONTINUATION = terminal("QUOTED_CONTINUATION", r"\\\n")
-QUOTED_ELEMENT = choice(
-    terminal("QUOTED_ELEMENT", r"([^\\\"]|\n)+"),
-    ESCAPE_SEQUENCE,
-    QUOTED_CONTINUATION,
+QUOTED_CONTINUATION_R = r"\\\n"
+QUOTED_ARGUMENT_R = (
+    '"('
+    + "|".join((r"([^\\\"]|\n)+", ESCAPE_SEQUENCE_R, QUOTED_CONTINUATION_R))
+    + ')*"'
 )
-
-
-def QUOTED_ARGUMENT(text):
-    parser = rule("impl", QUOTATION_MARK, star("impl", QUOTED_ELEMENT), QUOTATION_MARK)
-    matched = parser(text)
-    if matched is None:
-        return None
-
-    _, node_offset = matched
-    return Token("QUOTED_ARGUMENT", text[:node_offset].lstrip()), node_offset
+QUOTED_ARGUMENT = terminal("QUOTED_ARGUMENT", QUOTED_ARGUMENT_R)
 
 
 line_comment = rule("line_comment", POUND_SIGN, maybe(LINE_COMMENT_CONTENT))
