@@ -228,8 +228,8 @@ commented_argument = rule(
 )
 _arguments_atom = choice(commented_argument, _separation)
 arguments_impl = star("arguments", _arguments_atom)
-_invocation_part = rule("_invocation_part", LEFT_PAREN, arguments, RIGHT_PAREN)
-command_invocation = rule("command_invocation", IDENTIFIER, _invocation_part)
+_invocation_part = (LEFT_PAREN, arguments, RIGHT_PAREN)
+command_invocation = rule("command_invocation", IDENTIFIER, *_invocation_part)
 command_element = rule("?command_element", command_invocation, maybe(line_comment))
 
 
@@ -273,7 +273,7 @@ def block_body(until_rule):
 
 
 def command_template(t):
-    return rule("command_invocation", t, _invocation_part)
+    return rule("command_invocation", t, *_invocation_part)
 
 
 def element_template(name, pattern):
