@@ -1,6 +1,7 @@
 # Changelog
 ## [0.25.2] 2026-01-26
 ### Fixed
+- Missing definitions of macros produced by `check_required_components`. (#97)
 - `pre-commit` hook now considers `CMakeLists.txt.in` and `*.cmake.in` files. (#98)
 - Formatting of `add_custom_command(IMPLICIT_DEPENDS)` now considers arguments as pairs.
 
