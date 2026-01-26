@@ -5,4 +5,5 @@
     args: ["-i"]
     require_serial: true
     language: python
-    types: [cmake]
+    types: [file]
+    files: (\.cmake|CMakeLists.txt)(.in)?$

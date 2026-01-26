@@ -1,4 +1,9 @@
 # Changelog
+## [0.25.2] 2026-01-26
+### Fixed
+- `pre-commit` hook now considers `CMakeLists.txt.in` and `*.cmake.in` files. (#98)
+- Formatting of `add_custom_command(IMPLICIT_DEPENDS)` now considers arguments as pairs.
+
 ## [0.25.1] 2026-01-11
 ### Changed
 - Switch from `setup.py` to `pyproject.toml`.
