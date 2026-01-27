@@ -1,5 +1,6 @@
 import pytest
 from gersemi.exceptions import (
+    GenericParsingError,
     ParsingError,
     UnbalancedBlock,
     UnbalancedBrackets,
@@ -68,6 +69,15 @@ else()
 else()
     set(SETTING "BAR")""",
             UnbalancedBlock,
+        ),
+        (
+            """function()
+function()
+set(")
+endfunction()
+endfunction()
+""",
+            GenericParsingError,
         ),
     ],
 )

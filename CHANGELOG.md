@@ -1,4 +1,8 @@
 # Changelog
+## [0.25.3] 2026-01-27
+### Fixed
+- Avoid infinite loop when parsing incorrect code with not closed quoted argument. (#99)
+
 ## [0.25.2] 2026-01-26
 ### Fixed
 - Missing definitions of macros produced by `check_required_components`. (#97)

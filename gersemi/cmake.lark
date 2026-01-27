@@ -68,8 +68,7 @@ _separation_atom    : bracket_comment
 bracket_argument : BRACKET_ARGUMENT
 BRACKET_ARGUMENT : /\[(?P<equal_signs>(=*))\[([\s\S]+?)\](?P=equal_signs)\]/
 
-quoted_argument     : QUOTED_ARGUMENT
-QUOTED_ARGUMENT     : QUOTATION_MARK QUOTED_ELEMENT* QUOTATION_MARK
+quoted_argument     : QUOTATION_MARK QUOTED_ELEMENT* QUOTATION_MARK
 QUOTED_ELEMENT      : /([^\\\"]|\n)+/
                     | ESCAPE_SEQUENCE
                     | QUOTED_CONTINUATION

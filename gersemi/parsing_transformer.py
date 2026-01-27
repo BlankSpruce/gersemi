@@ -17,5 +17,21 @@ class CleanUpNewlines(Transformer_InPlace):
         return Tree("arguments", [child for child in children if not is_newline(child)])
 
 
-class ParsingTransformer(CleanUpComplexArgument, CleanUpNewlines):
+class MergeQuotedArgumentTokens(Transformer_InPlace):
+    def quoted_argument(self, children):
+        if len(children) < 2:
+            return Tree("quoted_argument", children)
+
+        quote_begin, *_, quote_end = children
+        token = Token("QUOTED_ARGUMENT", "".join(children))
+        token.start_pos = quote_begin.start_pos
+        token.end_pos = quote_end.end_pos
+        return Tree("quoted_argument", [token])
+
+
+class ParsingTransformer(
+    CleanUpComplexArgument,
+    CleanUpNewlines,
+    MergeQuotedArgumentTokens,
+):
     pass
