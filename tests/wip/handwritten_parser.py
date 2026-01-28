@@ -234,18 +234,18 @@ def _file_element_until(until_rule):
     return parser
 
 
-_newline = rule("_newline", NEWLINE)
-_newline_or_gap = plus("_newline_or_gap", _newline)
+GAP = re.compile(r"(\n[ \t]*)(\n[ \t]*)*")
 
 
 def newline_or_gap(text, offset):
-    matched = _newline_or_gap(text, offset)
+    matched = GAP.match(text, offset)
     if matched is None:
         return None
 
-    node, offset = matched
-    node = flatten_helper_nodes(node)
-    return Token("NEWLINE", "".join(node.children)[:2]), offset
+    if matched.group(2) is None:
+        return Token("NEWLINE", "\n"), matched.end()
+
+    return Token("NEWLINE", "\n\n"), matched.end()
 
 
 def _block_body_atom(until_rule):
