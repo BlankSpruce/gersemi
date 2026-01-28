@@ -4,20 +4,17 @@ from lark import Token, Tree
 DROP = None, 0
 
 
-def terminal(name, pattern):
-    prog = re.compile(pattern)
+def terminal(name, pattern, flags="", ignore=r"[ \t]*"):
+    prog = re.compile(rf"{flags}({pattern}){ignore}")
 
     def parser(text, offset):
         m = prog.match(text, offset)
-        if m is None or not m.group(0):
+        if m is None or not m.group(1):
             return None
 
-        return Token(name, m.group(0)), m.end()
+        return Token(name, m.group(1)), m.end()
 
     return parser
-
-
-_SPACE = re.compile("[ \t]+")
 
 
 def maybe(original_parser):
@@ -66,14 +63,7 @@ def rule(name, *rules):
         for rule_parser in rules:
             matched = rule_parser(text, offset)
             if matched is None:
-                matched_space = _SPACE.match(text, offset)
-                if matched_space is None:
-                    return None
-
-                offset = matched_space.end()
-                matched = rule_parser(text, offset)
-                if matched is None:
-                    return None
+                return None
 
             if matched != DROP:
                 node, offset = matched
@@ -154,7 +144,7 @@ _RIGHT_PAREN = terminal("_RIGHT_PARENTHESIS", r"\)")
 IDENTIFIER = terminal("IDENTIFIER", r"[A-Za-z_@][A-Za-z0-9_@]*")
 NEWLINE = terminal("NEWLINE", r"\n+")
 _NEWLINE = terminal("_NEWLINE", r"[\n \t]+")
-POUND_SIGN = terminal("POUND_SIGN", r"#")
+POUND_SIGN = terminal("POUND_SIGN", r"#", ignore="")
 LINE_COMMENT_CONTENT = terminal("LINE_COMMENT_CONTENT", r"[^\n]*")
 ESCAPE_SEQUENCE_R = r"\\([^A-Za-z0-9]|[nrt])"
 MAKE_STYLE_REFERENCE_R = r"\$\([^\)\n\"#]+?\)"
@@ -277,7 +267,7 @@ def command_template(t):
 
 
 def element_template(name, pattern):
-    t = terminal(name, pattern)
+    t = terminal(name, pattern, flags="(?i)")
     return rule("command_element", command_template(t), maybe(line_comment))
 
 
@@ -285,28 +275,28 @@ def block_template(start_rule, end_rule):
     return rule("block", start_rule, block_body(end_rule), end_rule)
 
 
-FOREACH = element_template("FOREACH", "(?i)foreach")
-ENDFOREACH = element_template("ENDFOREACH", "(?i)endforeach")
+FOREACH = element_template("FOREACH", "foreach")
+ENDFOREACH = element_template("ENDFOREACH", "endforeach")
 _foreach_block = block_template(FOREACH, ENDFOREACH)
 
-FUNCTION = element_template("FUNCTION", "(?i)function")
-ENDFUNCTION = element_template("ENDFUNCTION", "(?i)endfunction")
+FUNCTION = element_template("FUNCTION", "function")
+ENDFUNCTION = element_template("ENDFUNCTION", "endfunction")
 _function_block = block_template(FUNCTION, ENDFUNCTION)
 
-MACRO = element_template("MACRO", "(?i)macro")
-ENDMACRO = element_template("ENDMACRO", "(?i)endmacro")
+MACRO = element_template("MACRO", "macro")
+ENDMACRO = element_template("ENDMACRO", "endmacro")
 _macro_block = block_template(MACRO, ENDMACRO)
 
-WHILE = element_template("WHILE", "(?i)while")
-ENDWHILE = element_template("ENDWHILE", "(?i)endwhile")
+WHILE = element_template("WHILE", "while")
+ENDWHILE = element_template("ENDWHILE", "endwhile")
 _while_block = block_template(WHILE, ENDWHILE)
 
-BLOCK = element_template("BLOCK", "(?i)block")
-ENDBLOCK = element_template("ENDBLOCK", "(?i)endblock")
+BLOCK = element_template("BLOCK", "block")
+ENDBLOCK = element_template("ENDBLOCK", "endblock")
 _block_block = block_template(BLOCK, ENDBLOCK)
 
-IF = element_template("IF", "(?i)if")
-ENDIF = element_template("ENDIF", "(?i)endif")
+IF = element_template("IF", "if")
+ENDIF = element_template("ENDIF", "endif")
 
 
 def split_if_body(original_parser):
