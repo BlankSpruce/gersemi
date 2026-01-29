@@ -1,11 +1,14 @@
+from collections import ChainMap
 import pathlib
 import shutil
 import pytest
 from gersemi.configuration import ListExpansion, OutcomeConfiguration, indent_type
+from gersemi.extensions import preprocess_definitions
 from gersemi.formatter import create_formatter
 from gersemi.noop import noop
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.runner import find_all_custom_command_definitions
+import tests.custom_commands.extension as testing_extension
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
 
@@ -53,8 +56,9 @@ def formatter_creator():
                     config.get("list_expansion", ListExpansion.FavourInlining)
                 ),
             ),
-            known_definitions=get_custom_command_definitions(
-                config.get("definitions", [])
+            known_definitions=ChainMap(
+                get_custom_command_definitions(config.get("definitions", [])),
+                preprocess_definitions(testing_extension.command_definitions),
             ),
             lines_to_format=(),
         )

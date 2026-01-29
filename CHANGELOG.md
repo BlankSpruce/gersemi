@@ -1,4 +1,8 @@
 # Changelog
+## [0.25.4] 2026-01-29
+### Fixed
+- Nested multi-value arguments are expanded with favour-expansion. (#100)
+
 ## [0.25.3] 2026-01-27
 ### Fixed
 - Avoid infinite loop when parsing incorrect code with not closed quoted argument. (#99)

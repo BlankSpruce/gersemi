@@ -128,10 +128,9 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         keyword_as_value = get_value(keyword, None)
 
         can_be_inlined = (not self.favour_expansion) or (
-            self.favour_expansion
-            and keyword is not None
+            keyword is not None
             and (not is_pair(tree))
-            and keyword_as_value not in self.multi_value_keywords
+            and (not is_multi_value_argument(tree))
         )
         if can_be_inlined:
             with self.select_inlining_strategy():

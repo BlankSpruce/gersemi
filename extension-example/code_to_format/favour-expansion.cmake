@@ -75,7 +75,8 @@ example_rate_movies(
         RATING 0.57721
     MOVIE
         "Lord of the Rings: Fellowship of the Ring"
-        ALTERNATIVE_TITLES "Fellowship of the Ring"
+        ALTERNATIVE_TITLES
+            "Fellowship of the Ring"
         RATING 1.618033
         ROUND_DOWN
     MOVIE
@@ -149,7 +150,10 @@ example_nested_sections(
             LEVEL_2___OPTION_3
             LEVEL_2___OPTION_1
             LEVEL_2___OPTION_2
-            LEVEL_2___MULTI_VALUE_KEYWORD foo bar baz
+            LEVEL_2___MULTI_VALUE_KEYWORD
+                foo
+                bar
+                baz
             LEVEL_2___ONE_VALUE_KEYWORD
                 foobar__________________________________________________
             LEVEL_2___MULTI_VALUE_KEYWORD
