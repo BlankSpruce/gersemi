@@ -74,6 +74,20 @@ def rule(name, *rules):
     return parser
 
 
+def terminal_rule(name, token_name, pattern):
+    ignore = r"[ \t]*"
+    prog = re.compile(rf"({pattern}){ignore}")
+
+    def parser(text, offset):
+        m = prog.match(text, offset)
+        if m is None or not m.group(1):
+            return None
+
+        return Tree(name, [Token(token_name, m.group(1))]), m.end()
+
+    return parser
+
+
 def choice(*parsers):
     def parser(text, offset):
         for p in parsers:
@@ -141,7 +155,8 @@ LEFT_PAREN = terminal("LEFT_PARENTHESIS", r"\(")
 RIGHT_PAREN = terminal("RIGHT_PARENTHESIS", r"\)")
 _LEFT_PAREN = terminal("_LEFT_PARENTHESIS", r"\(")
 _RIGHT_PAREN = terminal("_RIGHT_PARENTHESIS", r"\)")
-IDENTIFIER = terminal("IDENTIFIER", r"[A-Za-z_@][A-Za-z0-9_@]*")
+IDENTIFIER_R = r"[A-Za-z_@][A-Za-z0-9_@]*"
+IDENTIFIER = terminal("IDENTIFIER", IDENTIFIER_R)
 NEWLINE = terminal("NEWLINE", r"\n+")
 _NEWLINE = terminal("_NEWLINE", r"[\n \t]+")
 POUND_SIGN = terminal("POUND_SIGN", r"#", ignore="")
@@ -160,14 +175,12 @@ UNQUOTED_ARGUMENT_R = (
     )
     + ")+"
 )
-UNQUOTED_ARGUMENT = terminal("UNQUOTED_ARGUMENT", UNQUOTED_ARGUMENT_R)
 QUOTED_CONTINUATION_R = r"\\\n"
 QUOTED_ARGUMENT_R = (
     '"('
     + "|".join((r"([^\\\"]|\n)+", ESCAPE_SEQUENCE_R, QUOTED_CONTINUATION_R))
     + ')*"'
 )
-QUOTED_ARGUMENT = terminal("QUOTED_ARGUMENT", QUOTED_ARGUMENT_R)
 
 
 line_comment = rule("line_comment", POUND_SIGN, maybe(LINE_COMMENT_CONTENT))
@@ -177,8 +190,10 @@ non_command_element = rule(
     star("_atom_non_command_element", bracket_comment),
     maybe(line_comment),
 )
-unquoted_argument = rule("unquoted_argument", UNQUOTED_ARGUMENT)
-quoted_argument = rule("quoted_argument", QUOTED_ARGUMENT)
+unquoted_argument = terminal_rule(
+    "unquoted_argument", "UNQUOTED_ARGUMENT", UNQUOTED_ARGUMENT_R
+)
+quoted_argument = terminal_rule("quoted_argument", "QUOTED_ARGUMENT", QUOTED_ARGUMENT_R)
 bracket_argument = rule("bracket_argument", BRACKET_ARGUMENT)
 
 
@@ -354,7 +369,9 @@ block = choice(
     _while_block,
     _block_block,
 )
-standalone_identifier = rule("standalone_identifier", IDENTIFIER)
+standalone_identifier = terminal_rule(
+    "standalone_identifier", "IDENTIFIER", IDENTIFIER_R
+)
 _file_element = choice(
     block, command_element, standalone_identifier, non_command_element
 )
