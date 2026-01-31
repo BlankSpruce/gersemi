@@ -101,7 +101,6 @@ class KeywordSplitter:
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
-    _inhibit_favour_expansion: bool = False
     _keyword_formatters: Dict[str, str] = {}
     _canonical_name: Optional[str] = None
 
