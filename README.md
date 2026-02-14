@@ -20,8 +20,9 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}]
                [--warn-about-unknown-commands] [--disable-formatting]
-               [--extensions extension-name-or-path [extension-name-or-path ...]] [-q]
-               [--color] [-w (INTEGER | max)] [--cache] [--cache-dir CACHE_DIR]
+               [--extensions extension-name-or-path [extension-name-or-path ...]]
+               [--sort-order {case-sensitive,case-insensitive}] [-q] [--color]
+               [-w (INTEGER | max)] [--cache] [--cache-dir CACHE_DIR]
                [--config CONFIGURATION_FILE] [--warnings-as-errors]
                [--line-ranges LINE_RANGES] [--respect-ignore-files]
                [src ...]
@@ -100,6 +101,13 @@ outcome configuration:
   --extensions extension-name-or-path [extension-name-or-path ...]
                         Names of extension modules or paths to extension files. See:
                         "Extensions" section in README.
+  --sort-order {case-sensitive,case-insensitive}
+                        Defines sorting order for values after the keyword which
+                        supports sorting due to either keyword hint or extension
+                        definition. With "case-sensitive" arguments that are sorted in
+                        case sensitive order also known as code point order. With "case-
+                        insensitive" arguments are sorted in case insensitive order.
+                        [default: case-sensitive]
 
 control configuration:
   These arguments control how gersemi operates rather than how it formats source code.

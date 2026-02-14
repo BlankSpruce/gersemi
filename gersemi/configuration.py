@@ -113,6 +113,24 @@ def line_ranges(value: str) -> LineRanges:
     return tuple(map(line_range, filter(None, value.split(","))))
 
 
+class SortOrder(EnumWithMetadata):
+    CaseSensitive = dict(
+        value="case-sensitive",
+        description="""
+    With "case-sensitive" arguments that are sorted in case sensitive order
+    also known as code point order.
+        """,
+        title="Case sensitive",
+    )
+    CaseInsensitive = dict(
+        value="case-insensitive",
+        description="""
+    With "case-insensitive" arguments are sorted in case insensitive order.
+        """,
+        title="Case insensitive",
+    )
+
+
 @dataclass
 class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
     """
@@ -208,6 +226,19 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
             description=doc(
                 """
     Names of extension modules or paths to extension files. See: "Extensions" section in README.
+                """
+            ),
+        ),
+    )
+
+    sort_order: SortOrder = field(
+        default=SortOrder.CaseSensitive,
+        metadata=dict(
+            title="Sort order",
+            description=doc(
+                """
+    Defines sorting order for values after the keyword which supports sorting
+    due to either keyword hint or extension definition.
                 """
             ),
         ),

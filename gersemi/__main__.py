@@ -8,6 +8,7 @@ from gersemi.configuration import (
     ControlConfiguration,
     ListExpansion,
     OutcomeConfiguration,
+    SortOrder,
     indent_type,
     line_ranges,
     normalize_definitions,
@@ -158,7 +159,7 @@ def create_argparser():
     outcome_configuration_group.add_argument(
         "--list-expansion",
         dest="list_expansion",
-        choices=["favour-inlining", "favour-expansion"],
+        choices=[attr.value for attr in ListExpansion],
         help=f"""
     {outcome_conf_doc["list_expansion"]}
     {" ".join(attr.description for attr in ListExpansion)}
@@ -197,6 +198,16 @@ def create_argparser():
         nargs="+",
         type=str,
         help=outcome_conf_doc["extensions"],
+    )
+    outcome_configuration_group.add_argument(
+        "--sort-order",
+        dest="sort_order",
+        choices=[attr.value for attr in SortOrder],
+        help=f"""
+    {outcome_conf_doc["sort_order"]}
+    {" ".join(attr.description for attr in SortOrder)}
+    [default: {OutcomeConfiguration.sort_order.value}]
+            """,
     )
 
     control_conf_doc: dict[str, str] = {

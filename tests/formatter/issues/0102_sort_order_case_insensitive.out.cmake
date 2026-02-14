@@ -1,0 +1,9 @@
+issue0102(
+    SORT_ME
+        arrogant
+        Awesome
+        Beautiful
+        bold
+        C
+        c
+)

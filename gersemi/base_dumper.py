@@ -19,7 +19,7 @@ class WontFit(Exception):
     pass
 
 
-class BaseDumper:
+class BaseDumper:  # pylint: disable=too-many-instance-attributes
     def __init__(self, configuration: OutcomeConfiguration):
         self.width = configuration.line_length
         self.indent_type = configuration.indent
@@ -28,6 +28,7 @@ class BaseDumper:
         self.favour_expansion = False
         self.unknown_commands_used: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
         self.list_expansion = configuration.list_expansion
+        self.sort_order = configuration.sort_order
 
     def __default__(self, tree: Tree):
         return "".join(self.visit_children(tree))

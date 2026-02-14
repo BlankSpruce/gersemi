@@ -15,6 +15,21 @@
       ],
       "type": "string"
     },
+    "SortOrder": {
+      "oneOf": [
+        {
+          "description": "With \"case-sensitive\" arguments that are sorted in case sensitive order also known as code point order.",
+          "enum": ["case-sensitive"],
+          "title": "Case sensitive"
+        },
+        {
+          "description": "With \"case-insensitive\" arguments are sorted in case insensitive order.",
+          "enum": ["case-insensitive"],
+          "title": "Case insensitive"
+        }
+      ],
+      "type": "string"
+    },
     "Tabs": {
       "oneOf": [
         {
@@ -71,6 +86,12 @@
       "default": "favour-inlining",
       "description": "Switch controls how code is expanded into multiple lines when it's not possible to keep it formatted in one line.",
       "title": "List expansion"
+    },
+    "sort_order": {
+      "$ref": "#/$defs/SortOrder",
+      "default": "case-sensitive",
+      "description": "Defines sorting order for values after the keyword which supports sorting due to either keyword hint or extension definition.",
+      "title": "Sort order"
     },
     "unsafe": {
       "default": false,

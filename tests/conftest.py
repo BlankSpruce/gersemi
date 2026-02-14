@@ -2,7 +2,12 @@ from collections import ChainMap
 import pathlib
 import shutil
 import pytest
-from gersemi.configuration import ListExpansion, OutcomeConfiguration, indent_type
+from gersemi.configuration import (
+    ListExpansion,
+    OutcomeConfiguration,
+    SortOrder,
+    indent_type,
+)
 from gersemi.extensions import preprocess_definitions
 from gersemi.formatter import create_formatter
 from gersemi.noop import noop
@@ -55,6 +60,7 @@ def formatter_creator():
                 list_expansion=ListExpansion(
                     config.get("list_expansion", ListExpansion.FavourInlining)
                 ),
+                sort_order=SortOrder(config.get("sort_order", SortOrder.CaseSensitive)),
             ),
             known_definitions=ChainMap(
                 get_custom_command_definitions(config.get("definitions", [])),

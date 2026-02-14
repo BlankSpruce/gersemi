@@ -199,6 +199,7 @@ extensions:
 indent: 4
 line_length: 80
 list_expansion: favour-inlining
+sort_order: case-sensitive
 unsafe: false
 warn_about_unknown_commands: true
 """

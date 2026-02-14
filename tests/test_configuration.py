@@ -9,6 +9,7 @@ import pytest
 from gersemi.configuration import (
     ListExpansion,
     OutcomeConfiguration,
+    SortOrder,
     Tabs,
     make_configuration_file,
 )
@@ -37,6 +38,7 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         result = super().generate(schema, mode=mode)
         result["$schema"] = "https://json-schema.org/draft-07/schema"
         result["$defs"]["ListExpansion"] = get_representation(ListExpansion)
+        result["$defs"]["SortOrder"] = get_representation(SortOrder)
         result["$defs"]["Tabs"] = get_representation(Tabs)
 
         result["properties"]["indent"]["anyOf"][0]["minimum"] = 1

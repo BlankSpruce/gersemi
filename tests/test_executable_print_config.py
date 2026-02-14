@@ -226,6 +226,7 @@ def verbose_config(
     indent=4,
     line_length=80,
     list_expansion="favour-inlining",
+    sort_order="case-sensitive",
     unsafe="false",
     warn_about_unknown_commands="true",
 ):
@@ -235,6 +236,7 @@ extensions:{extensions}
 indent: {indent}
 line_length: {line_length}
 list_expansion: {list_expansion}
+sort_order: {sort_order}
 unsafe: {unsafe}
 warn_about_unknown_commands: {warn_about_unknown_commands}"""
 
