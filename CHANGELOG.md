@@ -1,4 +1,14 @@
 # Changelog
+## [0.26.0] 2026-02-14
+### Added
+- Sorting order can be changed with `--sort-order`. (#102)
+
+### Changed
+- Extensions are now required to specify signature keyword as one of: `options`, `one_value_keywords` or `multi_value_keywords`.
+
+### Fixed
+- Formatting of commands with multiple signatures when keyword defining that signature is not at the first position. (#103)
+
 ## [0.25.4] 2026-01-29
 ### Fixed
 - Nested multi-value arguments are expanded with favour-expansion. (#100)
