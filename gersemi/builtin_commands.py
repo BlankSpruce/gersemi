@@ -175,11 +175,11 @@ builtin_commands = {
                 "one_value_keywords": ["SET_DEPENDENCY_PROVIDER"],
                 "multi_value_keywords": ["SUPPORTED_METHODS"],
             },
-            "GET_MESSAGE_LOG_LEVEL": {},
+            "GET_MESSAGE_LOG_LEVEL": {"one_value_keywords": ["GET_MESSAGE_LOG_LEVEL"]},
             "EXIT": {
                 "one_value_keywords": ["EXIT"],
             },
-            "TRACE": {"options": ["ON", "OFF", "EXPAND"]},
+            "TRACE": {"options": ["TRACE", "ON", "OFF", "EXPAND"]},
         },
     },
     "cmake_minimum_required": {
@@ -189,13 +189,13 @@ builtin_commands = {
     "cmake_parse_arguments": {
         "signatures": {
             "PARSE_ARGV": {
-                "front_positional_arguments": [
-                    "<N>",
+                "one_value_keywords": ["PARSE_ARGV"],
+                "back_positional_arguments": [
                     "<prefix>",
                     "<options>",
                     "<one_value_keywords>",
                     "<multi_value_keywords>",
-                ]
+                ],
             },
             None: {
                 "front_positional_arguments": [
@@ -227,40 +227,43 @@ builtin_commands = {
                 ],
             },
             # Query
-            "HAS_ROOT_NAME": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"]
+            "HAS_ROOT_NAME": {  # <path-var> <out-var>
+                "options": ["HAS_ROOT_NAME"],
             },
-            "HAS_ROOT_DIRECTORY": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"]
+            "HAS_ROOT_DIRECTORY": {  # <path-var> <out-var>
+                "options": ["HAS_ROOT_DIRECTORY"],
             },
-            "HAS_ROOT_PATH": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"]
+            "HAS_ROOT_PATH": {  # <path-var> <out-var>
+                "options": ["HAS_ROOT_PATH"],
             },
-            "HAS_FILENAME": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
-            "HAS_EXTENSION": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"]
+            "HAS_FILENAME": {  # <path-var> <out-var
+                "options": ["HAS_FILENAME"],
             },
-            "HAS_STEM": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
-            "HAS_RELATIVE_PATH": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"]
+            "HAS_EXTENSION": {  # <path-var> <out-var>
+                "options": ["HAS_EXTENSION"],
             },
-            "HAS_PARENT_PATH": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"]
+            "HAS_STEM": {  # <path-var> <out-var
+                "options": ["HAS_STEM"],
             },
-            "IS_ABSOLUTE": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
-            "IS_RELATIVE": {"front_positional_arguments": ["<path-var>", "<out-var>"]},
-            "IS_PREFIX": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"],
+            "HAS_RELATIVE_PATH": {  # <path-var> <out-var>
+                "options": ["HAS_RELATIVE_PATH"],
+            },
+            "HAS_PARENT_PATH": {  # <path-var> <out-var>
+                "options": ["HAS_PARENT_PATH"],
+            },
+            "IS_ABSOLUTE": {  # <path-var> <out-var
+                "options": ["IS_ABSOLUTE"],
+            },
+            "IS_RELATIVE": {  # <path-var> <out-var
+                "options": ["IS_RELATIVE"],
+            },
+            "IS_PREFIX": {  # <path-var> <out-var
                 "back_positional_arguments": ["<out-var>"],
-                "options": ["NORMALIZE"],
+                "options": ["IS_PREFIX", "NORMALIZE"],
             },
             "COMPARE": {
-                "front_positional_arguments": [
-                    "<input1>",
-                    "<OP>",
-                    "<input2>",
-                    "<out-var>",
-                ]
+                "one_value_keywords": ["COMPARE", "EQUAL", "NOT_EQUAL"],
+                "back_positional_arguments": ["<out-var>"],
             },
             # Modification
             "SET": {
@@ -347,8 +350,8 @@ builtin_commands = {
                 ],
             },
             # Hashing
-            "HASH": {
-                "front_positional_arguments": ["<path-var>", "<out-var>"],
+            "HASH": {  # <path-var> <out-var>
+                "options": ["HASH"]
             },
         },
     },
@@ -412,11 +415,18 @@ builtin_commands = {
     },
     "cmake_policy": {
         "signatures": {
-            "VERSION": {"front_positional_arguments": ["<min>...<max>"]},
-            "SET": {"options": ["OLD", "NEW"]},
-            "GET": {"back_positional_arguments": ["<variable>"]},
-            "PUSH": {},
-            "POP": {},
+            "VERSION": {
+                "one_value_keywords": [
+                    "VERSION",  # <min>...<max>
+                ]
+            },
+            "SET": {"options": ["OLD", "NEW"], "one_value_keywords": ["SET"]},
+            "GET": {
+                "one_value_keywords": ["GET"],
+                "back_positional_arguments": ["<variable>"],
+            },
+            "PUSH": {"options": ["PUSH"]},
+            "POP": {"options": ["POP"]},
         },
     },
     "configure_file": {
@@ -555,6 +565,7 @@ builtin_commands = {
                 "options": ["UTC"],
             },
             "GET_RUNTIME_DEPENDENCIES": {
+                "options": ["GET_RUNTIME_DEPENDENCIES"],
                 "one_value_keywords": [
                     "RESOLVED_DEPENDENCIES_VAR",
                     "UNRESOLVED_DEPENDENCIES_VAR",
@@ -598,7 +609,7 @@ builtin_commands = {
                 "multi_value_keywords": ["FILE_PERMISSIONS"],
             },
             "CONFIGURE": {
-                "options": ["ESCAPE_QUOTES", "@ONLY"],
+                "options": ["CONFIGURE", "ESCAPE_QUOTES", "@ONLY"],
                 "one_value_keywords": ["OUTPUT", "CONTENT", "NEWLINE_STYLE"],
             },
             # Filesystem
@@ -685,6 +696,7 @@ builtin_commands = {
             },
             "CHMOD": {
                 "multi_value_keywords": [
+                    "CHMOD",
                     "PERMISSIONS",
                     "FILE_PERMISSIONS",
                     "DIRECTORY_PERMISSIONS",
@@ -692,6 +704,7 @@ builtin_commands = {
             },
             "CHMOD_RECURSE": {
                 "multi_value_keywords": [
+                    "CHMOD_RECURSE",
                     "PERMISSIONS",
                     "FILE_PERMISSIONS",
                     "DIRECTORY_PERMISSIONS",
@@ -705,11 +718,15 @@ builtin_commands = {
                     "BASE_DIRECTORY",
                 ],
             },
-            "RELATIVE_PATH": {
-                "front_positional_arguments": ["<variable>", "<directory>", "<file>"]
+            "RELATIVE_PATH": {  # <variable> <directory> <file>
+                "options": ["RELATIVE_PATH"]
             },
-            "TO_CMAKE_PATH": {"front_positional_arguments": ["<path>", "<variable>"]},
-            "TO_NATIVE_PATH": {"front_positional_arguments": ["<path>", "<variable>"]},
+            "TO_CMAKE_PATH": {  # <path> <variable>
+                "options": ["TO_CMAKE_PATH"]
+            },
+            "TO_NATIVE_PATH": {  # <path> <variable>
+                "options": ["TO_NATIVE_PATH"]
+            },
             # Transfer
             "DOWNLOAD": {
                 "options": ["SHOW_PROGRESS"],
@@ -762,7 +779,7 @@ builtin_commands = {
             },
             # Archiving
             "ARCHIVE_CREATE": {
-                "options": ["VERBOSE"],
+                "options": ["ARCHIVE_CREATE", "VERBOSE"],
                 "one_value_keywords": [
                     "OUTPUT",
                     "FORMAT",
@@ -774,14 +791,14 @@ builtin_commands = {
                 "multi_value_keywords": ["PATHS"],
             },
             "ARCHIVE_EXTRACT": {
-                "options": ["LIST_ONLY", "VERBOSE"],
+                "options": ["ARCHIVE_EXTRACT", "LIST_ONLY", "VERBOSE"],
                 "one_value_keywords": ["INPUT", "DESTINATION"],
                 "multi_value_keywords": ["PATTERNS"],
             },
-            "REMOVE": {},
-            "REMOVE_RECURSE": {},
-            "TOUCH": {},
-            "TOUCH_NOCREATE": {},
+            "REMOVE": {"options": ["REMOVE"]},
+            "REMOVE_RECURSE": {"options": ["REMOVE_RECURSE"]},
+            "TOUCH": {"options": ["TOUCH"]},
+            "TOUCH_NOCREATE": {"options": ["TOUCH_NOCREATE"]},
         },
     },
     "find_file": {
@@ -1133,32 +1150,18 @@ builtin_commands = {
                     "FIND",  # <string>
                 ],
             },
-            "REPLACE": {
-                "front_positional_arguments": [
-                    "<match_string>",
-                    "<replace_string>",
-                    "<output_variable>",
-                ]
+            "REPLACE": {  # <match_string> <replace_string> <output_variable>
+                "one_value_keywords": ["REPLACE"],
             },
             # Regular Expressions
-            _REGEX_MATCH: {
-                "front_positional_arguments": [
-                    "<regular_expression>",
-                    "<output_variable>",
-                ]
+            _REGEX_MATCH: {  # <regular_expression> <output_variable>
+                "one_value_keywords": [_REGEX_MATCH],
             },
-            _REGEX_MATCHALL: {
-                "front_positional_arguments": [
-                    "<regular_expression>",
-                    "<output_variable>",
-                ]
+            _REGEX_MATCHALL: {  # <regular_expression> <output_variable>
+                "one_value_keywords": [_REGEX_MATCHALL],
             },
-            _REGEX_REPLACE: {
-                "front_positional_arguments": [
-                    "<regular_expression>",
-                    "<replacement_expression>",
-                    "<output_variable>",
-                ]
+            _REGEX_REPLACE: {  # <regular_expression> <replacement_expression> <output_variable>
+                "one_value_keywords": [_REGEX_REPLACE],
             },
             # Manipulation
             "APPEND": {
@@ -1235,47 +1238,23 @@ builtin_commands = {
                 "one_value_keywords": [_REGEX_QUOTE],
             },
             # Comparison
-            _COMPARE_LESS: {
-                "front_positional_arguments": [
-                    "<string1>",
-                    "<string2>",
-                    "<output_variable>",
-                ]
+            _COMPARE_LESS: {  # <string1> <string2> <output_variable>
+                "options": [_COMPARE_LESS],
             },
-            _COMPARE_GREATER: {
-                "front_positional_arguments": [
-                    "<string1>",
-                    "<string2>",
-                    "<output_variable>",
-                ]
+            _COMPARE_GREATER: {  # <string1> <string2> <output_variable>
+                "options": [_COMPARE_GREATER],
             },
-            _COMPARE_EQUAL: {
-                "front_positional_arguments": [
-                    "<string1>",
-                    "<string2>",
-                    "<output_variable>",
-                ]
+            _COMPARE_EQUAL: {  # <string1> <string2> <output_variable>
+                "options": [_COMPARE_EQUAL],
             },
-            _COMPARE_NOTEQUAL: {
-                "front_positional_arguments": [
-                    "<string1>",
-                    "<string2>",
-                    "<output_variable>",
-                ]
+            _COMPARE_NOTEQUAL: {  # <string1> <string2> <output_variable>
+                "options": [_COMPARE_NOTEQUAL],
             },
-            _COMPARE_LESS_EQUAL: {
-                "front_positional_arguments": [
-                    "<string1>",
-                    "<string2>",
-                    "<output_variable>",
-                ]
+            _COMPARE_LESS_EQUAL: {  # <string1> <string2> <output_variable>
+                "options": [_COMPARE_LESS_EQUAL],
             },
-            _COMPARE_GREATER_EQUAL: {
-                "front_positional_arguments": [
-                    "<string1>",
-                    "<string2>",
-                    "<output_variable>",
-                ]
+            _COMPARE_GREATER_EQUAL: {  # <string1> <string2> <output_variable>
+                "options": [_COMPARE_GREATER_EQUAL],
             },
             # Hashing
             "MD5": {
@@ -1352,7 +1331,10 @@ builtin_commands = {
                     "MAKE_C_IDENTIFIER",  # <string>
                 ],
             },
-            "RANDOM": {"one_value_keywords": ["LENGTH", "ALPHABET", "RANDOM_SEED"]},
+            "RANDOM": {
+                "options": ["RANDOM"],
+                "one_value_keywords": ["LENGTH", "ALPHABET", "RANDOM_SEED"],
+            },
             "TIMESTAMP": {
                 "options": ["UTC"],
                 "one_value_keywords": [

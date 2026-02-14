@@ -1,10 +1,8 @@
 from contextlib import contextmanager
 from itertools import filterfalse
 from typing import Dict, List, Optional, Union
-from lark import Tree
 from gersemi.ast_helpers import is_comment, is_one_of_keywords
 from gersemi.keywords import KeywordMatcher
-from gersemi.types import Nodes
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -54,33 +52,12 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
         _, arguments = tree.children
         arguments = self._preprocess_arguments(arguments)
         arguments_only = filterfalse(is_comment, arguments.children)
-        first_argument = next(arguments_only, None)
-        matcher = self._get_signature_matcher(first_argument)
+        matcher = None
+        for argument in arguments_only:
+            matcher = self._get_signature_matcher(argument)
+            if matcher is not None:
+                break
 
         signature = self.signatures.get(matcher, None)
         with self._update_signature_characteristics(signature):
             return super().format_command(tree)
-
-    def _split_arguments(self, arguments: Nodes) -> Nodes:
-        if len(arguments) == 0:
-            return []
-
-        signature_node, *rest = arguments
-        if (
-            isinstance(signature_node, Tree)
-            and signature_node.children
-            and any(
-                is_one_of_keywords(keywords, signature_node)
-                for keywords in (
-                    self.options,
-                    self.one_value_keywords,
-                    self.multi_value_keywords,
-                )
-            )
-        ):
-            return super()._split_arguments(arguments)
-
-        return [
-            Tree("positional_arguments", [signature_node]),
-            *super()._split_arguments(rest),
-        ]

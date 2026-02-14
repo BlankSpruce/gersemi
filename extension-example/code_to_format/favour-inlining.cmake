@@ -184,14 +184,12 @@ example_show_movie_credits(
 
 # command with multiple signatures
 example_compute_value(
-    SUM
-    sum_result
+    SUM sum_result
     VALUES 1 2 3 4 5 6 7 8 9 10
 )
 
 example_compute_value(
-    PRODUCT
-    product_result
+    PRODUCT product_result
     VALUES
         1.1
         2.22
@@ -205,8 +203,7 @@ example_compute_value(
 )
 
 example_compute_value(
-    MAP
-    map_result
+    MAP map_result
     FUNCTION "square root"
     VALUES 1 4 9 16 25 36 100 10000
 )

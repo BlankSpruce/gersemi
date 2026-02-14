@@ -108,6 +108,19 @@ class Verifier:
                 with self.element(keyword):
                     self.verify_section(subsection)
 
+    def verify_that_signature_name_is_among_keywords(self, signature_name, signature):
+        if signature_name is None:
+            return
+
+        for p in PROPERTIES_WITH_KEYWORDS:
+            keywords = signature.get(p, [])
+            if signature_name in keywords:
+                return
+
+        self.fail(
+            f"{signature_name} needs to be listed in either options, one_value_keywords or multi_value_keywords"  # pylint: disable=line-too-long
+        )
+
     def verify_signatures(self, signatures):
         self.verify_is_mapping(signatures)
 
@@ -117,6 +130,9 @@ class Verifier:
 
             with self.element(signature_name):
                 self.verify_section(signature)
+                self.verify_that_signature_name_is_among_keywords(
+                    signature_name, signature
+                )
 
     def verify_command(self, name, definition):
         self.verify_identifier("command name", name)

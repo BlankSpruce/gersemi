@@ -21,8 +21,17 @@ ab_signatures = f"{ab}['signatures']"
         {"ab": {"options": ("ONE", "TWO", "THREE")}},
         {"ab": {"unsupported_entry": {}, "foobar": {}}},
         {"ab": {"unsupported_entry": {}, "options": [], "foobar": {}}},
-        {"ab": {"signatures": {"OK": {}}}},
-        {"ab": {"signatures": {"OK": {"multi_value_keywords": "VALUES"}}}},
+        {"ab": {"signatures": {"OK": {"options": ["OK"]}}}},
+        {
+            "ab": {
+                "signatures": {
+                    "OK": {
+                        "options": ["OK"],
+                        "multi_value_keywords": "VALUES",
+                    }
+                }
+            }
+        },
         {"ab": {"options": ("ONE", "22", "THREE")}},
         {"ab": {"one_value_keywords": ("ONE", "234", "THREE")}},
     ],

@@ -18,8 +18,7 @@ string(
 string(REPLACE foo bar baz input1)
 
 string(
-    REPLACE
-    long_string_________________________
+    REPLACE long_string_________________________
     long_string_________________________
     long_output_variable_________________________
     input1
@@ -33,8 +32,7 @@ string(REGEX MATCHALL regex foo bar)
 string(REGEX REPLACE regex foo bar baz)
 
 string(
-    REGEX MATCH
-    long_regex_________________________
+    REGEX MATCH long_regex_________________________
     long_output_variable_________________________
     input1
     long_input_________________________
@@ -175,11 +173,11 @@ string(
     long_argument_______________________________
 )
 
-string(<HASH> foo MD5)
+string(SHA224 foo MD5)
 
 string(
-    <HASH>
-    long_argument______________________________________________________________
+    SHA224
+        long_argument______________________________________________________________
     SHA224
 )
 

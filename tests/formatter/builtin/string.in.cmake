@@ -86,9 +86,9 @@ string(COMPARE LESS_EQUAL long_argument_______________________________ long_argu
 
 string(COMPARE GREATER_EQUAL long_argument_______________________________ long_argument_______________________________ long_argument_______________________________)
 
-string(<HASH> foo MD5)
+string(SHA224 foo MD5)
 
-string(<HASH> long_argument______________________________________________________________ SHA224)
+string(SHA224 long_argument______________________________________________________________ SHA224)
 
 string(ASCII 1 2 3 foo)
 

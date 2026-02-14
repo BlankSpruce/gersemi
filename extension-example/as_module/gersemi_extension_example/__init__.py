@@ -277,7 +277,7 @@ command_definitions = {
     },
     #
     # 9) Command can have multiple signatures which are selected
-    # through value of first argument. Example:
+    # through presence of keyword argument. Example:
     #
     #     install(TARGETS <target>... [...])
     #     install(IMPORTED_RUNTIME_ARTIFACTS <target>... [...])
@@ -295,16 +295,22 @@ command_definitions = {
     "example_compute_value": {
         "signatures": {
             "SUM": {
-                "front_positional_arguments": ["result-variable"],
+                "one_value_keywords": [
+                    "SUM",  # result-variable
+                ],
                 "multi_value_keywords": ["VALUES"],
             },
             "PRODUCT": {
-                "front_positional_arguments": ["result-variable"],
+                "one_value_keywords": [
+                    "PRODUCT",  # result-variable
+                ],
                 "multi_value_keywords": ["VALUES"],
             },
             "MAP": {
-                "front_positional_arguments": ["result-variable"],
-                "one_value_keywords": ["FUNCTION"],
+                "one_value_keywords": [
+                    "MAP",  # result-variable
+                    "FUNCTION",
+                ],
                 "multi_value_keywords": ["VALUES"],
             },
         }
@@ -317,6 +323,7 @@ command_definitions = {
         "signatures": {
             "SOME_SIGNATURE": {
                 "options": [
+                    "SOME_SIGNATURE",
                     "OPTION_KEYWORD_SIGNATURE___1",
                     "OPTION_KEYWORD_SIGNATURE___2",
                 ],

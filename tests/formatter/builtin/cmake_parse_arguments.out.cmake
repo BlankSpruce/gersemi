@@ -33,8 +33,7 @@ cmake_parse_arguments(
 )
 
 cmake_parse_arguments(
-    PARSE_ARGV
-    42
+    PARSE_ARGV 42
     FOO
     LONG_WORD________________________________________________
     BAZ
@@ -57,8 +56,7 @@ if(TRUE)
     )
 
     cmake_parse_arguments(
-        PARSE_ARGV
-        42
+        PARSE_ARGV 42
         FOO
         LONG_WORD________________________________________________
         BAZ
