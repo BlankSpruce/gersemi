@@ -1,7 +1,7 @@
 # Changelog
 ## [0.26.1] 2026-03-13
 ### Added
-- Support for new keywords in native commands available in CMake 4.2.
+- Support for new keywords in native commands available in CMake 4.3.
 
 ## [0.26.0] 2026-02-14
 ### Added
