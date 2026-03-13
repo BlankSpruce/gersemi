@@ -59,3 +59,5 @@ set_property(SOURCE shader.hlsl PROPERTY VS_SETTINGS
 
 set_property(SOURCE foo.cpp PROPERTY VS_SETTINGS
   "$<$<CONFIG:DEBUG>:SourceProperty2=SourceProperty2Value>")
+
+set_property(FILE_SET foo bar baz TARGET qux PROPERTY FOOBAR foo______________________________________________________________________)

@@ -15,6 +15,7 @@ class SetProperty(ArgumentAwareCommandInvocationDumper):
         "PROPERTY",
         "TARGET_DIRECTORIES",
         "DIRECTORY",
+        "FILE_SET",
     ]
     _keyword_formatters = {"PROPERTY": "_format_property"}
 

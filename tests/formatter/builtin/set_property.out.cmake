@@ -220,3 +220,11 @@ set_property(
     PROPERTY
         VS_SETTINGS "$<$<CONFIG:DEBUG>:SourceProperty2=SourceProperty2Value>"
 )
+
+set_property(
+    FILE_SET foo bar baz
+    TARGET qux
+    PROPERTY
+        FOOBAR
+            foo______________________________________________________________________
+)

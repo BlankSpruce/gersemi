@@ -125,6 +125,7 @@ _target_sources_FILE_SET = {
 
 _VERSION_Any = ("VERSION", AnyMatcher())
 _REGEX_QUOTE = ("REGEX", "QUOTE")
+_CUSTOM_CONTENT_Any = ("CUSTOM_CONTENT", AnyMatcher())
 
 builtin_commands = {
     #### Legend
@@ -152,6 +153,16 @@ builtin_commands = {
             "ERROR_VARIABLE",
         ],
         "multi_value_keywords": ["QUERY"],
+    },
+    "cmake_instrumentation": {
+        "_two_words_keywords": [_CUSTOM_CONTENT_Any],
+        "sections": {
+            _CUSTOM_CONTENT_Any: {
+                "one_value_keywords": ["STRING", "BOOL", "LIST", "JSON"],
+            },
+        },
+        "one_value_keywords": ["API_VERSION", "DATA_VERSION", "CALLBACK"],
+        "multi_value_keywords": ["HOOKS", "OPTIONS", _CUSTOM_CONTENT_Any],
     },
     "cmake_language": {
         "_two_words_keywords": [_EVAL_CODE],
@@ -786,6 +797,7 @@ builtin_commands = {
                     "COMPRESSION",
                     "COMPRESSION_LEVEL",
                     "MTIME",
+                    "THREADS",
                     "WORKING_DIRECTORY",
                 ],
                 "multi_value_keywords": ["PATHS"],
@@ -958,7 +970,7 @@ builtin_commands = {
             "TARGET_DIRECTORY",
             "SOURCE",
         ],
-        "multi_value_keywords": ["DIRECTORY"],
+        "multi_value_keywords": ["DIRECTORY", "FILE_SET"],
     },
     "include": {
         "front_positional_arguments": ["<file|module>"],
@@ -1356,11 +1368,13 @@ builtin_commands = {
                     "JSON",  # <out-var>
                     "ERROR_VARIABLE",
                     "GET",
+                    "GET_RAW",
                     "TYPE",
                     "MEMBER",
                     "LENGTH",
                     "REMOVE",
                     "SET",
+                    "STRING_ENCODE",
                 ],
                 "multi_value_keywords": ["EQUAL"],
             },
@@ -1584,6 +1598,44 @@ builtin_commands = {
                     },
                 },
             },
+            "PACKAGE_INFO": {
+                "sections": {
+                    _VERSION_Any: {
+                        "one_value_keywords": ["COMPAT_VERSION", "VERSION_SCHEMA"]
+                    },
+                },
+                "options": ["NO_PROJECT_METADATA", "LOWER_CASE_FILE"],
+                "one_value_keywords": [
+                    "PACKAGE_INFO",
+                    "EXPORT",
+                    "PROJECT",
+                    "APPENDIX",
+                    "LICENSE",
+                    "DEFAULT_LICENSE",
+                    "DESCRIPTION",
+                    "HOMEPAGE_URL",
+                    "CXX_MODULES_DIRECTORY",
+                ],
+                "multi_value_keywords": [
+                    _VERSION_Any,
+                    "DEFAULT_TARGETS",
+                    "DEFAULT_CONFIGURATIONS",
+                ],
+            },
+            "SBOM": {
+                "options": ["NO_PROJECT_DATA"],
+                "one_value_keywords": [
+                    "SBOM",
+                    "EXPORT",
+                    "FORMAT",
+                    "PROJECT",
+                    "VERSION",
+                    "LICENSE",
+                    "DESCRIPTION",
+                    "HOMEPAGE_URL",
+                    "PACKAGE_URL",
+                ],
+            },
         },
     },
     "fltk_wrap_ui": {
@@ -1752,12 +1804,18 @@ builtin_commands = {
                         "one_value_keywords": ["COMPAT_VERSION", "VERSION_SCHEMA"]
                     },
                 },
-                "options": ["LOWER_CASE_FILE", "EXCLUDE_FROM_ALL"],
+                "options": ["NO_PROJECT_DATA", "LOWER_CASE_FILE", "EXCLUDE_FROM_ALL"],
                 "one_value_keywords": [
                     "PACKAGE_INFO",
                     "EXPORT",
+                    "PROJECT",
                     "APPENDIX",
                     "DESTINATION",
+                    "LICENSE",
+                    "DEFAULT_LICENSE",
+                    "DESCRIPTION",
+                    "HOMEPAGE_URL",
+                    "CXX_MODULES_DIRECTORY",
                     "COMPONENT",
                 ],
                 "multi_value_keywords": [
@@ -1788,6 +1846,7 @@ builtin_commands = {
             "DESCRIPTION",
             "HOMEPAGE_URL",
             "COMPAT_VERSION",
+            "SPDX_LICENSE",
         ],
         "multi_value_keywords": ["LANGUAGES"],
     },
@@ -2501,7 +2560,13 @@ builtin_commands = {
     ### CTestCoverageCollectGCOV
     "ctest_coverage_collect_gcov": {
         "options": ["GLOB", "DELETE", "QUIET"],
-        "one_value_keywords": ["TARBALL", "SOURCE", "BUILD", "GCOV_COMMAND"],
+        "one_value_keywords": [
+            "TARBALL",
+            "TARBALL_COMPRESSION",
+            "SOURCE",
+            "BUILD",
+            "GCOV_COMMAND",
+        ],
         "multi_value_keywords": ["GCOV_OPTIONS"],
         "keyword_formatters": {"GCOV_OPTIONS": KeywordFormatter.CommandLine},
     },
