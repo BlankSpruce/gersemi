@@ -13,12 +13,6 @@ def preprocess(node):
 
 
 def test_handwritter_parser_vs_lark_based_parser(parser, case):
-    if case.name in (
-        "executable/utf-8-bom/expected",
-        "executable/utf-8-bom/given",
-    ):
-        pytest.skip("Unsupported")
-
     lhs = preprocess(parser.parse(case.content))
     rhs = preprocess(handwritten_parser(case.content))
 
