@@ -94,6 +94,9 @@ class BaseDumper:  # pylint: disable=too-many-instance-attributes
         finally:
             self.indent_level = old_indent_level
 
+    def dedented(self):
+        return self.with_indent_level(self.indent_level - 1)
+
     def indented(self):
         return self.with_indent_level(self.indent_level + 1)
 

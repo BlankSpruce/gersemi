@@ -291,52 +291,8 @@ def block_template(start, end):
     return rule("block", element_template(start), block_body(end_rule), end_rule)
 
 
-def split_if_body(original_parser):
-    def parser(text, offset):
-        matched = original_parser(text, offset)
-        if matched is None:
-            return None
-
-        node, offset = matched
-        if_k, body, endif = flatten_helper_nodes(node).children
-
-        children = [if_k]
-        new_body = []
-        for child in body.children:
-            if not isinstance(child, Tree):
-                new_body.append(child)
-                continue
-
-            if child.data != "command_invocation":
-                new_body.append(child)
-                continue
-
-            if child.children[0] not in ["elseif", "else"]:
-                new_body.append(child)
-                continue
-
-            children.append(tree("block_body", new_body[:]))
-            if child.children[0].lower() == "elseif":
-                child.children[0] = Token("ELSEIF", "elseif")
-
-            if child.children[0].lower() == "else":
-                child.children[0] = Token("ELSE", "else")
-
-            children.append(tree("command_element", [child]))
-            new_body = []
-
-        if new_body:
-            children.append(tree("block_body", new_body[:]))
-
-        children.append(endif)
-
-        return tree("block", children), offset
-
-    return parser
-
-
 block = choice(
-    split_if_body(block_template("if", "endif")),
+    block_template("if", "endif"),
     block_template("foreach", "endforeach"),
     block_template("function", "endfunction"),
     block_template("macro", "endmacro"),

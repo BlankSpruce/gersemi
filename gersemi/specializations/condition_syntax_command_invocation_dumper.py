@@ -180,8 +180,20 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
         return f"{begin}{formatted_arguments}\n{end}"
 
 
+class ConditionSyntaxCommandInvocationDumperWithDedent(
+    ConditionSyntaxCommandInvocationDumper
+):
+    def format_command(self, tree):
+        with self.dedented():
+            return super().format_command(tree)
+
+
 condition_syntax_commands = {
-    key: {"__impl": ConditionSyntaxCommandInvocationDumper}
+    key: {
+        "__impl": ConditionSyntaxCommandInvocationDumperWithDedent
+        if key in ("else", "elseif")
+        else ConditionSyntaxCommandInvocationDumper
+    }
     for key in (
         "elseif",
         "else",
