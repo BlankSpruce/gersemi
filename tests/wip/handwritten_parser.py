@@ -281,37 +281,14 @@ def command_template(t):
     return rule("command_invocation", t, *_invocation_part)
 
 
-def element_template(name, pattern):
-    t = terminal(name, pattern, flags="(?i)")
+def element_template(pattern):
+    t = terminal(pattern.upper(), pattern, flags="(?i)")
     return rule("command_element", command_template(t), maybe(line_comment))
 
 
-def block_template(start_rule, end_rule):
-    return rule("block", start_rule, block_body(end_rule), end_rule)
-
-
-FOREACH = element_template("FOREACH", "foreach")
-ENDFOREACH = element_template("ENDFOREACH", "endforeach")
-_foreach_block = block_template(FOREACH, ENDFOREACH)
-
-FUNCTION = element_template("FUNCTION", "function")
-ENDFUNCTION = element_template("ENDFUNCTION", "endfunction")
-_function_block = block_template(FUNCTION, ENDFUNCTION)
-
-MACRO = element_template("MACRO", "macro")
-ENDMACRO = element_template("ENDMACRO", "endmacro")
-_macro_block = block_template(MACRO, ENDMACRO)
-
-WHILE = element_template("WHILE", "while")
-ENDWHILE = element_template("ENDWHILE", "endwhile")
-_while_block = block_template(WHILE, ENDWHILE)
-
-BLOCK = element_template("BLOCK", "block")
-ENDBLOCK = element_template("ENDBLOCK", "endblock")
-_block_block = block_template(BLOCK, ENDBLOCK)
-
-IF = element_template("IF", "if")
-ENDIF = element_template("ENDIF", "endif")
+def block_template(start, end):
+    end_rule = element_template(end)
+    return rule("block", element_template(start), block_body(end_rule), end_rule)
 
 
 def split_if_body(original_parser):
@@ -358,16 +335,13 @@ def split_if_body(original_parser):
     return parser
 
 
-_if_block = split_if_body(rule("block", IF, block_body(ENDIF), ENDIF))
-
-
 block = choice(
-    _foreach_block,
-    _function_block,
-    _if_block,
-    _macro_block,
-    _while_block,
-    _block_block,
+    split_if_body(block_template("if", "endif")),
+    block_template("foreach", "endforeach"),
+    block_template("function", "endfunction"),
+    block_template("macro", "endmacro"),
+    block_template("while", "endwhile"),
+    block_template("block", "endblock"),
 )
 standalone_identifier = terminal_rule(
     "standalone_identifier", "IDENTIFIER", IDENTIFIER_R
