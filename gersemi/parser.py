@@ -234,4 +234,3 @@ def create_parser_with_postprocessing(bare_parser):
 
 
 BARE_PARSER = create_parser()
-PARSER = create_parser_with_postprocessing(BARE_PARSER)
