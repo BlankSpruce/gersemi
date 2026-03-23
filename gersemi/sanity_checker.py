@@ -35,6 +35,10 @@ class DropIrrelevantNodes(Transformer_InPlace):
             return Discard
         return Tree("non_command_element", children)
 
+    def custom_command(self, children):
+        _, identifier, arguments, _ = children
+        return Tree("command_invocation", [identifier.lower(), arguments])
+
     def command_element(self, children):
         if len(children) == 1:
             return children[0]

@@ -6,6 +6,7 @@ from gersemi.configuration import LineRanges, OutcomeConfiguration
 from gersemi.dumper import Dumper
 from gersemi.noop import noop
 from gersemi.parser import BARE_PARSER
+from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.postprocessor import postprocess
 from gersemi.sanity_checker import check_code_equivalence
 from gersemi.warnings import FormatterWarnings
@@ -117,11 +118,11 @@ class Formatter:
         if self.lines_to_format:
             code = add_line_range_fences(code, self.lines_to_format)
 
-        tree = BARE_PARSER.parse(code, self.known_definitions)
+        tree = HandwrittenParser().parse(code, self.known_definitions)
         original = deepcopy(tree)
         dumper = Dumper(self.configuration, self.known_definitions)
-        formatted = dumper.visit(postprocess(code, self.known_definitions, tree))
-        self.sanity_checker(BARE_PARSER, original, formatted)
+        formatted = dumper.visit(tree)
+        self.sanity_checker(HandwrittenParser(), original, formatted)
 
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:

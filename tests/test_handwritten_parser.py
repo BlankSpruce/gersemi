@@ -1,7 +1,6 @@
 from lark import Tree
 import pytest
 from tests.tests_generator import generate_input_only_tests
-from tests.wip.handwritten_parser import parse as handwritten_parser
 
 
 def preprocess(node):
@@ -13,10 +12,12 @@ def preprocess(node):
     return node
 
 
-def test_handwritter_parser_vs_lark_based_parser(parser_with_postprocessing, case):
+def test_handwritter_parser_vs_lark_based_parser(
+    parser_with_postprocessing, handwritten_parser, case
+):
     lark_based_parser = parser_with_postprocessing
     lhs = preprocess(lark_based_parser.parse(case.content))
-    rhs = preprocess(handwritten_parser(case.content))
+    rhs = preprocess(handwritten_parser.parse(case.content))
 
     assert lhs.pretty() == rhs.pretty()
     assert lhs == rhs

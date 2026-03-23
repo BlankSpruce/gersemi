@@ -1,17 +1,32 @@
 from collections import ChainMap
-from dataclasses import dataclass
 from itertools import dropwhile
 import re
 from lark import Token, Tree
 from gersemi.ast_helpers import is_newline
 from gersemi.builtin_commands import _builtin_commands
+from gersemi.exceptions import (
+    GenericParsingError,
+    ParsingError,
+    UnbalancedBlock,
+    UnbalancedBrackets,
+    UnbalancedParentheses,
+)
 
 DROP = None, 0
 
 
-@dataclass
-class ParsingContext:
-    known_definitions: dict
+def raise_exception(exception_type, text, offset):
+    line = text[:offset].count("\n")
+    if line == 0:
+        column = offset
+    else:
+        column = offset - text[:offset].rfind("\n")
+
+    spaces = " " * column
+    explanation = f"""{text.splitlines()[line]}
+{spaces}^
+"""
+    raise exception_type(explanation, line + 1, column + 1)
 
 
 def terminal(name, pattern, flags="", ignore=r"[ \t]*"):
@@ -127,6 +142,17 @@ def plus(name, original_parser):
 BRACKET_ARGUMENT_START = re.compile(r"\[(=*?)\[")
 
 
+def must_match(rule, exception_type):
+    def parser(context, text, offset):
+        matched = rule(context, text, offset)
+        if matched is None:
+            raise_exception(exception_type, text, offset)
+
+        return matched
+
+    return parser
+
+
 def BRACKET_ARGUMENT(context, text, offset):
     m = BRACKET_ARGUMENT_START.match(text, offset)
     if m is None:
@@ -138,14 +164,30 @@ def BRACKET_ARGUMENT(context, text, offset):
     right_bracket = re.escape(f"]{equal_signs}]")
 
     pattern = rf"{left_bracket}[\s\S]+?{right_bracket}"
-    return terminal("BRACKET_ARGUMENT", pattern)(context, text, offset)
+    rule_parser = must_match(terminal("BRACKET_ARGUMENT", pattern), UnbalancedBrackets)
+    return rule_parser(context, text, offset)
 
 
 QUOTATION_MARK = terminal("QUOTATION_MARK", r"\"")
 _LEFT_PAREN = terminal("_LEFT_PARENTHESIS", r"\(")
-_RIGHT_PAREN = terminal("_RIGHT_PARENTHESIS", r"\)")
+_RIGHT_PAREN = must_match(terminal("_RIGHT_PARENTHESIS", r"\)"), UnbalancedParentheses)
 IDENTIFIER_R = r"[A-Za-z_@][A-Za-z0-9_@]*"
-IDENTIFIER = terminal("IDENTIFIER", IDENTIFIER_R)
+
+
+def IDENTIFIER(context, text, offset):
+    rule_parser = terminal("IDENTIFIER", IDENTIFIER_R)
+    matched = rule_parser(context, text, offset)
+    if matched is None:
+        return None
+
+    node, _ = matched
+    for block_start, block_end in context.blocks:
+        if node.lower() in (block_start, block_end):
+            return None
+
+    return matched
+
+
 NEWLINE = terminal("NEWLINE", r"\n+")
 _NEWLINE = terminal("_NEWLINE", r"[\n \t]+")
 POUND_SIGN = terminal("POUND_SIGN", r"#", ignore="")
@@ -153,9 +195,10 @@ LINE_COMMENT_CONTENT = terminal("LINE_COMMENT_CONTENT", r"[^\n]*")
 ESCAPE_SEQUENCE_R = r"\\([^A-Za-z0-9]|[nrt])"
 MAKE_STYLE_REFERENCE_R = r"\$\([^\)\n\"#]+?\)"
 QUOTED_CONTINUATION_R = r"\\\n"
+QUOTED_ELEMENT_R = r"[^\\\"]|\n"
 QUOTED_ARGUMENT_R = (
     '"('
-    + "|".join((r"([^\\\"]|\n)+", ESCAPE_SEQUENCE_R, QUOTED_CONTINUATION_R))
+    + "|".join((QUOTED_ELEMENT_R, ESCAPE_SEQUENCE_R, QUOTED_CONTINUATION_R))
     + ')*"'
 )
 UNQUOTED_LEGACY_R = r"[^\s\(\)#\"\\]+" + QUOTED_ARGUMENT_R
@@ -184,7 +227,20 @@ non_command_element = rule(
 unquoted_argument = terminal_rule(
     "unquoted_argument", "UNQUOTED_ARGUMENT", UNQUOTED_ARGUMENT_R
 )
-quoted_argument = terminal_rule("quoted_argument", "QUOTED_ARGUMENT", QUOTED_ARGUMENT_R)
+
+
+def quoted_argument(context, text, offset):
+    rule_parser = terminal_rule("quoted_argument", "QUOTED_ARGUMENT", QUOTED_ARGUMENT_R)
+    matched = rule_parser(context, text, offset)
+    if matched is not None:
+        return matched
+
+    if QUOTATION_MARK(context, text, offset) is not None:
+        raise_exception(GenericParsingError, text, offset)
+
+    return None
+
+
 bracket_argument = rule("bracket_argument", BRACKET_ARGUMENT)
 
 
@@ -192,7 +248,21 @@ def arguments(context, text, offset):
     return arguments_impl(context, text, offset)
 
 
-complex_argument = rule("complex_argument", _LEFT_PAREN, arguments, _RIGHT_PAREN)
+def complex_argument(context, text, offset):
+    matched_left_paren = _LEFT_PAREN(context, text, offset)
+    if matched_left_paren is None:
+        return None
+
+    _, offset = matched_left_paren
+    matched_arguments = arguments(context, text, offset)
+    if matched_arguments is None:
+        return None
+
+    node, offset = matched_arguments
+    _, offset = _RIGHT_PAREN(context, text, offset)
+    return tree("complex_argument", [node]), offset
+
+
 argument = choice(
     bracket_argument, quoted_argument, unquoted_argument, complex_argument
 )
@@ -245,15 +315,14 @@ def command_invocation(identifier_rule):
             return None
 
         arguments_node, offset = matched_arguments
-        matched_right_paren = _RIGHT_PAREN(context, text, offset)
-        if matched_right_paren is None:
-            return None
-
         right_paren_offset = offset
+        matched_right_paren = _RIGHT_PAREN(context, text, offset)
         _, offset = matched_right_paren
         if identifier.lower() not in context.known_definitions:
             start = text[:command_start].rfind("\n") + 1
             indentation = text[start:command_start]
+            identifier.line = text[:command_start].count("\n") + 1
+            identifier.column = command_start - start + 1
             node = tree(
                 "custom_command",
                 [
@@ -325,17 +394,21 @@ def element_template(pattern):
 
 def block_template(start, end):
     end_rule = element_template(end)
-    return rule("block", element_template(start), block_body(end_rule), end_rule)
+    body_rule = must_match(block_body(end_rule), UnbalancedBlock)
+    end_rule = must_match(element_template(end), UnbalancedBlock)
+    return rule("block", element_template(start), body_rule, end_rule)
 
 
-block = choice(
-    block_template("if", "endif"),
-    block_template("foreach", "endforeach"),
-    block_template("function", "endfunction"),
-    block_template("macro", "endmacro"),
-    block_template("while", "endwhile"),
-    block_template("block", "endblock"),
-)
+def block(context, text, offset):
+    rule_parser = choice(
+        *[
+            block_template(block_start, block_end)
+            for block_start, block_end in context.blocks
+        ]
+    )
+    return rule_parser(context, text, offset)
+
+
 standalone_identifier = terminal_rule(
     "standalone_identifier", "IDENTIFIER", IDENTIFIER_R
 )
@@ -379,13 +452,37 @@ def postprocess(node):
     return node
 
 
-def parse(text, known_definitions=None):
-    context = ParsingContext(
-        known_definitions=(
+class HandwrittenParser:
+    def parse(self, text, known_definitions=None):
+        if known_definitions is None:
+            known_definitions = {}
+
+        self.blocks = (
+            ("if", "endif"),
+            ("foreach", "endforeach"),
+            ("function", "endfunction"),
+            ("macro", "endmacro"),
+            ("while", "endwhile"),
+            ("block", "endblock"),
+            *(
+                (name, definition["block_end"])
+                for name, definition in known_definitions.items()
+                if definition.get("block_end", None)
+            ),
+        )
+        self.known_definitions = (
             _builtin_commands
             if known_definitions is None
             else ChainMap(known_definitions, _builtin_commands)
         )
-    )
-    result, _ = start(context, text, 0)
-    return postprocess(postprocess(result))
+
+        result, offset = start(self, text, 0)
+        if offset != len(text):
+            matched_right_paren = _RIGHT_PAREN(self, text, offset)
+            if matched_right_paren is not None:
+                _, offset = matched_right_paren
+                raise_exception(UnbalancedParentheses, text, offset)
+
+            raise ParsingError
+
+        return postprocess(result)

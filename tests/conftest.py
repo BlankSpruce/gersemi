@@ -10,6 +10,7 @@ from gersemi.configuration import (
 )
 from gersemi.extensions import preprocess_definitions
 from gersemi.formatter import create_formatter
+from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.noop import noop
 from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.runner import find_all_custom_command_definitions
@@ -21,6 +22,11 @@ from tests.fixtures.cache import Cache
 @pytest.fixture(scope="module")
 def parser():
     return create_parser()
+
+
+@pytest.fixture(scope="module")
+def handwritten_parser():
+    return HandwrittenParser()
 
 
 @pytest.fixture(scope="module")
