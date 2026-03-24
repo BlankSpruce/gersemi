@@ -1,5 +1,16 @@
-from lark import Discard, Tree
-from lark.exceptions import VisitError
+from dataclasses import dataclass
+from lark import Tree
+
+
+class Discard:
+    pass
+
+
+@dataclass
+class VisitError(Exception):
+    data: str
+    node: Tree
+    exception: Exception
 
 
 class Transformer_InPlace:
