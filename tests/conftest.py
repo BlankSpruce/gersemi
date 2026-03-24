@@ -14,9 +14,9 @@ from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.noop import noop
 from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
-from tests.old_parser.parser import create_parser, create_parser_with_postprocessing
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
+from tests.old_parser.parser import create_parser, create_parser_with_postprocessing
 
 
 @pytest.fixture(scope="module")
@@ -32,7 +32,7 @@ def lark_based_parser_with_simple_grammar():
 
 
 @pytest.fixture(scope="module")
-def lark_based_parser(parser):  # pylint: disable=redefined-outer-name
+def lark_based_parser():  # pylint: disable=redefined-outer-name
     return create_parser_with_postprocessing(create_parser())
 
 

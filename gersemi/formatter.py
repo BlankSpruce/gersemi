@@ -4,8 +4,8 @@ import re
 from typing import List, Tuple
 from gersemi.configuration import LineRanges, OutcomeConfiguration
 from gersemi.dumper import Dumper
-from gersemi.noop import noop
 from gersemi.handwritten_parser import HandwrittenParser
+from gersemi.noop import noop
 from gersemi.sanity_checker import check_code_equivalence
 from gersemi.warnings import FormatterWarnings
 

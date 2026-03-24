@@ -1,5 +1,4 @@
 from lark import Tree
-import pytest
 from tests.tests_generator import generate_input_only_tests
 
 

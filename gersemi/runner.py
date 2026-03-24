@@ -29,9 +29,9 @@ from gersemi.custom_command_definition_finder import (
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import Formatter, NullFormatter, create_formatter
+from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
-from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import Error, Result, apply, get_error_message
 from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS

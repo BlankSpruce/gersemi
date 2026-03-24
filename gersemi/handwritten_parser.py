@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 from collections import ChainMap
 from itertools import dropwhile
 import re
@@ -17,10 +18,7 @@ DROP = None, 0
 
 def raise_exception(exception_type, text, offset):
     line = text[:offset].count("\n")
-    if line == 0:
-        column = offset
-    else:
-        column = offset - text[:offset].rfind("\n")
+    column = offset - (0 if line == 0 else text[:offset].rfind("\n"))
 
     spaces = " " * column
     explanation = f"""{text.splitlines()[line]}
@@ -151,9 +149,9 @@ def plus(name, original_parser):
 BRACKET_ARGUMENT_START = re.compile(r"\[(=*?)\[")
 
 
-def must_match(rule, exception_type):
+def must_match(original_parser, exception_type):
     def parser(context, text, offset):
-        matched = rule(context, text, offset)
+        matched = original_parser(context, text, offset)
         if matched is None:
             raise_exception(exception_type, text, offset)
 
@@ -328,12 +326,12 @@ def command_invocation(identifier_rule):
         matched_right_paren = _RIGHT_PAREN(context, text, offset)
         _, offset = matched_right_paren
 
-        start = text[:command_start].rfind("\n") + 1
+        node_start = text[:command_start].rfind("\n") + 1
         identifier.line = text[:command_start].count("\n") + 1
-        identifier.column = command_start - start + 1
+        identifier.column = command_start - node_start + 1
 
         if identifier.lower() not in context.known_definitions:
-            indentation = text[start:command_start]
+            indentation = text[node_start:command_start]
 
             node = tree(
                 "custom_command",
@@ -404,11 +402,11 @@ def element_template(pattern):
     return rule("command_element", command_invocation(t), maybe(line_comment))
 
 
-def block_template(start, end):
-    end_rule = element_template(end)
+def block_template(start_pattern, end_pattern):
+    end_rule = element_template(end_pattern)
     body_rule = must_match(block_body(end_rule), UnbalancedBlock)
-    end_rule = must_match(element_template(end), UnbalancedBlock)
-    return rule("block", element_template(start), body_rule, end_rule)
+    end_rule = must_match(element_template(end_pattern), UnbalancedBlock)
+    return rule("block", element_template(start_pattern), body_rule, end_rule)
 
 
 def block(context, text, offset):
@@ -465,6 +463,10 @@ def postprocess(node):
 
 
 class HandwrittenParser:
+    def __init__(self):
+        self.blocks = ()
+        self.known_definitions = {}
+
     def parse(self, text, known_definitions=None):
         if known_definitions is None:
             known_definitions = {}

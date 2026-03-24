@@ -86,12 +86,12 @@ def test_invalid_code_parsing_error(
     lark_based_parser, parser, invalid_code, expected_exception
 ):
     with pytest.raises(ParsingError) as lark_based_exc_info:
-        result = lark_based_parser.parse(invalid_code)
+        lark_based_parser.parse(invalid_code)
 
     assert lark_based_exc_info.type is expected_exception
 
     with pytest.raises(ParsingError) as handwritten_exc_info:
-        result = parser.parse(invalid_code)
+        parser.parse(invalid_code)
 
     assert handwritten_exc_info.type is expected_exception
 
