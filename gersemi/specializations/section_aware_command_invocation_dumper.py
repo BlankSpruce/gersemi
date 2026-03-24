@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from typing import Iterable, Mapping
-from lark import Tree
 from gersemi.ast_helpers import (
     is_multi_value_argument,
     is_one_of_keywords,
@@ -10,6 +9,7 @@ from gersemi.ast_helpers import (
     positional_arguments,
 )
 from gersemi.keywords import KeywordMatcher
+from gersemi.types import Tree
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )

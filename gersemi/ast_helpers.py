@@ -1,7 +1,6 @@
 from typing import Any, Callable
-from lark import Token, Tree
 from gersemi.interpreter import Interpreter
-from gersemi.types import Node
+from gersemi.types import Node, Token, Tree
 
 
 def is_tree(tree_type: str) -> Callable[[Node], bool]:

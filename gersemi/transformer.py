@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from lark import Tree
+from gersemi.types import Tree
 
 
 class Discard:

@@ -1,7 +1,6 @@
 from collections.abc import Sized
 from functools import partial
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
-from lark import Tree
 from gersemi.ast_helpers import (
     get_value,
     is_comment,
@@ -25,7 +24,7 @@ from gersemi.keyword_kind import (
     kind_to_preprocessor,
 )
 from gersemi.keywords import KeywordMatcher
-from gersemi.types import Nodes
+from gersemi.types import Nodes, Tree
 from gersemi.utils import pop_all
 
 

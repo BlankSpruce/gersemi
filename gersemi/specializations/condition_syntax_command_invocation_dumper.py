@@ -1,5 +1,4 @@
 from typing import List
-from lark import Tree
 from gersemi.ast_helpers import (
     is_comment,
     is_line_comment_in,
@@ -7,7 +6,7 @@ from gersemi.ast_helpers import (
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.configuration import Spaces
-from gersemi.types import Nodes
+from gersemi.types import Nodes, Tree
 from gersemi.utils import advance
 
 

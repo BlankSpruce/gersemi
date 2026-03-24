@@ -1,7 +1,6 @@
-from lark import Token, Tree
 from gersemi.ast_helpers import is_newline
 from gersemi.transformer import Transformer_InPlace
-from gersemi.types import Nodes
+from gersemi.types import Nodes, Token, Tree
 
 
 class CleanUpComplexArgument(Transformer_InPlace):

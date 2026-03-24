@@ -2,10 +2,9 @@ from collections import defaultdict
 from contextlib import contextmanager
 from textwrap import indent
 from typing import Dict, List, Optional, Tuple
-from lark import Tree
 from gersemi.ast_helpers import is_line_comment_in
 from gersemi.configuration import Indent, ListExpansion, OutcomeConfiguration, Tabs
-from gersemi.types import Nodes
+from gersemi.types import Nodes, Tree
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
 

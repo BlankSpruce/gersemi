@@ -10,6 +10,7 @@ from gersemi.exceptions import (
     UnbalancedParentheses,
     UnbalancedQuotes,
 )
+from gersemi.types import Tree
 from tests.old_parser.parsing_transformer import ParsingTransformer
 from tests.old_parser.postprocessor import postprocess
 
@@ -48,6 +49,7 @@ def get_lark_parser(grammar_filename, custom_blocks: Sequence[CustomBlock]) -> L
             propagate_positions=False,
             maybe_placeholders=False,
             transformer=ParsingTransformer(),
+            tree_class=Tree,
         )
 
 

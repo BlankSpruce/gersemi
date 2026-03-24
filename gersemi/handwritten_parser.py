@@ -2,7 +2,6 @@
 from collections import ChainMap
 from itertools import dropwhile
 import re
-from lark import Token, Tree
 from gersemi.ast_helpers import is_newline
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.exceptions import (
@@ -12,6 +11,7 @@ from gersemi.exceptions import (
     UnbalancedBrackets,
     UnbalancedParentheses,
 )
+from gersemi.types import Token, Tree
 
 DROP = None, 0
 
@@ -189,7 +189,7 @@ def IDENTIFIER(context, text, offset):
 
     node, _ = matched
     for block_start, block_end in context.blocks:
-        if node.lower() in (block_start, block_end):
+        if node.value.lower() in (block_start, block_end):
             return None
 
     return matched
@@ -330,7 +330,7 @@ def command_invocation(identifier_rule):
         identifier.line = text[:command_start].count("\n") + 1
         identifier.column = command_start - node_start + 1
 
-        if identifier.lower() not in context.known_definitions:
+        if identifier.value.lower() not in context.known_definitions:
             indentation = text[node_start:command_start]
 
             node = tree(

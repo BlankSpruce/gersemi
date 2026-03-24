@@ -1,7 +1,6 @@
 from collections import ChainMap
 from itertools import dropwhile
 from typing import List
-from lark import Token, Tree
 from gersemi.ast_helpers import (
     is_commented_argument,
     is_newline,
@@ -10,7 +9,7 @@ from gersemi.ast_helpers import (
 )
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.transformer import Discard, Transformer_InPlace
-from gersemi.types import Nodes
+from gersemi.types import Nodes, Token, Tree
 
 
 class PostProcessorStageOne(Transformer_InPlace):
@@ -87,7 +86,7 @@ class PostProcessorStageOne(Transformer_InPlace):
     def _join_tokens(self, lhs, rhs):
         return Token(
             lhs.children[0].type,
-            "".join(lhs.children) + "".join(rhs.children),
+            "".join(map(str, lhs.children)) + "".join(map(str, rhs.children)),
             start_pos=lhs.children[0].start_pos,
             end_pos=rhs.children[-1].end_pos,
         )
