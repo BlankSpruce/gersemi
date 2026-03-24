@@ -10,8 +10,8 @@ from gersemi.exceptions import (
     UnbalancedParentheses,
     UnbalancedQuotes,
 )
-from gersemi.parsing_transformer import ParsingTransformer
-from gersemi.postprocessor import postprocess
+from tests.old_parser.parsing_transformer import ParsingTransformer
+from tests.old_parser.postprocessor import postprocess
 
 
 @dataclass

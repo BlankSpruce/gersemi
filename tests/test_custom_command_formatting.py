@@ -15,7 +15,6 @@ def create_dumper(definitions):
 
 
 def test_custom_command_without_keyworded_arguments_formatting(
-    parser_with_postprocessing,
     parser,
 ):
     given = """function(some_custom_command_without_keyworded_arguments only positional arguments)
@@ -49,14 +48,13 @@ some_custom_command_without_keyworded_arguments(
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
-    parsed_again = parser_with_postprocessing.parse(given, definitions)
+    parsed_again = parser.parse(given, definitions)
     formatted = dumper.visit(parsed_again)
 
     assert formatted == expected
 
 
 def test_custom_command_without_keyworded_arguments_with_disabled_reformatting(
-    parser_with_postprocessing,
     parser,
 ):
     given = """function(some_custom_command_without_keyworded_arguments only positional arguments)
@@ -88,7 +86,7 @@ some_custom_command_without_keyworded_arguments(long____________________________
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
-    parsed_again = parser_with_postprocessing.parse(given, definitions)
+    parsed_again = parser.parse(given, definitions)
     formatted = dumper.visit(parsed_again)
 
     assert formatted == expected
@@ -106,9 +104,7 @@ endfunction()
 """,
     ],
 )
-def test_can_deal_with_empty_body_in_custom_command_definition(
-    parser_with_postprocessing, parser, given
-):
+def test_can_deal_with_empty_body_in_custom_command_definition(parser, given):
     expected = """function(
     some_custom_command_without_keyworded_arguments
     only
@@ -122,7 +118,7 @@ endfunction()
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
-    parsed_again = parser_with_postprocessing.parse(given, definitions)
+    parsed_again = parser.parse(given, definitions)
     formatted = dumper.visit(parsed_again)
 
     assert formatted == expected

@@ -12,33 +12,28 @@ from gersemi.extensions import preprocess_definitions
 from gersemi.formatter import create_formatter
 from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.noop import noop
-from gersemi.parser import create_parser, create_parser_with_postprocessing
 from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
+from tests.old_parser.parser import create_parser, create_parser_with_postprocessing
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
 
 
 @pytest.fixture(scope="module")
 def parser():
-    return create_parser()
-
-
-@pytest.fixture(scope="module")
-def handwritten_parser():
     return HandwrittenParser()
 
 
 @pytest.fixture(scope="module")
-def parser_with_simple_grammar():
+def lark_based_parser_with_simple_grammar():
     this_file_dir = pathlib.Path(__file__).resolve().parent
     grammar = this_file_dir / "simple_cmake.lark"
     return create_parser(grammar)
 
 
 @pytest.fixture(scope="module")
-def parser_with_postprocessing(parser):  # pylint: disable=redefined-outer-name
-    return create_parser_with_postprocessing(parser)
+def lark_based_parser(parser):  # pylint: disable=redefined-outer-name
+    return create_parser_with_postprocessing(create_parser())
 
 
 def get_custom_command_definitions(configuration_definitions):

@@ -31,7 +31,7 @@ from gersemi.formatted_file import FormattedFile
 from gersemi.formatter import Formatter, NullFormatter, create_formatter
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
-from gersemi.parser import BARE_PARSER as parser
+from gersemi.handwritten_parser import HandwrittenParser
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import Error, Result, apply, get_error_message
 from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
@@ -134,7 +134,7 @@ def find_custom_command_definitions_in_file_impl(filepath: Path) -> Dict[str, Ke
     if not has_custom_command_definition(code):
         return {}
 
-    parse_tree = parser.parse(code)
+    parse_tree = HandwrittenParser().parse(code)
     return find_custom_command_definitions(parse_tree, filepath)
 
 

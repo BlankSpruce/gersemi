@@ -189,7 +189,7 @@ class CMakeInterpreter(Interpreter):
         ][:1]
 
     def command_invocation(self, tree):
-        identifier, _, arguments, _ = tree.children
+        identifier, arguments = tree.children
         command_interpreters = {
             "cmake_parse_arguments": self._cmake_parse_arguments,
             "function": self._new_command,

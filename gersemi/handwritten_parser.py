@@ -29,6 +29,15 @@ def raise_exception(exception_type, text, offset):
     raise exception_type(explanation, line + 1, column + 1)
 
 
+def token(name, content, text, offset):
+    return Token(
+        name,
+        content,
+        line=text[:offset].count("\n") + 1,
+        column=offset - text[:offset].rfind("\n"),
+    )
+
+
 def terminal(name, pattern, flags="", ignore=r"[ \t]*"):
     prog = re.compile(rf"{flags}({pattern}){ignore}")
 
@@ -37,7 +46,7 @@ def terminal(name, pattern, flags="", ignore=r"[ \t]*"):
         if m is None or not m.group(1):
             return None
 
-        return Token(name, m.group(1)), m.end()
+        return token(name, m.group(1), text, offset), m.end()
 
     return parser
 
@@ -89,7 +98,7 @@ def terminal_rule(name, token_name, pattern):
         if m is None or not m.group(1):
             return None
 
-        return Tree(name, [Token(token_name, m.group(1))]), m.end()
+        return Tree(name, [token(token_name, m.group(1), text, offset)]), m.end()
 
     return parser
 
@@ -318,11 +327,14 @@ def command_invocation(identifier_rule):
         right_paren_offset = offset
         matched_right_paren = _RIGHT_PAREN(context, text, offset)
         _, offset = matched_right_paren
+
+        start = text[:command_start].rfind("\n") + 1
+        identifier.line = text[:command_start].count("\n") + 1
+        identifier.column = command_start - start + 1
+
         if identifier.lower() not in context.known_definitions:
-            start = text[:command_start].rfind("\n") + 1
             indentation = text[start:command_start]
-            identifier.line = text[:command_start].count("\n") + 1
-            identifier.column = command_start - start + 1
+
             node = tree(
                 "custom_command",
                 [
@@ -368,9 +380,9 @@ def newline_or_gap(context, text, offset):
         return None
 
     if matched.group(2) is None:
-        return Token("NEWLINE", "\n"), matched.end()
+        return token("NEWLINE", "\n", text, offset), matched.end()
 
-    return Token("NEWLINE", "\n\n"), matched.end()
+    return token("NEWLINE", "\n\n", text, offset), matched.end()
 
 
 def _block_body_atom(until_rule):
