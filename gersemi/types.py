@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Union
-import lark
+from typing import List, Optional, Union
 
 
 @dataclass
@@ -12,7 +11,26 @@ class Tree:
         return hash((self.data, tuple(self.children)))
 
 
-Token = lark.Token
+@dataclass
+class Token:
+    type: str
+    value: str
+    line: Optional[int] = None
+    column: Optional[int] = None
+    start_pos: Optional[int] = None
+    end_pos: Optional[int] = None
+
+    def __eq__(self, other):
+        if isinstance(other, Token):
+            return self.type == other.type and self.value == other.value
+
+        return self.value == other
+
+    def __str__(self):
+        return self.value
+
+    def __hash__(self):
+        return hash(self.value)
 
 
 Node = Union[Token, Tree]

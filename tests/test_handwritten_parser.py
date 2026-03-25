@@ -1,8 +1,9 @@
+from gersemi.types import Token
 from tests.tests_generator import generate_input_only_tests
 
 
 def preprocess(node):
-    if isinstance(node, str):
+    if isinstance(node, (str, Token)):
         node_type = getattr(node, "type", "ANONYMOUS")
         return f"{str(node_type)} {repr(str(node))}"
 

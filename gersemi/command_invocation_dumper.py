@@ -51,7 +51,7 @@ class CommandInvocationDumper(
 
     def command_invocation(self, tree):
         command_name, _ = tree.children
-        patch = self._get_patch(command_name)
+        patch = self._get_patch(str(command_name))
         if patch is None:
             return super().format_command(tree)
         with self.patched(patch):

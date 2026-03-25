@@ -42,7 +42,7 @@ class DropIrrelevantElements(Transformer_InPlace):
 
     def line_comment(self, children):
         if len(children) > 1:
-            comment = children[1].strip()
+            comment = str(children[1]).strip()
             if comment == IGNORE:
                 return IgnoreThisDefinition()
 
@@ -75,7 +75,7 @@ class CMakeInterpreter(Interpreter):
     def _set(self, arguments):
         name, *values = self.visit_children(arguments)
         self.stack[name] = [
-            item for value in values for item in self._eval_variables(value)
+            item for value in values for item in self._eval_variables(str(value))
         ]
 
     def _new_command(self, arguments):
@@ -94,7 +94,7 @@ class CMakeInterpreter(Interpreter):
             keywords = arguments.children[1:4]
 
         options, one_value_keywords, multi_value_keywords = [
-            self._eval_variables(self.visit(item)) for item in keywords
+            self._eval_variables(str(self.visit(item))) for item in keywords
         ]
         return Keywords(options, one_value_keywords, multi_value_keywords)
 
@@ -112,13 +112,13 @@ class CMakeInterpreter(Interpreter):
         return False
 
     def _add_command(self, name, arguments, block_end):
-        key = name.lower()
+        key = str(name).lower()
         if key not in self.found_commands:
             self.found_commands[key] = []
 
         self.found_commands[key].append(
             (
-                (name, arguments, block_end),
+                (str(name), arguments, block_end),
                 f"{self.filepath}:{name.line}:{name.column}",
             )
         )
@@ -198,7 +198,7 @@ class CMakeInterpreter(Interpreter):
         return command_interpreters.get(identifier, lambda *args: None)(arguments)
 
     def _join(self, tree):
-        return "".join(self.visit_children(tree))
+        return "".join(map(str, self.visit_children(tree)))
 
     def complex_argument(self, tree):
         return f"({self.visit_children(tree)})"

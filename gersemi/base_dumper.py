@@ -38,7 +38,7 @@ class BaseDumper:  # pylint: disable=too-many-instance-attributes
 
     def visit_children(self, tree):
         yield from (
-            self.visit(child) if isinstance(child, Tree) else child
+            self.visit(child) if isinstance(child, Tree) else str(child)
             for child in tree.children
         )
 
@@ -58,7 +58,7 @@ class BaseDumper:  # pylint: disable=too-many-instance-attributes
 
                 result = self.visit(c)
             else:
-                result = c
+                result = str(c)
 
             if "\n" in result:
                 raise WontFit()
@@ -121,6 +121,7 @@ class BaseDumper:  # pylint: disable=too-many-instance-attributes
             self.favour_expansion = old
 
     def format_command_name(self, identifier):
+        identifier = str(identifier)
         try:
             canonical_name = self._canonical_name
         except AttributeError:
