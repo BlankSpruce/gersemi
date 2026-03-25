@@ -1,5 +1,6 @@
 # pylint: disable=unused-argument
 from collections import ChainMap
+from functools import lru_cache
 from itertools import dropwhile
 import re
 from gersemi.ast_helpers import is_newline
@@ -402,6 +403,7 @@ def element_template(pattern):
     return rule("command_element", command_invocation(t), maybe(line_comment))
 
 
+@lru_cache(maxsize=None)
 def block_template(start_pattern, end_pattern):
     end_rule = element_template(end_pattern)
     body_rule = must_match(block_body(end_rule), UnbalancedBlock)
@@ -419,10 +421,6 @@ standalone_identifier = terminal_rule(
 _file_element = choice(
     block, command_element, standalone_identifier, non_command_element
 )
-
-
-_start_atom = rule("_atom_start_atom", _file_element, newline_or_gap)
-start = rule("start", star("_atom_start", _start_atom), _file_element)
 
 
 def _drop_edge_empty_lines(children):
@@ -461,6 +459,24 @@ class HandwrittenParser:
         self.blocks = ()
         self.known_definitions = {}
 
+    def start(self, text, offset):
+        result = []
+        while True:
+            matched_file_element = _file_element(self, text, offset)
+            if matched_file_element is None:
+                break
+
+            node, offset = matched_file_element
+            result.append(node)
+            matched_newline_or_gap = newline_or_gap(self, text, offset)
+            if matched_newline_or_gap is None:
+                return tree("start", result), offset
+
+            node, offset = matched_newline_or_gap
+            result.append(node)
+
+        return tree("start", []), offset
+
     def parse(self, text, known_definitions=None):
         if known_definitions is None:
             known_definitions = {}
@@ -490,7 +506,7 @@ class HandwrittenParser:
             else ChainMap(known_definitions, _builtin_commands)
         )
 
-        result, offset = start(self, text, 0)
+        result, offset = self.start(text, 0)
         if offset != len(text):
             matched_right_paren = _RIGHT_PAREN(self, text, offset)
             if matched_right_paren is not None:
