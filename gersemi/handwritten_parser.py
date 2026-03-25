@@ -235,11 +235,13 @@ non_command_element = rule(
 unquoted_argument = terminal_rule(
     "unquoted_argument", "UNQUOTED_ARGUMENT", UNQUOTED_ARGUMENT_R
 )
+quoted_argument_impl = terminal_rule(
+    "quoted_argument", "QUOTED_ARGUMENT", QUOTED_ARGUMENT_R
+)
 
 
 def quoted_argument(context, text, offset):
-    rule_parser = terminal_rule("quoted_argument", "QUOTED_ARGUMENT", QUOTED_ARGUMENT_R)
-    matched = rule_parser(context, text, offset)
+    matched = quoted_argument_impl(context, text, offset)
     if matched is not None:
         return matched
 
