@@ -2,7 +2,6 @@ import argparse
 from dataclasses import fields
 import pathlib
 import sys
-from lark import __version__ as lark_version
 from gersemi.__version__ import __title__, __version__
 from gersemi.configuration import (
     ControlConfiguration,
@@ -36,7 +35,6 @@ class ShowVersion(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         frozen_suffix = " (frozen)" if FROZEN else ""
         print(f"{__title__} {__version__}{frozen_suffix}")
-        print(f"lark {lark_version}")
         print(f"colorama {colorama_version}")
         print(f"Python {sys.version}")
         sys.exit(SUCCESS)

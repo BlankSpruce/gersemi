@@ -13,7 +13,6 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "ignore-python>=0.3,<0.4",
-    "lark>=1.0",
     "platformdirs",
     "pyyaml>=5,<7",
 ]
