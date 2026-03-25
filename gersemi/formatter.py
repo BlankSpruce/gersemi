@@ -103,12 +103,10 @@ class Formatter:
     def __init__(
         self,
         configuration: OutcomeConfiguration,
-        sanity_checker,
         known_definitions,
         lines_to_format: LineRanges,
     ):
         self.configuration = configuration
-        self.sanity_checker = sanity_checker
         self.known_definitions = known_definitions
         self.lines_to_format = lines_to_format
 
@@ -118,10 +116,13 @@ class Formatter:
 
         parser = HandwrittenParser()
         tree = parser.parse(code, self.known_definitions)
-        original = deepcopy(tree)
+        if not self.configuration.unsafe:
+            original = deepcopy(tree)
+
         dumper = Dumper(self.configuration, self.known_definitions)
         formatted = dumper.visit(tree)
-        self.sanity_checker(parser, original, formatted)
+        if not self.configuration.unsafe:
+            check_code_equivalence(parser, original, formatted)
 
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:
@@ -140,10 +141,4 @@ def create_formatter(
     known_definitions,
     lines_to_format,
 ):
-    sanity_checker = check_code_equivalence if not configuration.unsafe else noop
-    return Formatter(
-        configuration,
-        sanity_checker,
-        known_definitions,
-        lines_to_format,
-    )
+    return Formatter(configuration, known_definitions, lines_to_format)
