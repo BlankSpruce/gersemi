@@ -18,8 +18,8 @@ DROP = None, 0
 
 
 def raise_exception(exception_type, text, offset):
-    line = text[:offset].count("\n")
-    column = offset - (0 if line == 0 else text[:offset].rfind("\n"))
+    line = str.count(text, "\n", 0, offset)
+    column = offset - (0 if line == 0 else str.rfind(text, "\n", 0, offset))
 
     spaces = " " * column
     explanation = f"""{text.splitlines()[line]}
@@ -32,8 +32,8 @@ def token(name, content, text, offset):
     return Token(
         name,
         content,
-        line=text[:offset].count("\n") + 1,
-        column=offset - text[:offset].rfind("\n"),
+        line=str.count(text, "\n", 0, offset) + 1,
+        column=offset - str.rfind(text, "\n", 0, offset),
     )
 
 
@@ -330,10 +330,7 @@ def command_invocation(identifier_rule):
         matched_right_paren = _RIGHT_PAREN(context, text, offset)
         _, offset = matched_right_paren
 
-        node_start = text[:command_start].rfind("\n") + 1
-        identifier.line = text[:command_start].count("\n") + 1
-        identifier.column = command_start - node_start + 1
-
+        node_start = str.rfind(text, "\n", 0, command_start) + 1
         if identifier.value.lower() not in context.known_definitions:
             indentation = text[node_start:command_start]
 
