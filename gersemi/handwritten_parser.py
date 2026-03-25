@@ -37,6 +37,7 @@ def token(name, content, text, offset):
     )
 
 
+@lru_cache(maxsize=None)
 def terminal(name, pattern, flags="", ignore=r"[ \t]*"):
     prog = re.compile(rf"{flags}({pattern}){ignore}")
 
