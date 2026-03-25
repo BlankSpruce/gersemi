@@ -162,10 +162,10 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
     )
 
     unsafe: bool = field(
-        default=False,
+        default=True,
         metadata=dict(
             title="Unsafe",
-            description="Skip default sanity checks.",
+            description="Enable sanity checks.",
         ),
     )
 

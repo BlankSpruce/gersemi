@@ -94,8 +94,8 @@
       "title": "Sort order"
     },
     "unsafe": {
-      "default": false,
-      "description": "Skip default sanity checks.",
+      "default": true,
+      "description": "Enable sanity checks.",
       "title": "Unsafe",
       "type": "boolean"
     },

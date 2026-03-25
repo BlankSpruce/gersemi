@@ -139,11 +139,16 @@ def create_argparser():
         help=f"{outcome_conf_doc['indent']} [default: {repr(OutcomeConfiguration.indent)}]",
     )
     outcome_configuration_group.add_argument(
+        "--safe",
         "--unsafe",
         dest="unsafe",
-        action="store_true",
+        action=toggle_action(lambda s: s == "--safe"),
+        nargs=0,
         default=None,
-        help=outcome_conf_doc["unsafe"],
+        help=f"""
+    {outcome_conf_doc["unsafe"]}
+    [default: skip sanity checks]
+            """,
     )
     outcome_configuration_group.add_argument(
         "--definitions",

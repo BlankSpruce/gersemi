@@ -90,7 +90,7 @@ class TestPrintConfigMinimalWithConfigurationFile:
             where=self.target,
             line_length=80,
             indent=4,
-            unsafe=False,
+            unsafe=True,
             disable_formatting=False,
         ):
             assert self.app(self.target) == success(
@@ -122,22 +122,22 @@ class TestPrintConfigMinimalWithConfigurationFile:
 
     def test_file_with_multiple_options(self):
         with create_dot_gersemirc(
-            where=self.target, unsafe=True, list_expansion="favour-expansion"
+            where=self.target, unsafe=False, list_expansion="favour-expansion"
         ):
             assert self.app(self.target) == success(
                 stdout=self.file_differs(
-                    "list_expansion: favour-expansion\nunsafe: true"
+                    "list_expansion: favour-expansion\nunsafe: false"
                 ),
                 stderr="",
             )
 
     def test_file_and_line_length_from_command_line(self):
         with create_dot_gersemirc(
-            where=self.target, unsafe=True, list_expansion="favour-expansion"
+            where=self.target, unsafe=False, list_expansion="favour-expansion"
         ):
             assert self.app("--line-length", 42, self.target) == success(
                 stdout=self.file_differs(
-                    "line_length: 42\nlist_expansion: favour-expansion\nunsafe: true"
+                    "line_length: 42\nlist_expansion: favour-expansion\nunsafe: false"
                 ),
                 stderr="",
             )
@@ -227,7 +227,7 @@ def verbose_config(
     line_length=80,
     list_expansion="favour-inlining",
     sort_order="case-sensitive",
-    unsafe="false",
+    unsafe="true",
     warn_about_unknown_commands="true",
 ):
     return f"""definitions:{definitions}
@@ -342,7 +342,7 @@ class TestPrintConfigVerboseWithConfigurationFile:
             where=self.target,
             line_length=80,
             indent=4,
-            unsafe=False,
+            unsafe=True,
             disable_formatting=False,
         ):
             assert self.app(self.target) == success(

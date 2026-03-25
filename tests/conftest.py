@@ -55,7 +55,7 @@ def formatter_creator():
     def creator(config):
         return create_formatter(
             OutcomeConfiguration(
-                unsafe=config.get("unsafe", False),
+                unsafe=config.get("unsafe", True),
                 line_length=config.get("line_length", 80),
                 indent=indent_type(config.get("indent", 4)),
                 list_expansion=ListExpansion(
