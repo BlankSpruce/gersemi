@@ -116,11 +116,12 @@ class Formatter:
         if self.lines_to_format:
             code = add_line_range_fences(code, self.lines_to_format)
 
-        tree = HandwrittenParser().parse(code, self.known_definitions)
+        parser = HandwrittenParser()
+        tree = parser.parse(code, self.known_definitions)
         original = deepcopy(tree)
         dumper = Dumper(self.configuration, self.known_definitions)
         formatted = dumper.visit(tree)
-        self.sanity_checker(HandwrittenParser(), original, formatted)
+        self.sanity_checker(parser, original, formatted)
 
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:

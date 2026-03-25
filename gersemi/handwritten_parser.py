@@ -410,13 +410,7 @@ def block_template(start_pattern, end_pattern):
 
 
 def block(context, text, offset):
-    rule_parser = choice(
-        *[
-            block_template(block_start, block_end)
-            for block_start, block_end in context.blocks
-        ]
-    )
-    return rule_parser(context, text, offset)
+    return context.block(context, text, offset)
 
 
 standalone_identifier = terminal_rule(
@@ -483,6 +477,12 @@ class HandwrittenParser:
                 for name, definition in known_definitions.items()
                 if definition.get("block_end", None)
             ),
+        )
+        self.block = choice(
+            *[
+                block_template(block_start, block_end)
+                for block_start, block_end in self.blocks
+            ]
         )
         self.known_definitions = (
             _builtin_commands
