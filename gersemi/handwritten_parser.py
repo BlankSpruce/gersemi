@@ -384,18 +384,36 @@ def newline_or_gap(context, text, offset):
     return token("NEWLINE", "\n\n", text, offset), matched.end()
 
 
-def _block_body_atom(until_rule):
-    return rule(
-        "_atom_block_body_atom", newline_or_gap, _file_element_until(until_rule)
-    )
-
-
 def block_body(until_rule):
-    return rule(
-        "block_body",
-        star("_atom_block_body", _block_body_atom(until_rule)),
-        newline_or_gap,
-    )
+    file_element_parser = _file_element_until(until_rule)
+
+    def parser(context, text, offset):
+        matched_newline_or_gap = newline_or_gap(context, text, offset)
+        if matched_newline_or_gap is None:
+            return None
+        else:
+            _, offset = matched_newline_or_gap
+
+        result = []
+        newline_node = None
+        while True:
+            matched_file_element = file_element_parser(context, text, offset)
+            if matched_file_element is None:
+                break
+
+            node, offset = matched_file_element
+            result.append(node)
+
+            matched_newline_or_gap = newline_or_gap(context, text, offset)
+            if matched_newline_or_gap is None:
+                return tree("block_body", result), offset
+
+            node, offset = matched_newline_or_gap
+            result.append(node)
+
+        return tree("block_body", result), offset
+
+    return parser
 
 
 def element_template(pattern):
