@@ -391,11 +391,10 @@ def block_body(until_rule):
         matched_newline_or_gap = newline_or_gap(context, text, offset)
         if matched_newline_or_gap is None:
             return None
-        else:
-            _, offset = matched_newline_or_gap
+
+        _, offset = matched_newline_or_gap
 
         result = []
-        newline_node = None
         while True:
             matched_file_element = file_element_parser(context, text, offset)
             if matched_file_element is None:
@@ -475,6 +474,7 @@ def postprocess(node):
 class HandwrittenParser:
     def __init__(self):
         self.blocks = ()
+        self.block = None
         self.known_definitions = {}
 
     def start(self, text, offset):

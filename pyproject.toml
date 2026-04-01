@@ -46,6 +46,7 @@ Homepage = "https://github.com/BlankSpruce/gersemi"
 [[tool.mypy.overrides]]
 module = [
     "colorama",
+    "gersemi_rust_parser",
     "platformdirs",
     "pytest",
 ]
@@ -58,7 +59,7 @@ load-plugins = 'pylint.extensions.mccabe'
 max-complexity=10
 
 [tool.pylint."MESSAGES CONTROL"]
-disable = '''use-dict-literal,
+disable = '''c-extension-no-member,
 
     duplicate-code,
 

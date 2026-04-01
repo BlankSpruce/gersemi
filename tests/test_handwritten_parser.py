@@ -1,5 +1,5 @@
-from gersemi.types import Token, Tree
 import gersemi_rust_parser
+from gersemi.types import Token
 from tests.tests_generator import generate_input_only_tests
 
 
