@@ -326,7 +326,7 @@ def command_invocation(identifier_rule):
             return None
 
         arguments_node, offset = matched_arguments
-        right_paren_offset = offset
+        arguments_offset = offset
         matched_right_paren = _RIGHT_PAREN(context, text, offset)
         _, offset = matched_right_paren
 
@@ -342,7 +342,7 @@ def command_invocation(identifier_rule):
                     arguments_node,
                     tree(
                         "formatted_node",
-                        [text[left_paren_offset + 1 : right_paren_offset]],
+                        [text[left_paren_offset + 1 : arguments_offset]],
                     ),
                 ],
             )

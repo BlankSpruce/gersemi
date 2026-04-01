@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -120,3 +120,7 @@ include = ["gersemi", "gersemi.*"]
 
 [tool.setuptools.package-data]
 gersemi = ["cmake.lark"]
+
+[[tool.setuptools-rust.ext-modules]]
+target = "gersemi_rust_parser"
+path = "gersemi/rust-parser/Cargo.toml"
