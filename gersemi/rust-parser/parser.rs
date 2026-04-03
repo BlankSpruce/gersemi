@@ -21,8 +21,16 @@ mod gersemi_rust_parser {
     #[pyclass]
     #[derive(Clone)]
     enum Node {
-        Tree { data: String, children: Vec<Node> },
-        Token { type_: String, value: String },
+        Tree {
+            data: String,
+            children: Vec<Node>,
+        },
+        Token {
+            type_: String,
+            value: String,
+            line: usize,
+            column: usize,
+        },
     }
 
     #[pyclass(eq, eq_int)]
@@ -60,13 +68,6 @@ mod gersemi_rust_parser {
         Node::Tree {
             data: data.to_string(),
             children,
-        }
-    }
-
-    fn token(type_: &str, value: &str) -> Node {
-        Node::Token {
-            type_: type_.to_string(),
-            value: value.to_string(),
         }
     }
 
@@ -127,13 +128,24 @@ mod gersemi_rust_parser {
     type SkippableMatch = (Option<Node>, usize);
 
     impl Parser {
+        fn token(&self, type_: &str, value: &str, offset: usize) -> Node {
+            Node::Token {
+                type_: type_.to_string(),
+                value: value.to_string(),
+                line: self.line(offset) + 1,
+                column: self.column(offset),
+            }
+        }
+
         fn line(&self, offset: usize) -> usize {
             self.text[..offset].chars().filter(|&c| c == '\n').count()
         }
 
         fn column(&self, offset: usize) -> usize {
-            let skip = self.text[..offset].rfind('\n').unwrap_or(0);
-            offset - skip
+            match self.text[..offset].rfind('\n') {
+                None => offset,
+                Some(value) => offset - value,
+            }
         }
 
         fn error(&self, offset: usize, error_type: ErrorType) -> Error {
@@ -178,7 +190,7 @@ mod gersemi_rust_parser {
                             None => Err(self.unbalanced_brackets(offset)),
                             Some(captures) => Ok(captures.get(1).map(|matched| {
                                 (
-                                    token("BRACKET_ARGUMENT", matched.as_str()),
+                                    self.token("BRACKET_ARGUMENT", matched.as_str(), offset),
                                     offset + captures.get_match().len(),
                                 )
                             })),
@@ -193,7 +205,7 @@ mod gersemi_rust_parser {
                 None => None,
                 Some(captures) => captures.get(1).map(|matched| {
                     (
-                        token(name, matched.as_str()),
+                        self.token(name, matched.as_str(), offset),
                         offset + captures.get_match().len(),
                     )
                 }),
@@ -348,7 +360,7 @@ mod gersemi_rust_parser {
                     (
                         tree(
                             "quoted_argument",
-                            vec![token("QUOTED_ARGUMENT", matched.as_str())],
+                            vec![self.token("QUOTED_ARGUMENT", matched.as_str(), offset)],
                         ),
                         offset + captures.get_match().len(),
                     )
@@ -364,7 +376,7 @@ mod gersemi_rust_parser {
                     (
                         tree(
                             "unquoted_argument",
-                            vec![token("UNQUOTED_ARGUMENT", matched.as_str())],
+                            vec![self.token("UNQUOTED_ARGUMENT", matched.as_str(), offset)],
                         ),
                         offset + captures.get_match().len(),
                     )
@@ -459,7 +471,7 @@ mod gersemi_rust_parser {
                 Some(value) => value + 1,
                 None => 0usize,
             };
-            token("ANONYMOUS", &self.text[start..offset])
+            self.token("ANONYMOUS", &self.text[start..offset], offset)
         }
 
         fn formatted_node(&self, start: usize, end: usize) -> Node {
@@ -468,7 +480,10 @@ mod gersemi_rust_parser {
             } else {
                 &self.text[start + 1..end]
             };
-            tree("formatted_node", vec![token("ANONYMOUS", value)])
+            tree(
+                "formatted_node",
+                vec![self.token("ANONYMOUS", value, start)],
+            )
         }
 
         fn create_command_invocation_node(
@@ -480,7 +495,12 @@ mod gersemi_rust_parser {
             custom_formatting_end: usize,
         ) -> Node {
             match &identifier {
-                Node::Token { type_: _, value } => {
+                Node::Token {
+                    type_: _,
+                    value,
+                    column: _,
+                    line: _,
+                } => {
                     if self.is_known_command(value) {
                         tree("command_invocation", vec![identifier, arguments])
                     } else {
@@ -506,6 +526,8 @@ mod gersemi_rust_parser {
                     Node::Token {
                         type_: _,
                         value: ref command_name,
+                        line: _,
+                        column: _,
                     } => {
                         if block_edge || !self.is_block_edge_command(command_name.as_str()) {
                             return Some((node, offset));
@@ -615,7 +637,10 @@ mod gersemi_rust_parser {
                     Some(content) => (
                         tree(
                             "line_comment",
-                            vec![pound_sign, token("LINE_COMMENT_CONTENT", content.as_str())],
+                            vec![
+                                pound_sign,
+                                self.token("LINE_COMMENT_CONTENT", content.as_str(), offset),
+                            ],
                         ),
                         offset + content.len(),
                     ),
@@ -667,9 +692,12 @@ mod gersemi_rust_parser {
             match RE.captures(&self.text[offset..]) {
                 None => None,
                 Some(captures) => match captures.get(2) {
-                    None => Some((token("NEWLINE", "\n"), offset + captures.get_match().len())),
+                    None => Some((
+                        self.token("NEWLINE", "\n", offset),
+                        offset + captures.get_match().len(),
+                    )),
                     Some(_) => Some((
-                        token("NEWLINE", "\n\n"),
+                        self.token("NEWLINE", "\n\n", offset),
                         offset + captures.get_match().len(),
                     )),
                 },
