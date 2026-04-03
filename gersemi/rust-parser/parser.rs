@@ -58,7 +58,7 @@ mod gersemi_rust_parser {
     fn tree(data: &str, children: Vec<Node>) -> Node {
         Node::Tree {
             data: data.to_string(),
-            children: children,
+            children,
         }
     }
 
@@ -120,25 +120,19 @@ mod gersemi_rust_parser {
     type SkippableMatch = (Option<Node>, usize);
 
     impl Parser {
-        fn line(self: &Self, offset: usize) -> usize {
+        fn line(&self, offset: usize) -> usize {
             self.text[..offset].chars().filter(|&c| c == '\n').count()
         }
 
-        fn column(self: &Self, offset: usize) -> usize {
-            let skip = match self.text[..offset].rfind('\n') {
-                None => 0,
-                Some(value) => value,
-            };
+        fn column(&self, offset: usize) -> usize {
+            let skip = self.text[..offset].rfind('\n').unwrap_or(0);
             offset - skip
         }
 
-        fn error(self: &Self, offset: usize, error_type: ErrorType) -> Error {
+        fn error(&self, offset: usize, error_type: ErrorType) -> Error {
             let line = self.line(offset);
             let column = self.column(offset);
-            let faulty_line = match self.text.lines().nth(line) {
-                None => "",
-                Some(line) => line,
-            };
+            let faulty_line = self.text.lines().nth(line).unwrap_or("");
             let explanation = format!("{}\n{}^\n", faulty_line, " ".repeat(column));
             Error {
                 error_type,
@@ -148,27 +142,23 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn unbalanced_parentheses(self: &Self, offset: usize) -> Error {
+        fn unbalanced_parentheses(&self, offset: usize) -> Error {
             self.error(offset, ErrorType::UnbalancedParentheses)
         }
 
-        fn unbalanced_brackets(self: &Self, offset: usize) -> Error {
+        fn unbalanced_brackets(&self, offset: usize) -> Error {
             self.error(offset, ErrorType::UnbalancedBrackets)
         }
 
-        fn unbalanced_block(self: &Self, offset: usize) -> Error {
+        fn unbalanced_block(&self, offset: usize) -> Error {
             self.error(offset, ErrorType::UnbalancedBlock)
         }
 
-        fn parsing_error(self: &Self, offset: usize) -> Error {
-            self.error(offset, ErrorType::ParsingError)
-        }
-
-        fn generic_parsing_error(self: &Self, offset: usize) -> Error {
+        fn generic_parsing_error(&self, offset: usize) -> Error {
             self.error(offset, ErrorType::GenericParsingError)
         }
 
-        fn bracket_argument_token(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn bracket_argument_token(&self, offset: usize) -> Result<Option<Match>, Error> {
             static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[(=*)\["));
             match RE_START.captures(&self.text[offset..]) {
                 None => Ok(None),
@@ -192,7 +182,7 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn terminal(self: &Self, re: &regex::Regex, name: &str, offset: usize) -> Option<Match> {
+        fn terminal(&self, re: &regex::Regex, name: &str, offset: usize) -> Option<Match> {
             match re.captures(&self.text[offset..]) {
                 None => None,
                 Some(captures) => match captures.get(1) {
@@ -205,17 +195,17 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn pound_sign(self: &Self, offset: usize) -> Option<Match> {
+        fn pound_sign(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
             self.terminal(&RE, "POUND_SIGN", offset)
         }
 
-        fn left_paren(self: &Self, offset: usize) -> Option<Match> {
+        fn left_paren(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\()[ \t]*"));
             self.terminal(&RE, "LEFT_PAREN", offset)
         }
 
-        fn right_paren(self: &Self, offset: usize) -> Result<Match, Error> {
+        fn right_paren(&self, offset: usize) -> Result<Match, Error> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\))[ \t]*"));
             match self.terminal(&RE, "RIGHT_PAREN", offset) {
                 None => Err(self.unbalanced_parentheses(offset)),
@@ -223,21 +213,17 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn newline(self: &Self, offset: usize) -> Option<Match> {
+        fn newline(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n+)[ \t]*"));
             self.terminal(&RE, "NEWLINE", offset)
         }
 
-        fn element_t(
-            self: &Self,
-            command: &BlockCommand,
-            offset: usize,
-        ) -> Result<Option<Match>, Error> {
+        fn element_t(&self, command: &BlockCommand, offset: usize) -> Result<Option<Match>, Error> {
             self.command_element_t(&command.re, true, offset)
         }
 
         fn block_body(
-            self: &Self,
+            &self,
             end_command: &BlockCommand,
             mut offset: usize,
         ) -> Result<Option<Match>, Error> {
@@ -248,7 +234,7 @@ mod gersemi_rust_parser {
             let mut result: Vec<Node> = vec![];
             let mut last_newline_or_gap: Option<Node> = None;
             loop {
-                if let Some(_) = self.element_t(end_command, offset)? {
+                if self.element_t(end_command, offset)?.is_some() {
                     break;
                 }
 
@@ -286,7 +272,7 @@ mod gersemi_rust_parser {
         }
 
         fn block_t(
-            self: &Self,
+            &self,
             start_command: &BlockCommand,
             end_command: &BlockCommand,
             offset: usize,
@@ -306,7 +292,7 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn block(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn block(&self, offset: usize) -> Result<Option<Match>, Error> {
             for (block_start, block_end) in &self.blocks {
                 if let Some(matched) = self.block_t(block_start, block_end, offset)? {
                     return Ok(Some(matched));
@@ -317,7 +303,7 @@ mod gersemi_rust_parser {
         }
 
         fn commented_argument_atom(
-            self: &Self,
+            &self,
             offset: usize,
         ) -> Result<Option<(Vec<Node>, usize)>, Error> {
             if let Some((matched, offset)) = self.bracket_comment(offset)? {
@@ -333,19 +319,19 @@ mod gersemi_rust_parser {
             Ok(None)
         }
 
-        fn bracket_argument(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn bracket_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
             Ok(match self.bracket_argument_token(offset)? {
                 None => None,
                 Some((matched, offset)) => Some((tree("bracket_argument", vec![matched]), offset)),
             })
         }
 
-        fn quotation_mark(self: &Self, offset: usize) -> Option<Match> {
+        fn quotation_mark(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r#"^(")"#));
             self.terminal(&RE, "QUOTATION_MARK", offset)
         }
 
-        fn quoted_argument(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn quoted_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
             static RE: LazyLock<Regex> = LazyLock::new(|| {
                 regex(add_ignores(quoted_argument_pattern().to_string()).as_str())
             });
@@ -367,7 +353,7 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn unquoted_argument(self: &Self, offset: usize) -> Option<Match> {
+        fn unquoted_argument(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
             match RE.captures(&self.text[offset..]) {
                 None => None,
@@ -384,22 +370,20 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn complex_argument(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
-            match self.left_paren(offset) {
-                None => Ok(None),
+        fn complex_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
+            Ok(match self.left_paren(offset) {
+                None => None,
                 Some((_, offset)) => match self.arguments(offset)? {
-                    None => Ok(None),
-                    Some((matched_arguments, offset)) => match self.right_paren(offset)? {
-                        (_, offset) => Ok(Some((
-                            tree("complex_argument", vec![matched_arguments]),
-                            offset,
-                        ))),
-                    },
+                    None => None,
+                    Some((matched_arguments, offset)) => {
+                        let (_, offset) = self.right_paren(offset)?;
+                        Some((tree("complex_argument", vec![matched_arguments]), offset))
+                    }
                 },
-            }
+            })
         }
 
-        fn argument(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn argument(&self, offset: usize) -> Result<Option<Match>, Error> {
             if let Some(matched) = self.bracket_argument(offset)? {
                 return Ok(Some(matched));
             }
@@ -415,7 +399,7 @@ mod gersemi_rust_parser {
             self.complex_argument(offset)
         }
 
-        fn commented_argument(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn commented_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
             Ok(match self.argument(offset)? {
                 None => None,
                 Some((matched_argument, offset)) => match self.commented_argument_atom(offset)? {
@@ -429,7 +413,7 @@ mod gersemi_rust_parser {
             })
         }
 
-        fn separation(self: &Self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
+        fn separation(&self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
             if let Some((node, offset)) = self.bracket_comment(offset)? {
                 return Ok(Some((Some(node), offset)));
             }
@@ -445,7 +429,7 @@ mod gersemi_rust_parser {
             Ok(None)
         }
 
-        fn arguments_atom(self: &Self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
+        fn arguments_atom(&self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
             if let Some((node, offset)) = self.commented_argument(offset)? {
                 return Ok(Some((Some(node), offset)));
             }
@@ -457,7 +441,7 @@ mod gersemi_rust_parser {
             Ok(None)
         }
 
-        fn arguments(self: &Self, mut offset: usize) -> Result<Option<Match>, Error> {
+        fn arguments(&self, mut offset: usize) -> Result<Option<Match>, Error> {
             let mut result = Vec::<Node>::new();
             while let Some((matched, new_offset)) = self.arguments_atom(offset)? {
                 if let Some(matched) = matched {
@@ -468,7 +452,7 @@ mod gersemi_rust_parser {
             Ok(Some((tree("arguments", result), offset)))
         }
 
-        fn indentation(self: &Self, offset: usize) -> Node {
+        fn indentation(&self, offset: usize) -> Node {
             let start = match self.text[..offset].rfind('\n') {
                 Some(value) => value + 1,
                 None => 0usize,
@@ -476,7 +460,7 @@ mod gersemi_rust_parser {
             token("ANONYMOUS", &self.text[start..offset])
         }
 
-        fn formatted_node(self: &Self, start: usize, end: usize) -> Node {
+        fn formatted_node(&self, start: usize, end: usize) -> Node {
             let value = if start >= end {
                 ""
             } else {
@@ -486,7 +470,7 @@ mod gersemi_rust_parser {
         }
 
         fn create_command_invocation_node(
-            self: &Self,
+            &self,
             identifier: Node,
             arguments: Node,
             initial_offset: usize,
@@ -513,13 +497,8 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn identifier(
-            self: &Self,
-            re: &regex::Regex,
-            offset: usize,
-            block_edge: bool,
-        ) -> Option<Match> {
-            match self.terminal(&re, "IDENTIFIER", offset) {
+        fn identifier(&self, re: &regex::Regex, offset: usize, block_edge: bool) -> Option<Match> {
+            match self.terminal(re, "IDENTIFIER", offset) {
                 None => None,
                 Some((node, offset)) => match node {
                     Node::Token {
@@ -541,7 +520,7 @@ mod gersemi_rust_parser {
         }
 
         fn command_invocation_t(
-            self: &Self,
+            &self,
             re: &regex::Regex,
             offset: usize,
             block_edge: bool,
@@ -555,18 +534,17 @@ mod gersemi_rust_parser {
                         Some((_, offset)) => match self.arguments(offset)? {
                             None => None,
                             Some((matched_arguments, arguments_offset)) => {
-                                match self.right_paren(arguments_offset)? {
-                                    (_, offset) => Some((
-                                        self.create_command_invocation_node(
-                                            matched_identifier,
-                                            matched_arguments,
-                                            initial_offset,
-                                            identifier_offset,
-                                            arguments_offset,
-                                        ),
-                                        offset,
-                                    )),
-                                }
+                                let (_, offset) = self.right_paren(arguments_offset)?;
+                                Some((
+                                    self.create_command_invocation_node(
+                                        matched_identifier,
+                                        matched_arguments,
+                                        initial_offset,
+                                        identifier_offset,
+                                        arguments_offset,
+                                    ),
+                                    offset,
+                                ))
                             }
                         },
                     }
@@ -575,7 +553,7 @@ mod gersemi_rust_parser {
         }
 
         fn command_element_t(
-            self: &Self,
+            &self,
             re: &regex::Regex,
             block_edge: bool,
             offset: usize,
@@ -598,12 +576,12 @@ mod gersemi_rust_parser {
             })
         }
 
-        fn command_element(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn command_element(&self, offset: usize) -> Result<Option<Match>, Error> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
             self.command_element_t(&RE, false, offset)
         }
 
-        fn standalone_identifier(self: &Self, offset: usize) -> Option<Match> {
+        fn standalone_identifier(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
             match self.terminal(&RE, "IDENTIFIER", offset) {
                 None => None,
@@ -611,7 +589,7 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn bracket_comment(self: &Self, mut offset: usize) -> Result<Option<Match>, Error> {
+        fn bracket_comment(&self, mut offset: usize) -> Result<Option<Match>, Error> {
             let mut result = Vec::<Node>::new();
             if let Some((matched, new_offset)) = self.pound_sign(offset) {
                 result.push(matched);
@@ -629,7 +607,7 @@ mod gersemi_rust_parser {
             Ok(None)
         }
 
-        fn line_comment(self: &Self, mut offset: usize) -> Option<Match> {
+        fn line_comment(&self, mut offset: usize) -> Option<Match> {
             let mut result = Vec::<Node>::new();
             if let Some((matched, new_offset)) = self.pound_sign(offset) {
                 result.push(matched);
@@ -647,7 +625,7 @@ mod gersemi_rust_parser {
             Some((tree("line_comment", result), offset))
         }
 
-        fn non_command_element(self: &Self, mut offset: usize) -> Result<Option<Match>, Error> {
+        fn non_command_element(&self, mut offset: usize) -> Result<Option<Match>, Error> {
             let mut result = Vec::<Node>::new();
             while let Some((matched, new_offset)) = self.bracket_comment(offset)? {
                 result.push(matched);
@@ -659,14 +637,14 @@ mod gersemi_rust_parser {
                 offset = new_offset;
             }
 
-            if result.len() == 0 {
+            if result.is_empty() {
                 return Ok(None);
             }
 
             Ok(Some((tree("non_command_element", result), offset)))
         }
 
-        fn file_element(self: &Self, offset: usize) -> Result<Option<Match>, Error> {
+        fn file_element(&self, offset: usize) -> Result<Option<Match>, Error> {
             if let Some(result) = self.block(offset)? {
                 return Ok(Some(result));
             }
@@ -686,7 +664,7 @@ mod gersemi_rust_parser {
             Ok(None)
         }
 
-        fn newline_or_gap(self: &Self, offset: usize) -> Option<Match> {
+        fn newline_or_gap(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n[ \t]*)(\n[ \t]*)*"));
             match RE.captures(&self.text[offset..]) {
                 None => None,
@@ -700,7 +678,7 @@ mod gersemi_rust_parser {
             }
         }
 
-        fn start(self: &Self) -> Result<Node, Error> {
+        fn start(&self) -> Result<Node, Error> {
             let mut offset = match self.newline_or_gap(0) {
                 Some((_, new_offset)) => new_offset,
                 None => 0usize,
@@ -746,14 +724,14 @@ mod gersemi_rust_parser {
             Ok(tree("start", result))
         }
 
-        fn is_known_command(self: &Self, command_name: &str) -> bool {
+        fn is_known_command(&self, command_name: &str) -> bool {
             let command_name = command_name.to_lowercase();
             self.known_commands
                 .iter()
                 .any(|item| item.as_str() == command_name)
         }
 
-        fn is_block_edge_command(self: &Self, command_name: &str) -> bool {
+        fn is_block_edge_command(&self, command_name: &str) -> bool {
             let name = command_name.to_lowercase();
             self.blocks
                 .iter()
