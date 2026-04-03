@@ -169,13 +169,12 @@ mod gersemi_rust_parser {
                         let re = regex(re_pattern.as_str());
                         match re.captures(&self.text[offset..]) {
                             None => Err(self.unbalanced_brackets(offset)),
-                            Some(captures) => Ok(match captures.get(1) {
-                                None => None,
-                                Some(matched) => Some((
+                            Some(captures) => Ok(captures.get(1).map(|matched| {
+                                (
                                     token("BRACKET_ARGUMENT", matched.as_str()),
                                     offset + captures.get_match().len(),
-                                )),
-                            }),
+                                )
+                            })),
                         }
                     }
                 },
@@ -185,13 +184,12 @@ mod gersemi_rust_parser {
         fn terminal(&self, re: &regex::Regex, name: &str, offset: usize) -> Option<Match> {
             match re.captures(&self.text[offset..]) {
                 None => None,
-                Some(captures) => match captures.get(1) {
-                    None => None,
-                    Some(matched) => Some((
+                Some(captures) => captures.get(1).map(|matched| {
+                    (
                         token(name, matched.as_str()),
                         offset + captures.get_match().len(),
-                    )),
-                },
+                    )
+                }),
             }
         }
 
@@ -320,10 +318,9 @@ mod gersemi_rust_parser {
         }
 
         fn bracket_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
-            Ok(match self.bracket_argument_token(offset)? {
-                None => None,
-                Some((matched, offset)) => Some((tree("bracket_argument", vec![matched]), offset)),
-            })
+            Ok(self
+                .bracket_argument_token(offset)?
+                .map(|(matched, offset)| (tree("bracket_argument", vec![matched]), offset)))
         }
 
         fn quotation_mark(&self, offset: usize) -> Option<Match> {
@@ -340,16 +337,15 @@ mod gersemi_rust_parser {
                     None => Ok(None),
                     Some(_) => Err(self.generic_parsing_error(offset)),
                 },
-                Some(captures) => Ok(match captures.get(1) {
-                    None => None,
-                    Some(matched) => Some((
+                Some(captures) => Ok(captures.get(1).map(|matched| {
+                    (
                         tree(
                             "quoted_argument",
                             vec![token("QUOTED_ARGUMENT", matched.as_str())],
                         ),
                         offset + captures.get_match().len(),
-                    )),
-                }),
+                    )
+                })),
             }
         }
 
@@ -357,16 +353,15 @@ mod gersemi_rust_parser {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
             match RE.captures(&self.text[offset..]) {
                 None => None,
-                Some(captures) => match captures.get(1) {
-                    None => None,
-                    Some(matched) => Some((
+                Some(captures) => captures.get(1).map(|matched| {
+                    (
                         tree(
                             "unquoted_argument",
                             vec![token("UNQUOTED_ARGUMENT", matched.as_str())],
                         ),
                         offset + captures.get_match().len(),
-                    )),
-                },
+                    )
+                }),
             }
         }
 
@@ -583,10 +578,8 @@ mod gersemi_rust_parser {
 
         fn standalone_identifier(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-            match self.terminal(&RE, "IDENTIFIER", offset) {
-                None => None,
-                Some((node, offset)) => Some((tree("standalone_identifier", vec![node]), offset)),
-            }
+            self.terminal(&RE, "IDENTIFIER", offset)
+                .map(|(node, offset)| (tree("standalone_identifier", vec![node]), offset))
         }
 
         fn bracket_comment(&self, mut offset: usize) -> Result<Option<Match>, Error> {
@@ -685,6 +678,8 @@ mod gersemi_rust_parser {
             };
             let mut result: Vec<Node> = vec![];
             let mut last_newline_or_gap: Option<Node> = None;
+
+            #[allow(clippy::while_let_loop)]
             loop {
                 match self.file_element(offset)? {
                     Some((matched, new_offset)) => {
