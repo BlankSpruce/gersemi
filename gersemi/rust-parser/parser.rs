@@ -4,7 +4,8 @@ use pyo3::prelude::*;
 mod gersemi_rust_parser {
     use pyo3::prelude::*;
     use regex::Regex;
-    use std::sync::LazyLock;
+    use std::collections::HashMap;
+    use std::sync::{LazyLock, Mutex};
 
     struct BlockCommand {
         name: String,
@@ -110,7 +111,16 @@ mod gersemi_rust_parser {
     }
 
     fn regex(pattern: &str) -> Regex {
-        Regex::new(pattern).unwrap()
+        static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
+            LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
+
+        let mut regexes = REGEXES.lock().unwrap();
+        if !regexes.contains_key(pattern) {
+            let re = Regex::new(pattern).unwrap();
+            regexes.insert(pattern.to_string(), re);
+        }
+
+        regexes.get(pattern).unwrap().clone()
     }
 
     type Match = (Node, usize);
@@ -326,8 +336,9 @@ mod gersemi_rust_parser {
         }
 
         fn quoted_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
-            static RE: LazyLock<Regex> =
-                LazyLock::new(|| regex(add_ignores(quoted_argument_pattern()).as_str()));
+            static PATTERN: LazyLock<String> =
+                LazyLock::new(|| add_ignores(quoted_argument_pattern()));
+            static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
             match RE.captures(&self.text[offset..]) {
                 None => match self.quotation_mark(offset) {
                     None => Ok(None),
