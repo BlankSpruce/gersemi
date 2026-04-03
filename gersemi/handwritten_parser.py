@@ -531,6 +531,6 @@ class HandwrittenParser:
                 _, offset = matched_right_paren
                 raise_exception(UnbalancedParentheses, text, offset)
 
-            raise ParsingError
+            raise_exception(ParsingError, text, offset)
 
         return postprocess(result)

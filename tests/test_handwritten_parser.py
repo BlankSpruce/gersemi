@@ -1,16 +1,8 @@
-import gersemi_rust_parser
 from gersemi.types import Token
 from tests.tests_generator import generate_input_only_tests
 
 
 def preprocess(node, dbg_types=False):
-    if isinstance(node, gersemi_rust_parser.Node.Token):
-        if dbg_types:
-            node_type = getattr(node, "type_", "ANONYMOUS")
-            return f"{str(node_type)} {repr(node.value)}"
-
-        return repr(node.value)
-
     if isinstance(node, (str, Token)):
         if dbg_types:
             node_type = getattr(node, "type", "ANONYMOUS")
