@@ -11,3 +11,8 @@ regex = "1.12.3"
 name = "gersemi_rust_parser"
 crate-type = ["cdylib"]
 path = "parser.rs"
+
+[lints.clippy]
+struct-field-names = {level = "allow", priority = 1}
+pedantic = "warn"
+

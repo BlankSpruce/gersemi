@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 #[pymodule]
 mod gersemi_rust_parser {
     use pyo3::prelude::*;
-    use regex::*;
+    use regex::Regex;
     use std::sync::LazyLock;
 
     struct BlockCommand {
@@ -69,28 +69,25 @@ mod gersemi_rust_parser {
         }
     }
 
-    fn add_ignores(pattern: String) -> String {
-        format!("^({})[ \t]*", pattern)
+    fn add_ignores(pattern: &str) -> String {
+        format!("^({pattern})[ \t]*")
     }
 
-    const ESCAPE_SEQUENCE_R: &str = r#"\\([^A-Za-z0-9]|[nrt])"#;
+    const ESCAPE_SEQUENCE_R: &str = r"\\([^A-Za-z0-9]|[nrt])";
     const IDENTIFIER_R: &str = r"^([A-Za-z_@][A-Za-z0-9_@]*)[ \t]*";
     const MAKE_STYLE_REFERENCE_R: &str = r##"\$\([^\)\n\"#]+?\)"##;
-    const QUOTED_CONTINUATION_R: &str = r#"\\\n"#;
+    const QUOTED_CONTINUATION_R: &str = r"\\\n";
     const QUOTED_ELEMENT_R: &str = r#"[^\\\"]|\n"#;
 
     fn quoted_argument_pattern() -> &'static str {
         static RE: LazyLock<String> = LazyLock::new(|| {
-            format!(
-                r#""({}|{}|{})*?""#,
-                QUOTED_ELEMENT_R, ESCAPE_SEQUENCE_R, QUOTED_CONTINUATION_R
-            )
+            format!(r#""({QUOTED_ELEMENT_R}|{ESCAPE_SEQUENCE_R}|{QUOTED_CONTINUATION_R})*?""#)
         });
         RE.as_str()
     }
 
     fn unquoted_legacy_pattern() -> String {
-        format!(r##"[^\s\(\)#\"\\]+{}"##, quoted_argument_pattern())
+        format!(r#"[^\s\(\)#\"\\]+{}"#, quoted_argument_pattern())
     }
 
     fn unquoted_argument_pattern() -> &'static str {
@@ -100,8 +97,8 @@ mod gersemi_rust_parser {
                 unquoted_legacy_pattern(),
                 MAKE_STYLE_REFERENCE_R,
                 ESCAPE_SEQUENCE_R,
-                r##"[^\$\s\(\)#\"\\]+"##,
-                r##"[^\s\(\)#\"\\]"##
+                r#"[^\$\s\(\)#\"\\]+"#,
+                r#"[^\s\(\)#\"\\]"#
             )
         });
         RE.as_str()
@@ -109,7 +106,7 @@ mod gersemi_rust_parser {
 
     fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
         let equal_signs = "=".repeat(number_of_equal_signs);
-        format!(r"^(\[{0}\[[\s\S]+?\]{0}\])[ \t]*", equal_signs)
+        format!(r"^(\[{equal_signs}\[[\s\S]+?\]{equal_signs}\])[ \t]*")
     }
 
     fn regex(pattern: &str) -> Regex {
@@ -258,7 +255,7 @@ mod gersemi_rust_parser {
                         if new_offset == offset {
                             break;
                         }
-                        offset = new_offset
+                        offset = new_offset;
                     }
                     None => {
                         return Ok(Some((tree("block_body", result), offset)));
@@ -329,9 +326,8 @@ mod gersemi_rust_parser {
         }
 
         fn quoted_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
-            static RE: LazyLock<Regex> = LazyLock::new(|| {
-                regex(add_ignores(quoted_argument_pattern().to_string()).as_str())
-            });
+            static RE: LazyLock<Regex> =
+                LazyLock::new(|| regex(add_ignores(quoted_argument_pattern()).as_str()));
             match RE.captures(&self.text[offset..]) {
                 None => match self.quotation_mark(offset) {
                     None => Ok(None),
@@ -488,7 +484,7 @@ mod gersemi_rust_parser {
                         )
                     }
                 }
-                _ => tree("command_invocation", vec![identifier, arguments]),
+                Node::Tree { .. } => tree("command_invocation", vec![identifier, arguments]),
             }
         }
 
@@ -600,22 +596,20 @@ mod gersemi_rust_parser {
             Ok(None)
         }
 
-        fn line_comment(&self, mut offset: usize) -> Option<Match> {
-            let mut result = Vec::<Node>::new();
-            if let Some((matched, new_offset)) = self.pound_sign(offset) {
-                result.push(matched);
-                offset = new_offset;
-            } else {
-                return None;
-            }
-
-            static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^[^\n]+"));
-            if let Some(matched) = RE.find(&self.text[offset..]) {
-                result.push(token("LINE_COMMENT_CONTENT", matched.as_str()));
-                offset += matched.len();
-            }
-
-            Some((tree("line_comment", result), offset))
+        fn line_comment(&self, offset: usize) -> Option<Match> {
+            self.pound_sign(offset).map(|(pound_sign, offset)| {
+                static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^[^\n]+"));
+                match RE.find(&self.text[offset..]) {
+                    None => (tree("line_comment", vec![pound_sign]), offset),
+                    Some(content) => (
+                        tree(
+                            "line_comment",
+                            vec![pound_sign, token("LINE_COMMENT_CONTENT", content.as_str())],
+                        ),
+                        offset + content.len(),
+                    ),
+                }
+            })
         }
 
         fn non_command_element(&self, mut offset: usize) -> Result<Option<Match>, Error> {
@@ -703,7 +697,7 @@ mod gersemi_rust_parser {
                         if new_offset == offset {
                             break;
                         }
-                        offset = new_offset
+                        offset = new_offset;
                     }
                     None => {
                         break;
@@ -738,7 +732,7 @@ mod gersemi_rust_parser {
     type BlockDefinitions = Vec<BlockDefinition>;
 
     fn block_command(name: String) -> BlockCommand {
-        let pattern = format!("(?i)^({})[ \t]*", name);
+        let pattern = format!("(?i)^({name})[ \t]*");
         let re = regex(pattern.as_str());
         BlockCommand { name, re }
     }
@@ -751,18 +745,14 @@ mod gersemi_rust_parser {
     }
 
     #[pyfunction]
-    fn parse(
-        text: String,
-        blocks: BlockDefinitions,
-        known_commands: Vec<String>,
-    ) -> PyResult<ParsingResult> {
+    fn parse(text: String, blocks: BlockDefinitions, known_commands: Vec<String>) -> ParsingResult {
         let parser = Parser {
             blocks: prepare_blocks(blocks),
             known_commands,
             text,
         };
 
-        Ok(match parser.start() {
+        match parser.start() {
             Ok(node) => ParsingResult::Success(node),
             Err(Error {
                 error_type,
@@ -775,6 +765,6 @@ mod gersemi_rust_parser {
                 line,
                 column,
             },
-        })
+        }
     }
 }
