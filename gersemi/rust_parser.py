@@ -1,14 +1,6 @@
 from collections import ChainMap
 import gersemi_rust_parser
 from gersemi.builtin_commands import _builtin_commands
-from gersemi.exceptions import (
-    GenericParsingError,
-    ParsingError,
-    UnbalancedBlock,
-    UnbalancedBrackets,
-    UnbalancedParentheses,
-)
-from gersemi.types import Token, Tree
 
 
 class RustParser:
@@ -26,7 +18,7 @@ class RustParser:
             else ChainMap(known_definitions, _builtin_commands)
         )
 
-        result = gersemi_rust_parser.parse(
+        return gersemi_rust_parser.parse(
             text,
             blocks=(
                 ("if", "endif"),
@@ -43,4 +35,3 @@ class RustParser:
             ),
             known_commands=tuple(key for key in self.known_definitions),
         )
-        return result
