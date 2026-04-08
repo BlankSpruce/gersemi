@@ -32,6 +32,12 @@ class Token:
     def __hash__(self):
         return hash(self.value)
 
+    def __iter__(self):
+        return iter(self.value)
+
+    def __getattr__(self, attr):
+        return getattr(self.value, attr)
+
 
 Node = Union[Token, Tree]
 Nodes = List[Node]

@@ -3,6 +3,8 @@ use pyo3::prelude::*;
 #[pymodule]
 mod gersemi_rust_parser {
     use pyo3::prelude::*;
+    use pyo3::sync::PyOnceLock;
+    use pyo3::types::PyType;
     use regex::Regex;
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
@@ -18,7 +20,6 @@ mod gersemi_rust_parser {
         text: String,
     }
 
-    #[pyclass]
     #[derive(Clone)]
     enum Node {
         Tree {
@@ -33,35 +34,20 @@ mod gersemi_rust_parser {
         },
     }
 
-    #[pyclass(eq, eq_int)]
     #[derive(Clone, PartialEq)]
     enum ErrorType {
         GenericParsingError,
-        ParsingError,
         UnbalancedBlock,
         UnbalancedBrackets,
         UnbalancedParentheses,
     }
 
-    #[pyclass]
     #[derive(Clone)]
     struct Error {
         error_type: ErrorType,
         explanation: String,
         line: usize,
         column: usize,
-    }
-
-    #[pyclass]
-    #[derive(Clone)]
-    enum ParsingResult {
-        Success(Node),
-        Fail {
-            error_type: ErrorType,
-            explanation: String,
-            line: usize,
-            column: usize,
-        },
     }
 
     fn tree(data: &str, children: Vec<Node>) -> Node {
@@ -783,8 +769,57 @@ mod gersemi_rust_parser {
             .collect()
     }
 
+    fn convert(py: Python<'_>, node: Node) -> PyResult<Bound<'_, PyAny>> {
+        static TREE: PyOnceLock<Py<PyType>> = PyOnceLock::new();
+        static TOKEN: PyOnceLock<Py<PyType>> = PyOnceLock::new();
+        match node {
+            Node::Tree { data, children } => TREE.import(py, "gersemi.types", "Tree")?.call1((
+                data,
+                children
+                    .into_iter()
+                    .map(|child| convert(py, child).unwrap())
+                    .collect::<Vec<_>>(),
+            )),
+            Node::Token {
+                type_,
+                value,
+                line,
+                column,
+            } => TOKEN
+                .import(py, "gersemi.types", "Token")?
+                .call1((type_, value, line, column)),
+        }
+    }
+
+    pyo3::import_exception!(gersemi.exceptions, GenericParsingError);
+    pyo3::import_exception!(gersemi.exceptions, UnbalancedBlock);
+    pyo3::import_exception!(gersemi.exceptions, UnbalancedBrackets);
+    pyo3::import_exception!(gersemi.exceptions, UnbalancedParentheses);
+
+    fn raise_exception(error: Error) -> PyErr {
+        match error.error_type {
+            ErrorType::GenericParsingError => {
+                GenericParsingError::new_err((error.explanation, error.line, error.column))
+            }
+            ErrorType::UnbalancedBlock => {
+                UnbalancedBlock::new_err((error.explanation, error.line, error.column))
+            }
+            ErrorType::UnbalancedBrackets => {
+                UnbalancedBrackets::new_err((error.explanation, error.line, error.column))
+            }
+            ErrorType::UnbalancedParentheses => {
+                UnbalancedParentheses::new_err((error.explanation, error.line, error.column))
+            }
+        }
+    }
+
     #[pyfunction]
-    fn parse(text: String, blocks: BlockDefinitions, known_commands: Vec<String>) -> ParsingResult {
+    fn parse(
+        py: Python<'_>,
+        text: String,
+        blocks: BlockDefinitions,
+        known_commands: Vec<String>,
+    ) -> PyResult<Bound<'_, PyAny>> {
         let parser = Parser {
             blocks: prepare_blocks(blocks),
             known_commands,
@@ -792,18 +827,8 @@ mod gersemi_rust_parser {
         };
 
         match parser.start() {
-            Ok(node) => ParsingResult::Success(node),
-            Err(Error {
-                error_type,
-                explanation,
-                line,
-                column,
-            }) => ParsingResult::Fail {
-                error_type,
-                explanation,
-                line,
-                column,
-            },
+            Ok(node) => convert(py, node),
+            Err(error) => Err(raise_exception(error)),
         }
     }
 }

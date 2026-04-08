@@ -10,41 +10,6 @@ from gersemi.exceptions import (
 )
 from gersemi.types import Token, Tree
 
-RustErrorType = gersemi_rust_parser.ErrorType
-RustToken = gersemi_rust_parser.Node.Token
-RustSuccess = gersemi_rust_parser.ParsingResult.Success
-
-
-def convert(node):
-    if isinstance(node, RustToken):
-        return Token(node.type_, node.value, line=node.line, column=node.column)
-
-    return Tree(node.data, list(map(convert, node.children)))
-
-
-def get_exception_type(error_type):
-    if error_type == RustErrorType.UnbalancedParentheses:
-        return UnbalancedParentheses
-
-    if error_type == RustErrorType.UnbalancedBrackets:
-        return UnbalancedBrackets
-
-    if error_type == RustErrorType.UnbalancedBlock:
-        return UnbalancedBlock
-
-    if error_type == RustErrorType.ParsingError:
-        return ParsingError
-
-    if error_type == RustErrorType.GenericParsingError:
-        return GenericParsingError
-
-    return ParsingError
-
-
-def raise_exception(error):
-    exception_type = get_exception_type(error.error_type)
-    raise exception_type(error.explanation, error.line, error.column)
-
 
 class RustParser:
     def __init__(self):
@@ -78,8 +43,4 @@ class RustParser:
             ),
             known_commands=tuple(key for key in self.known_definitions),
         )
-
-        if isinstance(result, RustSuccess):
-            return convert(result[0])
-
-        return raise_exception(result)
+        return result
