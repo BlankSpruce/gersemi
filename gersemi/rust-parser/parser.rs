@@ -29,8 +29,8 @@ mod gersemi_rust_parser {
         Token {
             type_: String,
             value: String,
-            line: usize,
-            column: usize,
+            line: Option<usize>,
+            column: Option<usize>,
         },
     }
 
@@ -115,11 +115,21 @@ mod gersemi_rust_parser {
 
     impl Parser {
         fn token(&self, type_: &str, value: &str, offset: usize) -> Node {
-            Node::Token {
-                type_: type_.to_string(),
-                value: value.to_string(),
-                line: self.line(offset) + 1,
-                column: self.column(offset),
+            match type_ {
+                "IDENTIFIER" | "UNQUOTED_ARGUMENT" | "QUOTED_ARGUMENT" | "BRACKET_ARGUMENT" => {
+                    Node::Token {
+                        type_: type_.to_string(),
+                        value: value.to_string(),
+                        line: Some(self.line(offset) + 1),
+                        column: Some(self.column(offset)),
+                    }
+                }
+                _ => Node::Token {
+                    type_: type_.to_string(),
+                    value: value.to_string(),
+                    line: None,
+                    column: None,
+                },
             }
         }
 
