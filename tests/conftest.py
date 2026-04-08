@@ -22,6 +22,11 @@ from tests.old_parser.parser import create_parser, create_parser_with_postproces
 
 @pytest.fixture(scope="module")
 def parser():
+    return RustParser()
+
+
+@pytest.fixture(scope="module")
+def handwritten_parser():
     return HandwrittenParser()
 
 

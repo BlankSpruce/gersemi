@@ -13,15 +13,17 @@ def preprocess(node, dbg_types=False):
     return (node.data, [preprocess(child, dbg_types) for child in node.children])
 
 
-def test_handwritter_parser_vs_lark_based_parser(lark_based_parser, parser, case):
+def test_handwritter_parser_vs_lark_based_parser(
+    lark_based_parser, handwritten_parser, case
+):
     lhs = preprocess(lark_based_parser.parse(case.content))
-    rhs = preprocess(parser.parse(case.content))
+    rhs = preprocess(handwritten_parser.parse(case.content))
 
     assert lhs == rhs
 
 
-def test_handwritten_parser_vs_rust_parser(parser, rust_parser, case):
-    lhs = preprocess(parser.parse(case.content))
+def test_handwritten_parser_vs_rust_parser(handwritten_parser, rust_parser, case):
+    lhs = preprocess(handwritten_parser.parse(case.content))
     rhs = preprocess(rust_parser.parse(case.content))
 
     assert lhs == rhs

@@ -21,13 +21,17 @@ def test_formatter_idempotence(formatter_creator, case):
 
 
 def test_abstract_syntax_tree_equivalence(
-    lark_based_parser, lark_based_parser_with_simple_grammar, rust_parser, parser, case
+    lark_based_parser,
+    lark_based_parser_with_simple_grammar,
+    rust_parser,
+    handwritten_parser,
+    case,
 ):
     for p in [
         lark_based_parser,
         lark_based_parser_with_simple_grammar,
         rust_parser,
-        parser,
+        handwritten_parser,
     ]:
         # ruff: noqa: PERF203
         try:
