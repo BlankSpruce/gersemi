@@ -10,6 +10,11 @@ from gersemi.warnings import FormatterWarnings
 
 GERSEMI_OFF = "# gersemi: off"
 GERSEMI_ON = "# gersemi: on"
+DISABLED_FORMATTING_FENCES = {
+    GERSEMI_OFF: GERSEMI_ON,
+    "# cmake-format: off": "# cmake-format: on",
+    "# fmt: off": "# fmt: on",
+}
 BUG = "#-#-# gersemi: If you see this there is a bug in gersemi, please report it.#-#-#"
 LINE_RANGE_FENCE_OFF = f"{GERSEMI_OFF}\n{BUG}\n"
 LINE_RANGE_FENCE_ON = f"{BUG}\n{GERSEMI_ON}\n"
@@ -35,6 +40,7 @@ def consume_until(iterator, target):
 def reconstruct_disabled_formatting_zones_impl(original, formatted):
     other = iter(original.splitlines(keepends=True))
     active = iter(formatted.splitlines(keepends=True))
+    closing_fence = None
 
     while True:
         line = next(active, None)
@@ -42,21 +48,25 @@ def reconstruct_disabled_formatting_zones_impl(original, formatted):
             break
 
         command = line.strip()
-        if command == GERSEMI_OFF:
-            consume_until(other, command)
-            other, active = active, other
 
-        if command == GERSEMI_ON:
+        if closing_fence is None:
+            closing_fence = DISABLED_FORMATTING_FENCES.get(command)
+            if closing_fence is not None:
+                consume_until(other, command)
+                other, active = active, other
+
+        if command == closing_fence:
             gersemi_on = consume_until(other, command)
             if gersemi_on is not None:
                 line = gersemi_on
             other, active = active, other
+            closing_fence = None
 
         yield line
 
 
 def reconstruct_disabled_formatting_zones(original, formatted):
-    if GERSEMI_OFF not in original:
+    if all(off_pattern not in original for off_pattern in DISABLED_FORMATTING_FENCES):
         return formatted
 
     return "".join(reconstruct_disabled_formatting_zones_impl(original, formatted))

@@ -829,7 +829,11 @@ You can extend gersemi capabilities through Python modules listed with `--extens
 
 ### How to disable reformatting
 
-Gersemi can be disallowed to format block of code using pair of fencing comments `# gersemi: off`/`# gersemi: on`. Example:
+Gersemi can be disallowed to format block of code using pair of fencing comments. Supported pairs:
+- `# gersemi: off`/`# gersemi: on`
+- `# cmake-format: off`/`# cmake-format: on`
+- `# fmt: off`/`# fmt: on`
+Mixing fencing comments, for instance `# gersemi: off` + `# fmt: on`, is not supported. Example:
 
 ```cmake
 the_hobbit(
