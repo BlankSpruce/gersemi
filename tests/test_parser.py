@@ -9,10 +9,9 @@ from gersemi.exceptions import (
 from .tests_generator import generate_input_only_tests
 
 
-def test_parser(lark_based_parser, rust_parser, handwritten_parser, case):
+def test_parser(lark_based_parser, rust_parser, case):
     try:
         lark_based_parser.parse(case.content)
-        handwritten_parser.parse(case.content)
         rust_parser.parse(case.content)
     except ParsingError:
         pytest.fail("invalid input to parse")
@@ -84,24 +83,17 @@ endfunction()
     ],
 )
 def test_invalid_code_parsing_error(
-    lark_based_parser, rust_parser, handwritten_parser, invalid_code, expected_exception
+    lark_based_parser, rust_parser, invalid_code, expected_exception
 ):
     with pytest.raises(ParsingError) as lark_based_exc_info:
         lark_based_parser.parse(invalid_code)
 
     assert lark_based_exc_info.type is expected_exception
 
-    with pytest.raises(ParsingError) as handwritten_exc_info:
-        handwritten_parser.parse(invalid_code)
-
-    assert handwritten_exc_info.type is expected_exception
-
     with pytest.raises(ParsingError) as rust_exc_info:
         rust_parser.parse(invalid_code)
 
     assert rust_exc_info.type is expected_exception
-
-    assert handwritten_exc_info.value.args == rust_exc_info.value.args
 
 
 pytest_generate_tests = generate_input_only_tests(
