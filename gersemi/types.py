@@ -35,6 +35,11 @@ class Token:
     def __iter__(self):
         return iter(self.value)
 
+    def __deepcopy__(self, _memo):
+        return Token(
+            self.type, self.value, self.line, self.column, self.start_pos, self.end_pos
+        )
+
     def __getattr__(self, attr):
         return getattr(self.value, attr)
 

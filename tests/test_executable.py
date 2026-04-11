@@ -128,6 +128,11 @@ def test_check_not_formatted_input_from_stdin(app):
     assert app("--check", "-", input=inp) == fail()
 
 
+def test_safe_check_not_formatted_input_from_stdin(app):
+    inp = """set(FOO BAR)"""  # missing newline at the end
+    assert app("--check", "--safe", "-", input=inp) == fail()
+
+
 def test_format_formatted_input_from_stdin(app):
     inp = """set(FOO BAR)
 """
