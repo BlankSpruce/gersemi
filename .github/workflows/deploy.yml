@@ -37,6 +37,7 @@ jobs:
           build
           --sdist
           --wheel
+          --config-setting=--build-option=--py-limited-api=cp38
           --outdir dist/
           .
 

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-pyo3 = "0.26"
+pyo3 = { version = "0.26", features = ["abi3"] }
 regex = "1.12.3"
 
 [lib]
