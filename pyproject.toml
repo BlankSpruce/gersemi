@@ -43,6 +43,12 @@ gersemi = "gersemi.__main__:main"
 [project.urls]
 Homepage = "https://github.com/BlankSpruce/gersemi"
 
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "10.12"
+
+[tool.cibuildwheel]
+skip = ["*-win32", "*-musllinux*", "*_i686"]
+
 [[tool.mypy.overrides]]
 module = [
     "colorama",
