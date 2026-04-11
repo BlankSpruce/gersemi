@@ -114,22 +114,27 @@ mod gersemi_rust_backend {
     type SkippableMatch = (Option<Node>, usize);
 
     impl Parser {
-        fn token(&self, type_: &str, value: &str, offset: usize) -> Node {
-            match type_ {
-                "IDENTIFIER" | "UNQUOTED_ARGUMENT" | "QUOTED_ARGUMENT" | "BRACKET_ARGUMENT" => {
-                    Node::Token {
-                        type_: type_.to_string(),
-                        value: value.to_string(),
-                        line: Some(self.line(offset) + 1),
-                        column: Some(self.column(offset)),
-                    }
+        fn token(
+            &self,
+            type_: &str,
+            value: &str,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Node {
+            if compute_token_position {
+                Node::Token {
+                    type_: type_.to_string(),
+                    value: value.to_string(),
+                    line: Some(self.line(offset) + 1),
+                    column: Some(self.column(offset)),
                 }
-                _ => Node::Token {
+            } else {
+                Node::Token {
                     type_: type_.to_string(),
                     value: value.to_string(),
                     line: None,
                     column: None,
-                },
+                }
             }
         }
 
@@ -177,7 +182,11 @@ mod gersemi_rust_backend {
             self.error(offset, ErrorType::GenericParsingError)
         }
 
-        fn bracket_argument_token(&self, offset: usize) -> Result<Option<Match>, Error> {
+        fn bracket_argument_token(
+            &self,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<Match>, Error> {
             static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[(=*)\["));
             match RE_START.captures(&self.text[offset..]) {
                 None => Ok(None),
@@ -190,7 +199,12 @@ mod gersemi_rust_backend {
                             None => Err(self.unbalanced_brackets(offset)),
                             Some(captures) => Ok(captures.get(1).map(|matched| {
                                 (
-                                    self.token("BRACKET_ARGUMENT", matched.as_str(), offset),
+                                    self.token(
+                                        "BRACKET_ARGUMENT",
+                                        matched.as_str(),
+                                        offset,
+                                        compute_token_position,
+                                    ),
                                     offset + captures.get_match().len(),
                                 )
                             })),
@@ -200,12 +214,18 @@ mod gersemi_rust_backend {
             }
         }
 
-        fn terminal(&self, re: &regex::Regex, name: &str, offset: usize) -> Option<Match> {
+        fn terminal(
+            &self,
+            re: &regex::Regex,
+            name: &str,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Option<Match> {
             match re.captures(&self.text[offset..]) {
                 None => None,
                 Some(captures) => captures.get(1).map(|matched| {
                     (
-                        self.token(name, matched.as_str(), offset),
+                        self.token(name, matched.as_str(), offset, compute_token_position),
                         offset + captures.get_match().len(),
                     )
                 }),
@@ -214,17 +234,17 @@ mod gersemi_rust_backend {
 
         fn pound_sign(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
-            self.terminal(&RE, "POUND_SIGN", offset)
+            self.terminal(&RE, "POUND_SIGN", offset, false)
         }
 
         fn left_paren(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\()[ \t]*"));
-            self.terminal(&RE, "LEFT_PAREN", offset)
+            self.terminal(&RE, "LEFT_PAREN", offset, false)
         }
 
         fn right_paren(&self, offset: usize) -> Result<Match, Error> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\))[ \t]*"));
-            match self.terminal(&RE, "RIGHT_PAREN", offset) {
+            match self.terminal(&RE, "RIGHT_PAREN", offset, false) {
                 None => Err(self.unbalanced_parentheses(offset)),
                 Some(matched) => Ok(matched),
             }
@@ -232,11 +252,12 @@ mod gersemi_rust_backend {
 
         fn newline(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n+)[ \t]*"));
-            self.terminal(&RE, "NEWLINE", offset)
+            self.terminal(&RE, "NEWLINE", offset, false)
         }
 
         fn element_t(&self, command: &BlockCommand, offset: usize) -> Result<Option<Match>, Error> {
-            self.command_element_t(&command.re, true, offset)
+            let compute_token_position = matches!(command.name.as_str(), "function" | "macro");
+            self.command_element_t(&command.re, true, compute_token_position, offset)
         }
 
         fn block_body(
@@ -336,18 +357,26 @@ mod gersemi_rust_backend {
             Ok(None)
         }
 
-        fn bracket_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
+        fn bracket_argument(
+            &self,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<Match>, Error> {
             Ok(self
-                .bracket_argument_token(offset)?
+                .bracket_argument_token(offset, compute_token_position)?
                 .map(|(matched, offset)| (tree("bracket_argument", vec![matched]), offset)))
         }
 
         fn quotation_mark(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r#"^(")"#));
-            self.terminal(&RE, "QUOTATION_MARK", offset)
+            self.terminal(&RE, "QUOTATION_MARK", offset, false)
         }
 
-        fn quoted_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
+        fn quoted_argument(
+            &self,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<Match>, Error> {
             static PATTERN: LazyLock<String> =
                 LazyLock::new(|| add_ignores(quoted_argument_pattern()));
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
@@ -360,7 +389,12 @@ mod gersemi_rust_backend {
                     (
                         tree(
                             "quoted_argument",
-                            vec![self.token("QUOTED_ARGUMENT", matched.as_str(), offset)],
+                            vec![self.token(
+                                "QUOTED_ARGUMENT",
+                                matched.as_str(),
+                                offset,
+                                compute_token_position,
+                            )],
                         ),
                         offset + captures.get_match().len(),
                     )
@@ -368,7 +402,7 @@ mod gersemi_rust_backend {
             }
         }
 
-        fn unquoted_argument(&self, offset: usize) -> Option<Match> {
+        fn unquoted_argument(&self, offset: usize, compute_token_position: bool) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
             match RE.captures(&self.text[offset..]) {
                 None => None,
@@ -376,7 +410,12 @@ mod gersemi_rust_backend {
                     (
                         tree(
                             "unquoted_argument",
-                            vec![self.token("UNQUOTED_ARGUMENT", matched.as_str(), offset)],
+                            vec![self.token(
+                                "UNQUOTED_ARGUMENT",
+                                matched.as_str(),
+                                offset,
+                                compute_token_position,
+                            )],
                         ),
                         offset + captures.get_match().len(),
                     )
@@ -387,7 +426,7 @@ mod gersemi_rust_backend {
         fn complex_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
             Ok(match self.left_paren(offset) {
                 None => None,
-                Some((_, offset)) => match self.arguments(offset)? {
+                Some((_, offset)) => match self.arguments(offset, false)? {
                     None => None,
                     Some((matched_arguments, offset)) => {
                         let (_, offset) = self.right_paren(offset)?;
@@ -397,24 +436,32 @@ mod gersemi_rust_backend {
             })
         }
 
-        fn argument(&self, offset: usize) -> Result<Option<Match>, Error> {
-            if let Some(matched) = self.bracket_argument(offset)? {
+        fn argument(
+            &self,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<Match>, Error> {
+            if let Some(matched) = self.bracket_argument(offset, compute_token_position)? {
                 return Ok(Some(matched));
             }
 
-            if let Some(matched) = self.quoted_argument(offset)? {
+            if let Some(matched) = self.quoted_argument(offset, compute_token_position)? {
                 return Ok(Some(matched));
             }
 
-            if let Some(matched) = self.unquoted_argument(offset) {
+            if let Some(matched) = self.unquoted_argument(offset, compute_token_position) {
                 return Ok(Some(matched));
             }
 
             self.complex_argument(offset)
         }
 
-        fn commented_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
-            Ok(match self.argument(offset)? {
+        fn commented_argument(
+            &self,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<Match>, Error> {
+            Ok(match self.argument(offset, compute_token_position)? {
                 None => None,
                 Some((matched_argument, offset)) => match self.commented_argument_atom(offset)? {
                     None => Some((matched_argument, offset)),
@@ -443,8 +490,12 @@ mod gersemi_rust_backend {
             Ok(None)
         }
 
-        fn arguments_atom(&self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
-            if let Some((node, offset)) = self.commented_argument(offset)? {
+        fn arguments_atom(
+            &self,
+            offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<SkippableMatch>, Error> {
+            if let Some((node, offset)) = self.commented_argument(offset, compute_token_position)? {
                 return Ok(Some((Some(node), offset)));
             }
 
@@ -455,9 +506,15 @@ mod gersemi_rust_backend {
             Ok(None)
         }
 
-        fn arguments(&self, mut offset: usize) -> Result<Option<Match>, Error> {
+        fn arguments(
+            &self,
+            mut offset: usize,
+            compute_token_position: bool,
+        ) -> Result<Option<Match>, Error> {
             let mut result = Vec::<Node>::new();
-            while let Some((matched, new_offset)) = self.arguments_atom(offset)? {
+            while let Some((matched, new_offset)) =
+                self.arguments_atom(offset, compute_token_position)?
+            {
                 if let Some(matched) = matched {
                     result.push(matched);
                 }
@@ -471,7 +528,7 @@ mod gersemi_rust_backend {
                 Some(value) => value + 1,
                 None => 0usize,
             };
-            self.token("ANONYMOUS", &self.text[start..offset], offset)
+            self.token("ANONYMOUS", &self.text[start..offset], offset, false)
         }
 
         fn formatted_node(&self, start: usize, end: usize) -> Node {
@@ -482,7 +539,7 @@ mod gersemi_rust_backend {
             };
             tree(
                 "formatted_node",
-                vec![self.token("ANONYMOUS", value, start)],
+                vec![self.token("ANONYMOUS", value, start, false)],
             )
         }
 
@@ -496,7 +553,7 @@ mod gersemi_rust_backend {
         ) -> Node {
             match &identifier {
                 Node::Token {
-                    type_: _,
+                    type_,
                     value,
                     column: _,
                     line: _,
@@ -508,7 +565,7 @@ mod gersemi_rust_backend {
                             "custom_command",
                             vec![
                                 self.indentation(initial_offset),
-                                identifier,
+                                self.token(type_, value, initial_offset, true),
                                 arguments,
                                 self.formatted_node(custom_formatting_start, custom_formatting_end),
                             ],
@@ -520,7 +577,7 @@ mod gersemi_rust_backend {
         }
 
         fn identifier(&self, re: &regex::Regex, offset: usize, block_edge: bool) -> Option<Match> {
-            match self.terminal(re, "IDENTIFIER", offset) {
+            match self.terminal(re, "IDENTIFIER", offset, false) {
                 None => None,
                 Some((node, offset)) => match node {
                     Node::Token {
@@ -548,6 +605,7 @@ mod gersemi_rust_backend {
             re: &regex::Regex,
             offset: usize,
             block_edge: bool,
+            compute_token_position: bool,
         ) -> Result<Option<Match>, Error> {
             let initial_offset = offset;
             Ok(match self.identifier(re, offset, block_edge) {
@@ -555,22 +613,24 @@ mod gersemi_rust_backend {
                 Some((matched_identifier, identifier_offset)) => {
                     match self.left_paren(identifier_offset) {
                         None => None,
-                        Some((_, offset)) => match self.arguments(offset)? {
-                            None => None,
-                            Some((matched_arguments, arguments_offset)) => {
-                                let (_, offset) = self.right_paren(arguments_offset)?;
-                                Some((
-                                    self.create_command_invocation_node(
-                                        matched_identifier,
-                                        matched_arguments,
-                                        initial_offset,
-                                        identifier_offset,
-                                        arguments_offset,
-                                    ),
-                                    offset,
-                                ))
+                        Some((_, offset)) => {
+                            match self.arguments(offset, compute_token_position)? {
+                                None => None,
+                                Some((matched_arguments, arguments_offset)) => {
+                                    let (_, offset) = self.right_paren(arguments_offset)?;
+                                    Some((
+                                        self.create_command_invocation_node(
+                                            matched_identifier,
+                                            matched_arguments,
+                                            initial_offset,
+                                            identifier_offset,
+                                            arguments_offset,
+                                        ),
+                                        offset,
+                                    ))
+                                }
                             }
-                        },
+                        }
                     }
                 }
             })
@@ -580,34 +640,37 @@ mod gersemi_rust_backend {
             &self,
             re: &regex::Regex,
             block_edge: bool,
+            compute_token_position: bool,
             offset: usize,
         ) -> Result<Option<Match>, Error> {
-            Ok(match self.command_invocation_t(re, offset, block_edge)? {
-                None => None,
-                Some((matched, offset)) => match self.line_comment(offset) {
-                    None => {
-                        if block_edge {
-                            Some((tree("command_element", vec![matched]), offset))
-                        } else {
-                            Some((matched, offset))
+            Ok(
+                match self.command_invocation_t(re, offset, block_edge, compute_token_position)? {
+                    None => None,
+                    Some((matched, offset)) => match self.line_comment(offset) {
+                        None => {
+                            if block_edge {
+                                Some((tree("command_element", vec![matched]), offset))
+                            } else {
+                                Some((matched, offset))
+                            }
                         }
-                    }
-                    Some((matched_comment, new_offset)) => Some((
-                        tree("command_element", vec![matched, matched_comment]),
-                        new_offset,
-                    )),
+                        Some((matched_comment, new_offset)) => Some((
+                            tree("command_element", vec![matched, matched_comment]),
+                            new_offset,
+                        )),
+                    },
                 },
-            })
+            )
         }
 
         fn command_element(&self, offset: usize) -> Result<Option<Match>, Error> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-            self.command_element_t(&RE, false, offset)
+            self.command_element_t(&RE, false, false, offset)
         }
 
         fn standalone_identifier(&self, offset: usize) -> Option<Match> {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-            self.terminal(&RE, "IDENTIFIER", offset)
+            self.terminal(&RE, "IDENTIFIER", offset, false)
                 .map(|(node, offset)| (tree("standalone_identifier", vec![node]), offset))
         }
 
@@ -620,7 +683,7 @@ mod gersemi_rust_backend {
                 return Ok(None);
             }
 
-            if let Some((matched, new_offset)) = self.bracket_argument_token(offset)? {
+            if let Some((matched, new_offset)) = self.bracket_argument_token(offset, false)? {
                 result.push(matched);
                 offset = new_offset;
                 return Ok(Some((tree("bracket_comment", result), offset)));
@@ -639,7 +702,7 @@ mod gersemi_rust_backend {
                             "line_comment",
                             vec![
                                 pound_sign,
-                                self.token("LINE_COMMENT_CONTENT", content.as_str(), offset),
+                                self.token("LINE_COMMENT_CONTENT", content.as_str(), offset, false),
                             ],
                         ),
                         offset + content.len(),
@@ -693,11 +756,11 @@ mod gersemi_rust_backend {
                 None => None,
                 Some(captures) => match captures.get(2) {
                     None => Some((
-                        self.token("NEWLINE", "\n", offset),
+                        self.token("NEWLINE", "\n", offset, false),
                         offset + captures.get_match().len(),
                     )),
                     Some(_) => Some((
-                        self.token("NEWLINE", "\n\n", offset),
+                        self.token("NEWLINE", "\n\n", offset, false),
                         offset + captures.get_match().len(),
                     )),
                 },
