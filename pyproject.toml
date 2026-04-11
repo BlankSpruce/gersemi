@@ -46,7 +46,7 @@ Homepage = "https://github.com/BlankSpruce/gersemi"
 [[tool.mypy.overrides]]
 module = [
     "colorama",
-    "gersemi_rust_parser",
+    "gersemi_rust_backend",
     "platformdirs",
     "pytest",
 ]
@@ -123,5 +123,5 @@ include = ["gersemi", "gersemi.*"]
 gersemi = ["cmake.lark"]
 
 [[tool.setuptools-rust.ext-modules]]
-target = "gersemi_rust_parser"
-path = "gersemi/rust-parser/Cargo.toml"
+target = "gersemi_rust_backend"
+path = "gersemi/rust-backend/Cargo.toml"

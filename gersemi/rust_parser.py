@@ -1,5 +1,5 @@
 from collections import ChainMap
-import gersemi_rust_parser
+import gersemi_rust_backend
 from gersemi.builtin_commands import _builtin_commands
 
 
@@ -18,7 +18,7 @@ class RustParser:
             else ChainMap(known_definitions, _builtin_commands)
         )
 
-        return gersemi_rust_parser.parse(
+        return gersemi_rust_backend.parse(
             text,
             blocks=(
                 ("if", "endif"),

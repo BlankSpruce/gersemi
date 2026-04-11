@@ -76,6 +76,10 @@ def test_help_just_works(app):
     assert app("--help") == success()
 
 
+def test_version_just_works(app):
+    assert app("--version") == success()
+
+
 def test_check_on_formatted_file_should_return_zero(app, testfiles):
     assert app("--check", testfiles / "formatted_file.cmake") == success()
 

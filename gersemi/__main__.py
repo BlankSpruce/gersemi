@@ -2,6 +2,7 @@ import argparse
 from dataclasses import fields
 import pathlib
 import sys
+import gersemi_rust_backend
 from gersemi.__version__ import __title__, __version__
 from gersemi.configuration import (
     ControlConfiguration,
@@ -37,6 +38,7 @@ class ShowVersion(argparse.Action):
         print(f"{__title__} {__version__}{frozen_suffix}")
         print(f"colorama {colorama_version}")
         print(f"Python {sys.version}")
+        print(gersemi_rust_backend.version())
         sys.exit(SUCCESS)
 
 

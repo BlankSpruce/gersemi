@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 #[pymodule]
-mod gersemi_rust_parser {
+mod gersemi_rust_backend {
     use pyo3::prelude::*;
     use pyo3::sync::PyOnceLock;
     use pyo3::types::PyType;
@@ -844,5 +844,11 @@ mod gersemi_rust_parser {
             Ok(node) => convert(py, node),
             Err(error) => Err(raise_exception(error)),
         }
+    }
+
+    #[pyfunction]
+    fn version() -> &'static str {
+        static RESULT: &str = env!("CARGO_VERSION");
+        RESULT
     }
 }

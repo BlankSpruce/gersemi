@@ -1,5 +1,5 @@
 [package]
-name = "gersemi-rust-parser"
+name = "gersemi-rust-backend"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,9 +8,9 @@ pyo3 = { version = "0.28", features = ["abi3"] }
 regex = "1.12"
 
 [lib]
-name = "gersemi_rust_parser"
+name = "gersemi_rust_backend"
 crate-type = ["cdylib"]
-path = "parser.rs"
+path = "backend.rs"
 
 [lints.clippy]
 struct-field-names = {level = "allow", priority = 1}
