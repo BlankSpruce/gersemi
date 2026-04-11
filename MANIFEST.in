@@ -1,0 +1,2 @@
+include gersemi/rust-parser/Cargo.toml
+include gersemi/rust-parser/parser.rs
