@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-pyo3 = { version = "0.26", features = ["abi3"] }
-regex = "1.12.3"
+pyo3 = { version = "0.28", features = ["abi3"] }
+regex = "1.12"
 
 [lib]
 name = "gersemi_rust_parser"
