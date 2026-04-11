@@ -146,7 +146,11 @@ mod gersemi_rust_parser {
 
         fn error(&self, offset: usize, error_type: ErrorType) -> Error {
             let line = self.line(offset);
-            let column = if line == 0 { offset } else { self.column(offset) };
+            let column = if line == 0 {
+                offset
+            } else {
+                self.column(offset)
+            };
             let faulty_line = self.text.lines().nth(line).unwrap_or("");
             let explanation = format!("{}\n{}^\n", faulty_line, " ".repeat(column));
             Error {
