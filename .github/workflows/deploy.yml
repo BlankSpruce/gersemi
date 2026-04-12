@@ -30,9 +30,8 @@ jobs:
           persist-credentials: false
 
       - name: Setup Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: stable
 
       - name: Build wheels
