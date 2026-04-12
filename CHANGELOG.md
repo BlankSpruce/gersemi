@@ -1,4 +1,12 @@
 # Changelog
+## [0.27.0] 2026-04-12
+### Added
+- Formatting can be disabled through other pairs of fencing comments: `# cmake-format: off`/`# cmake-format: on` and `# fmt: off`/`# fmt: on`. (#106)
+
+### Changed
+- Change default from `unsafe: false` to `unsafe: true`. Additionally add explicit `--safe` to enable that mode from command line.
+- Replace internal CMake parser with custom handwritten one in Rust instead of relying on Lark AKA "rewrite it in Rust".
+
 ## [0.26.1] 2026-03-13
 ### Added
 - Support for new keywords in native commands available in CMake 4.3.

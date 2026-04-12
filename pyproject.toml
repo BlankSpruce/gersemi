@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gersemi"
-version = "0.26.1"
+version = "0.27.0"
 authors = [
     { name = "Blank Spruce", email = "blankspruce@protonmail.com" }
 ]
@@ -124,9 +124,6 @@ no-lines-before = [
 
 [tool.setuptools.packages.find]
 include = ["gersemi", "gersemi.*"]
-
-[tool.setuptools.package-data]
-gersemi = ["cmake.lark"]
 
 [[tool.setuptools-rust.ext-modules]]
 target = "gersemi_rust_backend"

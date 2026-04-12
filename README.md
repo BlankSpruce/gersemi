@@ -16,7 +16,7 @@ pip3 install gersemi
 
 ```plain
 usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--version]
-               [-h] [-l INTEGER] [--indent (INTEGER | tabs)] [--unsafe]
+               [-h] [-l INTEGER] [--indent (INTEGER | tabs)] [--safe]
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}]
                [--warn-about-unknown-commands] [--disable-formatting]
@@ -72,7 +72,7 @@ outcome configuration:
   --indent (INTEGER | tabs)
                         Number of spaces used to indent or 'tabs' for indenting with
                         tabs [default: 4]
-  --unsafe              Skip default sanity checks.
+  --safe, --unsafe      Enable sanity checks. [default: skip sanity checks]
   --definitions src [src ...]
                         Files or directories containing custom command definitions
                         (functions or macros). If only - is provided custom definitions,
@@ -166,7 +166,7 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.26.1
+  rev: 0.27.0
   hooks:
   - id: gersemi
 ```
@@ -182,7 +182,7 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 ```yaml
 repos:
 - repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.26.1
+  rev: 0.27.0
   hooks:
   - id: gersemi
     additional_dependencies:
