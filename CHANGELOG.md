@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.1] 2026-04-13
+### Fixed
+- Build process of Rust extension. (#108)
+
 ## [0.27.0] 2026-04-12
 ### Added
 - Formatting can be disabled through other pairs of fencing comments: `# cmake-format: off`/`# cmake-format: on` and `# fmt: off`/`# fmt: on`. (#106)
