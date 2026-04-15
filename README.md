@@ -165,8 +165,8 @@ You can use gersemi with a pre-commit hook by adding the following to `.pre-comm
 
 ```yaml
 repos:
-- repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.27.0
+- repo: https://github.com/BlankSpruce/gersemi-pre-commit
+  rev: 0.27.1
   hooks:
   - id: gersemi
 ```
@@ -181,8 +181,8 @@ If you want to use extensions with pre-commit list them with [`additional_depend
 `.pre-commit-config.yaml`:
 ```yaml
 repos:
-- repo: https://github.com/BlankSpruce/gersemi
-  rev: 0.27.0
+- repo: https://github.com/BlankSpruce/gersemi-pre-commit
+  rev: 0.27.1
   hooks:
   - id: gersemi
     additional_dependencies:

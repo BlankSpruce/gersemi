@@ -1,4 +1,9 @@
 # Changelog
+## [0.27.1] 2026-04-15
+### Fixed
+- pre-commit hook reference in README now points to separate repository to leverage availability of wheels in PyPI. (#107)
+- Build process of Rust extension. (#108)
+
 ## [0.27.0] 2026-04-12
 ### Added
 - Formatting can be disabled through other pairs of fencing comments: `# cmake-format: off`/`# cmake-format: on` and `# fmt: off`/`# fmt: on`. (#106)
