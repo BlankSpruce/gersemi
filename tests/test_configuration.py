@@ -2,6 +2,7 @@
 from dataclasses import asdict
 import json
 from pathlib import Path
+import sys
 from pydantic import TypeAdapter
 from pydantic.json_schema import GenerateJsonSchema
 from pydantic.version import version_short
@@ -46,6 +47,7 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         return result
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="At least Python 3.7 is required")
 @pytest.mark.skipif(
     pydantic_version_as_() < (2, 9), reason="At least pydantic 2.9 is required"
 )
