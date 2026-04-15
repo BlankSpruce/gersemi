@@ -42,6 +42,7 @@
     }
   },
   "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "These arguments control how gersemi formats source code.\nValues for these arguments can be stored in .gersemirc file which can be\nplaced in directory next to the source file or any parent directory.\nThe highest priority has file provided through --config, then file closest\nto the source file, then file in parent directory etc. until root of file\nsystem is reached.\nArguments from command line can be used to override parts of that stored\nconfiguration or supply them in absence of configuration file.\nPrecedence: (command line arguments) > (configuration file) > (defaults)",
   "properties": {
     "definitions": {
       "default": [],
