@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.2] 2026-04-16
+### Fixed
+- Missing files from source distribution. (#108)
+
 ## [0.27.1] 2026-04-15
 ### Fixed
 - pre-commit hook reference in README now points to separate repository to leverage availability of wheels in PyPI. (#107)

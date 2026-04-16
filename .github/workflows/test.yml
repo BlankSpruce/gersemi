@@ -47,5 +47,5 @@ jobs:
         run: tox -e tests && tox -e build-executable -- ${{ matrix.executable-name }}
 
       - name: Run quality tests
-        run: tox -e lint && tox -e format && tox -e mypy && tox -e check-extension
+        run: tox -e lint && tox -e format && tox -e mypy && tox -e check-extension && tox -e check-sdist
         if: matrix.name == 'Quality tests'
