@@ -29,7 +29,6 @@ def create_standard_dumper(data):
 
     class Impl(*bases):
         _canonical_name = data.get("_canonical_name", None)
-        _inhibit_favour_expansion = data.get("_inhibit_favour_expansion", False)
         _two_words_keywords = data.get("_two_words_keywords", ())
 
         front_positional_arguments = data.get("front_positional_arguments", ())
@@ -40,6 +39,7 @@ def create_standard_dumper(data):
         sections = data.get("sections", {})
         keyword_formatters = data.get("keyword_formatters", {})
         keyword_preprocessors = data.get("keyword_preprocessors", {})
+        expansion_limits = data.get("expansion_limits", {})
 
         if data_signatures is not None:
             signatures = data_signatures
