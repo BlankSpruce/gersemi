@@ -1,6 +1,6 @@
 use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyAnyMethods, PyType};
-use pyo3::{Bound, IntoPyObject, Py, PyAny, PyErr, Python};
+use pyo3::{Bound, FromPyObject, IntoPyObject, Py, PyAny, PyErr, Python};
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -16,13 +16,16 @@ pub struct Parser {
     known_commands: Vec<String>,
 }
 
+#[derive(FromPyObject)]
 pub enum Node {
     Tree {
         data: String,
         children: Vec<Node>,
     },
     Token {
+        #[pyo3(attribute("type"))]
         type_: String,
+
         value: String,
         line: Option<usize>,
         column: Option<usize>,
@@ -43,7 +46,7 @@ pub struct Error {
     pub column: usize,
 }
 
-fn tree(data: &str, children: Vec<Node>) -> Node {
+pub fn tree(data: &str, children: Vec<Node>) -> Node {
     Node::Tree {
         data: data.to_string(),
         children,

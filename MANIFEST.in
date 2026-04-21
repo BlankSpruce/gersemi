@@ -1,1 +1,2 @@
-recursive-include gersemi/rust-backend *
+include gersemi/rust-backend/Cargo.toml
+recursive-include gersemi/rust-backend *.rs
