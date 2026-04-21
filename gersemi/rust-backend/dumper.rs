@@ -1,4 +1,5 @@
-use crate::parser::{tree, Node};
+use crate::node::{Node, Nodes};
+use crate::parser::tree;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
@@ -117,13 +118,13 @@ enum AccumulatorKind {
 
 struct Accumulator {
     kind: AccumulatorKind,
-    nodes: Vec<Node>,
+    nodes: Nodes,
 }
 
 struct KeywordSplitter {
-    groups: Vec<Node>,
+    groups: Nodes,
     accumulator: Accumulator,
-    comment_accumulator: Vec<Node>,
+    comment_accumulator: Nodes,
 }
 
 impl KeywordSplitter {
@@ -141,11 +142,11 @@ impl KeywordSplitter {
         self.groups.append(&mut self.comment_accumulator);
     }
 
-    fn split(&mut self, dumper: &Dumper, arguments: Vec<Node>) {
+    fn split(&mut self, dumper: &Dumper, arguments: Nodes) {
         let mut iterator = arguments.into_iter();
 
         while let Some(argument) = iterator.next() {
-            if is_comment(&argument) {
+            if argument.is_comment() {
                 self.comment_accumulator.push(argument);
             } else if dumper.is_one_of_options(&argument) {
                 self.flush_accumulators();
@@ -154,7 +155,7 @@ impl KeywordSplitter {
                 self.flush_accumulators();
                 let mut group = vec![argument];
                 for n in iterator.by_ref() {
-                    let stop = !is_comment(&n);
+                    let stop = !n.is_comment();
                     group.push(n);
                     if stop {
                         break;
@@ -216,20 +217,16 @@ impl Dumper {
             || self.is_one_of_multi_value_keywords(node)
     }
 
-    fn is_keyword(&self, argument: &Node) -> bool {
-        self.is_one_of_keywords(argument)
-    }
-
     fn find_pivot(&self, arguments: &[Node]) -> Option<usize> {
         for (index, argument) in arguments.iter().enumerate() {
-            if self.is_keyword(argument) {
+            if self.is_one_of_keywords(argument) {
                 return Some(index);
             }
         }
         None
     }
 
-    fn separate_front(&self, mut arguments: Vec<Node>) -> (Vec<Node>, Vec<Node>) {
+    fn separate_front(&self, mut arguments: Nodes) -> (Nodes, Nodes) {
         match self.find_pivot(&arguments) {
             None => (arguments, vec![]),
             Some(pivot) => {
@@ -239,7 +236,7 @@ impl Dumper {
         }
     }
 
-    fn split_positional_arguments(&self, mut arguments: Vec<Node>) -> Vec<Node> {
+    fn split_positional_arguments(&self, mut arguments: Nodes) -> Nodes {
         let last_index = min(arguments.len(), self.front_positional_arguments.len());
         let rest = arguments.split_off(last_index);
         let mut arguments = arguments
@@ -254,7 +251,7 @@ impl Dumper {
         arguments
     }
 
-    fn split_by_keywords(&self, arguments: Vec<Node>) -> Vec<Node> {
+    fn split_by_keywords(&self, arguments: Nodes) -> Nodes {
         let mut keyword_splitter = KeywordSplitter {
             groups: vec![],
             accumulator: Accumulator {
@@ -267,7 +264,7 @@ impl Dumper {
         keyword_splitter.groups
     }
 
-    pub fn split_arguments(&self, mut arguments: Vec<Node>) -> Vec<Node> {
+    pub fn split_arguments(&self, mut arguments: Nodes) -> Nodes {
         let back = if self.back_positional_arguments.len() > arguments.len() {
             vec![]
         } else {
@@ -282,13 +279,6 @@ impl Dumper {
             .into_iter()
             .chain(keyworded_arguments)
             .chain(back)
-            .collect::<Vec<Node>>()
-    }
-}
-
-fn is_comment(node: &Node) -> bool {
-    match node {
-        Node::Token { .. } => false,
-        Node::Tree { data, .. } => data == "bracket_comment" || data == "line_comment",
+            .collect::<Nodes>()
     }
 }

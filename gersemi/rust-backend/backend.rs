@@ -1,4 +1,5 @@
 mod dumper;
+mod node;
 mod parser;
 
 use pyo3::pymodule;
@@ -6,7 +7,8 @@ use pyo3::pymodule;
 #[pymodule]
 mod gersemi_rust_backend {
     use crate::dumper::Dumper;
-    use crate::parser::{BlockDefinitions, Error, Node, Parser};
+    use crate::node::{Node, Nodes};
+    use crate::parser::{BlockDefinitions, Error, Parser};
     use pyo3::pyfunction;
 
     #[pyfunction]
@@ -21,7 +23,7 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn argument_aware_split_arguments(dumper: Dumper, arguments: Vec<Node>) -> Vec<Node> {
+    fn argument_aware_split_arguments(dumper: Dumper, arguments: Nodes) -> Nodes {
         dumper.split_arguments(arguments)
     }
 
