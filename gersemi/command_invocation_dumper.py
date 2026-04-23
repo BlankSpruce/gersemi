@@ -1,6 +1,7 @@
 from collections import ChainMap
 from contextlib import contextmanager
 from functools import lru_cache
+from gersemi.argument_schema import StandardCommand
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import OutcomeConfiguration
@@ -43,8 +44,7 @@ class CommandInvocationDumper(
         if command is None:
             return None
 
-        impl = command.get("__impl", None)
-        if impl is None:
+        if isinstance(command, StandardCommand):
             return create_standard_dumper(command)
 
         return create_specialized_dumper(command)

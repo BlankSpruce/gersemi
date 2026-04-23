@@ -2,8 +2,8 @@ from collections import abc
 
 
 class ImmutableDict(abc.Mapping):
-    def __init__(self, d):
-        self._d = d
+    def __init__(self, d=None):
+        self._d = {} if d is None else d
 
     def __getitem__(self, key):
         return self._d[key]

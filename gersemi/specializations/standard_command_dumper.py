@@ -1,5 +1,4 @@
 from functools import lru_cache
-from gersemi.argument_schema import argument_schemas_from_dict
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_preprocessor import KeywordPreprocessor
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
@@ -24,33 +23,32 @@ def create_standard_dumper(data):
         ArgumentAwareCommandInvocationDumper,
     ]
 
-    data_signatures = data.get("signatures", None)
-    if data_signatures is not None:
+    if data.signatures:
         bases = [MultipleSignatureCommandInvocationDumper, *bases]
 
     class Impl(*bases):
-        _canonical_name = data.get("_canonical_name", None)
-        _inhibit_favour_expansion = data.get("_inhibit_favour_expansion", False)
-        _two_words_keywords = data.get("_two_words_keywords", ())
+        _canonical_name = data.canonical_name
+        _inhibit_favour_expansion = data.inhibit_favour_expansion
+        _two_words_keywords = data.two_words_keywords
 
-        front_positional_arguments = data.get("front_positional_arguments", ())
-        back_positional_arguments = data.get("back_positional_arguments", ())
-        options = data.get("options", ())
-        one_value_keywords = data.get("one_value_keywords", ())
-        multi_value_keywords = data.get("multi_value_keywords", ())
-        sections = argument_schemas_from_dict(data.get("sections", {}))
-        keyword_formatters = data.get("keyword_formatters", {})
-        keyword_preprocessors = data.get("keyword_preprocessors", {})
+        front_positional_arguments = data.schema.front_positional_arguments
+        back_positional_arguments = data.schema.back_positional_arguments
+        options = data.schema.options
+        one_value_keywords = data.schema.one_value_keywords
+        multi_value_keywords = data.schema.multi_value_keywords
+        sections = data.schema.sections
+        keyword_formatters = data.schema.keyword_formatters
+        keyword_preprocessors = data.schema.keyword_preprocessors
 
-        if data_signatures is not None:
-            signatures = argument_schemas_from_dict(data_signatures)
+        if data.signatures:
+            signatures = data.signatures
 
     return Impl
 
 
 @lru_cache(maxsize=None)
 def create_specialized_dumper(data):
-    class Impl(data["__impl"]):
-        _canonical_name = data.get("_canonical_name", None)
+    class Impl(data.impl):
+        _canonical_name = data.canonical_name
 
     return Impl

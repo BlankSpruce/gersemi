@@ -28,9 +28,9 @@ class RustParser:
                 ("while", "endwhile"),
                 ("block", "endblock"),
                 *(
-                    (name, definition["block_end"])
+                    (name, definition.block_end)
                     for name, definition in known_definitions.items()
-                    if definition.get("block_end", None)
+                    if getattr(definition, "block_end", None)
                 ),
             ),
             known_commands=tuple(key for key in self.known_definitions),

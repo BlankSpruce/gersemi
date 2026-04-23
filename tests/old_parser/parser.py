@@ -200,9 +200,9 @@ class Parser:
     ):
         if known_definitions:
             custom_blocks = tuple(
-                CustomBlock(start=n, end=d["block_end"])
+                CustomBlock(start=n, end=d.block_end)
                 for n, d in known_definitions.items()
-                if d.get("block_end", None)
+                if getattr(d, "block_end", None)
             )
         else:
             custom_blocks = ()

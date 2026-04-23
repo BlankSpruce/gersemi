@@ -1,7 +1,13 @@
 # pylint: disable=too-many-lines
 # ruff: noqa: C420
 from typing import Iterable, List, Mapping
-from gersemi.immutable import make_immutable
+from gersemi.argument_schema import (
+    SpecializedCommand,
+    StandardCommand,
+    argument_schema_from_dict,
+    argument_schemas_from_dict,
+)
+from gersemi.immutable import ImmutableDict, make_immutable
 from gersemi.keyword_kind import KeywordFormatter
 from gersemi.keywords import AnyMatcher, KeywordMatcher
 from gersemi.specializations.add_custom_target import add_custom_target
@@ -3550,18 +3556,25 @@ builtin_commands = {
 }
 
 
-def add_canonical_name(value, canonical_name):
-    if isinstance(value, dict):
-        value["_canonical_name"] = canonical_name
-        return value
-
-    return value
-
-
 def preprocess_definitions(definitions):
     return make_immutable(
         {
-            key.strip().lower(): add_canonical_name(value, key)
+            key.strip().lower(): (
+                StandardCommand(
+                    canonical_name=key,
+                    inhibit_favour_expansion=value.get(
+                        "_inhibit_favour_expansion", False
+                    ),
+                    two_words_keywords=tuple(value.get("_two_words_keywords", ())),
+                    schema=argument_schema_from_dict(value),
+                    signatures=argument_schemas_from_dict(
+                        value.get("signatures", ImmutableDict())
+                    ),
+                    block_end=value.get("block_end", None),
+                )
+                if "__impl" not in value
+                else SpecializedCommand(canonical_name=key, impl=value.get("__impl"))
+            )
             for key, value in definitions.items()
         }
     )

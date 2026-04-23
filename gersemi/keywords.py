@@ -16,7 +16,8 @@ class AnyMatcher:
         return hash(str(self))
 
 
-KeywordMatcher = Union[str, Tuple[str, Union[str, AnyMatcher]]]
+TwoWordKeywordMatcher = Tuple[str, Union[str, AnyMatcher]]
+KeywordMatcher = Union[str, TwoWordKeywordMatcher]
 
 
 @dataclass
