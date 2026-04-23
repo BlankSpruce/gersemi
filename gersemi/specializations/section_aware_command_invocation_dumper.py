@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from gersemi.argument_schema import Sections, create_schema_patch
 from gersemi.ast_helpers import (
     is_multi_value_argument,
     is_one_of_keywords,
@@ -7,25 +8,10 @@ from gersemi.ast_helpers import (
     is_section,
     positional_arguments,
 )
-from gersemi.section import Sections
 from gersemi.types import Tree
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-
-
-def create_section_patch(section, old_class):
-    class Impl(old_class):
-        front_positional_arguments = section.front_positional_arguments
-        back_positional_arguments = section.back_positional_arguments
-        options = section.options
-        one_value_keywords = section.one_value_keywords
-        multi_value_keywords = section.multi_value_keywords
-        sections = section.sections
-        keyword_formatters = section.keyword_formatters
-        keyword_preprocessors = section.keyword_preprocessors
-
-    return Impl
 
 
 class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
@@ -35,7 +21,7 @@ class SectionAwareCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
     def _update_section_characteristics(self, keyword):
         old_class = type(self)
         try:
-            self.__class__ = create_section_patch(self.sections[keyword], old_class)
+            self.__class__ = create_schema_patch(self.sections[keyword], old_class)
             yield
         finally:
             self.__class__ = old_class

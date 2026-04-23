@@ -1,33 +1,14 @@
 from contextlib import contextmanager
 from itertools import filterfalse
-from typing import Dict, List, Optional, Union
+from gersemi.argument_schema import Signatures, create_schema_patch
 from gersemi.ast_helpers import is_comment, is_one_of_keywords
-from gersemi.keywords import KeywordMatcher
-from gersemi.section import Sections, sections_from_dict
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
 
 
-def create_signature_patch(signature, old_class):
-    def get(key, default_value=None):
-        return signature.get(key, [] if default_value is None else default_value)
-
-    class Impl(old_class):
-        front_positional_arguments = get("front_positional_arguments")
-        back_positional_arguments = get("back_positional_arguments")
-        options = get("options")
-        one_value_keywords = get("one_value_keywords")
-        multi_value_keywords = get("multi_value_keywords")
-        sections = sections_from_dict(get("sections", {}))
-        keyword_formatters = get("keyword_formatters", {})
-        keyword_preprocessors = get("keyword_preprocessors", {})
-
-    return Impl
-
-
 class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDumper):
-    signatures: Dict[Optional[KeywordMatcher], Dict[str, Union[List, Sections]]] = {}
+    signatures: Signatures = {}
 
     @contextmanager
     def _update_signature_characteristics(self, signature):
@@ -37,7 +18,7 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
 
         old_class = type(self)
         try:
-            self.__class__ = create_signature_patch(signature, old_class)
+            self.__class__ = create_schema_patch(signature, old_class)
             yield
         finally:
             self.__class__ = old_class
