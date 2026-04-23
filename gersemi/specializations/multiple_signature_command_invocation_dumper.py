@@ -3,10 +3,10 @@ from itertools import filterfalse
 from typing import Dict, List, Optional, Union
 from gersemi.ast_helpers import is_comment, is_one_of_keywords
 from gersemi.keywords import KeywordMatcher
+from gersemi.section import Sections, sections_from_dict
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-from .section_aware_command_invocation_dumper import Sections
 
 
 def create_signature_patch(signature, old_class):
@@ -19,7 +19,7 @@ def create_signature_patch(signature, old_class):
         options = get("options")
         one_value_keywords = get("one_value_keywords")
         multi_value_keywords = get("multi_value_keywords")
-        sections = get("sections", {})
+        sections = sections_from_dict(get("sections", {}))
         keyword_formatters = get("keyword_formatters", {})
         keyword_preprocessors = get("keyword_preprocessors", {})
 

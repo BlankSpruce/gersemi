@@ -2,6 +2,7 @@ from functools import lru_cache
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_preprocessor import KeywordPreprocessor
 from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
+from gersemi.section import sections_from_dict
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -37,7 +38,7 @@ def create_standard_dumper(data):
         options = data.get("options", ())
         one_value_keywords = data.get("one_value_keywords", ())
         multi_value_keywords = data.get("multi_value_keywords", ())
-        sections = data.get("sections", {})
+        sections = sections_from_dict(data.get("sections", {}))
         keyword_formatters = data.get("keyword_formatters", {})
         keyword_preprocessors = data.get("keyword_preprocessors", {})
 

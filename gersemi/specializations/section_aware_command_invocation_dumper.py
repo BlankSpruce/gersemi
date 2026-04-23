@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from typing import Iterable, Mapping
 from gersemi.ast_helpers import (
     is_multi_value_argument,
     is_one_of_keywords,
@@ -8,28 +7,23 @@ from gersemi.ast_helpers import (
     is_section,
     positional_arguments,
 )
-from gersemi.keywords import KeywordMatcher
+from gersemi.section import Sections
 from gersemi.types import Tree
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
 
-Sections = Mapping[KeywordMatcher, Mapping[KeywordMatcher, Iterable[KeywordMatcher]]]
-
 
 def create_section_patch(section, old_class):
-    def get(key, default_value):
-        return section.get(key, default_value)
-
     class Impl(old_class):
-        front_positional_arguments = get("front_positional_arguments", [])
-        back_positional_arguments = get("back_positional_arguments", [])
-        options = get("options", [])
-        one_value_keywords = get("one_value_keywords", [])
-        multi_value_keywords = get("multi_value_keywords", [])
-        sections = get("sections", {})
-        keyword_formatters = get("keyword_formatters", {})
-        keyword_preprocessors = get("keyword_preprocessors", {})
+        front_positional_arguments = section.front_positional_arguments
+        back_positional_arguments = section.back_positional_arguments
+        options = section.options
+        one_value_keywords = section.one_value_keywords
+        multi_value_keywords = section.multi_value_keywords
+        sections = section.sections
+        keyword_formatters = section.keyword_formatters
+        keyword_preprocessors = section.keyword_preprocessors
 
     return Impl
 
