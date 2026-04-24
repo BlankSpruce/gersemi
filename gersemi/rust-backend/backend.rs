@@ -23,8 +23,8 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn argument_aware_split_arguments(dumper: Dumper, arguments: Nodes) -> Nodes {
-        dumper.split_arguments(arguments)
+    fn dumper_split_arguments(dumper: Dumper, arguments: Nodes) -> Nodes {
+        dumper.split_arguments_with_sections(arguments)
     }
 
     #[pyfunction]

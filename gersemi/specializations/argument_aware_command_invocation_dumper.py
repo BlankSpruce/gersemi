@@ -1,5 +1,4 @@
 from typing import Dict, Iterable, Optional, Sequence
-import gersemi_rust_backend
 from gersemi.ast_helpers import (
     get_value,
     is_multi_value_argument,
@@ -71,12 +70,6 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
             formatter = getattr(self, formatter_kind)
             formatted_values = formatter(values)
         return f"{begin}\n{formatted_values}"
-
-    def _split_arguments(self, arguments):
-        return gersemi_rust_backend.argument_aware_split_arguments(
-            self,
-            arguments,
-        )
 
     def group_size(self, group):
         if is_positional_arguments(group):

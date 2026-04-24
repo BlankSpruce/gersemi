@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Optional, Sequence
 from gersemi.immutable import ImmutableDict, make_immutable
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
@@ -15,9 +15,13 @@ class ArgumentSchema:  # pylint: disable=too-many-instance-attributes
     options: Iterable[KeywordMatcher] = ()
     one_value_keywords: Iterable[KeywordMatcher] = ()
     multi_value_keywords: Iterable[KeywordMatcher] = ()
-    sections: Sections = ImmutableDict()
-    keyword_formatters: Mapping[str, KeywordFormatter] = ImmutableDict()
-    keyword_preprocessors: Mapping[str, KeywordPreprocessor] = ImmutableDict()
+    sections: Sections = field(default_factory=ImmutableDict)
+    keyword_formatters: Mapping[str, KeywordFormatter] = field(
+        default_factory=ImmutableDict
+    )
+    keyword_preprocessors: Mapping[str, KeywordPreprocessor] = field(
+        default_factory=ImmutableDict
+    )
 
 
 def argument_schema_from_dict(schema: Mapping) -> ArgumentSchema:
@@ -56,7 +60,7 @@ def create_schema_patch(schema, old_class):
 @dataclass(eq=True, frozen=True)
 class StandardCommand:
     schema: ArgumentSchema
-    signatures: Signatures = ImmutableDict()
+    signatures: Signatures = field(default_factory=ImmutableDict)
     block_end: Optional[str] = None
     canonical_name: Optional[str] = None
     inhibit_favour_expansion: bool = False

@@ -5,25 +5,33 @@ use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
 use pyo3::{FromPyObject, PyAny};
 use std::cmp::min;
+use std::collections::HashMap;
 
+#[derive(Eq, Hash, PartialEq)]
 enum SecondKeyword {
     String(String),
     Any,
 }
 
+#[derive(Eq, Hash, PartialEq)]
 struct KeywordMatcher {
     first: String,
     second: Option<SecondKeyword>,
 }
 
 #[derive(FromPyObject)]
-pub struct Dumper {
+pub struct ArgumentSchema {
     options: Vec<KeywordMatcher>,
     one_value_keywords: Vec<KeywordMatcher>,
     multi_value_keywords: Vec<KeywordMatcher>,
     front_positional_arguments: Vec<String>,
     back_positional_arguments: Vec<String>,
+
+    #[pyo3(default)]
+    sections: HashMap<KeywordMatcher, ArgumentSchema>,
 }
+
+pub type Dumper = ArgumentSchema;
 
 impl FromPyObject<'_, '_> for KeywordMatcher {
     type Error = PyErr;
@@ -183,6 +191,16 @@ impl KeywordSplitter {
     }
 }
 
+fn is_among_section_keywords(section_dumper: Option<&ArgumentSchema>, argument: &Node) -> bool {
+    match section_dumper {
+        None => false,
+        Some(section_dumper) => match argument {
+            Node::Token { .. } => false,
+            Node::Tree { children, .. } => section_dumper.is_one_of_keywords(&children[0]),
+        },
+    }
+}
+
 impl Dumper {
     fn is_one_of_options(&self, node: &Node) -> bool {
         for matcher in &self.options {
@@ -264,7 +282,7 @@ impl Dumper {
         keyword_splitter.groups
     }
 
-    pub fn split_arguments(&self, mut arguments: Nodes) -> Nodes {
+    fn split_arguments(&self, mut arguments: Nodes) -> Nodes {
         let back = if self.back_positional_arguments.len() > arguments.len() {
             vec![]
         } else {
@@ -280,5 +298,125 @@ impl Dumper {
             .chain(keyworded_arguments)
             .chain(back)
             .collect::<Nodes>()
+    }
+
+    fn get_section_dumper(&self, node: &Node) -> Option<&ArgumentSchema> {
+        for (item, schema) in &self.sections {
+            if item.matches(node) {
+                return Some(schema);
+            }
+        }
+        None
+    }
+
+    fn split_multi_value_argument(&self, data: String, children: Nodes) -> Node {
+        let first_node = children.first();
+        match first_node {
+            None => Node::Tree { data, children },
+            Some(first_node) => match self.get_section_dumper(first_node) {
+                None => Node::Tree { data, children },
+                Some(section_dumper) => {
+                    let mut result = children;
+                    let rest = result.split_off(1);
+                    let rest = section_dumper.split_arguments_with_sections(rest);
+                    for argument in rest {
+                        match argument {
+                            Node::Token { .. } => result.push(argument),
+                            Node::Tree { data, mut children } => match data.as_str() {
+                                "positional_arguments" => result.append(&mut children),
+                                _ => result.push(Node::Tree { data, children }),
+                            },
+                        }
+                    }
+
+                    tree("section", result)
+                }
+            },
+        }
+    }
+
+    fn fix_back_positional_arguments(&self, data: &str, section_children: &mut Nodes) {
+        if data != "section" {
+            return;
+        }
+
+        let pivot = self.back_positional_arguments.len();
+        if pivot == 0 {
+            return;
+        }
+
+        let last = section_children.last_mut();
+        let Some(Node::Tree {
+            data,
+            children: last_children,
+        }) = last
+        else {
+            return;
+        };
+
+        match data.as_str() {
+            "one_value_argument" | "multi_value_argument" => {
+                let last_rest = last_children.split_off(1);
+
+                let mut left_in_place = last_rest;
+                let back_positional_arguments =
+                    left_in_place.split_off(left_in_place.len() - pivot);
+                last_children.append(&mut left_in_place);
+
+                section_children.push(tree("positional_arguments", back_positional_arguments));
+            }
+            _ => (),
+        }
+    }
+
+    fn form_sections(&self, arguments: Nodes) -> Nodes {
+        let mut result = Nodes::new();
+        let mut section_dumper: Option<&ArgumentSchema> = None;
+
+        for argument in arguments {
+            if is_among_section_keywords(section_dumper, &argument) {
+                let last = result.last_mut();
+                if let Some(Node::Tree { children, .. }) = last {
+                    children.push(argument);
+                }
+            } else {
+                if let Some(section_dumper) = section_dumper {
+                    if let Some(Node::Tree { data, children }) = result.last_mut() {
+                        section_dumper.fix_back_positional_arguments(data, children);
+                    }
+                }
+
+                if let Node::Tree { children, .. } = &argument {
+                    if children.is_empty() {
+                        section_dumper = None;
+                    } else if let Some(last) = children.first() {
+                        section_dumper = self.get_section_dumper(last);
+                    } else {
+                        section_dumper = None;
+                    }
+                } else {
+                    section_dumper = None;
+                }
+
+                result.push(argument);
+            }
+        }
+
+        result
+    }
+
+    pub fn split_arguments_with_sections(&self, arguments: Nodes) -> Nodes {
+        let arguments = self.split_arguments(arguments);
+        let preprocessed = arguments
+            .into_iter()
+            .map(|argument| match argument {
+                Node::Token { .. } => argument,
+                Node::Tree { data, children } => match data.as_str() {
+                    "multi_value_argument" => self.split_multi_value_argument(data, children),
+                    _ => Node::Tree { data, children },
+                },
+            })
+            .collect();
+        self.form_sections(preprocessed)
     }
 }

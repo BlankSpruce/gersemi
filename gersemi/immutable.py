@@ -1,24 +1,15 @@
 from collections import abc
 
 
-class ImmutableDict(abc.Mapping):
-    def __init__(self, d=None):
-        self._d = {} if d is None else d
+class ImmutableDict(dict):
+    def __setitem__(self, key, value):
+        raise TypeError("mutation not allowed")
 
-    def __getitem__(self, key):
-        return self._d[key]
-
-    def __iter__(self):
-        return iter(self._d)
-
-    def __len__(self):
-        return len(self._d)
-
-    def __contains__(self, item):
-        return item in self._d
+    def __delitem__(self, key):
+        raise TypeError("mutation not allowed")
 
     def __hash__(self):
-        return hash(frozenset(self._d.items()))
+        return hash(frozenset(self.items()))
 
 
 def make_immutable(thing):

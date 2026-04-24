@@ -1,3 +1,4 @@
+import gersemi_rust_backend
 from gersemi.ast_helpers import is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
@@ -24,7 +25,10 @@ class BaseCommandInvocationDumper(BaseDumper):
         return "\n".join([self._indent(begin), formatted_arguments, self._indent(end)])
 
     def _split_arguments(self, arguments: Nodes) -> Nodes:
-        return arguments
+        return gersemi_rust_backend.dumper_split_arguments(
+            self,
+            arguments,
+        )
 
     def group_size(self, group):
         return len(group)
