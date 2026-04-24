@@ -6,7 +6,7 @@ use pyo3::pymodule;
 
 #[pymodule]
 mod gersemi_rust_backend {
-    use crate::dumper::Dumper;
+    use crate::dumper::{isolate_conditions, Dumper};
     use crate::node::{Node, Nodes};
     use crate::parser::{BlockDefinitions, Error, Parser};
     use pyo3::pyfunction;
@@ -25,6 +25,17 @@ mod gersemi_rust_backend {
     #[allow(clippy::needless_pass_by_value)]
     fn dumper_split_arguments(dumper: Dumper, arguments: Nodes) -> Nodes {
         dumper.split_arguments_with_sections(arguments)
+    }
+
+    #[pyfunction]
+    fn condition_syntax_preprocess_arguments(arguments_node: Node) -> Node {
+        let Node::Tree { data, children } = arguments_node else {
+            return arguments_node;
+        };
+        Node::Tree {
+            data,
+            children: isolate_conditions(children),
+        }
     }
 
     #[pyfunction]

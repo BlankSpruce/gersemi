@@ -2,22 +2,12 @@ from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
 import sys
-from typing import Any, Iterator, List
+from typing import List
 
 
 def pop_all(in_list: List) -> List:
     popped, in_list[:] = in_list[:], []
     return popped
-
-
-def advance(iterator: Iterator, times: int, default: Any) -> Any:
-    result = default
-    for _ in range(times):
-        new_result = next(iterator, default)
-        if new_result == default:
-            break
-        result = new_result
-    return result
 
 
 def fromfile(path):

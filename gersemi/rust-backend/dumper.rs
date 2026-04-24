@@ -19,6 +19,13 @@ struct KeywordMatcher {
     second: Option<SecondKeyword>,
 }
 
+fn single_word_matcher(s: &str) -> KeywordMatcher {
+    KeywordMatcher {
+        first: s.to_string(),
+        second: None,
+    }
+}
+
 #[derive(FromPyObject)]
 pub struct ArgumentSchema {
     options: Vec<KeywordMatcher>,
@@ -195,40 +202,34 @@ fn is_among_section_keywords(section_dumper: Option<&ArgumentSchema>, argument: 
         None => false,
         Some(section_dumper) => match argument {
             Node::Token { .. } => false,
-            Node::Tree { children, .. } => section_dumper.is_one_of_keywords(&children[0]),
+            Node::Tree { children, .. } => section_dumper.is_one_of_schema_keywords(&children[0]),
         },
     }
 }
 
+fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
+    for matcher in matchers {
+        if matcher.matches(node) {
+            return true;
+        }
+    }
+    false
+}
+
 impl Dumper {
     fn is_one_of_options(&self, node: &Node) -> bool {
-        for matcher in &self.options {
-            if matcher.matches(node) {
-                return true;
-            }
-        }
-        false
+        is_one_of_keywords(&self.options, node)
     }
 
     fn is_one_of_one_value_keywords(&self, node: &Node) -> bool {
-        for matcher in &self.one_value_keywords {
-            if matcher.matches(node) {
-                return true;
-            }
-        }
-        false
+        is_one_of_keywords(&self.one_value_keywords, node)
     }
 
     fn is_one_of_multi_value_keywords(&self, node: &Node) -> bool {
-        for matcher in &self.multi_value_keywords {
-            if matcher.matches(node) {
-                return true;
-            }
-        }
-        false
+        is_one_of_keywords(&self.multi_value_keywords, node)
     }
 
-    fn is_one_of_keywords(&self, node: &Node) -> bool {
+    fn is_one_of_schema_keywords(&self, node: &Node) -> bool {
         self.is_one_of_options(node)
             || self.is_one_of_one_value_keywords(node)
             || self.is_one_of_multi_value_keywords(node)
@@ -236,7 +237,7 @@ impl Dumper {
 
     fn find_pivot(&self, arguments: &[Node]) -> Option<usize> {
         for (index, argument) in arguments.iter().enumerate() {
-            if self.is_one_of_keywords(argument) {
+            if self.is_one_of_schema_keywords(argument) {
                 return Some(index);
             }
         }
@@ -416,4 +417,137 @@ impl Dumper {
             .collect();
         self.form_sections(preprocessed)
     }
+}
+
+fn isolate_unary_operators(operators: &[KeywordMatcher], arguments: Nodes) -> Nodes {
+    let mut one_behind: Option<Node> = None;
+    let mut result = Nodes::new();
+    for current in arguments {
+        match one_behind {
+            None => {
+                one_behind = Some(current);
+            }
+            Some(one_behind_node) => {
+                if is_one_of_keywords(operators, &one_behind_node) {
+                    if current.is_comment() {
+                        result.push(tree("unary_operation", vec![one_behind_node]));
+                        result.push(current);
+                    } else {
+                        result.push(tree("unary_operation", vec![one_behind_node, current]));
+                    }
+                    one_behind = None;
+                } else {
+                    result.push(one_behind_node);
+                    one_behind = Some(current);
+                }
+            }
+        }
+    }
+
+    if let Some(node) = one_behind {
+        result.push(node);
+    }
+
+    result
+}
+
+fn isolate_binary_tests(operators: &[KeywordMatcher], arguments: Nodes) -> Nodes {
+    let mut two_behind: Option<Node> = None;
+    let mut one_behind: Option<Node> = None;
+    let mut result = Nodes::new();
+
+    for current in arguments {
+        match (two_behind, one_behind) {
+            (None, one_behind_node) => {
+                two_behind = one_behind_node;
+                one_behind = Some(current);
+            }
+            (Some(two_behind_node), Some(one_behind_node)) => {
+                if is_one_of_keywords(operators, &one_behind_node) {
+                    result.push(tree(
+                        "binary_operation",
+                        vec![two_behind_node, one_behind_node, current],
+                    ));
+                    two_behind = None;
+                    one_behind = None;
+                } else {
+                    result.push(two_behind_node);
+                    two_behind = Some(one_behind_node);
+                    one_behind = Some(current);
+                }
+            }
+            (Some(two_behind_node), None) => {
+                result.push(two_behind_node);
+                two_behind = None;
+                one_behind = Some(current);
+            }
+        }
+    }
+
+    if let Some(node) = two_behind {
+        result.push(node);
+    }
+
+    if let Some(node) = one_behind {
+        result.push(node);
+    }
+
+    result
+}
+
+pub fn isolate_conditions(arguments: Nodes) -> Nodes {
+    let unary_operators = [
+        "COMMAND",
+        "POLICY",
+        "TARGET",
+        "TEST",
+        "EXISTS",
+        "IS_DIRECTORY",
+        "IS_SYMLINK",
+        "IS_ABSOLUTE",
+        "DEFINED",
+        "IS_READABLE",
+        "IS_WRITABLE",
+        "IS_EXECUTABLE",
+    ]
+    .map(single_word_matcher);
+    let binary_operators = [
+        "IS_NEWER_THAN",
+        "MATCHES",
+        "LESS",
+        "GREATER",
+        "EQUAL",
+        "LESS_EQUAL",
+        "GREATER_EQUAL",
+        "STRLESS",
+        "STRGREATER",
+        "STREQUAL",
+        "STRLESS_EQUAL",
+        "STRGREATER_EQUAL",
+        "VERSION_LESS",
+        "VERSION_GREATER",
+        "VERSION_EQUAL",
+        "VERSION_LESS_EQUAL",
+        "VERSION_GREATER_EQUAL",
+        "IN_LIST",
+        "PATH_EQUAL",
+    ]
+    .map(single_word_matcher);
+    let not_operator = [single_word_matcher("NOT")];
+    let and_operator = [single_word_matcher("AND")];
+    let or_operator = [single_word_matcher("OR")];
+
+    isolate_unary_operators(
+        &or_operator,
+        isolate_unary_operators(
+            &and_operator,
+            isolate_unary_operators(
+                &not_operator,
+                isolate_binary_tests(
+                    &binary_operators,
+                    isolate_unary_operators(&unary_operators, arguments),
+                ),
+            ),
+        ),
+    )
 }
