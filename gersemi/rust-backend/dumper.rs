@@ -84,38 +84,37 @@ fn matches_second(matcher: &SecondKeyword, data: &str, children: &[Node]) -> boo
 
 impl KeywordMatcher {
     fn matches(&self, node: &Node) -> bool {
-        if let Node::Tree { data, children } = node {
-            return match &self.second {
-                None => is_keyword(&self.first, data, children),
-                Some(second) => {
-                    if data != "keyword_argument" {
-                        return false;
-                    }
+        let Node::Tree { data, children } = node else {
+            return false;
+        };
 
-                    match &children[0] {
-                        Node::Tree {
-                            data: first_data,
-                            children: first_children,
-                        } => {
-                            if !is_keyword(&self.first, first_data, first_children) {
-                                return false;
-                            }
+        let Some(second) = &self.second else {
+            return is_keyword(&self.first, data, children);
+        };
 
-                            match &children[1] {
-                                Node::Tree {
-                                    data: second_data,
-                                    children: second_children,
-                                } => matches_second(second, second_data, second_children),
-                                Node::Token { .. } => false,
-                            }
-                        }
-                        Node::Token { .. } => false,
-                    }
-                }
-            };
+        if data != "keyword_argument" {
+            return false;
         }
 
-        false
+        match &children[0] {
+            Node::Tree {
+                data: first_data,
+                children: first_children,
+            } => {
+                if !is_keyword(&self.first, first_data, first_children) {
+                    return false;
+                }
+
+                match &children[1] {
+                    Node::Tree {
+                        data: second_data,
+                        children: second_children,
+                    } => matches_second(second, second_data, second_children),
+                    Node::Token { .. } => false,
+                }
+            }
+            Node::Token { .. } => false,
+        }
     }
 }
 
@@ -311,28 +310,28 @@ impl Dumper {
 
     fn split_multi_value_argument(&self, data: String, children: Nodes) -> Node {
         let first_node = children.first();
-        match first_node {
-            None => Node::Tree { data, children },
-            Some(first_node) => match self.get_section_dumper(first_node) {
-                None => Node::Tree { data, children },
-                Some(section_dumper) => {
-                    let mut result = children;
-                    let rest = result.split_off(1);
-                    let rest = section_dumper.split_arguments_with_sections(rest);
-                    for argument in rest {
-                        match argument {
-                            Node::Token { .. } => result.push(argument),
-                            Node::Tree { data, mut children } => match data.as_str() {
-                                "positional_arguments" => result.append(&mut children),
-                                _ => result.push(Node::Tree { data, children }),
-                            },
-                        }
-                    }
+        let Some(first_node) = first_node else {
+            return Node::Tree { data, children };
+        };
 
-                    tree("section", result)
-                }
-            },
+        let Some(section_dumper) = self.get_section_dumper(first_node) else {
+            return Node::Tree { data, children };
+        };
+
+        let mut result = children;
+        let rest = result.split_off(1);
+        let rest = section_dumper.split_arguments_with_sections(rest);
+        for argument in rest {
+            match argument {
+                Node::Token { .. } => result.push(argument),
+                Node::Tree { data, mut children } => match data.as_str() {
+                    "positional_arguments" => result.append(&mut children),
+                    _ => result.push(Node::Tree { data, children }),
+                },
+            }
         }
+
+        tree("section", result)
     }
 
     fn fix_back_positional_arguments(&self, data: &str, section_children: &mut Nodes) {
@@ -386,17 +385,15 @@ impl Dumper {
                     }
                 }
 
-                if let Node::Tree { children, .. } = &argument {
-                    if children.is_empty() {
-                        section_dumper = None;
-                    } else if let Some(last) = children.first() {
-                        section_dumper = self.get_section_dumper(last);
+                section_dumper = if let Node::Tree { children, .. } = &argument {
+                    if let Some(first) = children.first() {
+                        self.get_section_dumper(first)
                     } else {
-                        section_dumper = None;
+                        None
                     }
                 } else {
-                    section_dumper = None;
-                }
+                    None
+                };
 
                 result.push(argument);
             }
