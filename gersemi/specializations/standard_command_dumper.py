@@ -8,14 +8,12 @@ from .argument_aware_command_invocation_dumper import (
 from .multiple_signature_command_invocation_dumper import (
     MultipleSignatureCommandInvocationDumper,
 )
-from .section_aware_command_invocation_dumper import SectionAwareCommandInvocationDumper
 from .two_word_keyword_isolator import TwoWordKeywordIsolator
 
 
 @lru_cache(maxsize=None)
 def create_standard_dumper(data):
     bases = [
-        SectionAwareCommandInvocationDumper,
         TwoWordKeywordIsolator,
         CommandLineFormatter,
         KeywordWithPairsFormatter,

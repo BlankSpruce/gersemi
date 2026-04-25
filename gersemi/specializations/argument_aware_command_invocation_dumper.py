@@ -1,4 +1,5 @@
 from typing import Dict, Iterable, Optional, Sequence
+from gersemi.argument_schema import Sections
 from gersemi.ast_helpers import (
     get_value,
     is_multi_value_argument,
@@ -28,6 +29,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     options: Iterable[KeywordMatcher] = []
     one_value_keywords: Iterable[KeywordMatcher] = []
     multi_value_keywords: Iterable[KeywordMatcher] = []
+    sections: Sections = {}
     keyword_formatters: Dict[str, KeywordFormatter] = {}
     keyword_preprocessors: Dict[str, KeywordPreprocessor] = {}
 
@@ -117,3 +119,21 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)
         return "\n".join(map(self.visit, filter(None, groups)))
+
+    def section(self, tree):
+        header, *rest = tree.children
+        preprocessor = self._get_preprocessor(header)
+        if preprocessor is not None:
+            rest = getattr(self, preprocessor)(rest)
+
+        result = self._try_to_format_into_single_line(tree.children)
+        if result is not None:
+            return result
+
+        begin = self.visit(header)
+        if len(rest) == 0:
+            return begin
+
+        with self.indented():
+            formatted_values = "\n".join(map(self.visit, rest))
+        return f"{begin}\n{formatted_values}"
