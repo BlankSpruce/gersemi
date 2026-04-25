@@ -1,7 +1,5 @@
 use crate::node::{Node, Nodes};
-use pyo3::sync::PyOnceLock;
-use pyo3::types::{PyAnyMethods, PyType};
-use pyo3::{Bound, IntoPyObject, Py, PyAny, PyErr, Python};
+use pyo3::PyErr;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -821,34 +819,6 @@ fn prepare_blocks(blocks: BlockDefinitions) -> Vec<(BlockCommand, BlockCommand)>
         .into_iter()
         .map(|(start, end)| (block_command(start), block_command(end)))
         .collect()
-}
-
-impl<'py> IntoPyObject<'py> for Node {
-    type Target = PyAny;
-    type Output = Bound<'py, PyAny>;
-    type Error = PyErr;
-
-    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        static TREE: PyOnceLock<Py<PyType>> = PyOnceLock::new();
-        static TOKEN: PyOnceLock<Py<PyType>> = PyOnceLock::new();
-        match self {
-            Node::Tree { data, children } => TREE.import(py, "gersemi.types", "Tree")?.call1((
-                data,
-                children
-                    .into_iter()
-                    .map(|child| child.into_pyobject(py).unwrap())
-                    .collect::<Vec<_>>(),
-            )),
-            Node::Token {
-                type_,
-                value,
-                line,
-                column,
-            } => TOKEN
-                .import(py, "gersemi.types", "Token")?
-                .call1((type_, value, line, column)),
-        }
-    }
 }
 
 pyo3::import_exception!(gersemi.exceptions, GenericParsingError);
