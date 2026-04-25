@@ -1,4 +1,5 @@
 import gersemi_rust_backend
+from gersemi.argument_schema import ArgumentSchema
 from gersemi.ast_helpers import is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
@@ -6,6 +7,8 @@ from gersemi.types import Nodes
 
 
 class BaseCommandInvocationDumper(BaseDumper):
+    schema: ArgumentSchema
+
     _inhibit_favour_expansion: bool = False
 
     def format_command_with_short_name(self, begin, arguments, end):
@@ -26,7 +29,7 @@ class BaseCommandInvocationDumper(BaseDumper):
 
     def _split_arguments(self, arguments: Nodes) -> Nodes:
         return gersemi_rust_backend.dumper_split_arguments(
-            self,
+            self.schema,
             arguments,
         )
 

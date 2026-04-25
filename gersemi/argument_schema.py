@@ -43,16 +43,9 @@ def argument_schemas_from_dict(schemas: Mapping) -> Mapping[Any, ArgumentSchema]
     )
 
 
-def create_schema_patch(schema, old_class):
+def create_schema_patch(source_schema, old_class):
     class Impl(old_class):
-        front_positional_arguments = schema.front_positional_arguments
-        back_positional_arguments = schema.back_positional_arguments
-        options = schema.options
-        one_value_keywords = schema.one_value_keywords
-        multi_value_keywords = schema.multi_value_keywords
-        sections = schema.sections
-        keyword_formatters = schema.keyword_formatters
-        keyword_preprocessors = schema.keyword_preprocessors
+        schema = source_schema
 
     return Impl
 

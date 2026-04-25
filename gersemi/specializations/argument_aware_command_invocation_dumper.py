@@ -1,5 +1,4 @@
-from typing import Dict, Iterable, Optional, Sequence
-from gersemi.argument_schema import Sections
+from typing import Dict, Optional
 from gersemi.ast_helpers import (
     get_value,
     is_multi_value_argument,
@@ -11,27 +10,15 @@ from gersemi.ast_helpers import (
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.keyword_kind import (
-    KeywordFormatter,
-    KeywordPreprocessor,
     kind_to_formatter,
     kind_to_preprocessor,
 )
-from gersemi.keywords import KeywordMatcher
 
 
 class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
     _inhibit_favour_expansion: bool = False
     _keyword_formatters: Dict[str, str] = {}
     _canonical_name: Optional[str] = None
-
-    front_positional_arguments: Sequence[str] = []
-    back_positional_arguments: Sequence[str] = []
-    options: Iterable[KeywordMatcher] = []
-    one_value_keywords: Iterable[KeywordMatcher] = []
-    multi_value_keywords: Iterable[KeywordMatcher] = []
-    sections: Sections = {}
-    keyword_formatters: Dict[str, KeywordFormatter] = {}
-    keyword_preprocessors: Dict[str, KeywordPreprocessor] = {}
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
@@ -100,12 +87,12 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
 
     def _get_formatter(self, tree):
         return kind_to_formatter(
-            self.keyword_formatters.get(get_value(tree, None), None)
+            self.schema.keyword_formatters.get(get_value(tree, None), None)
         )
 
     def _get_preprocessor(self, tree):
         return kind_to_preprocessor(
-            self.keyword_preprocessors.get(get_value(tree, None), None)
+            self.schema.keyword_preprocessors.get(get_value(tree, None), None)
         )
 
     def multi_value_argument(self, tree):
