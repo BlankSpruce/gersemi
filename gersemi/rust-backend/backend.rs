@@ -41,7 +41,7 @@ mod gersemi_rust_backend {
     }
 
     #[pyfunction]
-    fn two_words_keyword_isolator_preprocess_arguments(
+    fn isolate_two_words_keywords(
         two_words_keywords: Vec<TwoWordKeywordMatcher>,
         arguments_node: Node,
     ) -> Node {

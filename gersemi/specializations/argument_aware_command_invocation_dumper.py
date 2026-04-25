@@ -124,3 +124,6 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         with self.indented():
             formatted_values = "\n".join(map(self.visit, rest))
         return f"{begin}\n{formatted_values}"
+
+    def keyword_argument(self, tree):
+        return self._format_non_option(tree)

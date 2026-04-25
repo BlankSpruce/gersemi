@@ -1,8 +1,10 @@
+from typing import Sequence, Tuple, Union
 import gersemi_rust_backend
 from gersemi.argument_schema import ArgumentSchema
 from gersemi.ast_helpers import is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
+from gersemi.keywords import AnyMatcher
 from gersemi.types import Nodes
 
 
@@ -10,6 +12,7 @@ class BaseCommandInvocationDumper(BaseDumper):
     schema: ArgumentSchema
 
     _inhibit_favour_expansion: bool = False
+    _two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
 
     def format_command_with_short_name(self, begin, arguments, end):
         with self.indented():
@@ -102,4 +105,6 @@ class BaseCommandInvocationDumper(BaseDumper):
         return f"{self.indent_symbol}{tree.children[0]}"
 
     def _preprocess_arguments(self, arguments):
-        return arguments
+        return gersemi_rust_backend.isolate_two_words_keywords(
+            self._two_words_keywords, arguments
+        )
