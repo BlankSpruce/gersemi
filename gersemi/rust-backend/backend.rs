@@ -1,4 +1,4 @@
-mod dumper;
+mod argument_schema;
 mod node;
 mod parser;
 
@@ -6,7 +6,7 @@ use pyo3::pymodule;
 
 #[pymodule]
 mod gersemi_rust_backend {
-    use crate::dumper::{isolate_conditions, Dumper};
+    use crate::argument_schema::{isolate_conditions, ArgumentSchema};
     use crate::node::{Node, Nodes};
     use crate::parser::{BlockDefinitions, Error, Parser};
     use pyo3::pyfunction;
@@ -23,8 +23,8 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn dumper_split_arguments(dumper: Dumper, arguments: Nodes) -> Nodes {
-        dumper.split_arguments_with_sections(arguments)
+    fn dumper_split_arguments(schema: ArgumentSchema, arguments: Nodes) -> Nodes {
+        schema.split_arguments_with_sections(arguments)
     }
 
     #[pyfunction]

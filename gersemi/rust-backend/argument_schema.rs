@@ -38,8 +38,6 @@ pub struct ArgumentSchema {
     sections: HashMap<KeywordMatcher, ArgumentSchema>,
 }
 
-pub type Dumper = ArgumentSchema;
-
 impl FromPyObject<'_, '_> for KeywordMatcher {
     type Error = PyErr;
 
@@ -156,16 +154,16 @@ impl KeywordSplitter {
         self.groups.append(&mut self.comment_accumulator);
     }
 
-    fn split(&mut self, dumper: &Dumper, arguments: Nodes) {
+    fn split(&mut self, schema: &ArgumentSchema, arguments: Nodes) {
         let mut iterator = arguments.into_iter();
 
         while let Some(argument) = iterator.next() {
             if argument.is_comment() {
                 self.comment_accumulator.push(argument);
-            } else if dumper.is_one_of_options(&argument) {
+            } else if schema.is_one_of_options(&argument) {
                 self.flush_accumulators();
                 self.groups.push(tree("option_argument", vec![argument]));
-            } else if dumper.is_one_of_one_value_keywords(&argument) {
+            } else if schema.is_one_of_one_value_keywords(&argument) {
                 self.flush_accumulators();
                 let mut group = vec![argument];
                 for n in iterator.by_ref() {
@@ -176,7 +174,7 @@ impl KeywordSplitter {
                     }
                 }
                 self.groups.push(tree("one_value_argument", group));
-            } else if dumper.is_one_of_multi_value_keywords(&argument) {
+            } else if schema.is_one_of_multi_value_keywords(&argument) {
                 self.flush_accumulators();
                 self.accumulator.kind = AccumulatorKind::Nodes;
                 self.accumulator.nodes = vec![argument];
@@ -197,12 +195,12 @@ impl KeywordSplitter {
     }
 }
 
-fn is_among_section_keywords(section_dumper: Option<&ArgumentSchema>, argument: &Node) -> bool {
-    match section_dumper {
+fn is_among_section_keywords(section_schema: Option<&ArgumentSchema>, argument: &Node) -> bool {
+    match section_schema {
         None => false,
-        Some(section_dumper) => match argument {
+        Some(section_schema) => match argument {
             Node::Token { .. } => false,
-            Node::Tree { children, .. } => section_dumper.is_one_of_schema_keywords(&children[0]),
+            Node::Tree { children, .. } => section_schema.is_one_of_schema_keywords(&children[0]),
         },
     }
 }
@@ -216,7 +214,7 @@ fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
     false
 }
 
-impl Dumper {
+impl ArgumentSchema {
     fn is_one_of_options(&self, node: &Node) -> bool {
         is_one_of_keywords(&self.options, node)
     }
@@ -300,7 +298,7 @@ impl Dumper {
             .collect::<Nodes>()
     }
 
-    fn get_section_dumper(&self, node: &Node) -> Option<&ArgumentSchema> {
+    fn get_section_schema(&self, node: &Node) -> Option<&ArgumentSchema> {
         for (item, schema) in &self.sections {
             if item.matches(node) {
                 return Some(schema);
@@ -315,13 +313,13 @@ impl Dumper {
             return Node::Tree { data, children };
         };
 
-        let Some(section_dumper) = self.get_section_dumper(first_node) else {
+        let Some(section_schema) = self.get_section_schema(first_node) else {
             return Node::Tree { data, children };
         };
 
         let mut result = children;
         let rest = result.split_off(1);
-        let rest = section_dumper.split_arguments_with_sections(rest);
+        let rest = section_schema.split_arguments_with_sections(rest);
         for argument in rest {
             match argument {
                 Node::Token { .. } => result.push(argument),
@@ -371,24 +369,24 @@ impl Dumper {
 
     fn form_sections(&self, arguments: Nodes) -> Nodes {
         let mut result = Nodes::new();
-        let mut section_dumper: Option<&ArgumentSchema> = None;
+        let mut section_schema: Option<&ArgumentSchema> = None;
 
         for argument in arguments {
-            if is_among_section_keywords(section_dumper, &argument) {
+            if is_among_section_keywords(section_schema, &argument) {
                 let last = result.last_mut();
                 if let Some(Node::Tree { children, .. }) = last {
                     children.push(argument);
                 }
             } else {
-                if let Some(section_dumper) = section_dumper {
+                if let Some(section_schema) = section_schema {
                     if let Some(Node::Tree { data, children }) = result.last_mut() {
-                        section_dumper.fix_back_positional_arguments(data, children);
+                        section_schema.fix_back_positional_arguments(data, children);
                     }
                 }
 
-                section_dumper = if let Node::Tree { children, .. } = &argument {
+                section_schema = if let Node::Tree { children, .. } = &argument {
                     if let Some(first) = children.first() {
-                        self.get_section_dumper(first)
+                        self.get_section_schema(first)
                     } else {
                         None
                     }
