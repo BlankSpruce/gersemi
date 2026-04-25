@@ -8,7 +8,7 @@ use std::cmp::min;
 use std::collections::HashMap;
 
 #[derive(Eq, Hash, PartialEq)]
-enum SecondKeyword {
+pub enum SecondKeyword {
     String(String),
     Any,
 }
@@ -63,7 +63,7 @@ impl FromPyObject<'_, '_> for KeywordMatcher {
     }
 }
 
-fn is_keyword(matcher: &String, data: &str, children: &[Node]) -> bool {
+pub fn is_keyword(matcher: &String, data: &str, children: &[Node]) -> bool {
     if children.is_empty() {
         return false;
     }

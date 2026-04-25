@@ -1,6 +1,7 @@
 mod argument_schema;
 mod node;
 mod parser;
+mod two_words_keyword_isolator;
 
 use pyo3::pymodule;
 
@@ -9,6 +10,7 @@ mod gersemi_rust_backend {
     use crate::argument_schema::{isolate_conditions, ArgumentSchema};
     use crate::node::{Node, Nodes};
     use crate::parser::{BlockDefinitions, Error, Parser};
+    use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
 
     #[pyfunction]
@@ -35,6 +37,23 @@ mod gersemi_rust_backend {
         Node::Tree {
             data,
             children: isolate_conditions(children),
+        }
+    }
+
+    #[pyfunction]
+    fn two_words_keyword_isolator_preprocess_arguments(
+        two_words_keywords: Vec<TwoWordKeywordMatcher>,
+        arguments_node: Node,
+    ) -> Node {
+        let Node::Tree { data, children } = arguments_node else {
+            return arguments_node;
+        };
+        Node::Tree {
+            data,
+            children: crate::two_words_keyword_isolator::preprocess_arguments(
+                two_words_keywords,
+                children,
+            ),
         }
     }
 
