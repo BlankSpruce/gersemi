@@ -36,28 +36,3 @@ def kind_to_formatter(kind: Union[None, str, KeywordFormatter]) -> Optional[str]
         KeywordFormatter.CommandLine: "_format_command_line",
         KeywordFormatter.Pairs: "_format_keyword_with_pairs",
     }.get(proper_kind)
-
-
-def get_preprocessor_kind(
-    kind: Union[None, str, KeywordPreprocessor],
-) -> Optional[KeywordPreprocessor]:
-    if isinstance(kind, KeywordPreprocessor):
-        return kind
-
-    return (
-        KeywordPreprocessor(kind)
-        if kind in [e.value for e in KeywordPreprocessor]
-        else None
-    )
-
-
-def kind_to_preprocessor(kind: Union[None, str, KeywordPreprocessor]) -> Optional[str]:
-    proper_kind = get_preprocessor_kind(kind)
-    if proper_kind is None:
-        return None
-
-    return {
-        KeywordPreprocessor.Sort: "_sort_arguments",
-        KeywordPreprocessor.Unique: "_keep_unique_arguments",
-        KeywordPreprocessor.SortAndUnique: "_sort_and_keep_unique_arguments",
-    }.get(proper_kind)

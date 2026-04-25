@@ -9,6 +9,9 @@ use pyo3::pymodule;
 #[pymodule]
 mod gersemi_rust_backend {
     use crate::argument_schema::{isolate_conditions, ArgumentSchema, KeywordMatcher};
+    use crate::keyword_preprocessor::{
+        keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
+    };
     use crate::node::{Node, Nodes};
     use crate::parser::{tree, BlockDefinitions, Error, Parser};
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
@@ -86,21 +89,18 @@ mod gersemi_rust_backend {
     }
 
     #[pyfunction]
-    fn sort_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
-        crate::keyword_preprocessor::sort_arguments(nodes, case_insensitive)
-    }
-
-    #[pyfunction]
-    fn keep_unique_arguments(nodes: Nodes) -> Nodes {
-        crate::keyword_preprocessor::keep_unique_arguments(nodes)
-    }
-
-    #[pyfunction]
-    fn sort_and_keep_unique_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
-        crate::keyword_preprocessor::sort_arguments(
-            crate::keyword_preprocessor::keep_unique_arguments(nodes),
-            case_insensitive,
-        )
+    #[allow(clippy::needless_pass_by_value)]
+    fn preprocess_keyword_values(
+        nodes: Nodes,
+        preprocessor: String,
+        case_insensitive: bool,
+    ) -> Nodes {
+        match preprocessor.as_str() {
+            "sort" => sort_arguments(nodes, case_insensitive),
+            "unique" => keep_unique_arguments(nodes),
+            "sort+unique" => sort_and_keep_unique_arguments(nodes, case_insensitive),
+            _ => nodes,
+        }
     }
 
     #[pyfunction]

@@ -90,3 +90,7 @@ pub fn sort_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
 
     result
 }
+
+pub fn sort_and_keep_unique_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
+    sort_arguments(keep_unique_arguments(nodes), case_insensitive)
+}

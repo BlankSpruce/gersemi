@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+import gersemi_rust_backend
 from gersemi.ast_helpers import (
     get_value,
     is_multi_value_argument,
@@ -9,9 +10,9 @@ from gersemi.ast_helpers import (
     is_section,
 )
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.configuration import SortOrder
 from gersemi.keyword_kind import (
     kind_to_formatter,
-    kind_to_preprocessor,
 )
 
 
@@ -91,15 +92,23 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         )
 
     def _get_preprocessor(self, tree):
-        return kind_to_preprocessor(
-            self.schema.keyword_preprocessors.get(get_value(tree, None), None)
+        return self.schema.keyword_preprocessors.get(get_value(tree, None), None)
+
+    def _preprocess_keyword_values(self, nodes, preprocessor):
+        return gersemi_rust_backend.preprocess_keyword_values(
+            nodes=nodes,
+            preprocessor=preprocessor,
+            case_insensitive=self.sort_order == SortOrder.CaseInsensitive,
         )
 
     def multi_value_argument(self, tree):
         keyword, *values = tree.children
         preprocessor = self._get_preprocessor(keyword)
         if preprocessor is not None:
-            tree.children = [keyword, *getattr(self, preprocessor)(values)]
+            tree.children = [
+                keyword,
+                *self._preprocess_keyword_values(values, preprocessor),
+            ]
 
         return self._format_non_option(tree)
 
@@ -111,7 +120,7 @@ class ArgumentAwareCommandInvocationDumper(BaseCommandInvocationDumper):
         header, *rest = tree.children
         preprocessor = self._get_preprocessor(header)
         if preprocessor is not None:
-            rest = getattr(self, preprocessor)(rest)
+            rest = self._preprocess_keyword_values(rest, preprocessor)
 
         result = self._try_to_format_into_single_line(tree.children)
         if result is not None:
