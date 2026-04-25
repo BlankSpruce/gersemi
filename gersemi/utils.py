@@ -2,12 +2,6 @@ from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
 import sys
-from typing import List
-
-
-def pop_all(in_list: List) -> List:
-    popped, in_list[:] = in_list[:], []
-    return popped
 
 
 def fromfile(path):

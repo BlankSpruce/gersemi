@@ -1,4 +1,5 @@
 mod argument_schema;
+mod keyword_preprocessor;
 mod node;
 mod parser;
 mod two_words_keyword_isolator;
@@ -82,6 +83,24 @@ mod gersemi_rust_backend {
             result.push(tree("pair", accumulator));
         }
         result
+    }
+
+    #[pyfunction]
+    fn sort_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
+        crate::keyword_preprocessor::sort_arguments(nodes, case_insensitive)
+    }
+
+    #[pyfunction]
+    fn keep_unique_arguments(nodes: Nodes) -> Nodes {
+        crate::keyword_preprocessor::keep_unique_arguments(nodes)
+    }
+
+    #[pyfunction]
+    fn sort_and_keep_unique_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
+        crate::keyword_preprocessor::sort_arguments(
+            crate::keyword_preprocessor::keep_unique_arguments(nodes),
+            case_insensitive,
+        )
     }
 
     #[pyfunction]
