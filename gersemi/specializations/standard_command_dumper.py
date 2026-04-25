@@ -1,7 +1,6 @@
 from functools import lru_cache
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_preprocessor import KeywordPreprocessor
-from gersemi.keyword_with_pairs_formatter import KeywordWithPairsFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -14,7 +13,6 @@ from .multiple_signature_command_invocation_dumper import (
 def create_standard_dumper(data):
     bases = [
         CommandLineFormatter,
-        KeywordWithPairsFormatter,
         KeywordPreprocessor,
         ArgumentAwareCommandInvocationDumper,
     ]

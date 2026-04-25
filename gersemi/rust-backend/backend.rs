@@ -9,7 +9,7 @@ use pyo3::pymodule;
 mod gersemi_rust_backend {
     use crate::argument_schema::{isolate_conditions, ArgumentSchema};
     use crate::node::{Node, Nodes};
-    use crate::parser::{BlockDefinitions, Error, Parser};
+    use crate::parser::{tree, BlockDefinitions, Error, Parser};
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
 
@@ -55,6 +55,33 @@ mod gersemi_rust_backend {
                 children,
             ),
         }
+    }
+
+    #[pyfunction]
+    fn pair_arguments(arguments: Nodes) -> Nodes {
+        let mut result = Nodes::new();
+        let mut accumulator = Nodes::new();
+        for argument in arguments {
+            if accumulator.is_empty() {
+                if argument.is_comment() {
+                    result.push(argument);
+                } else {
+                    accumulator.push(argument);
+                }
+            } else {
+                let is_comment_node = argument.is_comment();
+                accumulator.push(argument);
+                if !is_comment_node {
+                    let accumulator = std::mem::take(&mut accumulator);
+                    result.push(tree("pair", accumulator));
+                }
+            }
+        }
+
+        if !accumulator.is_empty() {
+            result.push(tree("pair", accumulator));
+        }
+        result
     }
 
     #[pyfunction]

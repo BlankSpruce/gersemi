@@ -2,6 +2,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from textwrap import indent
 from typing import Dict, List, Optional, Tuple
+import gersemi_rust_backend
 from gersemi.ast_helpers import is_line_comment_in
 from gersemi.configuration import Indent, ListExpansion, OutcomeConfiguration, Tabs
 from gersemi.types import Nodes, Tree
@@ -146,3 +147,6 @@ class BaseDumper:  # pylint: disable=too-many-instance-attributes
             UnknownCommandWarning(command_name=name, positions=positions)
             for name, positions in self.unknown_commands_used.items()
         ]
+
+    def _format_keyword_with_pairs(self, args):
+        return "\n".join(map(self.visit, gersemi_rust_backend.pair_arguments(args)))
