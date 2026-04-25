@@ -14,7 +14,7 @@ pub enum SecondKeyword {
 }
 
 #[derive(Eq, Hash, PartialEq)]
-struct KeywordMatcher {
+pub struct KeywordMatcher {
     first: String,
     second: Option<SecondKeyword>,
 }
@@ -205,7 +205,7 @@ fn is_among_section_keywords(section_schema: Option<&ArgumentSchema>, argument: 
     }
 }
 
-fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
+pub fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
     for matcher in matchers {
         if matcher.matches(node) {
             return true;

@@ -8,7 +8,7 @@ use pyo3::pymodule;
 
 #[pymodule]
 mod gersemi_rust_backend {
-    use crate::argument_schema::{isolate_conditions, ArgumentSchema};
+    use crate::argument_schema::{isolate_conditions, ArgumentSchema, KeywordMatcher};
     use crate::node::{Node, Nodes};
     use crate::parser::{tree, BlockDefinitions, Error, Parser};
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
@@ -101,6 +101,12 @@ mod gersemi_rust_backend {
             crate::keyword_preprocessor::keep_unique_arguments(nodes),
             case_insensitive,
         )
+    }
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn is_one_of_keywords(matchers: Vec<KeywordMatcher>, node: Node) -> bool {
+        crate::argument_schema::is_one_of_keywords(&matchers, &node)
     }
 
     #[pyfunction]

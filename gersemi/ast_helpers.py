@@ -11,11 +11,8 @@ def is_token(token_type: str) -> Callable[[Node], bool]:
     return lambda element: getattr(element, "type", None) == token_type
 
 
-is_block = is_tree("block")
-is_bracket_argument = is_tree("bracket_argument")
 is_bracket_comment = is_tree("bracket_comment")
 is_commented_argument = is_tree("commented_argument")
-is_keyword_argument = is_tree("keyword_argument")
 is_line_comment = is_tree("line_comment")
 is_multi_value_argument = is_tree("multi_value_argument")
 is_one_value_argument = is_tree("one_value_argument")
@@ -23,7 +20,6 @@ is_option_argument = is_tree("option_argument")
 is_positional_arguments = is_tree("positional_arguments")
 is_quoted_argument = is_tree("quoted_argument")
 is_section = is_tree("section")
-is_two_word_argument = is_tree("two_word_argument")
 is_unquoted_argument = is_tree("unquoted_argument")
 is_pair = is_tree("pair")
 
@@ -67,33 +63,6 @@ def is_keyword(keyword, node):
         return node.children and is_keyword(keyword, node.children[0])
 
     return node.children and node.children[0] == keyword
-
-
-def is_one_of_keywords(keywords, node):
-    for k in keywords:
-        if isinstance(k, str):
-            if is_keyword(k, node):
-                return True
-        elif isinstance(k, tuple) and is_keyword_argument(node):
-            front_pattern, back_pattern = k
-            if not is_keyword(front_pattern, node.children[0]):
-                continue
-
-            if is_keyword(back_pattern, node.children[-1]):
-                return True
-
-    return False
-
-
-def make_tree(name: str):
-    return lambda children: Tree(name, children)
-
-
-option_argument = make_tree("option_argument")
-one_value_argument = make_tree("one_value_argument")
-multi_value_argument = make_tree("multi_value_argument")
-positional_arguments = make_tree("positional_arguments")
-pair = make_tree("pair")
 
 
 def get_value(node, default: Any):

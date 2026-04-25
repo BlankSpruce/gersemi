@@ -1,7 +1,8 @@
 from contextlib import contextmanager
 from itertools import filterfalse
+import gersemi_rust_backend
 from gersemi.argument_schema import Signatures, create_schema_patch
-from gersemi.ast_helpers import is_comment, is_one_of_keywords
+from gersemi.ast_helpers import is_comment
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
@@ -23,22 +24,25 @@ class MultipleSignatureCommandInvocationDumper(ArgumentAwareCommandInvocationDum
         finally:
             self.__class__ = old_class
 
-    def _get_signature_matcher(self, keyword):
-        for item in self.signatures:
-            if is_one_of_keywords([item], keyword):
-                return item
-        return None
+    def _get_signature(self, keyword):
+        for item, signature in self.signatures.items():
+            if item is None:
+                continue
+
+            if gersemi_rust_backend.is_one_of_keywords([item], keyword):
+                return signature
+
+        return self.signatures.get(None, None)
 
     def format_command(self, tree):
         _, arguments = tree.children
         arguments = self._preprocess_arguments(arguments)
         arguments_only = filterfalse(is_comment, arguments.children)
-        matcher = None
+        signature = None
         for argument in arguments_only:
-            matcher = self._get_signature_matcher(argument)
-            if matcher is not None:
+            signature = self._get_signature(argument)
+            if signature is not None:
                 break
 
-        signature = self.signatures.get(matcher, None)
         with self._update_signature_characteristics(signature):
             return super().format_command(tree)
