@@ -1,7 +1,9 @@
+from contextlib import contextmanager
+from itertools import filterfalse
 from typing import Sequence, Tuple, Union
 import gersemi_rust_backend
-from gersemi.argument_schema import ArgumentSchema
-from gersemi.ast_helpers import is_line_comment_in_any_of
+from gersemi.argument_schema import ArgumentSchema, Signatures, create_schema_patch
+from gersemi.ast_helpers import is_comment, is_line_comment_in_any_of
 from gersemi.base_dumper import BaseDumper
 from gersemi.configuration import ListExpansion, Spaces
 from gersemi.keywords import AnyMatcher
@@ -10,6 +12,7 @@ from gersemi.types import Nodes
 
 class BaseCommandInvocationDumper(BaseDumper):
     schema: ArgumentSchema
+    signatures: Signatures = {}
 
     _inhibit_favour_expansion: bool = False
     _two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
@@ -49,7 +52,7 @@ class BaseCommandInvocationDumper(BaseDumper):
             return all(size < 2 for size in group_sizes)
         return all(size <= 4 for size in group_sizes)
 
-    def format_command(self, tree):
+    def format_signature(self, tree):
         raw_identifier, arguments = tree.children
         identifier = self.format_command_name(raw_identifier)
         arguments = self._preprocess_arguments(arguments)
@@ -108,3 +111,39 @@ class BaseCommandInvocationDumper(BaseDumper):
         return gersemi_rust_backend.isolate_two_words_keywords(
             self._two_words_keywords, arguments
         )
+
+    @contextmanager
+    def _update_signature_characteristics(self, signature):
+        if signature is None:
+            yield
+            return
+
+        old_class = type(self)
+        try:
+            self.__class__ = create_schema_patch(signature, old_class)
+            yield
+        finally:
+            self.__class__ = old_class
+
+    def _get_signature(self, keyword):
+        for item, signature in self.signatures.items():
+            if item is None:
+                continue
+
+            if gersemi_rust_backend.is_one_of_keywords([item], keyword):
+                return signature
+
+        return self.signatures.get(None, None)
+
+    def format_command(self, tree):
+        _, arguments = tree.children
+        arguments = self._preprocess_arguments(arguments)
+        arguments_only = filterfalse(is_comment, arguments.children)
+        signature = None
+        for argument in arguments_only:
+            signature = self._get_signature(argument)
+            if signature is not None:
+                break
+
+        with self._update_signature_characteristics(signature):
+            return self.format_signature(tree)

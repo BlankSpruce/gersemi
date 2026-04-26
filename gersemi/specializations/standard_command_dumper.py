@@ -3,27 +3,16 @@ from gersemi.command_line_formatter import CommandLineFormatter
 from .argument_aware_command_invocation_dumper import (
     ArgumentAwareCommandInvocationDumper,
 )
-from .multiple_signature_command_invocation_dumper import (
-    MultipleSignatureCommandInvocationDumper,
-)
 
 
 @lru_cache(maxsize=None)
 def create_standard_dumper(data):
-    bases = [CommandLineFormatter, ArgumentAwareCommandInvocationDumper]
-
-    if data.signatures:
-        bases = [MultipleSignatureCommandInvocationDumper, *bases]
-
-    class Impl(*bases):
+    class Impl(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
         _canonical_name = data.canonical_name
         _inhibit_favour_expansion = data.inhibit_favour_expansion
         _two_words_keywords = data.two_words_keywords
-
         schema = data.schema
-
-        if data.signatures:
-            signatures = data.signatures
+        signatures = data.signatures
 
     return Impl
 
