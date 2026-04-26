@@ -4,20 +4,31 @@ from functools import lru_cache
 from gersemi.argument_schema import StandardCommand
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.builtin_commands import _builtin_commands
+from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.configuration import OutcomeConfiguration
+from gersemi.specializations.argument_aware_command_invocation_dumper import (
+    ArgumentAwareCommandInvocationDumper,
+)
 from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
-)
-from gersemi.specializations.standard_command_dumper import (
-    create_specialized_dumper,
-    create_standard_dumper,
 )
 
 
 @lru_cache(maxsize=None)
-def create_patch(patch, old_class):
-    class Impl(patch, old_class):
-        pass
+def create_patch(data, old_class):
+    if not isinstance(data, StandardCommand):
+
+        class Impl(data.impl, old_class):  # pylint: disable=function-redefined
+            _canonical_name = data.canonical_name
+
+        return Impl
+
+    class Impl(CommandLineFormatter, ArgumentAwareCommandInvocationDumper, old_class):
+        _canonical_name = data.canonical_name
+        _inhibit_favour_expansion = data.inhibit_favour_expansion
+        _two_words_keywords = data.two_words_keywords
+        schema = data.schema
+        signatures = data.signatures
 
     return Impl
 
@@ -31,21 +42,17 @@ class Dumper(PreservingCommandInvocationDumper, BaseCommandInvocationDumper):
     def patched(self, patch):
         old_class = type(self)
         try:
-            # pylint: disable=attribute-defined-outside-init
-            self.__class__ = create_patch(patch, old_class)
+            self.__class__ = patch
             yield self
         finally:
-            self.__class__ = old_class  # pylint: disable=invalid-class-object,
+            self.__class__ = old_class
 
     def _get_patch(self, raw_command_name):
         command = self.known_definitions.get(raw_command_name.lower(), None)
         if command is None:
             return None
 
-        if isinstance(command, StandardCommand):
-            return create_standard_dumper(command)
-
-        return create_specialized_dumper(command)
+        return create_patch(command, type(self))
 
     def command_invocation(self, tree):
         command_name, _ = tree.children
