@@ -1,37 +1,61 @@
-from gersemi.base_dumper import BaseDumper
-from gersemi.command_invocation_dumper import CommandInvocationDumper
+from collections import ChainMap
+from contextlib import contextmanager
+from functools import lru_cache
+from gersemi.argument_schema import StandardCommand
+from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.builtin_commands import _builtin_commands
+from gersemi.configuration import OutcomeConfiguration
+from gersemi.specializations.preserving_command_invocation_dumper import (
+    PreservingCommandInvocationDumper,
+)
+from gersemi.specializations.standard_command_dumper import (
+    create_specialized_dumper,
+    create_standard_dumper,
+)
 
 
-class Dumper(CommandInvocationDumper, BaseDumper):
-    def start(self, tree):
-        result = self.__default__(tree)
-        if result.endswith("\n"):
-            return result
-        return result + "\n"
+@lru_cache(maxsize=None)
+def create_patch(patch, old_class):
+    class Impl(patch, old_class):
+        pass
 
-    def block(self, tree):
-        return "\n".join(filter(None, map(self.visit, tree.children)))
+    return Impl
 
-    def block_body(self, tree):
-        with self.indented():
-            return "".join(self.visit_children(tree))
 
-    def command_element(self, tree):
-        invocation, *comment = tree.children
-        formatted_invocation = self.visit(invocation)
-        if len(comment) == 0:
-            return formatted_invocation
+class Dumper(PreservingCommandInvocationDumper, BaseCommandInvocationDumper):
+    def __init__(self, configuration: OutcomeConfiguration, known_definitions):
+        self.known_definitions = ChainMap(known_definitions, _builtin_commands)
+        super().__init__(configuration)
 
-        with self.not_indented():
-            formatted_comment = self.visit(comment[0])
+    @contextmanager
+    def patched(self, patch):
+        old_class = type(self)
+        try:
+            # pylint: disable=attribute-defined-outside-init
+            self.__class__ = create_patch(patch, old_class)
+            yield self
+        finally:
+            self.__class__ = old_class  # pylint: disable=invalid-class-object,
 
-        return f"{formatted_invocation} {formatted_comment}"
+    def _get_patch(self, raw_command_name):
+        command = self.known_definitions.get(raw_command_name.lower(), None)
+        if command is None:
+            return None
 
-    def non_command_element(self, tree):
-        return " ".join(self.visit(child) for child in tree.children)
+        if isinstance(command, StandardCommand):
+            return create_standard_dumper(command)
 
-    def line_comment(self, tree):
-        return self._indent("".join(map(str, tree.children))).rstrip()
+        return create_specialized_dumper(command)
 
-    def standalone_identifier(self, tree):
-        return self.unquoted_argument(tree)
+    def command_invocation(self, tree):
+        command_name, _ = tree.children
+        patch = self._get_patch(str(command_name))
+        if patch is None:
+            return super().format_command(tree)
+        with self.patched(patch):
+            return self.format_command(tree)
+
+    def custom_command(self, tree):
+        _, command_name, *_ = tree.children
+        self._record_unknown_command(command_name)
+        return super().custom_command(tree)
