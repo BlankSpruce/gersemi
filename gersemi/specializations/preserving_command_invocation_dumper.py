@@ -1,6 +1,6 @@
 import re
 from textwrap import indent
-from gersemi.base_dumper import BaseDumper
+from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 
 BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
 QUOTED_ARGUMENT_REGEX = r'("(?:[^\\\"]|\n|(?:\\(?:[^A-Za-z0-9]|[nrt]))|\\\n)*")'
@@ -92,7 +92,7 @@ def remove_common_beginning(s, other):
     return s[index:]
 
 
-class PreservingCommandInvocationDumper(BaseDumper):
+class PreservingCommandInvocationDumper(BaseCommandInvocationDumper):
     def _preprocess_content(self, content):
         if content.strip() == "":
             return ""

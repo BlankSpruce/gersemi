@@ -1,12 +1,10 @@
 from gersemi.argument_schema import ArgumentSchema
+from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.keyword_kind import KeywordFormatter
-from .argument_aware_command_invocation_dumper import (
-    ArgumentAwareCommandInvocationDumper,
-)
 
 
-class AddCustomTarget(CommandLineFormatter, ArgumentAwareCommandInvocationDumper):
+class AddCustomTarget(CommandLineFormatter, BaseCommandInvocationDumper):
     schema = ArgumentSchema(
         front_positional_arguments=["Name"],
         options=["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"],

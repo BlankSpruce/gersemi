@@ -1,10 +1,8 @@
 from gersemi.argument_schema import ArgumentSchema
-from .argument_aware_command_invocation_dumper import (
-    ArgumentAwareCommandInvocationDumper,
-)
+from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 
 
-class SetProperty(ArgumentAwareCommandInvocationDumper):
+class SetProperty(BaseCommandInvocationDumper):
     schema = ArgumentSchema(
         options=["GLOBAL", "APPEND", "APPEND_STRING"],
         multi_value_keywords=[

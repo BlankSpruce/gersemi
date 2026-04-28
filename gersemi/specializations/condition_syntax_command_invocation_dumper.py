@@ -51,6 +51,9 @@ class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
         head, *tail = arguments
         return [[head], tail]
 
+    def arguments(self, tree):
+        return "\n".join(self.visit_children(tree))
+
     def complex_argument(self, tree):
         arguments, *_ = tree.children
         arguments = self._preprocess_arguments(arguments)

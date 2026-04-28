@@ -6,9 +6,6 @@ from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.configuration import OutcomeConfiguration
-from gersemi.specializations.argument_aware_command_invocation_dumper import (
-    ArgumentAwareCommandInvocationDumper,
-)
 from gersemi.specializations.preserving_command_invocation_dumper import (
     PreservingCommandInvocationDumper,
 )
@@ -23,7 +20,7 @@ def create_patch(data, old_class):
 
         return Impl
 
-    class Impl(CommandLineFormatter, ArgumentAwareCommandInvocationDumper, old_class):
+    class Impl(CommandLineFormatter, old_class):  # pylint: disable=function-redefined
         _canonical_name = data.canonical_name
         _inhibit_favour_expansion = data.inhibit_favour_expansion
         _two_words_keywords = data.two_words_keywords
