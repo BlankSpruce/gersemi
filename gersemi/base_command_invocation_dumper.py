@@ -1,8 +1,9 @@
+from collections import defaultdict
 from contextlib import contextmanager
 from itertools import filterfalse
 import re
 from textwrap import indent
-from typing import Dict, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 import gersemi_rust_backend
 from gersemi.argument_schema import ArgumentSchema, Signatures, create_schema_patch
 from gersemi.ast_helpers import (
@@ -10,6 +11,7 @@ from gersemi.ast_helpers import (
     is_comment,
     is_commented_argument,
     is_line_comment,
+    is_line_comment_in,
     is_line_comment_in_any_of,
     is_multi_value_argument,
     is_one_value_argument,
@@ -18,11 +20,18 @@ from gersemi.ast_helpers import (
     is_positional_arguments,
     is_section,
 )
-from gersemi.base_dumper import BaseDumper
-from gersemi.configuration import ListExpansion, SortOrder, Spaces
+from gersemi.configuration import (
+    Indent,
+    ListExpansion,
+    OutcomeConfiguration,
+    SortOrder,
+    Spaces,
+    Tabs,
+)
 from gersemi.keyword_kind import kind_to_formatter
 from gersemi.keywords import AnyMatcher
-from gersemi.types import Nodes
+from gersemi.types import Nodes, Tree
+from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
 BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
 QUOTED_ARGUMENT_REGEX = r'("(?:[^\\\"]|\n|(?:\\(?:[^A-Za-z0-9]|[nrt]))|\\\n)*")'
@@ -114,7 +123,17 @@ def remove_common_beginning(s, other):
     return s[index:]
 
 
-class BaseCommandInvocationDumper(BaseDumper):
+def get_indent(indent_type: Indent) -> str:
+    if isinstance(indent_type, Tabs):
+        return "\t"
+    return " " * indent_type
+
+
+class WontFit(Exception):
+    pass
+
+
+class BaseCommandInvocationDumper:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     schema: ArgumentSchema
     signatures: Signatures = {}
 
@@ -122,6 +141,155 @@ class BaseCommandInvocationDumper(BaseDumper):
     _two_words_keywords: Sequence[Tuple[str, Union[str, AnyMatcher]]] = []
     _keyword_formatters: Dict[str, str] = {}
     _canonical_name: Optional[str] = None
+
+    def __init__(self, configuration: OutcomeConfiguration):
+        self.width = configuration.line_length
+        self.indent_type = configuration.indent
+        self._indent_symbol = get_indent(self.indent_type)
+        self.indent_level = 0
+        self.favour_expansion = False
+        self.unknown_commands_used: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
+        self.list_expansion = configuration.list_expansion
+        self.sort_order = configuration.sort_order
+
+    def __default__(self, tree: Tree):
+        return "".join(self.visit_children(tree))
+
+    def visit(self, tree):
+        f = getattr(self, tree.data, self.__default__)
+        return f(tree)
+
+    def visit_children(self, tree):
+        yield from (
+            self.visit(child) if isinstance(child, Tree) else str(child)
+            for child in tree.children
+        )
+
+    @property
+    def indent_symbol(self):
+        return self._indent_symbol * self.indent_level
+
+    def _indent(self, text: str):
+        return indent(text, self.indent_symbol)
+
+    def _single_line_helper(self, children, offset):
+        width = offset
+        for c in children:
+            if isinstance(c, Tree):
+                if is_line_comment_in(c):
+                    raise WontFit()
+
+                result = self.visit(c)
+            else:
+                result = str(c)
+
+            if "\n" in result:
+                raise WontFit()
+
+            width += len(result)
+            if width > self.width:
+                raise WontFit()
+
+            yield result
+            width += 1
+
+    def _try_to_format_into_single_line(
+        self, children: Nodes, prefix: str = "", postfix: str = ""
+    ) -> Optional[str]:
+        if self.favour_expansion:
+            return None
+
+        try:
+            reserved_space = len(prefix) + len(postfix) + len(self.indent_symbol)
+            with self.not_indented():
+                formatted = " ".join(self._single_line_helper(children, reserved_space))
+            return f"{self.indent_symbol}{prefix}{formatted}{postfix}"
+        except WontFit:
+            return None
+
+    @contextmanager
+    def with_indent_level(self, indent_level):
+        old_indent_level = self.indent_level
+        try:
+            self.indent_level = indent_level
+            yield self
+        finally:
+            self.indent_level = old_indent_level
+
+    def dedented(self):
+        return self.with_indent_level(self.indent_level - 1)
+
+    def indented(self):
+        return self.with_indent_level(self.indent_level + 1)
+
+    def not_indented(self):
+        return self.with_indent_level(0)
+
+    @contextmanager
+    def select_expansion_strategy(self):
+        old = self.favour_expansion
+        try:
+            self.favour_expansion = self.list_expansion == ListExpansion.FavourExpansion
+            yield self
+        finally:
+            self.favour_expansion = old
+
+    @contextmanager
+    def select_inlining_strategy(self):
+        old = self.favour_expansion
+        try:
+            self.favour_expansion = False
+            yield self
+        finally:
+            self.favour_expansion = old
+
+    def _record_unknown_command(self, command):
+        self.unknown_commands_used[str(command)].append((command.line, command.column))
+
+    def get_warnings(self) -> FormatterWarnings:
+        if len(self.unknown_commands_used) == 0:
+            return []
+
+        return [
+            UnknownCommandWarning(command_name=name, positions=positions)
+            for name, positions in self.unknown_commands_used.items()
+        ]
+
+    def _format_keyword_with_pairs(self, args):
+        return "\n".join(map(self.visit, gersemi_rust_backend.pair_arguments(args)))
+
+    def start(self, tree):
+        result = self.__default__(tree)
+        if result.endswith("\n"):
+            return result
+        return result + "\n"
+
+    def block(self, tree):
+        return "\n".join(filter(None, map(self.visit, tree.children)))
+
+    def block_body(self, tree):
+        with self.indented():
+            return "".join(self.visit_children(tree))
+
+    def command_element(self, tree):
+        invocation, *comment = tree.children
+        formatted_invocation = self.visit(invocation)
+        if len(comment) == 0:
+            return formatted_invocation
+
+        with self.not_indented():
+            formatted_comment = self.visit(comment[0])
+
+        return f"{formatted_invocation} {formatted_comment}"
+
+    def non_command_element(self, tree):
+        return " ".join(self.visit(child) for child in tree.children)
+
+    def line_comment(self, tree):
+        return self._indent("".join(map(str, tree.children))).rstrip()
+
+    def standalone_identifier(self, tree):
+        return f"{self.indent_symbol}{tree.children[0]}"
 
     def _default_format_values(self, values) -> str:
         return "\n".join(map(self.visit, values))
