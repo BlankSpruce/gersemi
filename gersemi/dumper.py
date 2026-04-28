@@ -6,9 +6,6 @@ from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.command_line_formatter import CommandLineFormatter
 from gersemi.configuration import OutcomeConfiguration
-from gersemi.specializations.preserving_command_invocation_dumper import (
-    PreservingCommandInvocationDumper,
-)
 
 
 @lru_cache(maxsize=None)
@@ -30,7 +27,7 @@ def create_patch(data, old_class):
     return Impl
 
 
-class Dumper(PreservingCommandInvocationDumper, BaseCommandInvocationDumper):
+class Dumper(BaseCommandInvocationDumper):
     def __init__(self, configuration: OutcomeConfiguration, known_definitions):
         self.known_definitions = ChainMap(known_definitions, _builtin_commands)
         super().__init__(configuration)
