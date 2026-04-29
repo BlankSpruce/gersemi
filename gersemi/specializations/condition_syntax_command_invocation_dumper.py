@@ -1,10 +1,10 @@
 import gersemi_rust_backend
 from gersemi.ast_helpers import is_line_comment_in
-from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
 from gersemi.configuration import Spaces
+from gersemi.dumper import Dumper
 
 
-class ConditionSyntaxCommandInvocationDumper(BaseCommandInvocationDumper):
+class ConditionSyntaxCommandInvocationDumper(Dumper):
     _inhibit_favour_expansion = True
 
     def unary_operation(self, tree):

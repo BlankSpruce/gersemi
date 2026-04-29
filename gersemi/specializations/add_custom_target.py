@@ -1,9 +1,9 @@
 from gersemi.argument_schema import ArgumentSchema
-from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
+from gersemi.dumper import Dumper
 from gersemi.keyword_kind import KeywordFormatter
 
 
-class AddCustomTarget(BaseCommandInvocationDumper):
+class AddCustomTarget(Dumper):
     schema = ArgumentSchema(
         front_positional_arguments=["Name"],
         options=["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"],
