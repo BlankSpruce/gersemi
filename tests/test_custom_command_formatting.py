@@ -5,6 +5,7 @@ from gersemi.custom_command_definition_finder import (
     get_just_definitions,
 )
 from gersemi.dumper import Dumper
+from gersemi.parser import Parser
 
 
 def create_dumper(definitions):
@@ -14,9 +15,7 @@ def create_dumper(definitions):
     )
 
 
-def test_custom_command_without_keyworded_arguments_formatting(
-    parser,
-):
+def test_custom_command_without_keyworded_arguments_formatting():
     given = """function(some_custom_command_without_keyworded_arguments only positional arguments)
     message(STATUS "some_custom_command_without_keyworded_arguments")
 endfunction()
@@ -44,19 +43,19 @@ some_custom_command_without_keyworded_arguments(
 )
 """
 
-    parsed = parser.parse(given)
+    before = Parser(known_definitions=None)
+    parsed = before.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
-    parsed_again = parser.parse(given, definitions)
+    after = Parser(known_definitions=definitions)
+    parsed_again = after.parse(given)
     formatted = dumper.visit(parsed_again)
 
     assert formatted == expected
 
 
-def test_custom_command_without_keyworded_arguments_with_disabled_reformatting(
-    parser,
-):
+def test_custom_command_without_keyworded_arguments_with_disabled_reformatting():
     given = """function(some_custom_command_without_keyworded_arguments only positional arguments)
     # gersemi: ignore
     message(STATUS "some_custom_command_without_keyworded_arguments")
@@ -82,11 +81,13 @@ some_custom_command_without_keyworded_arguments(short positional arguments)
 some_custom_command_without_keyworded_arguments(long__________________________________________________ positional__________________________________________________ arguments__________________________________________________)
 """
 
-    parsed = parser.parse(given)
+    before = Parser(known_definitions=None)
+    parsed = before.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
-    parsed_again = parser.parse(given, definitions)
+    after = Parser(known_definitions=definitions)
+    parsed_again = after.parse(given)
     formatted = dumper.visit(parsed_again)
 
     assert formatted == expected
@@ -104,7 +105,7 @@ endfunction()
 """,
     ],
 )
-def test_can_deal_with_empty_body_in_custom_command_definition(parser, given):
+def test_can_deal_with_empty_body_in_custom_command_definition(given):
     expected = """function(
     some_custom_command_without_keyworded_arguments
     only
@@ -114,11 +115,13 @@ def test_can_deal_with_empty_body_in_custom_command_definition(parser, given):
 endfunction()
 """
 
-    parsed = parser.parse(given)
+    before = Parser(known_definitions=None)
+    parsed = before.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
     dumper = create_dumper(definitions)
 
-    parsed_again = parser.parse(given, definitions)
+    after = Parser(known_definitions=definitions)
+    parsed_again = after.parse(given)
     formatted = dumper.visit(parsed_again)
 
     assert formatted == expected

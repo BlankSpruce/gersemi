@@ -3,21 +3,15 @@ import gersemi_rust_backend
 from gersemi.builtin_commands import _builtin_commands
 
 
-class RustParser:
-    def __init__(self):
-        self.blocks = ()
-        self.known_definitions = {}
-
-    def parse(self, text, known_definitions=None):
-        if known_definitions is None:
-            known_definitions = {}
-
+class Parser:
+    def __init__(self, known_definitions=None):
         self.known_definitions = (
             _builtin_commands
             if known_definitions is None
             else ChainMap(known_definitions, _builtin_commands)
         )
 
+    def parse(self, text):
         return gersemi_rust_backend.parse(
             text,
             blocks=(
@@ -29,7 +23,7 @@ class RustParser:
                 ("block", "endblock"),
                 *(
                     (name, definition.block_end)
-                    for name, definition in known_definitions.items()
+                    for name, definition in self.known_definitions.items()
                     if getattr(definition, "block_end", None)
                 ),
             ),

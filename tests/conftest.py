@@ -11,8 +11,8 @@ from gersemi.configuration import (
 from gersemi.extensions import preprocess_definitions
 from gersemi.formatter import create_formatter
 from gersemi.noop import noop
+from gersemi.parser import Parser
 from gersemi.runner import find_all_custom_command_definitions
-from gersemi.rust_parser import RustParser
 import tests.custom_commands.extension as testing_extension
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
@@ -21,12 +21,12 @@ from tests.old_parser.parser import create_parser, create_parser_with_postproces
 
 @pytest.fixture(scope="module")
 def parser():
-    return RustParser()
+    return Parser()
 
 
 @pytest.fixture(scope="module")
 def rust_parser():
-    return RustParser()
+    return Parser()
 
 
 @pytest.fixture(scope="module")

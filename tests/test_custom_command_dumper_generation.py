@@ -4,6 +4,7 @@ from gersemi.custom_command_definition_finder import (
     get_just_definitions,
 )
 from gersemi.dumper import Dumper
+from gersemi.parser import Parser
 from .tests_generator import generate_input_only_tests
 
 custom_command_to_format = """
@@ -36,13 +37,15 @@ def create_dumper(custom_command_definitions):
     )
 
 
-def test_custom_command_generated_dumper(parser, case):  # pylint: disable=redefined-outer-name
-    parsed_function_def = parser.parse(case.content)
+def test_custom_command_generated_dumper(case):  # pylint: disable=redefined-outer-name
+    before = Parser(known_definitions=None)
+    parsed_function_def = before.parse(case.content)
     definitions = get_just_definitions(
         find_custom_command_definitions(parsed_function_def)
     )
 
-    parsed_function = parser.parse(custom_command_to_format, definitions)
+    after = Parser(known_definitions=definitions)
+    parsed_function = after.parse(custom_command_to_format)
     dumper = create_dumper(definitions)
     custom_command_formatted = dumper.visit(parsed_function)
 
