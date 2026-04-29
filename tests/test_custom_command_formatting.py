@@ -1,18 +1,9 @@
 import pytest
-from gersemi.configuration import OutcomeConfiguration
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
-from gersemi.dumper import Dumper
-from gersemi.parser import Parser
-
-
-def create_dumper(definitions):
-    return Dumper(
-        configuration=OutcomeConfiguration(line_length=80, indent=4),
-        known_definitions=definitions,
-    )
+from tests.utils import Dumper, Parser
 
 
 def test_custom_command_without_keyworded_arguments_formatting():
@@ -46,7 +37,7 @@ some_custom_command_without_keyworded_arguments(
     before = Parser(known_definitions=None)
     parsed = before.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
-    dumper = create_dumper(definitions)
+    dumper = Dumper(definitions)
 
     after = Parser(known_definitions=definitions)
     parsed_again = after.parse(given)
@@ -84,7 +75,7 @@ some_custom_command_without_keyworded_arguments(long____________________________
     before = Parser(known_definitions=None)
     parsed = before.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
-    dumper = create_dumper(definitions)
+    dumper = Dumper(definitions)
 
     after = Parser(known_definitions=definitions)
     parsed_again = after.parse(given)
@@ -118,7 +109,7 @@ endfunction()
     before = Parser(known_definitions=None)
     parsed = before.parse(given)
     definitions = get_just_definitions(find_custom_command_definitions(parsed))
-    dumper = create_dumper(definitions)
+    dumper = Dumper(definitions)
 
     after = Parser(known_definitions=definitions)
     parsed_again = after.parse(given)

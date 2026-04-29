@@ -1,15 +1,9 @@
-from collections import ChainMap
 import gersemi_rust_backend
-from gersemi.builtin_commands import _builtin_commands
 
 
 class Parser:
     def __init__(self, known_definitions=None):
-        self.known_definitions = (
-            _builtin_commands
-            if known_definitions is None
-            else ChainMap(known_definitions, _builtin_commands)
-        )
+        self.known_definitions = {} if known_definitions is None else known_definitions
 
     def parse(self, text):
         return gersemi_rust_backend.parse(

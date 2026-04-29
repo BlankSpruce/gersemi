@@ -1,10 +1,8 @@
-from gersemi.configuration import OutcomeConfiguration
 from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
-from gersemi.dumper import Dumper
-from gersemi.parser import Parser
+from tests.utils import Dumper, Parser
 from .tests_generator import generate_input_only_tests
 
 custom_command_to_format = """
@@ -30,13 +28,6 @@ custom_command_properly_formatted = """Seven_Samurai(
 """
 
 
-def create_dumper(custom_command_definitions):
-    return Dumper(
-        configuration=OutcomeConfiguration(line_length=80, indent=4),
-        known_definitions=custom_command_definitions,
-    )
-
-
 def test_custom_command_generated_dumper(case):  # pylint: disable=redefined-outer-name
     before = Parser(known_definitions=None)
     parsed_function_def = before.parse(case.content)
@@ -46,7 +37,7 @@ def test_custom_command_generated_dumper(case):  # pylint: disable=redefined-out
 
     after = Parser(known_definitions=definitions)
     parsed_function = after.parse(custom_command_to_format)
-    dumper = create_dumper(definitions)
+    dumper = Dumper(definitions)
     custom_command_formatted = dumper.visit(parsed_function)
 
     assert custom_command_formatted == custom_command_properly_formatted

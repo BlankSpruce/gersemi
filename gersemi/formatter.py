@@ -1,7 +1,9 @@
+from collections import ChainMap
 from copy import deepcopy
 from functools import lru_cache
 import re
 from typing import List, Tuple
+from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import LineRanges, OutcomeConfiguration
 from gersemi.dumper import Dumper
 from gersemi.parser import Parser
@@ -116,7 +118,7 @@ class Formatter:
         lines_to_format: LineRanges,
     ):
         self.configuration = configuration
-        self.known_definitions = known_definitions
+        self.known_definitions = ChainMap(known_definitions, _builtin_commands)
         self.lines_to_format = lines_to_format
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:

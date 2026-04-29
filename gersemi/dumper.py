@@ -1,9 +1,7 @@
-from collections import ChainMap
 from contextlib import contextmanager
 from functools import lru_cache
 from gersemi.argument_schema import StandardCommand
 from gersemi.base_command_invocation_dumper import BaseCommandInvocationDumper
-from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import OutcomeConfiguration
 
 
@@ -28,7 +26,7 @@ def create_patch(data, old_class):
 
 class Dumper(BaseCommandInvocationDumper):
     def __init__(self, configuration: OutcomeConfiguration, known_definitions):
-        self.known_definitions = ChainMap(known_definitions, _builtin_commands)
+        self.known_definitions = known_definitions
         super().__init__(configuration)
 
     @contextmanager

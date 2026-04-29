@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 from ignore import WalkBuilder  # pylint: disable=no-name-in-module
+from gersemi.builtin_commands import _builtin_commands
 from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
@@ -134,7 +135,7 @@ def find_custom_command_definitions_in_file_impl(filepath: Path) -> Dict[str, Ke
     if not has_custom_command_definition(code):
         return {}
 
-    parse_tree = Parser().parse(code)
+    parse_tree = Parser(_builtin_commands).parse(code)
     return find_custom_command_definitions(parse_tree, filepath)
 
 
