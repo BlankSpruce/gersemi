@@ -20,11 +20,6 @@ from tests.old_parser.parser import create_parser, create_parser_with_postproces
 
 
 @pytest.fixture(scope="module")
-def parser():
-    return Parser()
-
-
-@pytest.fixture(scope="module")
 def rust_parser():
     return Parser()
 
