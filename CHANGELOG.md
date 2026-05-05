@@ -1,4 +1,9 @@
 # Changelog
+## [0.27.3] 2026-05-05
+### Changed
+- Wheels on PyPI are also published for ARM based systems. (#108)
+- More of the core implementation reimplemented in Rust.
+
 ## [0.27.2] 2026-04-16
 ### Fixed
 - Missing files from source distribution. (#108)
