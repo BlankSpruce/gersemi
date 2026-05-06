@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.4] 2026-05-06
+### Fixed
+- Application won't hang when multiple workers are used. (#111)
+
 ## [0.27.3] 2026-05-05
 ### Changed
 - Wheels on PyPI are also published for ARM based systems. (#108)
