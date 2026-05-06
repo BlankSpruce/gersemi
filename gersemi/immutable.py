@@ -11,6 +11,9 @@ class ImmutableDict(dict):
     def __hash__(self):
         return hash(frozenset(self.items()))
 
+    def __reduce__(self):
+        return type(self), (dict(self),)
+
 
 def make_immutable(thing):
     if isinstance(thing, abc.Mapping):

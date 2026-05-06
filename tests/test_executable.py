@@ -1277,3 +1277,19 @@ def test_utf_8_bom_stdin_is_properly_handled(app):
     )
 
     assert app("-", input=given) == success(stdout=expected, stderr="")
+
+
+def test_multiprocessing_works(app, testfiles):
+    base = testfiles / "test_multiprocessing_works"
+    base.mkdir()
+    for i in range(100):
+        with open(base / f"testfile-{i}.cmake", "w", encoding="utf-8") as f:
+            f.write("set( FOO BAR )\n")
+
+    assert app("--workers", 1, "--check", base) == fail(stdout="")
+
+    assert app("--workers", 2, "--check", base) == fail(stdout="")
+    assert app("--workers", 2, "--in-place", base) == success(stdout="")
+    assert app("--workers", 2, "--check", base) == success(stdout="")
+
+    assert app("--workers", 1, "--check", base) == success(stdout="")
