@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.5] 2026-05-14
+### Fixed
+- Proper handling of `HELP` in `set(CACHE{variable})`. (#113)
+
 ## [0.27.4] 2026-05-06
 ### Fixed
 - Application won't hang when multiple workers are used. (#111)

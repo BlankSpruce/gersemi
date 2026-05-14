@@ -92,3 +92,9 @@ set(CACHE{foo} TYPE INTERNAL HELP help FORCE VALUE foo bar baz)
 set(CACHE{foo_________________________________________________________________} TYPE INTERNAL HELP help FORCE VALUE foo bar baz)
 
 set(CACHE{foo_________________________________________________________________} TYPE INTERNAL HELP help___________________________________________________________________________ FORCE VALUE foo_________________________________________________________________ bar_________________________________________________________________ baz_________________________________________________________________)
+
+set(CACHE{foo} TYPE INTERNAL HELP "help1" " help2" " help3" FORCE VALUE foo)
+
+set(CACHE{foo} TYPE INTERNAL HELP "help1" " help2" " help3" FORCE VALUE foo bar baz)
+
+set(CACHE{foo} TYPE INTERNAL HELP "help1" " help                                                  2" " help3" FORCE VALUE foo bar baz)

@@ -1144,8 +1144,8 @@ builtin_commands = {
     "set": {
         "front_positional_arguments": ["<variable>"],
         "options": ["PARENT_SCOPE", "FORCE"],
-        "one_value_keywords": ["CACHE", "TYPE", "HELP"],
-        "multi_value_keywords": ["VALUE"],
+        "one_value_keywords": ["CACHE", "TYPE"],
+        "multi_value_keywords": ["VALUE", "HELP"],
     },
     "string": {
         "_two_words_keywords": [
