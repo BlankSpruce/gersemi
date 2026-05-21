@@ -210,8 +210,10 @@ class CMakeInterpreter(Interpreter):
     def quoted_argument(self, tree):
         return get_value(tree, "")
 
+    def commented_argument(self, tree):
+        return self.visit(self._extract_first(tree))
+
     bracket_argument = _join
-    commented_argument = _join
     unquoted_argument = _extract_first
 
 
