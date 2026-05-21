@@ -227,13 +227,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
     def _single_line_helper(self, children, offset):
         width = offset
         for c in children:
-            if isinstance(c, Tree):
-                if is_line_comment_in(c):
-                    raise WontFit()
-
-                result = self.visit(c)
-            else:
-                result = str(c)
+            result = self.visit(c) if isinstance(c, Tree) else str(c)
 
             if "\n" in result:
                 raise WontFit()
@@ -245,6 +239,17 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             yield result
             width += 1
 
+    def _line_comment_is_only_at_rightmost_edge(self, children, postfix):
+        iterator = children[:-1] if postfix == "" else children
+        for c in iterator:
+            if not isinstance(c, Tree):
+                continue
+
+            if is_line_comment_in(c):
+                return False
+
+        return True
+
     def _try_to_format_into_single_line(
         self, children: Nodes, prefix: str = "", postfix: str = ""
     ) -> Optional[str]:
@@ -252,6 +257,9 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             return None
 
         try:
+            if not self._line_comment_is_only_at_rightmost_edge(children, postfix):
+                return None
+
             reserved_space = len(prefix) + len(postfix) + len(self.indent_symbol)
             with self.not_indented():
                 formatted = " ".join(self._single_line_helper(children, reserved_space))

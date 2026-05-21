@@ -83,9 +83,7 @@ if(
     OR BAZ #BAZ
     OR #OR
         QUX
-    OR FOO
-        IS_NEWER_THAN
-        BAR #BAR
+    OR FOO IS_NEWER_THAN BAR #BAR
     OR FOO
         IS_NEWER_THAN #IS_NEWER_THAN
         BAR

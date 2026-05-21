@@ -1,4 +1,9 @@
 # Changelog
+## [0.27.6] 2026-05-21
+### Fixed
+- Line comments don't inhibit local inlining when they are the last piece of the formatted chunk. (#114)
+- Comments can be used next to inline keywords in custom command definitions. (#114)
+
 ## [0.27.5] 2026-05-14
 ### Fixed
 - Proper handling of `HELP` in `set(CACHE{variable})`. (#113)

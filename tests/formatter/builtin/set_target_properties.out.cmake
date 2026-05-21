@@ -15,8 +15,7 @@ set_target_properties(
 set_target_properties(
     FOO
     PROPERTIES
-        FOO
-            BAR # after value
+        FOO BAR # after value
         BAZ # after key
             FOO
         BAR

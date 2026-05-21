@@ -105,8 +105,7 @@ find_path(
         #line
         #comments
         BAZ
-    PATHS
-        FOO #line comment at the end
+    PATHS FOO #line comment at the end
     NO_CMAKE_FIND_ROOT_PATH #line comment at the end of an option
 )
 
