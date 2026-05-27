@@ -133,6 +133,41 @@ _VERSION_Any = ("VERSION", AnyMatcher())
 _REGEX_QUOTE = ("REGEX", "QUOTE")
 _CUSTOM_CONTENT_Any = ("CUSTOM_CONTENT", AnyMatcher())
 
+_find_package_keywords = {
+    "options": [
+        "EXACT",
+        "QUIET",
+        "MODULE",
+        "CONFIG",
+        "NO_MODULE",
+        "NO_POLICY_SCOPE",
+        "NO_DEFAULT_PATH",
+        "NO_PACKAGE_ROOT_PATH",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+        "NO_SYSTEM_ENVIRONMENT_PATH",
+        "NO_CMAKE_PACKAGE_REGISTRY",
+        "NO_CMAKE_BUILDS_PATH",
+        "NO_CMAKE_SYSTEM_PATH",
+        "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY",
+        "CMAKE_FIND_ROOT_PATH_BOTH",
+        "ONLY_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_FIND_ROOT_PATH",
+        "NO_CMAKE_INSTALL_PREFIX",
+        "GLOBAL",
+    ],
+    "multi_value_keywords": [
+        "COMPONENTS",
+        "OPTIONAL_COMPONENTS",
+        "NAMES",
+        "CONFIGS",
+        "HINTS",
+        "PATHS",
+        "PATH_SUFFIXES",
+        "REQUIRED",
+    ],
+}
+
 builtin_commands = {
     #### Legend
     #### (&): canonical name used different than in the documentation
@@ -858,38 +893,7 @@ builtin_commands = {
     },
     "find_package": {
         "front_positional_arguments": ["<PackageName>", "<version>"],
-        "options": [
-            "EXACT",
-            "QUIET",
-            "MODULE",
-            "CONFIG",
-            "NO_MODULE",
-            "NO_POLICY_SCOPE",
-            "NO_DEFAULT_PATH",
-            "NO_PACKAGE_ROOT_PATH",
-            "NO_CMAKE_PATH",
-            "NO_CMAKE_ENVIRONMENT_PATH",
-            "NO_SYSTEM_ENVIRONMENT_PATH",
-            "NO_CMAKE_PACKAGE_REGISTRY",
-            "NO_CMAKE_BUILDS_PATH",
-            "NO_CMAKE_SYSTEM_PATH",
-            "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY",
-            "CMAKE_FIND_ROOT_PATH_BOTH",
-            "ONLY_CMAKE_FIND_ROOT_PATH",
-            "NO_CMAKE_FIND_ROOT_PATH",
-            "NO_CMAKE_INSTALL_PREFIX",
-            "GLOBAL",
-        ],
-        "multi_value_keywords": [
-            "COMPONENTS",
-            "OPTIONAL_COMPONENTS",
-            "NAMES",
-            "CONFIGS",
-            "HINTS",
-            "PATHS",
-            "PATH_SUFFIXES",
-            "REQUIRED",
-        ],
+        **_find_package_keywords,
     },
     "find_path": {
         "front_positional_arguments": ["<VAR>", "name"],
@@ -2775,6 +2779,7 @@ builtin_commands = {
             key: KeywordFormatter.CommandLine
             for key in ["DOWNLOAD_COMMAND", "UPDATE_COMMAND", "PATCH_COMMAND"]
         },
+        "sections": {"FIND_PACKAGE_ARGS": _find_package_keywords},
     },
     "FetchContent_GetProperties": {
         "one_value_keywords": ["SOURCE_DIR", "BINARY_DIR", "POPULATED"],
