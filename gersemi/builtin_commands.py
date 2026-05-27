@@ -2766,6 +2766,10 @@ builtin_commands = {
     "FetchContent_Declare": {
         "options": ["SYSTEM", "OVERRIDE_FIND_PACKAGE", "EXCLUDE_FROM_ALL"],
         "one_value_keywords": [
+            "SOURCE_DIR",
+            "BINARY_DIR",
+            "INSTALL_DIR",
+            "SOURCE_SUBDIR",
             # Download Step
             *_ExternalProject_Add_DownloadStep["one_value_keywords"],
             # Update Step
