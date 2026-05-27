@@ -2631,16 +2631,20 @@ builtin_commands = {
             "CMAKE_GENERATOR_INSTANCE",
             "SOURCE_SUBDIR",
             "CONFIGURE_HANDLED_BY_BUILD",
+            "CONFIGURE_ENVIRONMENT_MODIFICATION",
             # Build Step
             "BUILD_IN_SOURCE",
             "BUILD_ALWAYS",
             "BUILD_JOB_SERVER_AWARE",
+            "BUILD_ENVIRONMENT_MODIFICATION",
             # Install Step
             "INSTALL_JOB_SERVER_AWARE",
+            "INSTALL_ENVIRONMENT_MODIFICATION",
             # Test Step
             "TEST_BEFORE_INSTALL",
             "TEST_AFTER_INSTALL",
             "TEST_EXCLUDE_FROM_MAIN",
+            "TEST_ENVIRONMENT_MODIFICATION",
             # Output Logging
             "LOG_DOWNLOAD",
             "LOG_UPDATE",
@@ -2714,7 +2718,9 @@ builtin_commands = {
     "ExternalProject_Add_Step": {
         "one_value_keywords": [
             "COMMENT",
+            "INDEPENDENT",
             "ALWAYS",
+            "JOB_SERVER_AWARE",
             "EXCLUDE_FROM_MAIN",
             "WORKING_DIRECTORY",
             "LOG",
@@ -2726,6 +2732,7 @@ builtin_commands = {
             "DEPENDERS",
             "DEPENDS",
             "BYPRODUCTS",
+            "ENVIRONMENT_MODIFICATION",
         ],
         "keyword_formatters": {"COMMAND": KeywordFormatter.CommandLine},
     },
