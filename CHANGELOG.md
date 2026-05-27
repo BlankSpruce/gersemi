@@ -1,4 +1,10 @@
 # Changelog
+## [0.27.7] 2026-05-27
+### Fixed
+- `WHAT` in `feature_summary` is now treated as multi-value argument. (#115)
+- `FIND_PACKAGE_ARGS` in `FetchContent_Declare` now follows the formatting used for `find_package`.
+- Add missing keywords in `ExternalProject_Add` (#116) and `FetchContent_Declare` (#117).
+
 ## [0.27.6] 2026-05-21
 ### Fixed
 - Line comments don't inhibit local inlining when they are the last piece of the formatted chunk. (#114)
