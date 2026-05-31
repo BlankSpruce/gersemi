@@ -6,27 +6,11 @@ from gersemi.interpreter import Interpreter
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
 from gersemi.keywords import Hint, Keywords
 from gersemi.transformer import Discard, Transformer_InPlace
-
-
-class IgnoreThisDefinition:
-    pass
-
+from gersemi.types import Token
 
 BLOCK_END = "gersemi: block_end "
 HINTS = "gersemi: hints"
 IGNORE = "gersemi: ignore"
-
-
-class UseHint:
-    def __init__(self, value):
-        self.value = yaml.safe_load(value) or {}
-
-    def merge(self, other):
-        self.value.update(other.value)
-
-
-class BlockEnd(str):
-    pass
 
 
 class DropIrrelevantElements(Transformer_InPlace):
@@ -34,24 +18,27 @@ class DropIrrelevantElements(Transformer_InPlace):
         return Discard
 
     def non_command_element(self, children):
-        if (len(children) == 1) and any(
-            isinstance(children[0], helper_type)
-            for helper_type in [IgnoreThisDefinition, UseHint, BlockEnd]
+        if (
+            (len(children) == 1)
+            and isinstance(children[0], Token)
+            and children[0].type
+            in ["BLOCK_END_COMMAND", "IGNORE_THIS_DEFINITION", "USE_HINT"]
         ):
             return children[0]
+
         return Discard
 
     def line_comment(self, children):
         if len(children) > 1:
             comment = str(children[1]).strip()
             if comment == IGNORE:
-                return IgnoreThisDefinition()
+                return Token("IGNORE_THIS_DEFINITION", "")
 
             if comment.startswith(HINTS):
-                return UseHint(value=comment[len(HINTS) :])
+                return Token("USE_HINT", comment[len(HINTS) :])
 
             if comment.startswith(BLOCK_END):
-                return BlockEnd(comment[len(BLOCK_END) :])
+                return Token("BLOCK_END_COMMAND", comment[len(BLOCK_END) :])
 
         return Discard
 
@@ -108,7 +95,8 @@ class CMakeInterpreter(Interpreter):
         if maybe_body:
             body, *_ = maybe_body
             return body.children and any(
-                isinstance(c, IgnoreThisDefinition) for c in body.children
+                (isinstance(c, Token) and c.type == "IGNORE_THIS_DEFINITION")
+                for c in body.children
             )
         return False
 
@@ -124,19 +112,16 @@ class CMakeInterpreter(Interpreter):
             )
         )
 
-    def _get_hint(self, block):
+    def _get_hints(self, block):
         _, *maybe_body, _ = block.children
-        result = None
+        result = []
         if maybe_body:
             body, *_ = maybe_body
             for child in body.children:
-                if not isinstance(child, UseHint):
+                if not (isinstance(child, Token) and child.type == "USE_HINT"):
                     continue
 
-                if result:
-                    result.merge(child)
-                else:
-                    result = child
+                result.append(child.value)
 
         return result
 
@@ -145,24 +130,14 @@ class CMakeInterpreter(Interpreter):
         if maybe_body:
             body, *_ = maybe_body
             for child in body.children:
-                if isinstance(child, BlockEnd):
-                    return child
+                if isinstance(child, Token) and child.type == "BLOCK_END_COMMAND":
+                    return child.value
         return None
-
-    def _add_hint(self, keywords, hint):
-        if hint is None:
-            return keywords
-
-        keywords.hints = tuple(
-            Hint(keyword, kind) for keyword, kind in hint.value.items()
-        )
-        return keywords
 
     def block(self, tree):
         if self._should_definition_be_ignored(tree):
             return
 
-        hint = self._get_hint(tree)
         block_end = self._get_block_end(tree)
         subinterpreter = self._inner_scope
         block_begin, *body, _ = subinterpreter.visit_children(tree)
@@ -174,14 +149,13 @@ class CMakeInterpreter(Interpreter):
         name, positional_arguments = command_node
 
         keywords, *_ = body
-        if len(keywords) > 0:
-            self._add_command(
-                name,
-                (positional_arguments, self._add_hint(keywords[0], hint)),
-                block_end,
-            )
+        if keywords:
+            keywords = keywords[0]
+            keywords.hints = self._get_hints(tree)
         else:
-            self._add_command(name, (positional_arguments, Keywords()), block_end)
+            keywords = Keywords()
+
+        self._add_command(name, (positional_arguments, keywords), block_end)
 
     def block_body(self, tree):
         return [
@@ -223,6 +197,12 @@ def find_custom_command_definitions(tree, filepath="---"):
 
 
 def create_command(canonical_name, positional_arguments, keywords, block_end):
+    hints = {}
+    for raw_hint in keywords.hints:
+        hints.update(yaml.safe_load(raw_hint) or {})
+
+    hints = tuple(Hint(keyword, kind) for keyword, kind in hints.items())
+
     schema = {
         "front_positional_arguments": positional_arguments,
         "options": keywords.options,
@@ -231,14 +211,14 @@ def create_command(canonical_name, positional_arguments, keywords, block_end):
         "keyword_formatters": make_immutable(
             {
                 hint.keyword: hint.kind
-                for hint in keywords.hints
+                for hint in hints
                 if hint.kind in [e.value for e in KeywordFormatter]
             }
         ),
         "keyword_preprocessors": make_immutable(
             {
                 hint.keyword: hint.kind
-                for hint in keywords.hints
+                for hint in hints
                 if hint.kind in [e.value for e in KeywordPreprocessor]
             }
         ),
