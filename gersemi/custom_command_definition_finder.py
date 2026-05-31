@@ -1,12 +1,12 @@
+from typing import Optional, Sequence
 import yaml
 from gersemi.argument_schema import StandardCommand, argument_schema_from_dict
 from gersemi.ast_helpers import get_value, is_keyword
 from gersemi.immutable import make_immutable
-from gersemi.interpreter import Interpreter
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
 from gersemi.keywords import Hint, Keywords
 from gersemi.transformer import Discard, Transformer_InPlace
-from gersemi.types import Token
+from gersemi.types import Token, Tree
 
 BLOCK_END = "gersemi: block_end "
 HINTS = "gersemi: hints"
@@ -45,7 +45,7 @@ class DropIrrelevantElements(Transformer_InPlace):
     bracket_comment = _discard
 
 
-class CMakeInterpreter(Interpreter):
+class CMakeInterpreter:
     def __init__(self, filepath, stack=None):
         self.stack = {} if stack is None else stack
         self.found_commands = {}
@@ -61,7 +61,7 @@ class CMakeInterpreter(Interpreter):
         return arg.split(";")
 
     def _set(self, arguments):
-        name, *values = self.visit_children(arguments)
+        name, *values = self.arguments(arguments)
         self.stack[name] = [
             item for value in values for item in self._eval_variables(str(value))
         ]
@@ -70,8 +70,8 @@ class CMakeInterpreter(Interpreter):
         if len(arguments.children) > 0:
             name = arguments.children[0]
             positional_arguments = arguments.children[1:]
-            return self.visit(name), list(
-                map(str, map(self.visit, positional_arguments))
+            return self.argument(name), list(
+                map(str, map(self.argument, positional_arguments))
             )
         raise RuntimeError
 
@@ -82,12 +82,23 @@ class CMakeInterpreter(Interpreter):
             keywords = arguments.children[1:4]
 
         options, one_value_keywords, multi_value_keywords = [
-            self._eval_variables(str(self.visit(item))) for item in keywords
+            self._eval_variables(str(self.argument(item))) for item in keywords
         ]
         return Keywords(options, one_value_keywords, multi_value_keywords)
 
     def start(self, tree):
-        self.visit_children(tree)
+        for child in tree.children:
+            if not isinstance(child, Tree):
+                continue
+
+            if child.data == "command_invocation":
+                self.command_invocation(child)
+            elif child.data == "command_element":
+                first = child.children[0]
+                self.command_invocation(first)
+            elif child.data == "block":
+                self.block(child)
+
         return self.found_commands
 
     def _should_definition_be_ignored(self, block):
@@ -134,66 +145,104 @@ class CMakeInterpreter(Interpreter):
                     return child.value
         return None
 
+    def block_begin(self, tree):
+        if tree.data == "command_element":
+            children = tree.children[0].children
+        else:
+            children = tree.children
+
+        identifier, arguments = children
+        if identifier in ["function", "macro"]:
+            return self._new_command(arguments)
+
+        return None
+
     def block(self, tree):
         if self._should_definition_be_ignored(tree):
             return
 
         block_end = self._get_block_end(tree)
         subinterpreter = self._inner_scope
-        block_begin, *body, _ = subinterpreter.visit_children(tree)
+        command_node = subinterpreter.block_begin(tree.children[0])
+        body = subinterpreter.block_body(tree.children[1])
         self.found_commands.update(subinterpreter.found_commands)
 
-        command_node, *_ = block_begin
         if command_node is None:
             return
         name, positional_arguments = command_node
 
-        keywords, *_ = body
-        if keywords:
-            keywords = keywords[0]
+        if body:
+            keywords = body
             keywords.hints = self._get_hints(tree)
         else:
             keywords = Keywords()
 
         self._add_command(name, (positional_arguments, keywords), block_end)
 
-    def block_body(self, tree):
-        return [
-            item for item in self.visit_children(tree) if isinstance(item, Keywords)
-        ][:1]
+    def block_body(self, tree: Tree) -> Optional[Keywords]:
+        result = None
+        for child in tree.children:
+            if not isinstance(child, Tree):
+                continue
+
+            item = None
+            if child.data == "command_element":
+                element = child.children[0]
+                if element.data == "command_invocation":
+                    item = self.command_invocation(element)
+                else:
+                    item = None
+            elif child.data == "command_invocation":
+                item = self.command_invocation(child)
+            elif child.data == "block":
+                self.block(child)
+            else:
+                continue
+
+            if isinstance(item, Keywords):
+                result = item
+
+        return result
 
     def command_invocation(self, tree):
         identifier, arguments = tree.children
         command_interpreters = {
             "cmake_parse_arguments": self._cmake_parse_arguments,
-            "function": self._new_command,
-            "macro": self._new_command,
             "set": self._set,
         }
         return command_interpreters.get(identifier, lambda *args: None)(arguments)
 
-    def _join(self, tree):
-        return "".join(map(str, self.visit_children(tree)))
+    def bracket_argument(self, tree: Tree) -> str:
+        return "".join(map(str, tree.children))
 
-    def complex_argument(self, tree):
-        return f"({self.visit_children(tree)})"
+    def complex_argument(self, tree: Tree) -> str:
+        return "".join(map(str, self.arguments(tree.children[0])))
 
-    def _extract_first(self, tree):
-        return tree.children[0]
+    def arguments(self, tree: Tree) -> Sequence[str]:
+        return [self.argument(c) for c in tree.children]
 
-    def quoted_argument(self, tree):
-        return get_value(tree, "")
+    def argument(self, tree: Tree) -> str:
+        if tree.data == "unquoted_argument":
+            return tree.children[0]
 
-    def commented_argument(self, tree):
-        return self.visit(self._extract_first(tree))
+        if tree.data == "quoted_argument":
+            return get_value(tree, "")
 
-    bracket_argument = _join
-    unquoted_argument = _extract_first
+        if tree.data == "bracket_argument":
+            return self.bracket_argument(tree)
+
+        if tree.data == "complex_argument":
+            return self.complex_argument(tree)
+
+        if tree.data == "commented_argument":
+            return self.argument(tree.children[0])
+
+        raise NotImplementedError
 
 
 def find_custom_command_definitions(tree, filepath="---"):
     tree = DropIrrelevantElements().transform(tree)
-    return CMakeInterpreter(filepath).visit(tree)
+    return CMakeInterpreter(filepath).start(tree)
 
 
 def create_command(canonical_name, positional_arguments, keywords, block_end):
