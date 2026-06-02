@@ -1,4 +1,5 @@
 mod argument_schema;
+mod custom_command_definition_finder;
 mod keyword_preprocessor;
 mod node;
 mod parser;
@@ -9,6 +10,7 @@ use pyo3::pymodule;
 #[pymodule]
 mod gersemi_rust_backend {
     use crate::argument_schema::{isolate_conditions, ArgumentSchema, KeywordMatcher};
+    use crate::custom_command_definition_finder::CustomCommand;
     use crate::keyword_preprocessor::{
         keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
     };
@@ -16,6 +18,7 @@ mod gersemi_rust_backend {
     use crate::parser::{tree, BlockDefinitions, Error, Parser};
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
+    use std::collections::HashMap;
 
     #[pyfunction]
     fn parse(
@@ -107,6 +110,14 @@ mod gersemi_rust_backend {
     #[allow(clippy::needless_pass_by_value)]
     fn is_one_of_keywords(matchers: Vec<KeywordMatcher>, node: Node) -> bool {
         crate::argument_schema::is_one_of_keywords(&matchers, &node)
+    }
+
+    #[pyfunction]
+    fn find_custom_command_definitions(
+        node: Node,
+        filepath: String,
+    ) -> HashMap<String, Vec<CustomCommand>> {
+        crate::custom_command_definition_finder::find_custom_command_definitions(node, filepath)
     }
 
     #[pyfunction]
