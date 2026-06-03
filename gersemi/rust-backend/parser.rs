@@ -1,4 +1,4 @@
-use crate::node::{Node, Nodes};
+use crate::node::{Command, CommandInvocation, FileElement, Node, Nodes, Start};
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
 use std::collections::HashMap;
@@ -201,6 +201,18 @@ impl Parser {
         }
     }
 
+    fn raw_terminal(&self, re: &regex::Regex, offset: usize) -> Option<(String, usize)> {
+        match re.captures(&self.text[offset..]) {
+            None => None,
+            Some(captures) => captures.get(1).map(|matched| {
+                (
+                    matched.as_str().to_string(),
+                    offset + captures.get_match().len(),
+                )
+            }),
+        }
+    }
+
     fn terminal(
         &self,
         re: &regex::Regex,
@@ -208,15 +220,12 @@ impl Parser {
         offset: usize,
         compute_token_position: bool,
     ) -> Option<Match> {
-        match re.captures(&self.text[offset..]) {
-            None => None,
-            Some(captures) => captures.get(1).map(|matched| {
-                (
-                    self.token(name, matched.as_str(), offset, compute_token_position),
-                    offset + captures.get_match().len(),
-                )
-            }),
-        }
+        self.raw_terminal(re, offset).map(|(matched, new_offset)| {
+            (
+                self.token(name, matched.as_str(), offset, compute_token_position),
+                new_offset,
+            )
+        })
     }
 
     fn pound_sign(&self, offset: usize) -> Option<Match> {
@@ -242,7 +251,11 @@ impl Parser {
         self.terminal(&RE, "NEWLINE", offset, false)
     }
 
-    fn element_t(&self, command: &BlockCommand, offset: usize) -> Result<Option<Match>, Error> {
+    fn element_t(
+        &self,
+        command: &BlockCommand,
+        offset: usize,
+    ) -> Result<Option<(Command, usize)>, Error> {
         let compute_token_position = matches!(command.name.as_str(), "function" | "macro");
         self.command_element_t(&command.re, true, compute_token_position, offset)
     }
@@ -251,13 +264,13 @@ impl Parser {
         &self,
         end_command: &BlockCommand,
         mut offset: usize,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(Vec<FileElement>, usize)>, Error> {
         if let Some((_, new_offset)) = self.newline_or_gap(offset) {
             offset = new_offset;
         }
 
-        let mut result: Nodes = vec![];
-        let mut last_newline_or_gap: Option<Node> = None;
+        let mut result: Vec<FileElement> = vec![];
+        let mut last_newline_or_gap: Option<FileElement> = None;
         loop {
             if self.element_t(end_command, offset)?.is_some() {
                 break;
@@ -288,12 +301,12 @@ impl Parser {
                     offset = new_offset;
                 }
                 None => {
-                    return Ok(Some((tree("block_body", result), offset)));
+                    return Ok(Some((result, offset)));
                 }
             }
         }
 
-        Ok(Some((tree("block_body", result), offset)))
+        Ok(Some((result, offset)))
     }
 
     fn block_t(
@@ -301,23 +314,22 @@ impl Parser {
         start_command: &BlockCommand,
         end_command: &BlockCommand,
         offset: usize,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(FileElement, usize)>, Error> {
         match self.element_t(start_command, offset)? {
             None => Ok(None),
-            Some((matched_start, offset)) => match self.block_body(end_command, offset)? {
+            Some((start, offset)) => match self.block_body(end_command, offset)? {
                 None => Err(self.unbalanced_block(offset)),
-                Some((matched_body, offset)) => match self.element_t(end_command, offset)? {
+                Some((body, offset)) => match self.element_t(end_command, offset)? {
                     None => Err(self.unbalanced_block(offset)),
-                    Some((matched_end, offset)) => Ok(Some((
-                        tree("block", vec![matched_start, matched_body, matched_end]),
-                        offset,
-                    ))),
+                    Some((end, offset)) => {
+                        Ok(Some((FileElement::Block { start, body, end }, offset)))
+                    }
                 },
             },
         }
     }
 
-    fn block(&self, offset: usize) -> Result<Option<Match>, Error> {
+    fn block(&self, offset: usize) -> Result<Option<(FileElement, usize)>, Error> {
         for (block_start, block_end) in &self.blocks {
             if let Some(matched) = self.block_t(block_start, block_end, offset)? {
                 return Ok(Some(matched));
@@ -533,7 +545,7 @@ impl Parser {
         initial_offset: usize,
         custom_formatting_start: usize,
         custom_formatting_end: usize,
-    ) -> Node {
+    ) -> CommandInvocation {
         match &identifier {
             Node::Token {
                 type_,
@@ -542,20 +554,24 @@ impl Parser {
                 line: _,
             } => {
                 if self.is_known_command(value) {
-                    tree("command_invocation", vec![identifier, arguments])
+                    CommandInvocation::KnownCommand {
+                        identifier,
+                        arguments,
+                    }
                 } else {
-                    tree(
-                        "custom_command",
-                        vec![
-                            self.indentation(initial_offset),
-                            self.token(type_, value, initial_offset, true),
-                            arguments,
-                            self.formatted_node(custom_formatting_start, custom_formatting_end),
-                        ],
-                    )
+                    CommandInvocation::CustomCommand {
+                        indentation: self.indentation(initial_offset),
+                        identifier: self.token(type_, value, initial_offset, true),
+                        arguments,
+                        formatted_node: self
+                            .formatted_node(custom_formatting_start, custom_formatting_end),
+                    }
                 }
             }
-            Node::Tree { .. } => tree("command_invocation", vec![identifier, arguments]),
+            Node::Tree { .. } => CommandInvocation::KnownCommand {
+                identifier,
+                arguments,
+            },
         }
     }
 
@@ -589,7 +605,7 @@ impl Parser {
         offset: usize,
         block_edge: bool,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(CommandInvocation, usize)>, Error> {
         let initial_offset = offset;
         Ok(match self.identifier(re, offset, block_edge) {
             None => None,
@@ -623,20 +639,29 @@ impl Parser {
         block_edge: bool,
         compute_token_position: bool,
         offset: usize,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(Command, usize)>, Error> {
         Ok(
             match self.command_invocation_t(re, offset, block_edge, compute_token_position)? {
                 None => None,
                 Some((matched, offset)) => match self.line_comment(offset) {
                     None => {
                         if block_edge {
-                            Some((tree("command_element", vec![matched]), offset))
+                            Some((
+                                Command::Element {
+                                    command_invocation: matched,
+                                    line_comment: None,
+                                },
+                                offset,
+                            ))
                         } else {
-                            Some((matched, offset))
+                            Some((Command::Invocation(matched), offset))
                         }
                     }
                     Some((matched_comment, new_offset)) => Some((
-                        tree("command_element", vec![matched, matched_comment]),
+                        Command::Element {
+                            command_invocation: matched,
+                            line_comment: Some(matched_comment),
+                        },
                         new_offset,
                     )),
                 },
@@ -644,15 +669,19 @@ impl Parser {
         )
     }
 
-    fn command_element(&self, offset: usize) -> Result<Option<Match>, Error> {
+    fn command_element(&self, offset: usize) -> Result<Option<(Command, usize)>, Error> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
         self.command_element_t(&RE, false, false, offset)
     }
 
-    fn standalone_identifier(&self, offset: usize) -> Option<Match> {
+    fn standalone_identifier(&self, offset: usize) -> Option<(FileElement, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-        self.terminal(&RE, "IDENTIFIER", offset, false)
-            .map(|(node, offset)| (tree("standalone_identifier", vec![node]), offset))
+        self.raw_terminal(&RE, offset).map(|(matched, new_offset)| {
+            (
+                FileElement::StandaloneIdentifier { value: matched },
+                new_offset,
+            )
+        })
     }
 
     fn bracket_comment(&self, mut offset: usize) -> Result<Option<Match>, Error> {
@@ -692,32 +721,47 @@ impl Parser {
         })
     }
 
-    fn non_command_element(&self, mut offset: usize) -> Result<Option<Match>, Error> {
-        let mut result = Vec::<Node>::new();
+    fn non_command_element(
+        &self,
+        mut offset: usize,
+    ) -> Result<Option<(FileElement, usize)>, Error> {
+        let mut bracket_comments = Vec::<Node>::new();
         while let Some((matched, new_offset)) = self.bracket_comment(offset)? {
-            result.push(matched);
+            bracket_comments.push(matched);
             offset = new_offset;
         }
 
-        if let Some((matched, new_offset)) = self.line_comment(offset) {
-            result.push(matched);
-            offset = new_offset;
+        match self.line_comment(offset) {
+            None => {
+                if bracket_comments.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some((
+                        FileElement::NonCommandElement {
+                            bracket_comments,
+                            line_comment: None,
+                        },
+                        offset,
+                    )))
+                }
+            }
+            Some((matched, new_offset)) => Ok(Some((
+                FileElement::NonCommandElement {
+                    bracket_comments,
+                    line_comment: Some(matched),
+                },
+                new_offset,
+            ))),
         }
-
-        if result.is_empty() {
-            return Ok(None);
-        }
-
-        Ok(Some((tree("non_command_element", result), offset)))
     }
 
-    fn file_element(&self, offset: usize) -> Result<Option<Match>, Error> {
+    fn file_element(&self, offset: usize) -> Result<Option<(FileElement, usize)>, Error> {
         if let Some(result) = self.block(offset)? {
             return Ok(Some(result));
         }
 
-        if let Some(result) = self.command_element(offset)? {
-            return Ok(Some(result));
+        if let Some((result, offset)) = self.command_element(offset)? {
+            return Ok(Some((FileElement::Command(result), offset)));
         }
 
         if let Some(result) = self.standalone_identifier(offset) {
@@ -731,30 +775,34 @@ impl Parser {
         Ok(None)
     }
 
-    fn newline_or_gap(&self, offset: usize) -> Option<Match> {
+    fn newline_or_gap(&self, offset: usize) -> Option<(FileElement, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n[ \t]*)(\n[ \t]*)*"));
         match RE.captures(&self.text[offset..]) {
             None => None,
             Some(captures) => match captures.get(2) {
                 None => Some((
-                    self.token("NEWLINE", "\n", offset, false),
+                    FileElement::NewlineOrGap {
+                        value: "\n".to_string(),
+                    },
                     offset + captures.get_match().len(),
                 )),
                 Some(_) => Some((
-                    self.token("NEWLINE", "\n\n", offset, false),
+                    FileElement::NewlineOrGap {
+                        value: "\n\n".to_string(),
+                    },
                     offset + captures.get_match().len(),
                 )),
             },
         }
     }
 
-    pub fn start(&self) -> Result<Node, Error> {
+    pub fn start(&self) -> Result<Start, Error> {
         let mut offset = match self.newline_or_gap(0) {
             Some((_, new_offset)) => new_offset,
             None => 0usize,
         };
-        let mut result: Nodes = vec![];
-        let mut last_newline_or_gap: Option<Node> = None;
+        let mut result: Vec<FileElement> = vec![];
+        let mut last_newline_or_gap: Option<FileElement> = None;
 
         #[allow(clippy::while_let_loop)]
         loop {
@@ -793,7 +841,7 @@ impl Parser {
             return Err(self.unbalanced_parentheses(offset));
         }
 
-        Ok(tree("start", result))
+        Ok(Start { children: result })
     }
 
     fn is_known_command(&self, command_name: &str) -> bool {

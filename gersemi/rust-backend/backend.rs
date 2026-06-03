@@ -14,14 +14,14 @@ mod gersemi_rust_backend {
     use crate::keyword_preprocessor::{
         keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
     };
-    use crate::node::{Node, Nodes};
+    use crate::node::{Node, Nodes, Start};
     use crate::parser::{tree, Error, Parser, ParserDefinitions};
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
     use std::collections::HashMap;
 
     #[pyfunction]
-    fn parse(text: String, definitions: ParserDefinitions) -> Result<Node, Error> {
+    fn parse(text: String, definitions: ParserDefinitions) -> Result<Start, Error> {
         let parser = Parser::new(text, definitions);
         parser.start()
     }

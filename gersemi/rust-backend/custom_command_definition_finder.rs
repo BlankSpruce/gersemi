@@ -1,5 +1,5 @@
 use crate::argument_schema::is_keyword;
-use crate::node::{Node, Nodes};
+use crate::node::{Command, CommandInvocation, FileElement, Node, Nodes, Start};
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
 use std::collections::HashMap;
@@ -263,6 +263,58 @@ fn simplify(node: Node) -> Option<Node> {
     }
 }
 
+fn simplify_invocation(node: CommandInvocation) -> CommandInvocation {
+    match node {
+        CommandInvocation::KnownCommand {
+            identifier,
+            arguments,
+        } => CommandInvocation::KnownCommand {
+            identifier,
+            arguments: simplify(arguments).unwrap(),
+        },
+        CommandInvocation::CustomCommand { .. } => node,
+    }
+}
+
+fn simplify_file_element(node: FileElement) -> Option<FileElement> {
+    match node {
+        FileElement::Block { start, body, end } => Some(FileElement::Block {
+            start,
+            body: body.into_iter().filter_map(simplify_file_element).collect(),
+            end,
+        }),
+        FileElement::Command(node) => Some(FileElement::Command(match node {
+            Command::Element {
+                command_invocation,
+                line_comment,
+            } => Command::Element {
+                command_invocation: simplify_invocation(command_invocation),
+                line_comment,
+            },
+            Command::Invocation(node) => Command::Invocation(simplify_invocation(node)),
+        })),
+        FileElement::Node(node) => simplify(node).map(FileElement::Node),
+        FileElement::StandaloneIdentifier { .. } => None,
+        FileElement::NonCommandElement { line_comment, .. } => match line_comment {
+            None => None,
+            Some(node) => match simplify(node) {
+                None => None,
+                Some(node) => match node {
+                    Node::Tree { .. } => None,
+                    Node::Token { ref type_, .. } => {
+                        if type_.starts_with("HELPER_") {
+                            Some(FileElement::Node(node))
+                        } else {
+                            None
+                        }
+                    }
+                },
+            },
+        },
+        FileElement::NewlineOrGap { .. } => None,
+    }
+}
+
 impl CustomCommandInterpreter<'_> {
     fn get_subinterpreter(&self) -> Self {
         Self {
@@ -459,35 +511,40 @@ impl CustomCommandInterpreter<'_> {
         }
     }
 
-    fn start(&mut self, node: Node) {
-        let Some(Node::Tree { data, children }) = simplify(node) else {
-            return;
-        };
-
-        if data != "start" {
-            return;
-        }
-
-        for child in children {
+    fn start(&mut self, node: Start) {
+        for child in node.children.into_iter().filter_map(simplify_file_element) {
             match child {
-                Node::Token { .. } => (),
-                Node::Tree { data, children } => match data.as_str() {
-                    "block" => self.block(&children),
-                    "command_element" => {
-                        let Some(Node::Tree {
-                            children: first_children,
-                            ..
-                        }) = children.first()
-                        else {
-                            continue;
-                        };
-                        self.command_invocation(first_children);
+                FileElement::Block { start, body, end } => {
+                    let children = vec![
+                        start.into_node(),
+                        Node::Tree {
+                            data: "block_body".to_string(),
+                            children: body.into_iter().map(FileElement::into_node).collect(),
+                        },
+                        end.into_node(),
+                    ];
+                    self.block(&children);
+                }
+                FileElement::Command(command) => match command {
+                    Command::Element {
+                        command_invocation: node,
+                        ..
                     }
-                    "command_invocation" => {
-                        self.command_invocation(&children);
-                    }
-                    _ => (),
+                    | Command::Invocation(node) => match node {
+                        CommandInvocation::KnownCommand {
+                            identifier,
+                            arguments,
+                        } => {
+                            let children = vec![identifier, arguments];
+                            self.command_invocation(&children);
+                        }
+                        CommandInvocation::CustomCommand { .. } => (),
+                    },
                 },
+                FileElement::Node(_) => (),
+                FileElement::NonCommandElement { .. } => (),
+                FileElement::StandaloneIdentifier { .. } => (),
+                FileElement::NewlineOrGap { .. } => (),
             }
         }
     }
