@@ -34,9 +34,7 @@ some_custom_command_without_keyworded_arguments(
 )
 """
 
-    before = Parser(known_definitions=None)
-    parsed = before.parse(given)
-    definitions = get_just_definitions(find_custom_command_definitions(parsed))
+    definitions = get_just_definitions(find_custom_command_definitions(given))
     dumper = Dumper(definitions)
 
     after = Parser(known_definitions=definitions)
@@ -72,9 +70,7 @@ some_custom_command_without_keyworded_arguments(short positional arguments)
 some_custom_command_without_keyworded_arguments(long__________________________________________________ positional__________________________________________________ arguments__________________________________________________)
 """
 
-    before = Parser(known_definitions=None)
-    parsed = before.parse(given)
-    definitions = get_just_definitions(find_custom_command_definitions(parsed))
+    definitions = get_just_definitions(find_custom_command_definitions(given))
     dumper = Dumper(definitions)
 
     after = Parser(known_definitions=definitions)
@@ -106,9 +102,7 @@ def test_can_deal_with_empty_body_in_custom_command_definition(given):
 endfunction()
 """
 
-    before = Parser(known_definitions=None)
-    parsed = before.parse(given)
-    definitions = get_just_definitions(find_custom_command_definitions(parsed))
+    definitions = get_just_definitions(find_custom_command_definitions(given))
     dumper = Dumper(definitions)
 
     after = Parser(known_definitions=definitions)

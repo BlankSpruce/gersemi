@@ -1,5 +1,6 @@
 use crate::argument_schema::is_keyword;
 use crate::node::{Node, Nodes};
+use crate::parser::Parser;
 use pyo3::IntoPyObject;
 use std::collections::HashMap;
 
@@ -21,7 +22,8 @@ pub struct CustomCommandContent {
 
 pub type CustomCommand = (CustomCommandContent, String);
 
-struct CustomCommandInterpreter {
+struct CustomCommandInterpreter<'a> {
+    parser: &'a Parser,
     stack: HashMap<String, Vec<String>>,
     found_commands: HashMap<String, Vec<CustomCommand>>,
     filepath: String,
@@ -261,9 +263,10 @@ fn simplify(node: Node) -> Option<Node> {
     }
 }
 
-impl CustomCommandInterpreter {
+impl CustomCommandInterpreter<'_> {
     fn get_subinterpreter(&self) -> Self {
         Self {
+            parser: self.parser,
             stack: self.stack.clone(),
             found_commands: HashMap::new(),
             filepath: self.filepath.clone(),
@@ -491,13 +494,17 @@ impl CustomCommandInterpreter {
 }
 
 pub fn find_custom_command_definitions(
-    node: Node,
+    parser: &Parser,
     filepath: String,
 ) -> HashMap<String, Vec<CustomCommand>> {
     let mut interpreter = CustomCommandInterpreter {
+        parser,
         stack: HashMap::new(),
         found_commands: HashMap::new(),
         filepath,
+    };
+    let Ok(node) = parser.start() else {
+        return HashMap::new();
     };
     interpreter.start(node);
     interpreter.found_commands

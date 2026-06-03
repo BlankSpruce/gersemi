@@ -29,11 +29,7 @@ custom_command_properly_formatted = """Seven_Samurai(
 
 
 def test_custom_command_generated_dumper(case):  # pylint: disable=redefined-outer-name
-    before = Parser(known_definitions=None)
-    parsed_function_def = before.parse(case.content)
-    definitions = get_just_definitions(
-        find_custom_command_definitions(parsed_function_def)
-    )
+    definitions = get_just_definitions(find_custom_command_definitions(case.content))
 
     after = Parser(known_definitions=definitions)
     parsed_function = after.parse(custom_command_to_format)

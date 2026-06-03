@@ -15,18 +15,14 @@ mod gersemi_rust_backend {
         keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
     };
     use crate::node::{Node, Nodes};
-    use crate::parser::{tree, BlockDefinitions, Error, Parser};
+    use crate::parser::{tree, Error, Parser, ParserDefinitions};
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
     use std::collections::HashMap;
 
     #[pyfunction]
-    fn parse(
-        text: String,
-        blocks: BlockDefinitions,
-        known_commands: Vec<String>,
-    ) -> Result<Node, Error> {
-        let parser = Parser::new(text, blocks, known_commands);
+    fn parse(text: String, definitions: ParserDefinitions) -> Result<Node, Error> {
+        let parser = Parser::new(text, definitions);
         parser.start()
     }
 
@@ -114,10 +110,12 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     fn find_custom_command_definitions(
-        node: Node,
+        text: String,
+        definitions: ParserDefinitions,
         filepath: String,
     ) -> HashMap<String, Vec<CustomCommand>> {
-        crate::custom_command_definition_finder::find_custom_command_definitions(node, filepath)
+        let parser = Parser::new(text, definitions);
+        crate::custom_command_definition_finder::find_custom_command_definitions(&parser, filepath)
     }
 
     #[pyfunction]

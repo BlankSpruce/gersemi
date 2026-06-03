@@ -119,21 +119,21 @@ class Formatter:
     ):
         self.configuration = configuration
         self.known_definitions = ChainMap(known_definitions, _builtin_commands)
+        self.parser = Parser(self.known_definitions)
         self.lines_to_format = lines_to_format
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:
         if self.lines_to_format:
             code = add_line_range_fences(code, self.lines_to_format)
 
-        parser = Parser(self.known_definitions)
-        tree = parser.parse(code)
+        tree = self.parser.parse(code)
         if not self.configuration.unsafe:
             original = deepcopy(tree)
 
         dumper = Dumper(self.configuration, self.known_definitions)
         formatted = dumper.visit(tree)
         if not self.configuration.unsafe:
-            check_code_equivalence(parser, original, formatted)
+            check_code_equivalence(self.parser, original, formatted)
 
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:

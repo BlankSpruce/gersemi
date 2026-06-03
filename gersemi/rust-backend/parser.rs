@@ -1,5 +1,5 @@
 use crate::node::{Node, Nodes};
-use pyo3::PyErr;
+use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -7,6 +7,12 @@ use std::sync::{LazyLock, Mutex};
 struct BlockCommand {
     name: String,
     re: regex::Regex,
+}
+
+#[derive(FromPyObject)]
+pub struct ParserDefinitions {
+    blocks: BlockDefinitions,
+    known_commands: Vec<String>,
 }
 
 pub struct Parser {
@@ -93,11 +99,11 @@ type Match = (Node, usize);
 type SkippableMatch = (Option<Node>, usize);
 
 impl Parser {
-    pub fn new(text: String, blocks: BlockDefinitions, known_commands: Vec<String>) -> Self {
+    pub fn new(text: String, definitions: ParserDefinitions) -> Self {
         Parser {
             text,
-            blocks: prepare_blocks(blocks),
-            known_commands,
+            blocks: prepare_blocks(definitions.blocks),
+            known_commands: definitions.known_commands,
         }
     }
 
