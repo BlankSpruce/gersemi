@@ -1,4 +1,6 @@
-use crate::node::{BracketComment, Command, CommandInvocation, FileElement, LineComment, Node, Nodes, Start};
+use crate::node::{
+    BracketComment, Command, CommandInvocation, FileElement, LineComment, Node, Nodes, Start,
+};
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
 use std::collections::HashMap;
@@ -232,9 +234,7 @@ impl Parser {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
         match RE.captures(&self.text[offset..]) {
             None => None,
-            Some(captures) => captures.get(1).map(|_| {
-                offset + captures.get_match().len()
-            })
+            Some(captures) => captures.get(1).map(|_| offset + captures.get_match().len()),
         }
     }
 
@@ -351,7 +351,10 @@ impl Parser {
 
         if let Some((matched_comment, offset)) = self.line_comment(offset) {
             if let Some((matched_newline, offset)) = self.newline(offset) {
-                return Ok(Some((vec![matched_comment.into_node(), matched_newline], offset)));
+                return Ok(Some((
+                    vec![matched_comment.into_node(), matched_newline],
+                    offset,
+                )));
             }
         }
 
@@ -430,7 +433,16 @@ impl Parser {
                 None => None,
                 Some((matched_arguments, offset)) => {
                     let (_, offset) = self.right_paren(offset)?;
-                    Some((tree("complex_argument", vec![matched_arguments]), offset))
+                    Some((
+                        tree(
+                            "complex_argument",
+                            vec![Node::Tree {
+                                data: "arguments".to_string(),
+                                children: matched_arguments,
+                            }],
+                        ),
+                        offset,
+                    ))
                 }
             },
         })
@@ -510,7 +522,7 @@ impl Parser {
         &self,
         mut offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(Nodes, usize)>, Error> {
         let mut result = Vec::<Node>::new();
         while let Some((matched, new_offset)) =
             self.arguments_atom(offset, compute_token_position)?
@@ -520,87 +532,73 @@ impl Parser {
             }
             offset = new_offset;
         }
-        Ok(Some((tree("arguments", result), offset)))
+        Ok(Some((result, offset)))
     }
 
-    fn indentation(&self, offset: usize) -> Node {
+    fn indentation(&self, offset: usize) -> String {
         let start = match self.text[..offset].rfind('\n') {
             Some(value) => value + 1,
             None => 0usize,
         };
-        self.token("ANONYMOUS", &self.text[start..offset], offset, false)
+        self.text[start..offset].to_string()
     }
 
-    fn formatted_node(&self, start: usize, end: usize) -> Node {
+    fn formatted_node(&self, start: usize, end: usize) -> String {
         let value = if start >= end {
             ""
         } else {
             &self.text[start + 1..end]
         };
-        tree(
-            "formatted_node",
-            vec![self.token("ANONYMOUS", value, start, false)],
-        )
+        value.to_string()
     }
 
     fn create_command_invocation_node(
         &self,
-        identifier: Node,
-        arguments: Node,
+        identifier: String,
+        arguments: Nodes,
         initial_offset: usize,
         custom_formatting_start: usize,
         custom_formatting_end: usize,
     ) -> CommandInvocation {
-        match &identifier {
-            Node::Token {
-                type_,
-                value,
-                column: _,
-                line: _,
-            } => {
-                if self.is_known_command(value) {
+        {
+            {
+                if self.is_known_command(identifier.as_str()) {
                     CommandInvocation::KnownCommand {
                         identifier,
                         arguments,
                     }
                 } else {
+                    let line = self.line(initial_offset) + 1;
+                    let column = self.column(initial_offset);
                     CommandInvocation::CustomCommand {
                         indentation: self.indentation(initial_offset),
-                        identifier: self.token(type_, value, initial_offset, true),
+                        identifier,
                         arguments,
                         formatted_node: self
                             .formatted_node(custom_formatting_start, custom_formatting_end),
+                        line,
+                        column,
                     }
                 }
             }
-            Node::Tree { .. } => CommandInvocation::KnownCommand {
-                identifier,
-                arguments,
-            },
         }
     }
 
-    fn identifier(&self, re: &regex::Regex, offset: usize, block_edge: bool) -> Option<Match> {
-        match self.terminal(re, "IDENTIFIER", offset, false) {
+    fn identifier(
+        &self,
+        re: &regex::Regex,
+        offset: usize,
+        block_edge: bool,
+    ) -> Option<(String, usize)> {
+        match self.raw_terminal(re, offset) {
             None => None,
-            Some((node, offset)) => match node {
-                Node::Token {
-                    type_: _,
-                    value: ref command_name,
-                    line: _,
-                    column: _,
-                } => {
-                    if block_edge || !self.is_block_edge_command(command_name.as_str()) {
-                        return Some((node, offset));
-                    }
-
-                    None
+            Some((value, offset)) => {
+                if block_edge || !self.is_block_edge_command(value.as_str()) {
+                    return Some((value, offset));
                 }
-                Node::Tree {
-                    data: _,
-                    children: _,
-                } => Some((node, offset)),
-            },
+
+                None
+            }
         }
     }
 

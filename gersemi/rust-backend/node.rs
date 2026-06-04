@@ -59,14 +59,16 @@ impl Node {
 
 pub enum CommandInvocation {
     KnownCommand {
-        identifier: Node,
-        arguments: Node,
+        identifier: String,
+        arguments: Vec<Node>,
     },
     CustomCommand {
-        indentation: Node,
-        identifier: Node,
-        arguments: Node,
-        formatted_node: Node,
+        indentation: String,
+        identifier: String,
+        arguments: Vec<Node>,
+        formatted_node: String,
+        line: usize,
+        column: usize,
     },
 }
 
@@ -78,16 +80,55 @@ impl CommandInvocation {
                 arguments,
             } => Node::Tree {
                 data: "command_invocation".to_string(),
-                children: vec![identifier, arguments],
+                children: vec![
+                    Node::Token {
+                        type_: "IDENTIFIER".to_string(),
+                        value: identifier,
+                        line: None,
+                        column: None,
+                    },
+                    Node::Tree {
+                        data: "arguments".to_string(),
+                        children: arguments,
+                    },
+                ],
             },
             Self::CustomCommand {
                 indentation,
                 identifier,
                 arguments,
                 formatted_node,
+                line,
+                column,
             } => Node::Tree {
                 data: "custom_command".to_string(),
-                children: vec![indentation, identifier, arguments, formatted_node],
+                children: vec![
+                    Node::Token {
+                        type_: "ANONYMOUS".to_string(),
+                        value: indentation,
+                        line: None,
+                        column: None,
+                    },
+                    Node::Token {
+                        type_: "IDENTIFIER".to_string(),
+                        value: identifier,
+                        line: Some(line),
+                        column: Some(column),
+                    },
+                    Node::Tree {
+                        data: "arguments".to_string(),
+                        children: arguments,
+                    },
+                    Node::Tree {
+                        data: "formatted_node".to_string(),
+                        children: vec![Node::Token {
+                            type_: "ANONYMOUS".to_string(),
+                            value: formatted_node,
+                            line: None,
+                            column: None,
+                        }],
+                    },
+                ],
             },
         }
     }

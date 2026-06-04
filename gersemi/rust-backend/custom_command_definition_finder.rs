@@ -105,22 +105,8 @@ fn argument(node: &Node) -> String {
     }
 }
 
-fn new_command(identifier: Node, arguments: Node) -> Option<(Node, Vec<String>)> {
-    let (
-        Node::Token {
-            value: identifier, ..
-        },
-        Node::Tree {
-            children: arguments,
-            ..
-        },
-    ) = (identifier, arguments)
-    else {
-        return None;
-    };
-
-    let is_function_or_macro =
-        (identifier.as_str() == "function") || (identifier.as_str() == "macro");
+fn new_command(identifier: &str, arguments: &Nodes) -> Option<(Node, Vec<String>)> {
+    let is_function_or_macro = (identifier == "function") || (identifier == "macro");
     if !is_function_or_macro {
         return None;
     }
@@ -146,7 +132,7 @@ fn block_begin(node: Command) -> Option<(Node, Vec<String>)> {
             else {
                 return None;
             };
-            new_command(identifier, arguments)
+            new_command(&identifier, &arguments)
         }
     }
 }
@@ -192,7 +178,7 @@ fn simplify_invocation(node: CommandInvocation) -> CommandInvocation {
             arguments,
         } => CommandInvocation::KnownCommand {
             identifier,
-            arguments: simplify(arguments).unwrap(),
+            arguments: arguments.into_iter().filter_map(simplify).collect(),
         },
         CommandInvocation::CustomCommand { .. } => node,
     }
@@ -390,24 +376,11 @@ impl CustomCommandInterpreter {
         self.stack.insert(name.clone(), result);
     }
 
-    fn command_invocation(&mut self, identifier: Node, arguments: Node) -> Option<Keywords> {
-        let (
-            Node::Token {
-                value: identifier, ..
-            },
-            Node::Tree {
-                children: arguments,
-                ..
-            },
-        ) = (identifier, arguments)
-        else {
-            return None;
-        };
-
-        match identifier.as_str() {
-            "cmake_parse_arguments" => self.cmake_parse_arguments(&arguments),
+    fn command_invocation(&mut self, identifier: &str, arguments: &Nodes) -> Option<Keywords> {
+        match identifier {
+            "cmake_parse_arguments" => self.cmake_parse_arguments(arguments),
             "set" => {
-                self.set(&arguments);
+                self.set(arguments);
                 None
             }
             _ => None,
@@ -422,8 +395,8 @@ impl CustomCommandInterpreter {
             }
             | Command::Invocation(node) => match node {
                 CommandInvocation::KnownCommand {
-                    identifier,
-                    arguments,
+                    ref identifier,
+                    ref arguments,
                 } => self.command_invocation(identifier, arguments),
                 CommandInvocation::CustomCommand { .. } => None,
             },
