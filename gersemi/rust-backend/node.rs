@@ -2,7 +2,7 @@ use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyAnyMethods, PyType};
 use pyo3::{Bound, FromPyObject, IntoPyObject, Py, PyAny, PyErr, Python};
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
 pub enum Node {
     Tree {
         data: String,
@@ -96,7 +96,7 @@ impl CommandInvocation {
 pub enum Command {
     Element {
         command_invocation: CommandInvocation,
-        line_comment: Option<Node>,
+        line_comment: Option<LineComment>,
     },
     Invocation(CommandInvocation),
 }
@@ -110,7 +110,7 @@ impl Command {
             } => {
                 let children = match line_comment {
                     None => vec![command_invocation.into_node()],
-                    Some(node) => vec![command_invocation.into_node(), node],
+                    Some(node) => vec![command_invocation.into_node(), node.into_node()],
                 };
                 Node::Tree {
                     data: "command_element".to_string(),
@@ -122,6 +122,96 @@ impl Command {
     }
 }
 
+pub struct BracketComment {
+    pub value: String,
+}
+
+impl BracketComment {
+    pub fn into_node(self) -> Node {
+        Node::Tree {
+            data: "bracket_comment".to_string(),
+            children: vec![
+                Node::Token {
+                    type_: "POUND_SIGN".to_string(),
+                    value: "#".to_string(),
+                    line: None,
+                    column: None,
+                },
+                Node::Token {
+                    type_: "BRACKET_ARGUMENT".to_string(),
+                    value: self.value,
+                    line: None,
+                    column: None,
+                },
+            ],
+        }
+    }
+}
+
+pub struct LineComment {
+    pub value: String,
+}
+
+impl LineComment {
+    pub fn into_node(self) -> Node {
+        Node::Tree {
+            data: "line_comment".to_string(),
+            children: {
+                let pound_sign = Node::Token {
+                    type_: "POUND_SIGN".to_string(),
+                    value: "#".to_string(),
+                    line: None,
+                    column: None,
+                };
+                if self.value.is_empty() {
+                    vec![pound_sign]
+                } else {
+                    vec![
+                        pound_sign,
+                        Node::Token {
+                            type_: "LINE_COMMENT_CONTENT".to_string(),
+                            value: self.value,
+                            line: None,
+                            column: None,
+                        },
+                    ]
+                }
+            },
+        }
+    }
+}
+
+pub enum HelperNode {
+    BlockEndCommand { value: String },
+    IgnoreThisDefinition,
+    UseHint { value: String },
+}
+
+impl HelperNode {
+    pub fn into_node(self) -> Node {
+        match self {
+            Self::BlockEndCommand { value } => Node::Token {
+                type_: "HELPER_BLOCK_END_COMMAND".to_string(),
+                value,
+                line: None,
+                column: None,
+            },
+            Self::IgnoreThisDefinition => Node::Token {
+                type_: "HELPER_IGNORE_THIS_DEFINITION".to_string(),
+                value: String::new(),
+                line: None,
+                column: None,
+            },
+            Self::UseHint { value } => Node::Token {
+                type_: "HELPER_USE_HINT".to_string(),
+                value,
+                line: None,
+                column: None,
+            },
+        }
+    }
+}
+
 pub enum FileElement {
     Block {
         start: Command,
@@ -129,13 +219,13 @@ pub enum FileElement {
         end: Command,
     },
     Command(Command),
-    Node(Node),
+    HelperNode(HelperNode),
     StandaloneIdentifier {
         value: String,
     },
     NonCommandElement {
-        bracket_comments: Nodes,
-        line_comment: Option<Node>,
+        bracket_comments: Vec<BracketComment>,
+        line_comment: Option<LineComment>,
     },
     NewlineOrGap {
         value: String,
@@ -157,7 +247,7 @@ impl FileElement {
                 ],
             },
             Self::Command(command) => command.into_node(),
-            Self::Node(node) => node,
+            Self::HelperNode(node) => node.into_node(),
             Self::StandaloneIdentifier { value } => Node::Tree {
                 data: "standalone_identifier".to_string(),
                 children: vec![Node::Token {
@@ -171,9 +261,12 @@ impl FileElement {
                 bracket_comments,
                 line_comment,
             } => {
-                let mut children = bracket_comments;
+                let mut children = bracket_comments
+                    .into_iter()
+                    .map(BracketComment::into_node)
+                    .collect::<Vec<_>>();
                 if let Some(node) = line_comment {
-                    children.push(node);
+                    children.push(node.into_node());
                 }
                 Node::Tree {
                     data: "non_command_element".to_string(),

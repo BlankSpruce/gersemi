@@ -1,5 +1,7 @@
 use crate::argument_schema::is_keyword;
-use crate::node::{Command, CommandInvocation, FileElement, Node, Nodes, Start};
+use crate::node::{
+    Command, CommandInvocation, FileElement, HelperNode, LineComment, Node, Nodes, Start,
+};
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
 use std::collections::HashMap;
@@ -22,53 +24,24 @@ pub struct CustomCommandContent {
 
 pub type CustomCommand = (CustomCommandContent, String);
 
-struct CustomCommandInterpreter<'a> {
-    parser: &'a Parser,
+struct CustomCommandInterpreter {
     stack: HashMap<String, Vec<String>>,
     found_commands: HashMap<String, Vec<CustomCommand>>,
     filepath: String,
 }
 
-fn find_token<'a>(node: &'a Node, token_type: &str) -> Option<&'a String> {
-    match node {
-        Node::Token { type_, value, .. } => {
-            if type_.as_str() == token_type {
-                Some(value)
-            } else {
-                None
-            }
-        }
-        Node::Tree { children, .. } => {
-            for child in children {
-                if let Some(result) = find_token(child, token_type) {
-                    return Some(result);
-                }
-            }
-            None
-        }
-    }
-}
-
-fn should_definition_be_ignored(children: &Nodes) -> bool {
-    let Some(Node::Tree { children, .. }) = children.get(1) else {
-        return false;
-    };
-
-    for child in children {
-        if find_token(child, "HELPER_IGNORE_THIS_DEFINITION").is_some() {
+fn should_definition_be_ignored(body: &Vec<FileElement>) -> bool {
+    for child in body {
+        if let FileElement::HelperNode(HelperNode::IgnoreThisDefinition) = child {
             return true;
         }
     }
     false
 }
 
-fn get_block_end(children: &Nodes) -> Option<String> {
-    let Some(Node::Tree { children, .. }) = children.get(1) else {
-        return None;
-    };
-
-    for child in children {
-        if let Some(value) = find_token(child, "HELPER_BLOCK_END_COMMAND") {
+fn get_block_end(body: &Vec<FileElement>) -> Option<String> {
+    for child in body {
+        if let FileElement::HelperNode(HelperNode::BlockEndCommand { value }) = child {
             return Some(value.clone());
         }
     }
@@ -132,16 +105,16 @@ fn argument(node: &Node) -> String {
     }
 }
 
-fn new_command(children: &Nodes) -> Option<(&Node, Vec<String>)> {
+fn new_command(identifier: Node, arguments: Node) -> Option<(Node, Vec<String>)> {
     let (
-        Some(Node::Token {
+        Node::Token {
             value: identifier, ..
-        }),
-        Some(Node::Tree {
+        },
+        Node::Tree {
             children: arguments,
             ..
-        }),
-    ) = (children.first(), children.get(1))
+        },
+    ) = (identifier, arguments)
     else {
         return None;
     };
@@ -156,33 +129,32 @@ fn new_command(children: &Nodes) -> Option<(&Node, Vec<String>)> {
     let name = arguments.first().unwrap();
 
     let positional_arguments = positional_arguments.iter().map(argument).collect();
-    Some((name, positional_arguments))
+    Some((name.clone(), positional_arguments))
 }
 
-fn block_begin(node: &Node) -> Option<(&Node, Vec<String>)> {
+fn block_begin(node: Command) -> Option<(Node, Vec<String>)> {
     match node {
-        Node::Token { .. } => None,
-        Node::Tree { data, children } => match data.as_str() {
-            "command_element" => {
-                let Some(Node::Tree { children, .. }) = children.first() else {
-                    return None;
-                };
-
-                new_command(children)
-            }
-            _ => new_command(children),
-        },
+        Command::Element {
+            command_invocation: node,
+            ..
+        }
+        | Command::Invocation(node) => {
+            let CommandInvocation::KnownCommand {
+                identifier,
+                arguments,
+            } = node
+            else {
+                return None;
+            };
+            new_command(identifier, arguments)
+        }
     }
 }
 
-fn get_hints(children: &Nodes) -> Vec<String> {
-    let Some(Node::Tree { children, .. }) = children.get(1) else {
-        return vec![];
-    };
-
+fn get_hints(body: &Vec<FileElement>) -> Vec<String> {
     let mut result = Vec::<String>::new();
-    for child in children {
-        if let Some(value) = find_token(child, "HELPER_USE_HINT") {
+    for child in body {
+        if let FileElement::HelperNode(HelperNode::UseHint { value }) = child {
             result.push(value.clone());
         }
     }
@@ -200,63 +172,13 @@ const BLOCK_END: &str = "gersemi: block_end ";
 const HINTS: &str = "gersemi: hints";
 const IGNORE: &str = "gersemi: ignore";
 
-fn helper_token(type_: &str, value: &str) -> Node {
-    Node::Token {
-        type_: type_.to_string(),
-        value: value.to_string(),
-        line: None,
-        column: None,
-    }
-}
-
 fn simplify(node: Node) -> Option<Node> {
     match node {
         Node::Token { .. } => Some(node),
         Node::Tree { data, children } => {
             let children: Nodes = children.into_iter().filter_map(simplify).collect();
             match data.as_str() {
-                "bracket_comment" => None,
-                "line_comment" => {
-                    let Some(Node::Token { value, .. }) = children.get(1) else {
-                        return None;
-                    };
-                    let value = value.trim();
-                    if let Some((_, content)) = value.split_once(BLOCK_END) {
-                        Some(helper_token("HELPER_BLOCK_END_COMMAND", content))
-                    } else if let Some((_, content)) = value.split_once(HINTS) {
-                        Some(helper_token("HELPER_USE_HINT", content))
-                    } else if value.starts_with(IGNORE) {
-                        Some(helper_token("HELPER_IGNORE_THIS_DEFINITION", ""))
-                    } else {
-                        None
-                    }
-                }
-                "non_command_element" => {
-                    if children.len() != 1 {
-                        return None;
-                    }
-
-                    let Some(Node::Token {
-                        type_,
-                        value,
-                        line,
-                        column,
-                    }) = children.first()
-                    else {
-                        return None;
-                    };
-
-                    if type_.starts_with("HELPER_") {
-                        Some(Node::Token {
-                            type_: type_.clone(),
-                            value: value.clone(),
-                            line: *line,
-                            column: *column,
-                        })
-                    } else {
-                        None
-                    }
-                }
+                "bracket_comment" | "line_comment" => None,
                 _ => Some(Node::Tree { data, children }),
             }
         }
@@ -293,67 +215,51 @@ fn simplify_file_element(node: FileElement) -> Option<FileElement> {
             },
             Command::Invocation(node) => Command::Invocation(simplify_invocation(node)),
         })),
-        FileElement::Node(node) => simplify(node).map(FileElement::Node),
-        FileElement::StandaloneIdentifier { .. } => None,
+        FileElement::HelperNode(_) => Some(node),
         FileElement::NonCommandElement { line_comment, .. } => match line_comment {
             None => None,
-            Some(node) => match simplify(node) {
-                None => None,
-                Some(node) => match node {
-                    Node::Tree { .. } => None,
-                    Node::Token { ref type_, .. } => {
-                        if type_.starts_with("HELPER_") {
-                            Some(FileElement::Node(node))
-                        } else {
-                            None
-                        }
-                    }
-                },
-            },
+            Some(LineComment { value }) => {
+                let value = value.trim();
+                if let Some((_, content)) = value.split_once(BLOCK_END) {
+                    Some(FileElement::HelperNode(HelperNode::BlockEndCommand {
+                        value: content.to_string(),
+                    }))
+                } else if let Some((_, content)) = value.split_once(HINTS) {
+                    Some(FileElement::HelperNode(HelperNode::UseHint {
+                        value: content.to_string(),
+                    }))
+                } else if value.starts_with(IGNORE) {
+                    Some(FileElement::HelperNode(HelperNode::IgnoreThisDefinition))
+                } else {
+                    None
+                }
+            }
         },
-        FileElement::NewlineOrGap { .. } => None,
+        FileElement::StandaloneIdentifier { .. } | FileElement::NewlineOrGap { .. } => None,
     }
 }
 
-impl CustomCommandInterpreter<'_> {
+impl CustomCommandInterpreter {
     fn get_subinterpreter(&self) -> Self {
         Self {
-            parser: self.parser,
             stack: self.stack.clone(),
             found_commands: HashMap::new(),
             filepath: self.filepath.clone(),
         }
     }
 
-    fn block_body(&mut self, node: &Node) -> Option<Keywords> {
-        let Node::Tree { children, .. } = node else {
-            return None;
-        };
-
+    fn block_body(&mut self, body: Vec<FileElement>) -> Option<Keywords> {
         let mut result: Option<Keywords> = None;
-        for child in children {
-            let Node::Tree { data, children } = child else {
-                continue;
-            };
-
-            let item = match data.as_str() {
-                "command_element" => {
-                    let Some(Node::Tree { data, children }) = children.first() else {
-                        continue;
-                    };
-                    if data.as_str() == "command_invocation" {
-                        self.command_invocation(children)
-                    } else {
-                        None
-                    }
-                }
-                "command_invocation" => self.command_invocation(children),
-                "block" => {
-                    self.block(children);
+        for child in body {
+            let item = match child {
+                FileElement::Command(node) => self.command(node),
+                FileElement::Block { start, body, .. } => {
+                    self.block(start, body);
                     None
                 }
                 _ => None,
             };
+
             if item.is_some() {
                 result = item;
             }
@@ -394,40 +300,37 @@ impl CustomCommandInterpreter<'_> {
         self.found_commands.get_mut(&key).unwrap().push(entry);
     }
 
-    fn block(&mut self, children: &Nodes) {
-        if children.len() < 3 {
+    fn block(&mut self, start: Command, body: Vec<FileElement>) {
+        if should_definition_be_ignored(&body) {
             return;
         }
 
-        if should_definition_be_ignored(children) {
-            return;
-        }
-
-        let block_end = get_block_end(children);
+        let block_end = get_block_end(&body);
         let mut subinterpreter = self.get_subinterpreter();
-        let command_node = block_begin(children.first().unwrap());
-        let body = subinterpreter.block_body(children.get(1).unwrap());
+        let command_node = block_begin(start);
+        let hints = get_hints(&body);
+        let keywords = subinterpreter.block_body(body);
 
         self.found_commands.extend(subinterpreter.found_commands);
         let Some((name, positional_arguments)) = command_node else {
             return;
         };
 
-        let keywords = match body {
+        let keywords = match keywords {
             None => Keywords {
                 options: Vec::new(),
                 one_value_keywords: Vec::new(),
                 multi_value_keywords: Vec::new(),
                 hints: Vec::new(),
             },
-            Some(body) => {
-                let mut result = body;
-                result.hints = get_hints(children);
+            Some(keywords) => {
+                let mut result = keywords;
+                result.hints = hints;
                 result
             }
         };
 
-        self.add_command(name, positional_arguments, keywords, block_end);
+        self.add_command(&name, positional_arguments, keywords, block_end);
     }
 
     fn eval_variables(&self, mut arg: String) -> Vec<String> {
@@ -487,64 +390,59 @@ impl CustomCommandInterpreter<'_> {
         self.stack.insert(name.clone(), result);
     }
 
-    fn command_invocation(&mut self, children: &Nodes) -> Option<Keywords> {
+    fn command_invocation(&mut self, identifier: Node, arguments: Node) -> Option<Keywords> {
         let (
-            Some(Node::Token {
+            Node::Token {
                 value: identifier, ..
-            }),
-            Some(Node::Tree {
+            },
+            Node::Tree {
                 children: arguments,
                 ..
-            }),
-        ) = (children.first(), children.get(1))
+            },
+        ) = (identifier, arguments)
         else {
             return None;
         };
 
         match identifier.as_str() {
-            "cmake_parse_arguments" => self.cmake_parse_arguments(arguments),
+            "cmake_parse_arguments" => self.cmake_parse_arguments(&arguments),
             "set" => {
-                self.set(arguments);
+                self.set(&arguments);
                 None
             }
             _ => None,
         }
     }
 
+    fn command(&mut self, node: Command) -> Option<Keywords> {
+        match node {
+            Command::Element {
+                command_invocation: node,
+                ..
+            }
+            | Command::Invocation(node) => match node {
+                CommandInvocation::KnownCommand {
+                    identifier,
+                    arguments,
+                } => self.command_invocation(identifier, arguments),
+                CommandInvocation::CustomCommand { .. } => None,
+            },
+        }
+    }
+
     fn start(&mut self, node: Start) {
         for child in node.children.into_iter().filter_map(simplify_file_element) {
             match child {
-                FileElement::Block { start, body, end } => {
-                    let children = vec![
-                        start.into_node(),
-                        Node::Tree {
-                            data: "block_body".to_string(),
-                            children: body.into_iter().map(FileElement::into_node).collect(),
-                        },
-                        end.into_node(),
-                    ];
-                    self.block(&children);
+                FileElement::Block { start, body, .. } => {
+                    self.block(start, body);
                 }
-                FileElement::Command(command) => match command {
-                    Command::Element {
-                        command_invocation: node,
-                        ..
-                    }
-                    | Command::Invocation(node) => match node {
-                        CommandInvocation::KnownCommand {
-                            identifier,
-                            arguments,
-                        } => {
-                            let children = vec![identifier, arguments];
-                            self.command_invocation(&children);
-                        }
-                        CommandInvocation::CustomCommand { .. } => (),
-                    },
-                },
-                FileElement::Node(_) => (),
-                FileElement::NonCommandElement { .. } => (),
-                FileElement::StandaloneIdentifier { .. } => (),
-                FileElement::NewlineOrGap { .. } => (),
+                FileElement::Command(node) => {
+                    self.command(node);
+                }
+                FileElement::HelperNode(_)
+                | FileElement::NonCommandElement { .. }
+                | FileElement::StandaloneIdentifier { .. }
+                | FileElement::NewlineOrGap { .. } => (),
             }
         }
     }
@@ -555,7 +453,6 @@ pub fn find_custom_command_definitions(
     filepath: String,
 ) -> HashMap<String, Vec<CustomCommand>> {
     let mut interpreter = CustomCommandInterpreter {
-        parser,
         stack: HashMap::new(),
         found_commands: HashMap::new(),
         filepath,

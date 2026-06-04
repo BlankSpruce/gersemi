@@ -1,4 +1,4 @@
-use crate::node::{Command, CommandInvocation, FileElement, Node, Nodes, Start};
+use crate::node::{BracketComment, Command, CommandInvocation, FileElement, LineComment, Node, Nodes, Start};
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
 use std::collections::HashMap;
@@ -228,9 +228,14 @@ impl Parser {
         })
     }
 
-    fn pound_sign(&self, offset: usize) -> Option<Match> {
+    fn pound_sign(&self, offset: usize) -> Option<usize> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
-        self.terminal(&RE, "POUND_SIGN", offset, false)
+        match RE.captures(&self.text[offset..]) {
+            None => None,
+            Some(captures) => captures.get(1).map(|_| {
+                offset + captures.get_match().len()
+            })
+        }
     }
 
     fn left_paren(&self, offset: usize) -> Option<Match> {
@@ -341,12 +346,12 @@ impl Parser {
 
     fn commented_argument_atom(&self, offset: usize) -> Result<Option<(Nodes, usize)>, Error> {
         if let Some((matched, offset)) = self.bracket_comment(offset)? {
-            return Ok(Some((vec![matched], offset)));
+            return Ok(Some((vec![matched.into_node()], offset)));
         }
 
         if let Some((matched_comment, offset)) = self.line_comment(offset) {
             if let Some((matched_newline, offset)) = self.newline(offset) {
-                return Ok(Some((vec![matched_comment, matched_newline], offset)));
+                return Ok(Some((vec![matched_comment.into_node(), matched_newline], offset)));
             }
         }
 
@@ -471,11 +476,11 @@ impl Parser {
 
     fn separation(&self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
         if let Some((node, offset)) = self.bracket_comment(offset)? {
-            return Ok(Some((Some(node), offset)));
+            return Ok(Some((Some(node.into_node()), offset)));
         }
 
         if let Some((node, offset)) = self.line_comment(offset) {
-            return Ok(Some((Some(node), offset)));
+            return Ok(Some((Some(node.into_node()), offset)));
         }
 
         if let Some((_, offset)) = self.newline(offset) {
@@ -684,37 +689,37 @@ impl Parser {
         })
     }
 
-    fn bracket_comment(&self, mut offset: usize) -> Result<Option<Match>, Error> {
-        let mut result = Vec::<Node>::new();
-        if let Some((matched, new_offset)) = self.pound_sign(offset) {
-            result.push(matched);
+    fn bracket_comment(&self, mut offset: usize) -> Result<Option<(BracketComment, usize)>, Error> {
+        if let Some(new_offset) = self.pound_sign(offset) {
             offset = new_offset;
         } else {
             return Ok(None);
         }
 
-        if let Some((matched, new_offset)) = self.bracket_argument_token(offset, false)? {
-            result.push(matched);
+        if let Some((Node::Token { value, .. }, new_offset)) =
+            self.bracket_argument_token(offset, false)?
+        {
             offset = new_offset;
-            return Ok(Some((tree("bracket_comment", result), offset)));
+            return Ok(Some((BracketComment { value }, offset)));
         }
 
         Ok(None)
     }
 
-    fn line_comment(&self, offset: usize) -> Option<Match> {
-        self.pound_sign(offset).map(|(pound_sign, offset)| {
+    fn line_comment(&self, offset: usize) -> Option<(LineComment, usize)> {
+        self.pound_sign(offset).map(|offset| {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^[^\n]+"));
             match RE.find(&self.text[offset..]) {
-                None => (tree("line_comment", vec![pound_sign]), offset),
+                None => (
+                    LineComment {
+                        value: String::new(),
+                    },
+                    offset,
+                ),
                 Some(content) => (
-                    tree(
-                        "line_comment",
-                        vec![
-                            pound_sign,
-                            self.token("LINE_COMMENT_CONTENT", content.as_str(), offset, false),
-                        ],
-                    ),
+                    LineComment {
+                        value: content.as_str().to_string(),
+                    },
                     offset + content.len(),
                 ),
             }
@@ -725,7 +730,7 @@ impl Parser {
         &self,
         mut offset: usize,
     ) -> Result<Option<(FileElement, usize)>, Error> {
-        let mut bracket_comments = Vec::<Node>::new();
+        let mut bracket_comments = Vec::<BracketComment>::new();
         while let Some((matched, new_offset)) = self.bracket_comment(offset)? {
             bracket_comments.push(matched);
             offset = new_offset;
