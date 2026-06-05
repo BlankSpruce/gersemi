@@ -136,33 +136,52 @@ impl Argument {
 }
 
 #[derive(Clone)]
+pub enum CommentedArgumentComment {
+    BracketComment(BracketComment),
+    LineComment {
+        comment: LineComment,
+        newline: String,
+    },
+}
+
+#[derive(Clone)]
 pub enum ArgumentsAtom {
     CommentedArgument {
         argument: Argument,
-        comment_part: Vec<Node>,
+        comment: CommentedArgumentComment,
     },
     Argument(Argument),
-    Separation(Node),
+    BracketComment(BracketComment),
+    LineComment(LineComment),
 }
 
 impl ArgumentsAtom {
     pub fn into_node(self) -> Node {
         match self {
-            Self::CommentedArgument {
-                argument,
-                comment_part,
-            } => Node::Tree {
+            Self::CommentedArgument { argument, comment } => Node::Tree {
                 data: "commented_argument".to_string(),
                 children: {
                     let mut nodes = vec![argument.into_node()];
-                    for n in comment_part {
-                        nodes.push(n);
+                    match comment {
+                        CommentedArgumentComment::BracketComment(comment) => {
+                            nodes.push(comment.into_node());
+                        }
+                        CommentedArgumentComment::LineComment { comment, newline } => {
+                            nodes.push(comment.into_node());
+                            nodes.push(Node::Token {
+                                type_: "NEWLINE".to_string(),
+                                value: newline,
+                                line: None,
+                                column: None,
+                            });
+                        }
                     }
                     nodes
                 },
             },
             Self::Argument(argument) => argument.into_node(),
-            Self::Separation(node) => node,
+            Self::BracketComment(node) => node.into_node(),
+            Self::LineComment(node) => node.into_node(),
         }
     }
 }
@@ -281,6 +300,7 @@ impl Command {
     }
 }
 
+#[derive(Clone)]
 pub struct BracketComment {
     pub value: String,
 }
@@ -307,6 +327,7 @@ impl BracketComment {
     }
 }
 
+#[derive(Clone)]
 pub struct LineComment {
     pub value: String,
 }

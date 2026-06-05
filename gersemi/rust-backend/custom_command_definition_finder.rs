@@ -1,7 +1,7 @@
 use crate::argument_schema::is_keyword;
 use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, FileElement,
-    HelperNode, LineComment, Position, Node, Start,
+    HelperNode, LineComment, Node, Position, Start,
 };
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
@@ -56,7 +56,7 @@ fn argument(node: Argument) -> String {
             .filter_map(|x| match x {
                 ArgumentsAtom::Argument(node)
                 | ArgumentsAtom::CommentedArgument { argument: node, .. } => Some(argument(node)),
-                ArgumentsAtom::Separation(_) => None,
+                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
             })
             .collect::<Vec<_>>()
             .join(" "),
@@ -71,7 +71,7 @@ fn into_arguments(node: ArgumentsNode) -> Arguments {
         .filter_map(|x| match x {
             ArgumentsAtom::Argument(argument)
             | ArgumentsAtom::CommentedArgument { argument, .. } => Some(argument),
-            ArgumentsAtom::Separation(_) => None,
+            ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
         })
         .collect()
 }
@@ -129,7 +129,7 @@ fn get_command_start(node: &Argument) -> Option<Position> {
             Some(node) => match node {
                 ArgumentsAtom::Argument(argument)
                 | ArgumentsAtom::CommentedArgument { argument, .. } => get_command_start(argument),
-                ArgumentsAtom::Separation(_) => None,
+                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
             },
         },
     }
@@ -142,7 +142,7 @@ const IGNORE: &str = "gersemi: ignore";
 fn simplify(node: ArgumentsAtom) -> Option<ArgumentsAtom> {
     match node {
         ArgumentsAtom::Argument(_) | ArgumentsAtom::CommentedArgument { .. } => Some(node),
-        ArgumentsAtom::Separation(_) => None,
+        ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
     }
 }
 

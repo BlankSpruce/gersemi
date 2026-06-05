@@ -1,6 +1,6 @@
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
-    FileElement, LineComment, Node, Nodes, Position, Start,
+    CommentedArgumentComment, FileElement, LineComment, Node, Nodes, Position, Start,
 };
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
@@ -98,32 +98,12 @@ fn regex(pattern: &str) -> Regex {
     regexes.get(pattern).unwrap().clone()
 }
 
-type Match = (Node, usize);
-
 impl Parser {
     pub fn new(text: String, definitions: ParserDefinitions) -> Self {
         Parser {
             text,
             blocks: prepare_blocks(definitions.blocks),
             known_commands: definitions.known_commands,
-        }
-    }
-
-    fn token(&self, type_: &str, value: &str, offset: usize, compute_position: bool) -> Node {
-        if compute_position {
-            Node::Token {
-                type_: type_.to_string(),
-                value: value.to_string(),
-                line: Some(self.line(offset) + 1),
-                column: Some(self.column(offset)),
-            }
-        } else {
-            Node::Token {
-                type_: type_.to_string(),
-                value: value.to_string(),
-                line: None,
-                column: None,
-            }
         }
     }
 
@@ -231,21 +211,6 @@ impl Parser {
         }
     }
 
-    fn terminal(
-        &self,
-        re: &regex::Regex,
-        name: &str,
-        offset: usize,
-        compute_position: bool,
-    ) -> Option<Match> {
-        self.raw_terminal(re, offset).map(|(matched, new_offset)| {
-            (
-                self.token(name, matched.as_str(), offset, compute_position),
-                new_offset,
-            )
-        })
-    }
-
     fn pound_sign(&self, offset: usize) -> Option<usize> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
         match RE.captures(&self.text[offset..]) {
@@ -267,9 +232,9 @@ impl Parser {
         }
     }
 
-    fn newline(&self, offset: usize) -> Option<Match> {
+    fn newline(&self, offset: usize) -> Option<(String, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n+)[ \t]*"));
-        self.terminal(&RE, "NEWLINE", offset, false)
+        self.raw_terminal(&RE, offset)
     }
 
     fn element_t(
@@ -360,15 +325,24 @@ impl Parser {
         Ok(None)
     }
 
-    fn commented_argument_atom(&self, offset: usize) -> Result<Option<(Nodes, usize)>, Error> {
+    fn commented_argument_atom(
+        &self,
+        offset: usize,
+    ) -> Result<Option<(CommentedArgumentComment, usize)>, Error> {
         if let Some((matched, offset)) = self.bracket_comment(offset)? {
-            return Ok(Some((vec![matched.into_node()], offset)));
+            return Ok(Some((
+                CommentedArgumentComment::BracketComment(matched),
+                offset,
+            )));
         }
 
-        if let Some((matched_comment, offset)) = self.line_comment(offset) {
-            if let Some((matched_newline, offset)) = self.newline(offset) {
+        if let Some((comment, offset)) = self.line_comment(offset) {
+            if let Some((newline, offset)) = self.newline(offset) {
                 return Ok(Some((
-                    vec![matched_comment.into_node(), matched_newline],
+                    CommentedArgumentComment::LineComment {
+                        comment,
+                        newline,
+                    },
                     offset,
                 )));
             }
@@ -491,7 +465,7 @@ impl Parser {
                 Some((nodes, offset)) => Some((
                     ArgumentsAtom::CommentedArgument {
                         argument: matched_argument,
-                        comment_part: nodes,
+                        comment: nodes,
                     },
                     offset,
                 )),
@@ -501,17 +475,11 @@ impl Parser {
 
     fn separation(&self, offset: usize) -> Result<Option<(Option<ArgumentsAtom>, usize)>, Error> {
         if let Some((node, offset)) = self.bracket_comment(offset)? {
-            return Ok(Some((
-                Some(ArgumentsAtom::Separation(node.into_node())),
-                offset,
-            )));
+            return Ok(Some((Some(ArgumentsAtom::BracketComment(node)), offset)));
         }
 
         if let Some((node, offset)) = self.line_comment(offset) {
-            return Ok(Some((
-                Some(ArgumentsAtom::Separation(node.into_node())),
-                offset,
-            )));
+            return Ok(Some((Some(ArgumentsAtom::LineComment(node)), offset)));
         }
 
         if let Some((_, offset)) = self.newline(offset) {
