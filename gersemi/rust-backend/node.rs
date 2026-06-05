@@ -57,15 +57,133 @@ impl Node {
     }
 }
 
+#[derive(Clone)]
+pub enum Argument {
+    Bracket {
+        start: String,
+        value: String,
+        end: String,
+        line: Option<usize>,
+        column: Option<usize>,
+    },
+    Complex {
+        arguments: ArgumentsNode,
+    },
+    Quoted {
+        value: String,
+        line: Option<usize>,
+        column: Option<usize>,
+    },
+    Unquoted {
+        value: String,
+        line: Option<usize>,
+        column: Option<usize>,
+    },
+}
+
+pub type Arguments = Vec<Argument>;
+
+impl Argument {
+    pub fn into_node(self) -> Node {
+        match self {
+            Self::Bracket {
+                start,
+                value,
+                end,
+                line,
+                column,
+            } => Node::Tree {
+                data: "bracket_argument".to_string(),
+                children: vec![Node::Token {
+                    type_: "BRACKET_ARGUMENT".to_string(),
+                    value: format!("{start}{value}{end}"),
+                    line,
+                    column,
+                }],
+            },
+            Self::Complex { arguments } => Node::Tree {
+                data: "complex_argument".to_string(),
+                children: vec![Node::Tree {
+                    data: "arguments".to_string(),
+                    children: arguments
+                        .into_iter()
+                        .map(ArgumentsAtom::into_node)
+                        .collect(),
+                }],
+            },
+            Self::Quoted {
+                value,
+                line,
+                column,
+            } => Node::Tree {
+                data: "quoted_argument".to_string(),
+                children: vec![Node::Token {
+                    type_: "QUOTED_ARGUMENT".to_string(),
+                    value: format!("\"{value}\""),
+                    line,
+                    column,
+                }],
+            },
+            Self::Unquoted {
+                value,
+                line,
+                column,
+            } => Node::Tree {
+                data: "unquoted_argument".to_string(),
+                children: vec![Node::Token {
+                    type_: "UNQUOTED_ARGUMENT".to_string(),
+                    value,
+                    line,
+                    column,
+                }],
+            },
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum ArgumentsAtom {
+    CommentedArgument {
+        argument: Argument,
+        comment_part: Vec<Node>,
+    },
+    Argument(Argument),
+    Separation(Node),
+}
+
+impl ArgumentsAtom {
+    pub fn into_node(self) -> Node {
+        match self {
+            Self::CommentedArgument {
+                argument,
+                comment_part,
+            } => Node::Tree {
+                data: "commented_argument".to_string(),
+                children: {
+                    let mut nodes = vec![argument.into_node()];
+                    for n in comment_part {
+                        nodes.push(n);
+                    }
+                    nodes
+                },
+            },
+            Self::Argument(argument) => argument.into_node(),
+            Self::Separation(node) => node,
+        }
+    }
+}
+
+pub type ArgumentsNode = Vec<ArgumentsAtom>;
+
 pub enum CommandInvocation {
     KnownCommand {
         identifier: String,
-        arguments: Vec<Node>,
+        arguments: ArgumentsNode,
     },
     CustomCommand {
         indentation: String,
         identifier: String,
-        arguments: Vec<Node>,
+        arguments: ArgumentsNode,
         formatted_node: String,
         line: usize,
         column: usize,
@@ -89,7 +207,10 @@ impl CommandInvocation {
                     },
                     Node::Tree {
                         data: "arguments".to_string(),
-                        children: arguments,
+                        children: arguments
+                            .into_iter()
+                            .map(ArgumentsAtom::into_node)
+                            .collect(),
                     },
                 ],
             },
@@ -117,7 +238,10 @@ impl CommandInvocation {
                     },
                     Node::Tree {
                         data: "arguments".to_string(),
-                        children: arguments,
+                        children: arguments
+                            .into_iter()
+                            .map(ArgumentsAtom::into_node)
+                            .collect(),
                     },
                     Node::Tree {
                         data: "formatted_node".to_string(),
@@ -338,12 +462,8 @@ pub struct Start {
     pub children: Vec<FileElement>,
 }
 
-impl<'py> IntoPyObject<'py> for Start {
-    type Target = PyAny;
-    type Output = Bound<'py, PyAny>;
-    type Error = PyErr;
-
-    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+impl Start {
+    pub fn into_node(self) -> Node {
         Node::Tree {
             data: "start".to_string(),
             children: self
@@ -352,6 +472,15 @@ impl<'py> IntoPyObject<'py> for Start {
                 .map(FileElement::into_node)
                 .collect::<Vec<_>>(),
         }
-        .into_pyobject(py)
+    }
+}
+
+impl<'py> IntoPyObject<'py> for Start {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        self.into_node().into_pyobject(py)
     }
 }

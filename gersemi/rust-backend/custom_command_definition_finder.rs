@@ -1,6 +1,7 @@
 use crate::argument_schema::is_keyword;
 use crate::node::{
-    Command, CommandInvocation, FileElement, HelperNode, LineComment, Node, Nodes, Start,
+    Argument, Arguments, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, FileElement,
+    HelperNode, LineComment, Node, Start,
 };
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
@@ -48,77 +49,48 @@ fn get_block_end(body: &Vec<FileElement>) -> Option<String> {
     None
 }
 
-fn bracket_argument(nodes: &Nodes) -> String {
-    nodes
-        .iter()
-        .map(|child| match child {
-            Node::Token { value, .. } => value.clone(),
-            Node::Tree { .. } => String::new(),
-        })
-        .collect::<String>()
-}
-
-fn complex_argument(nodes: &Nodes) -> String {
-    match nodes.first() {
-        None => String::new(),
-        Some(Node::Token { value, .. }) => value.clone(),
-        Some(Node::Tree { children, .. }) => children
-            .iter()
-            .map(|child| match child {
-                Node::Token { value, .. } => value.clone(),
-                Node::Tree { .. } => String::new(),
-            })
-            .collect::<String>(),
-    }
-}
-
-fn argument(node: &Node) -> String {
+fn argument(node: Argument) -> String {
     match node {
-        Node::Tree { data, children } => match data.as_str() {
-            "unquoted_argument" => match children.first() {
-                None => String::new(),
-                Some(Node::Tree { children, .. }) => match children.first() {
-                    None => String::new(),
-                    Some(node) => argument(node),
-                },
-                Some(Node::Token { value, .. }) => value.clone(),
-            },
-            "quoted_argument" => match children.first() {
-                None => String::new(),
-                Some(Node::Tree { children, .. }) => match children.first() {
-                    None => String::new(),
-                    Some(node) => argument(node),
-                },
-                Some(Node::Token { value, .. }) => {
-                    let mut value = value.chars();
-                    value.next();
-                    value.next_back();
-                    value.as_str().to_string()
-                }
-            },
-            "bracket_argument" => bracket_argument(children),
-            "complex_argument" => complex_argument(children),
-            "commented_argument" => argument(children.first().unwrap()),
-            _ => String::new(),
-        },
-        Node::Token { value, .. } => value.clone(),
+        Argument::Complex { arguments } => arguments
+            .into_iter()
+            .filter_map(|x| match x {
+                ArgumentsAtom::Argument(node)
+                | ArgumentsAtom::CommentedArgument { argument: node, .. } => Some(argument(node)),
+                ArgumentsAtom::Separation(_) => None,
+            })
+            .collect::<Vec<_>>()
+            .join(" "),
+        Argument::Bracket { value, .. }
+        | Argument::Quoted { value, .. }
+        | Argument::Unquoted { value, .. } => value,
     }
 }
 
-fn new_command(identifier: &str, arguments: &Nodes) -> Option<(Node, Vec<String>)> {
+fn into_arguments(node: ArgumentsNode) -> Arguments {
+    node.into_iter()
+        .filter_map(|x| match x {
+            ArgumentsAtom::Argument(argument)
+            | ArgumentsAtom::CommentedArgument { argument, .. } => Some(argument),
+            ArgumentsAtom::Separation(_) => None,
+        })
+        .collect()
+}
+
+fn new_command(identifier: &str, node: ArgumentsNode) -> Option<(Argument, Vec<String>)> {
     let is_function_or_macro = (identifier == "function") || (identifier == "macro");
     if !is_function_or_macro {
         return None;
     }
 
-    let positional_arguments = &arguments[1..];
-    let name = arguments.first().unwrap();
+    let mut arguments: Arguments = into_arguments(node);
+    let name = arguments.first().unwrap().clone();
+    let positional_arguments = arguments.drain(1..);
 
-    let positional_arguments = positional_arguments.iter().map(argument).collect();
-    Some((name.clone(), positional_arguments))
+    let positional_arguments = positional_arguments.into_iter().map(argument).collect();
+    Some((name, positional_arguments))
 }
 
-fn block_begin(node: Command) -> Option<(Node, Vec<String>)> {
+fn block_begin(node: Command) -> Option<(Argument, Vec<String>)> {
     match node {
         Command::Element {
             command_invocation: node,
@@ -132,7 +104,7 @@ fn block_begin(node: Command) -> Option<(Node, Vec<String>)> {
             else {
                 return None;
             };
-            new_command(&identifier, &arguments)
+            new_command(&identifier, arguments)
         }
     }
 }
@@ -147,10 +119,19 @@ fn get_hints(body: &Vec<FileElement>) -> Vec<String> {
     result
 }
 
-fn get_command_start(node: &Node) -> (Option<usize>, Option<usize>) {
+fn get_command_start(node: &Argument) -> (Option<usize>, Option<usize>) {
     match node {
-        Node::Tree { children, .. } => get_command_start(children.first().unwrap()),
-        Node::Token { line, column, .. } => (*line, *column),
+        Argument::Bracket { line, column, .. }
+        | Argument::Quoted { line, column, .. }
+        | Argument::Unquoted { line, column, .. } => (*line, *column),
+        Argument::Complex { arguments } => match arguments.first() {
+            None => (None, None),
+            Some(node) => match node {
+                ArgumentsAtom::Argument(argument)
+                | ArgumentsAtom::CommentedArgument { argument, .. } => get_command_start(argument),
+                ArgumentsAtom::Separation(_) => (None, None),
+            },
+        },
     }
 }
 
@@ -158,16 +139,10 @@ const BLOCK_END: &str = "gersemi: block_end ";
 const HINTS: &str = "gersemi: hints";
 const IGNORE: &str = "gersemi: ignore";
 
-fn simplify(node: Node) -> Option<Node> {
+fn simplify(node: ArgumentsAtom) -> Option<ArgumentsAtom> {
     match node {
-        Node::Token { .. } => Some(node),
-        Node::Tree { data, children } => {
-            let children: Nodes = children.into_iter().filter_map(simplify).collect();
-            match data.as_str() {
-                "bracket_comment" | "line_comment" => None,
-                _ => Some(Node::Tree { data, children }),
-            }
-        }
+        ArgumentsAtom::Argument(_) | ArgumentsAtom::CommentedArgument { .. } => Some(node),
+        ArgumentsAtom::Separation(_) => None,
     }
 }
 
@@ -256,12 +231,12 @@ impl CustomCommandInterpreter {
 
     fn add_command(
         &mut self,
-        name: &Node,
+        name: Argument,
         positional_arguments: Vec<String>,
         keywords: Keywords,
         block_end: Option<String>,
     ) {
-        let (line, column) = get_command_start(name);
+        let (line, column) = get_command_start(&name);
         let name = argument(name);
 
         let key = name.to_lowercase();
@@ -316,7 +291,7 @@ impl CustomCommandInterpreter {
             }
         };
 
-        self.add_command(&name, positional_arguments, keywords, block_end);
+        self.add_command(name, positional_arguments, keywords, block_end);
     }
 
     fn eval_variables(&self, mut arg: String) -> Vec<String> {
@@ -332,11 +307,12 @@ impl CustomCommandInterpreter {
         result
     }
 
-    fn cmake_parse_arguments(&self, children: &Nodes) -> Option<Keywords> {
-        let Some(Node::Tree {
-            data,
-            children: first_children,
-        }) = children.first()
+    fn cmake_parse_arguments(&self, children: &Arguments) -> Option<Keywords> {
+        let first_child = children.first()?.clone().into_node();
+        let Node::Tree {
+            ref data,
+            children: ref first_children,
+        } = first_child
         else {
             return None;
         };
@@ -353,15 +329,15 @@ impl CustomCommandInterpreter {
         };
 
         Some(Keywords {
-            options: self.eval_variables(argument(options)),
-            one_value_keywords: self.eval_variables(argument(one_value_arguments)),
-            multi_value_keywords: self.eval_variables(argument(multi_value_arguments)),
+            options: self.eval_variables(argument(options.clone())),
+            one_value_keywords: self.eval_variables(argument(one_value_arguments.clone())),
+            multi_value_keywords: self.eval_variables(argument(multi_value_arguments.clone())),
             hints: vec![],
         })
     }
 
-    fn set(&mut self, arguments: &Nodes) {
-        let arguments = arguments.iter().map(argument).collect::<Vec<String>>();
+    fn set(&mut self, arguments: Arguments) {
+        let arguments = arguments.into_iter().map(argument).collect::<Vec<String>>();
         let Some(name) = arguments.first() else {
             return;
         };
@@ -376,9 +352,9 @@ impl CustomCommandInterpreter {
         self.stack.insert(name.clone(), result);
     }
 
-    fn command_invocation(&mut self, identifier: &str, arguments: &Nodes) -> Option<Keywords> {
+    fn command_invocation(&mut self, identifier: &str, arguments: Arguments) -> Option<Keywords> {
         match identifier {
-            "cmake_parse_arguments" => self.cmake_parse_arguments(arguments),
+            "cmake_parse_arguments" => self.cmake_parse_arguments(&arguments),
             "set" => {
                 self.set(arguments);
                 None
@@ -396,8 +372,8 @@ impl CustomCommandInterpreter {
             | Command::Invocation(node) => match node {
                 CommandInvocation::KnownCommand {
                     ref identifier,
-                    ref arguments,
-                } => self.command_invocation(identifier, arguments),
+                    arguments,
+                } => self.command_invocation(identifier, into_arguments(arguments)),
                 CommandInvocation::CustomCommand { .. } => None,
             },
         }

@@ -1,5 +1,6 @@
 use crate::node::{
-    BracketComment, Command, CommandInvocation, FileElement, LineComment, Node, Nodes, Start,
+    Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
+    FileElement, LineComment, Node, Nodes, Start,
 };
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
@@ -81,7 +82,7 @@ fn unquoted_argument_pattern() -> &'static str {
 
 fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
     let equal_signs = "=".repeat(number_of_equal_signs);
-    format!(r"^(\[{equal_signs}\[[\s\S]+?\]{equal_signs}\])[ \t]*")
+    format!(r"^(\[{equal_signs}\[)([\s\S]+?)(\]{equal_signs}\])[ \t]*")
 }
 
 fn regex(pattern: &str) -> Regex {
@@ -98,7 +99,6 @@ fn regex(pattern: &str) -> Regex {
 }
 
 type Match = (Node, usize);
-type SkippableMatch = (Option<Node>, usize);
 
 impl Parser {
     pub fn new(text: String, definitions: ParserDefinitions) -> Self {
@@ -175,7 +175,7 @@ impl Parser {
         &self,
         offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(Argument, usize)>, Error> {
         static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[(=*)\["));
         match RE_START.captures(&self.text[offset..]) {
             None => Ok(None),
@@ -186,17 +186,33 @@ impl Parser {
                     let re = regex(re_pattern.as_str());
                     match re.captures(&self.text[offset..]) {
                         None => Err(self.unbalanced_brackets(offset)),
-                        Some(captures) => Ok(captures.get(1).map(|matched| {
-                            (
-                                self.token(
-                                    "BRACKET_ARGUMENT",
-                                    matched.as_str(),
-                                    offset,
-                                    compute_token_position,
-                                ),
-                                offset + captures.get_match().len(),
-                            )
-                        })),
+                        Some(captures) => {
+                            Ok(match (captures.get(1), captures.get(2), captures.get(3)) {
+                                (Some(start), Some(value), Some(end)) => Some((
+                                    Argument::Bracket {
+                                        start: start.as_str().to_string(),
+                                        value: value.as_str().to_string(),
+                                        end: end.as_str().to_string(),
+                                        line: {
+                                            if compute_token_position {
+                                                Some(self.line(offset) + 1)
+                                            } else {
+                                                None
+                                            }
+                                        },
+                                        column: {
+                                            if compute_token_position {
+                                                Some(self.column(offset))
+                                            } else {
+                                                None
+                                            }
+                                        },
+                                    },
+                                    offset + captures.get_match().len(),
+                                )),
+                                _ => None,
+                            })
+                        }
                     }
                 }
             },
@@ -238,14 +254,14 @@ impl Parser {
         }
     }
 
-    fn left_paren(&self, offset: usize) -> Option<Match> {
+    fn left_paren(&self, offset: usize) -> Option<(String, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\()[ \t]*"));
-        self.terminal(&RE, "LEFT_PAREN", offset, false)
+        self.raw_terminal(&RE, offset)
     }
 
-    fn right_paren(&self, offset: usize) -> Result<Match, Error> {
+    fn right_paren(&self, offset: usize) -> Result<(String, usize), Error> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\))[ \t]*"));
-        match self.terminal(&RE, "RIGHT_PAREN", offset, false) {
+        match self.raw_terminal(&RE, offset) {
             None => Err(self.unbalanced_parentheses(offset)),
             Some(matched) => Ok(matched),
         }
@@ -365,22 +381,20 @@ impl Parser {
         &self,
         offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
-        Ok(self
-            .bracket_argument_token(offset, compute_token_position)?
-            .map(|(matched, offset)| (tree("bracket_argument", vec![matched]), offset)))
+    ) -> Result<Option<(Argument, usize)>, Error> {
+        self.bracket_argument_token(offset, compute_token_position)
     }
 
-    fn quotation_mark(&self, offset: usize) -> Option<Match> {
+    fn quotation_mark(&self, offset: usize) -> Option<(String, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r#"^(")"#));
-        self.terminal(&RE, "QUOTATION_MARK", offset, false)
+        self.raw_terminal(&RE, offset)
     }
 
     fn quoted_argument(
         &self,
         offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(Argument, usize)>, Error> {
         static PATTERN: LazyLock<String> = LazyLock::new(|| add_ignores(quoted_argument_pattern()));
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
         match RE.captures(&self.text[offset..]) {
@@ -390,43 +404,66 @@ impl Parser {
             },
             Some(captures) => Ok(captures.get(1).map(|matched| {
                 (
-                    tree(
-                        "quoted_argument",
-                        vec![self.token(
-                            "QUOTED_ARGUMENT",
-                            matched.as_str(),
-                            offset,
-                            compute_token_position,
-                        )],
-                    ),
+                    Argument::Quoted {
+                        value: {
+                            let result = matched.as_str();
+                            result[1..result.len() - 1].to_string()
+                        },
+                        line: {
+                            if compute_token_position {
+                                Some(self.line(offset) + 1)
+                            } else {
+                                None
+                            }
+                        },
+                        column: {
+                            if compute_token_position {
+                                Some(self.column(offset))
+                            } else {
+                                None
+                            }
+                        },
+                    },
                     offset + captures.get_match().len(),
                 )
             })),
         }
     }
 
-    fn unquoted_argument(&self, offset: usize, compute_token_position: bool) -> Option<Match> {
+    fn unquoted_argument(
+        &self,
+        offset: usize,
+        compute_token_position: bool,
+    ) -> Option<(Argument, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
         match RE.captures(&self.text[offset..]) {
             None => None,
             Some(captures) => captures.get(1).map(|matched| {
                 (
-                    tree(
-                        "unquoted_argument",
-                        vec![self.token(
-                            "UNQUOTED_ARGUMENT",
-                            matched.as_str(),
-                            offset,
-                            compute_token_position,
-                        )],
-                    ),
+                    Argument::Unquoted {
+                        value: matched.as_str().to_string(),
+                        line: {
+                            if compute_token_position {
+                                Some(self.line(offset) + 1)
+                            } else {
+                                None
+                            }
+                        },
+                        column: {
+                            if compute_token_position {
+                                Some(self.column(offset))
+                            } else {
+                                None
+                            }
+                        },
+                    },
                     offset + captures.get_match().len(),
                 )
             }),
         }
     }
 
-    fn complex_argument(&self, offset: usize) -> Result<Option<Match>, Error> {
+    fn complex_argument(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
         Ok(match self.left_paren(offset) {
             None => None,
             Some((_, offset)) => match self.arguments(offset, false)? {
@@ -434,13 +471,9 @@ impl Parser {
                 Some((matched_arguments, offset)) => {
                     let (_, offset) = self.right_paren(offset)?;
                     Some((
-                        tree(
-                            "complex_argument",
-                            vec![Node::Tree {
-                                data: "arguments".to_string(),
-                                children: matched_arguments,
-                            }],
-                        ),
+                        Argument::Complex {
+                            arguments: matched_arguments,
+                        },
                         offset,
                     ))
                 }
@@ -452,7 +485,7 @@ impl Parser {
         &self,
         offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(Argument, usize)>, Error> {
         if let Some(matched) = self.bracket_argument(offset, compute_token_position)? {
             return Ok(Some(matched));
         }
@@ -472,27 +505,35 @@ impl Parser {
         &self,
         offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<Match>, Error> {
+    ) -> Result<Option<(ArgumentsAtom, usize)>, Error> {
         Ok(match self.argument(offset, compute_token_position)? {
             None => None,
             Some((matched_argument, offset)) => match self.commented_argument_atom(offset)? {
-                None => Some((matched_argument, offset)),
-                Some((mut nodes, offset)) => {
-                    nodes.push(matched_argument);
-                    nodes.rotate_right(1);
-                    Some((tree("commented_argument", nodes), offset))
-                }
+                None => Some((ArgumentsAtom::Argument(matched_argument), offset)),
+                Some((nodes, offset)) => Some((
+                    ArgumentsAtom::CommentedArgument {
+                        argument: matched_argument,
+                        comment_part: nodes,
+                    },
+                    offset,
+                )),
             },
         })
     }
 
-    fn separation(&self, offset: usize) -> Result<Option<SkippableMatch>, Error> {
+    fn separation(&self, offset: usize) -> Result<Option<(Option<ArgumentsAtom>, usize)>, Error> {
         if let Some((node, offset)) = self.bracket_comment(offset)? {
-            return Ok(Some((Some(node.into_node()), offset)));
+            return Ok(Some((
+                Some(ArgumentsAtom::Separation(node.into_node())),
+                offset,
+            )));
         }
 
         if let Some((node, offset)) = self.line_comment(offset) {
-            return Ok(Some((Some(node.into_node()), offset)));
+            return Ok(Some((
+                Some(ArgumentsAtom::Separation(node.into_node())),
+                offset,
+            )));
         }
 
         if let Some((_, offset)) = self.newline(offset) {
@@ -506,7 +547,7 @@ impl Parser {
         &self,
         offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<SkippableMatch>, Error> {
+    ) -> Result<Option<(Option<ArgumentsAtom>, usize)>, Error> {
         if let Some((node, offset)) = self.commented_argument(offset, compute_token_position)? {
             return Ok(Some((Some(node), offset)));
         }
@@ -522,8 +563,8 @@ impl Parser {
         &self,
         mut offset: usize,
         compute_token_position: bool,
-    ) -> Result<Option<(Nodes, usize)>, Error> {
-        let mut result = Vec::<Node>::new();
+    ) -> Result<Option<(ArgumentsNode, usize)>, Error> {
+        let mut result = ArgumentsNode::new();
         while let Some((matched, new_offset)) =
             self.arguments_atom(offset, compute_token_position)?
         {
@@ -555,7 +596,7 @@ impl Parser {
     fn create_command_invocation_node(
         &self,
         identifier: String,
-        arguments: Nodes,
+        arguments: ArgumentsNode,
         initial_offset: usize,
         custom_formatting_start: usize,
         custom_formatting_end: usize,
@@ -694,11 +735,20 @@ impl Parser {
             return Ok(None);
         }
 
-        if let Some((Node::Token { value, .. }, new_offset)) =
-            self.bracket_argument_token(offset, false)?
+        if let Some((
+            Argument::Bracket {
+                start, value, end, ..
+            },
+            new_offset,
+        )) = self.bracket_argument_token(offset, false)?
         {
             offset = new_offset;
-            return Ok(Some((BracketComment { value }, offset)));
+            return Ok(Some((
+                BracketComment {
+                    value: format!("{start}{value}{end}"),
+                },
+                offset,
+            )));
         }
 
         Ok(None)
