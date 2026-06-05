@@ -58,26 +58,29 @@ impl Node {
 }
 
 #[derive(Clone)]
+pub struct Position {
+    pub line: usize,
+    pub column: usize,
+}
+
+#[derive(Clone)]
 pub enum Argument {
     Bracket {
         start: String,
         value: String,
         end: String,
-        line: Option<usize>,
-        column: Option<usize>,
+        position: Option<Position>,
     },
     Complex {
         arguments: ArgumentsNode,
     },
     Quoted {
         value: String,
-        line: Option<usize>,
-        column: Option<usize>,
+        position: Option<Position>,
     },
     Unquoted {
         value: String,
-        line: Option<usize>,
-        column: Option<usize>,
+        position: Option<Position>,
     },
 }
 
@@ -90,15 +93,14 @@ impl Argument {
                 start,
                 value,
                 end,
-                line,
-                column,
+                position,
             } => Node::Tree {
                 data: "bracket_argument".to_string(),
                 children: vec![Node::Token {
                     type_: "BRACKET_ARGUMENT".to_string(),
                     value: format!("{start}{value}{end}"),
-                    line,
-                    column,
+                    line: position.as_ref().map(|x| x.line),
+                    column: position.map(|x| x.column),
                 }],
             },
             Self::Complex { arguments } => Node::Tree {
@@ -111,30 +113,22 @@ impl Argument {
                         .collect(),
                 }],
             },
-            Self::Quoted {
-                value,
-                line,
-                column,
-            } => Node::Tree {
+            Self::Quoted { value, position } => Node::Tree {
                 data: "quoted_argument".to_string(),
                 children: vec![Node::Token {
                     type_: "QUOTED_ARGUMENT".to_string(),
                     value: format!("\"{value}\""),
-                    line,
-                    column,
+                    line: position.as_ref().map(|x| x.line),
+                    column: position.map(|x| x.column),
                 }],
             },
-            Self::Unquoted {
-                value,
-                line,
-                column,
-            } => Node::Tree {
+            Self::Unquoted { value, position } => Node::Tree {
                 data: "unquoted_argument".to_string(),
                 children: vec![Node::Token {
                     type_: "UNQUOTED_ARGUMENT".to_string(),
                     value,
-                    line,
-                    column,
+                    line: position.as_ref().map(|x| x.line),
+                    column: position.map(|x| x.column),
                 }],
             },
         }

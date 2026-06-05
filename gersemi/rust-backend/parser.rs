@@ -1,6 +1,6 @@
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
-    FileElement, LineComment, Node, Nodes, Start,
+    FileElement, LineComment, Node, Nodes, Position, Start,
 };
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
@@ -109,8 +109,8 @@ impl Parser {
         }
     }
 
-    fn token(&self, type_: &str, value: &str, offset: usize, compute_token_position: bool) -> Node {
-        if compute_token_position {
+    fn token(&self, type_: &str, value: &str, offset: usize, compute_position: bool) -> Node {
+        if compute_position {
             Node::Token {
                 type_: type_.to_string(),
                 value: value.to_string(),
@@ -171,10 +171,17 @@ impl Parser {
         self.error(offset, ErrorType::GenericParsingError)
     }
 
-    fn bracket_argument_token(
+    fn position(&self, offset: usize) -> Position {
+        Position {
+            line: self.line(offset) + 1,
+            column: self.column(offset),
+        }
+    }
+
+    fn bracket_argument(
         &self,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
         static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[(=*)\["));
         match RE_START.captures(&self.text[offset..]) {
@@ -193,16 +200,9 @@ impl Parser {
                                         start: start.as_str().to_string(),
                                         value: value.as_str().to_string(),
                                         end: end.as_str().to_string(),
-                                        line: {
-                                            if compute_token_position {
-                                                Some(self.line(offset) + 1)
-                                            } else {
-                                                None
-                                            }
-                                        },
-                                        column: {
-                                            if compute_token_position {
-                                                Some(self.column(offset))
+                                        position: {
+                                            if compute_position {
+                                                Some(self.position(offset))
                                             } else {
                                                 None
                                             }
@@ -236,11 +236,11 @@ impl Parser {
         re: &regex::Regex,
         name: &str,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Option<Match> {
         self.raw_terminal(re, offset).map(|(matched, new_offset)| {
             (
-                self.token(name, matched.as_str(), offset, compute_token_position),
+                self.token(name, matched.as_str(), offset, compute_position),
                 new_offset,
             )
         })
@@ -277,8 +277,8 @@ impl Parser {
         command: &BlockCommand,
         offset: usize,
     ) -> Result<Option<(Command, usize)>, Error> {
-        let compute_token_position = matches!(command.name.as_str(), "function" | "macro");
-        self.command_element_t(&command.re, true, compute_token_position, offset)
+        let compute_position = matches!(command.name.as_str(), "function" | "macro");
+        self.command_element_t(&command.re, true, compute_position, offset)
     }
 
     fn block_body(
@@ -377,14 +377,6 @@ impl Parser {
         Ok(None)
     }
 
-    fn bracket_argument(
-        &self,
-        offset: usize,
-        compute_token_position: bool,
-    ) -> Result<Option<(Argument, usize)>, Error> {
-        self.bracket_argument_token(offset, compute_token_position)
-    }
-
     fn quotation_mark(&self, offset: usize) -> Option<(String, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r#"^(")"#));
         self.raw_terminal(&RE, offset)
@@ -393,7 +385,7 @@ impl Parser {
     fn quoted_argument(
         &self,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
         static PATTERN: LazyLock<String> = LazyLock::new(|| add_ignores(quoted_argument_pattern()));
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
@@ -409,16 +401,9 @@ impl Parser {
                             let result = matched.as_str();
                             result[1..result.len() - 1].to_string()
                         },
-                        line: {
-                            if compute_token_position {
-                                Some(self.line(offset) + 1)
-                            } else {
-                                None
-                            }
-                        },
-                        column: {
-                            if compute_token_position {
-                                Some(self.column(offset))
+                        position: {
+                            if compute_position {
+                                Some(self.position(offset))
                             } else {
                                 None
                             }
@@ -433,7 +418,7 @@ impl Parser {
     fn unquoted_argument(
         &self,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Option<(Argument, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
         match RE.captures(&self.text[offset..]) {
@@ -442,16 +427,9 @@ impl Parser {
                 (
                     Argument::Unquoted {
                         value: matched.as_str().to_string(),
-                        line: {
-                            if compute_token_position {
-                                Some(self.line(offset) + 1)
-                            } else {
-                                None
-                            }
-                        },
-                        column: {
-                            if compute_token_position {
-                                Some(self.column(offset))
+                        position: {
+                            if compute_position {
+                                Some(self.position(offset))
                             } else {
                                 None
                             }
@@ -484,17 +462,17 @@ impl Parser {
     fn argument(
         &self,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
-        if let Some(matched) = self.bracket_argument(offset, compute_token_position)? {
+        if let Some(matched) = self.bracket_argument(offset, compute_position)? {
             return Ok(Some(matched));
         }
 
-        if let Some(matched) = self.quoted_argument(offset, compute_token_position)? {
+        if let Some(matched) = self.quoted_argument(offset, compute_position)? {
             return Ok(Some(matched));
         }
 
-        if let Some(matched) = self.unquoted_argument(offset, compute_token_position) {
+        if let Some(matched) = self.unquoted_argument(offset, compute_position) {
             return Ok(Some(matched));
         }
 
@@ -504,9 +482,9 @@ impl Parser {
     fn commented_argument(
         &self,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(ArgumentsAtom, usize)>, Error> {
-        Ok(match self.argument(offset, compute_token_position)? {
+        Ok(match self.argument(offset, compute_position)? {
             None => None,
             Some((matched_argument, offset)) => match self.commented_argument_atom(offset)? {
                 None => Some((ArgumentsAtom::Argument(matched_argument), offset)),
@@ -546,9 +524,9 @@ impl Parser {
     fn arguments_atom(
         &self,
         offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(Option<ArgumentsAtom>, usize)>, Error> {
-        if let Some((node, offset)) = self.commented_argument(offset, compute_token_position)? {
+        if let Some((node, offset)) = self.commented_argument(offset, compute_position)? {
             return Ok(Some((Some(node), offset)));
         }
 
@@ -562,12 +540,10 @@ impl Parser {
     fn arguments(
         &self,
         mut offset: usize,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(ArgumentsNode, usize)>, Error> {
         let mut result = ArgumentsNode::new();
-        while let Some((matched, new_offset)) =
-            self.arguments_atom(offset, compute_token_position)?
-        {
+        while let Some((matched, new_offset)) = self.arguments_atom(offset, compute_position)? {
             if let Some(matched) = matched {
                 result.push(matched);
             }
@@ -648,7 +624,7 @@ impl Parser {
         re: &regex::Regex,
         offset: usize,
         block_edge: bool,
-        compute_token_position: bool,
+        compute_position: bool,
     ) -> Result<Option<(CommandInvocation, usize)>, Error> {
         let initial_offset = offset;
         Ok(match self.identifier(re, offset, block_edge) {
@@ -656,7 +632,7 @@ impl Parser {
             Some((matched_identifier, identifier_offset)) => {
                 match self.left_paren(identifier_offset) {
                     None => None,
-                    Some((_, offset)) => match self.arguments(offset, compute_token_position)? {
+                    Some((_, offset)) => match self.arguments(offset, compute_position)? {
                         None => None,
                         Some((matched_arguments, arguments_offset)) => {
                             let (_, offset) = self.right_paren(arguments_offset)?;
@@ -681,11 +657,11 @@ impl Parser {
         &self,
         re: &regex::Regex,
         block_edge: bool,
-        compute_token_position: bool,
+        compute_position: bool,
         offset: usize,
     ) -> Result<Option<(Command, usize)>, Error> {
         Ok(
-            match self.command_invocation_t(re, offset, block_edge, compute_token_position)? {
+            match self.command_invocation_t(re, offset, block_edge, compute_position)? {
                 None => None,
                 Some((matched, offset)) => match self.line_comment(offset) {
                     None => {
@@ -740,7 +716,7 @@ impl Parser {
                 start, value, end, ..
             },
             new_offset,
-        )) = self.bracket_argument_token(offset, false)?
+        )) = self.bracket_argument(offset, false)?
         {
             offset = new_offset;
             return Ok(Some((

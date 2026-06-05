@@ -1,7 +1,7 @@
 use crate::argument_schema::is_keyword;
 use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, FileElement,
-    HelperNode, LineComment, Node, Start,
+    HelperNode, LineComment, Position, Node, Start,
 };
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
@@ -119,17 +119,17 @@ fn get_hints(body: &Vec<FileElement>) -> Vec<String> {
     result
 }
 
-fn get_command_start(node: &Argument) -> (Option<usize>, Option<usize>) {
+fn get_command_start(node: &Argument) -> Option<Position> {
     match node {
-        Argument::Bracket { line, column, .. }
-        | Argument::Quoted { line, column, .. }
-        | Argument::Unquoted { line, column, .. } => (*line, *column),
+        Argument::Bracket { position, .. }
+        | Argument::Quoted { position, .. }
+        | Argument::Unquoted { position, .. } => position.clone(),
         Argument::Complex { arguments } => match arguments.first() {
-            None => (None, None),
+            None => None,
             Some(node) => match node {
                 ArgumentsAtom::Argument(argument)
                 | ArgumentsAtom::CommentedArgument { argument, .. } => get_command_start(argument),
-                ArgumentsAtom::Separation(_) => (None, None),
+                ArgumentsAtom::Separation(_) => None,
             },
         },
     }
@@ -236,7 +236,10 @@ impl CustomCommandInterpreter {
         keywords: Keywords,
         block_end: Option<String>,
     ) {
-        let (line, column) = get_command_start(&name);
+        let (line, column) = match get_command_start(&name) {
+            None => (0, 0),
+            Some(Position { line, column }) => (line, column),
+        };
         let name = argument(name);
 
         let key = name.to_lowercase();
@@ -251,12 +254,7 @@ impl CustomCommandInterpreter {
                 keywords,
                 block_end,
             },
-            format!(
-                "{}:{}:{}",
-                self.filepath,
-                line.unwrap_or(0),
-                column.unwrap_or(0)
-            ),
+            format!("{}:{}:{}", self.filepath, line, column),
         );
         self.found_commands.get_mut(&key).unwrap().push(entry);
     }
