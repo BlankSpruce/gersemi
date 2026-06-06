@@ -83,11 +83,11 @@ fn new_command(identifier: &str, node: ArgumentsNode) -> Option<(Argument, Vec<S
     }
 
     let mut arguments: Arguments = into_arguments(node);
-    let name = arguments.first().unwrap().clone();
-    let positional_arguments = arguments.drain(1..);
+    let positional_arguments: Arguments = arguments.drain(1..).collect();
+    let name = arguments.pop();
 
     let positional_arguments = positional_arguments.into_iter().map(argument).collect();
-    Some((name, positional_arguments))
+    Some((name?, positional_arguments))
 }
 
 fn block_begin(node: Command) -> Option<(Argument, Vec<String>)> {
@@ -240,23 +240,19 @@ impl CustomCommandInterpreter {
             None => (0, 0),
             Some(Position { line, column }) => (line, column),
         };
-        let name = argument(name);
-
-        let key = name.to_lowercase();
-        if !self.found_commands.contains_key(&key) {
-            self.found_commands.insert(key.clone(), vec![]);
-        }
-
-        let entry = (
-            CustomCommandContent {
-                canonical_name: name.clone(),
-                positional_arguments,
-                keywords,
-                block_end,
-            },
-            format!("{}:{}:{}", self.filepath, line, column),
-        );
-        self.found_commands.get_mut(&key).unwrap().push(entry);
+        let canonical_name = argument(name);
+        self.found_commands
+            .entry(canonical_name.to_lowercase())
+            .or_insert(vec![])
+            .push((
+                CustomCommandContent {
+                    canonical_name,
+                    positional_arguments,
+                    keywords,
+                    block_end,
+                },
+                format!("{}:{}:{}", self.filepath, line, column),
+            ));
     }
 
     fn block(&mut self, start: Command, body: Vec<FileElement>) {

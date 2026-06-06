@@ -90,12 +90,9 @@ fn regex(pattern: &str) -> Regex {
         LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
 
     let mut regexes = REGEXES.lock().unwrap();
-    if !regexes.contains_key(pattern) {
-        let re = Regex::new(pattern).unwrap();
-        regexes.insert(pattern.to_string(), re);
-    }
-
-    regexes.get(pattern).unwrap().clone()
+    regexes.entry(pattern.to_string()).or_insert_with(||{
+        Regex::new(pattern).unwrap()
+    }).clone()
 }
 
 impl Parser {
