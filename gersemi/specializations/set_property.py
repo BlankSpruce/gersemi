@@ -20,14 +20,16 @@ class SetProperty(Dumper):
     _keyword_formatters = {"PROPERTY": "_format_property"}
 
     def _format_property(self, args):
-        result = self._try_to_format_into_single_line(args, prefix="", postfix="")
+        result = self._try_to_format_into_single_line(
+            args, prefix="", postfix="", visitor=self.arguments_atom
+        )
         if result is not None:
             return result
 
         name, *rest = args
         with self.indented():
-            formatted_rest = "\n".join(map(self.visit, rest))
-        return f"{self.visit(name)}\n{formatted_rest}"
+            formatted_rest = "\n".join(map(self.arguments_atom, rest))
+        return f"{self.arguments_atom(name)}\n{formatted_rest}"
 
 
 set_property = {"set_property": {"__impl": SetProperty}}

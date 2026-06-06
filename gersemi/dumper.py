@@ -4,7 +4,7 @@ from functools import lru_cache
 from itertools import filterfalse
 import re
 from textwrap import indent
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 import gersemi_rust_backend
 from gersemi.argument_schema import (
     ArgumentSchema,
@@ -16,7 +16,6 @@ from gersemi.ast_helpers import (
     get_value,
     is_comment,
     is_commented_argument,
-    is_line_comment,
     is_line_comment_in,
     is_line_comment_in_any_of,
     is_multi_value_argument,
@@ -36,7 +35,7 @@ from gersemi.configuration import (
 )
 from gersemi.keyword_kind import kind_to_formatter
 from gersemi.keywords import AnyMatcher
-from gersemi.types import Nodes, Tree
+from gersemi.types import Node, Nodes, Tree
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
 BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
@@ -158,6 +157,10 @@ def create_patch(data, old_class):
     return Impl
 
 
+def node_kind(node: Node) -> str:
+    return node.data if isinstance(node, Tree) else node.type
+
+
 class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     schema: ArgumentSchema
     signatures: Signatures = {}
@@ -204,19 +207,6 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         with self.patched(patch):
             return self.format_command(tree)
 
-    def __default__(self, tree: Tree):
-        return "".join(self.visit_children(tree))
-
-    def visit(self, tree):
-        f = getattr(self, tree.data, self.__default__)
-        return f(tree)
-
-    def visit_children(self, tree):
-        yield from (
-            self.visit(child) if isinstance(child, Tree) else str(child)
-            for child in tree.children
-        )
-
     @property
     def indent_symbol(self):
         return self._indent_symbol * self.indent_level
@@ -224,11 +214,9 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
     def _indent(self, text: str):
         return indent(text, self.indent_symbol)
 
-    def _single_line_helper(self, children, offset):
+    def _single_line_helper(self, visitor, children, offset):
         width = offset
-        for c in children:
-            result = self.visit(c) if isinstance(c, Tree) else str(c)
-
+        for result in map(visitor, children):
             if "\n" in result:
                 raise WontFit()
 
@@ -251,7 +239,11 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         return True
 
     def _try_to_format_into_single_line(
-        self, children: Nodes, prefix: str = "", postfix: str = ""
+        self,
+        children: Nodes,
+        visitor: Callable[[Node], str],
+        prefix: str = "",
+        postfix: str = "",
     ) -> Optional[str]:
         if self.favour_expansion:
             return None
@@ -262,7 +254,9 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
             reserved_space = len(prefix) + len(postfix) + len(self.indent_symbol)
             with self.not_indented():
-                formatted = " ".join(self._single_line_helper(children, reserved_space))
+                formatted = " ".join(
+                    self._single_line_helper(visitor, children, reserved_space)
+                )
             return f"{self.indent_symbol}{prefix}{formatted}{postfix}"
         except WontFit:
             return None
@@ -316,34 +310,65 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         ]
 
     def _format_keyword_with_pairs(self, args):
-        return "\n".join(map(self.visit, gersemi_rust_backend.pair_arguments(args)))
+        return "\n".join(
+            map(self.arguments_atom, gersemi_rust_backend.pair_arguments(args))
+        )
 
-    def start(self, tree):
-        result = self.__default__(tree)
+    def command(self, child):
+        return {
+            "command_element": self.command_element,
+            "command_invocation": self.command_invocation,
+            "custom_command": self.custom_command,
+        }[node_kind(child)](child)
+
+    def file_element(self, child):
+        return {
+            "block": self.block,
+            "standalone_identifier": self.standalone_identifier,
+            "non_command_element": self.non_command_element,
+            "NEWLINE": str,
+        }.get(node_kind(child), self.command)(child)
+
+    def visit(self, tree):
+        result = "".join(map(self.file_element, tree.children))
         if result.endswith("\n"):
             return result
         return result + "\n"
 
     def block(self, tree):
-        return "\n".join(filter(None, map(self.visit, tree.children)))
+        start, body, end = tree.children
+        return "\n".join(
+            filter(
+                None, (self.command(start), self.block_body(body), self.command(end))
+            )
+        )
 
     def block_body(self, tree):
         with self.indented():
-            return "".join(self.visit_children(tree))
+            return "".join(map(self.file_element, tree.children))
 
     def command_element(self, tree):
         invocation, *comment = tree.children
-        formatted_invocation = self.visit(invocation)
+        formatted_invocation = self.command(invocation)
         if len(comment) == 0:
             return formatted_invocation
 
         with self.not_indented():
-            formatted_comment = self.visit(comment[0])
+            formatted_comment = self.line_comment(comment[0])
 
         return f"{formatted_invocation} {formatted_comment}"
 
+    def comment(self, child):
+        kind = node_kind(child)
+        if kind == "bracket_comment":
+            return self.bracket_comment(child)
+        if kind == "line_comment":
+            return self.line_comment(child)
+
+        raise RuntimeError
+
     def non_command_element(self, tree):
-        return " ".join(self.visit(child) for child in tree.children)
+        return " ".join(map(self.comment, tree.children))
 
     def line_comment(self, tree):
         return self._indent("".join(map(str, tree.children))).rstrip()
@@ -352,13 +377,15 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         return f"{self.indent_symbol}{tree.children[0]}"
 
     def _default_format_values(self, values) -> str:
-        return "\n".join(map(self.visit, values))
+        return "\n".join(map(self.arguments_atom, values))
 
     def positional_arguments(self, tree) -> str:
-        return "\n".join(map(self.visit, tree.children))
+        return "\n".join(map(self.arguments_atom, tree.children))
 
     def _format_non_option(self, tree):
-        result = self._try_to_format_into_single_line(tree.children)
+        result = self._try_to_format_into_single_line(
+            tree.children, visitor=self.arguments_atom
+        )
         if result is not None:
             return result
 
@@ -372,11 +399,13 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         )
         if can_be_inlined:
             with self.select_inlining_strategy():
-                result = self._try_to_format_into_single_line(tree.children)
+                result = self._try_to_format_into_single_line(
+                    tree.children, visitor=self.arguments_atom
+                )
                 if result is not None:
                     return result
 
-        begin = self.visit(keyword)
+        begin = self.arguments_atom(keyword)
         if len(values) == 0:
             return begin
 
@@ -392,7 +421,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         return f"{begin}\n{formatted_values}"
 
     def option_argument(self, tree):
-        return self.visit(tree.children[0])
+        return self.arguments_atom(tree.children[0])
 
     def one_value_argument(self, tree):
         return self._format_non_option(tree)
@@ -432,16 +461,18 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         if preprocessor is not None:
             rest = self._preprocess_keyword_values(rest, preprocessor)
 
-        result = self._try_to_format_into_single_line(tree.children)
+        result = self._try_to_format_into_single_line(
+            tree.children, visitor=self.arguments_atom
+        )
         if result is not None:
             return result
 
-        begin = self.visit(header)
+        begin = self.arguments_atom(header)
         if len(rest) == 0:
             return begin
 
         with self.indented():
-            formatted_values = "\n".join(map(self.visit, rest))
+            formatted_values = "\n".join(map(self.arguments_atom, rest))
         return f"{begin}\n{formatted_values}"
 
     def keyword_argument(self, tree):
@@ -449,7 +480,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
     def format_command_with_short_name(self, begin, arguments, end):
         with self.indented():
-            formatted_arguments = self.visit(arguments).lstrip()
+            formatted_arguments = self.arguments(arguments).lstrip()
         if (
             not is_line_comment_in_any_of(arguments.children)
             and "\n" not in formatted_arguments
@@ -460,7 +491,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
     def _format_command_with_long_name(self, begin, arguments, end):
         with self.indented():
-            formatted_arguments = self.visit(arguments)
+            formatted_arguments = self.arguments(arguments)
         return "\n".join([self._indent(begin), formatted_arguments, self._indent(end)])
 
     def _split_arguments(self, arguments: Nodes) -> Nodes:
@@ -518,7 +549,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         end = ")"
 
         result = self._try_to_format_into_single_line(
-            arguments.children, prefix=begin, postfix=end
+            arguments.children, prefix=begin, postfix=end, visitor=self.arguments_atom
         )
         if result is not None and self._inlining_condition(arguments):
             return result
@@ -528,29 +559,54 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
                 return self.format_command_with_short_name(begin, arguments, end)
             return self._format_command_with_long_name(begin, arguments, end)
 
+    def arguments_atom(self, child):
+        return {
+            "commented_argument": self.commented_argument,
+            "bracket_comment": self.bracket_comment,
+            "line_comment": self.line_comment,
+        }.get(node_kind(child), self.argument)(child)
+
     def arguments(self, tree):
         groups = self._split_arguments(tree.children)
-        return "\n".join(map(self.visit, filter(None, groups)))
+        return "\n".join(map(self.arguments_atom, filter(None, groups)))
+
+    def argument(self, child):
+        return {
+            "unquoted_argument": self.unquoted_argument,
+            "quoted_argument": self.quoted_argument,
+            "bracket_argument": self.bracket_argument,
+            "complex_argument": self.complex_argument,
+            "option_argument": self.option_argument,
+            "one_value_argument": self.one_value_argument,
+            "multi_value_argument": self.multi_value_argument,
+            "positional_arguments": self.positional_arguments,
+            "section": self.section,
+            "pair": self.pair,
+            "keyword_argument": self.keyword_argument,
+        }[node_kind(child)](child)
 
     def commented_argument(self, tree):
         argument, comment, *_ = tree.children
-        formatted_argument = self.visit(argument)
+        formatted_argument = self.argument(argument)
         with self.not_indented():
-            formatted_comment = self.visit(comment)
+            formatted_comment = self.comment(comment)
         return f"{formatted_argument} {formatted_comment}"
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children
         if len(arguments.children) <= 4:
             result = self._try_to_format_into_single_line(
-                arguments.children, prefix="(", postfix=")"
+                arguments.children,
+                prefix="(",
+                postfix=")",
+                visitor=self.arguments_atom,
             )
             if result is not None:
                 return result
 
         begin = self._indent("(\n")
         with self.indented():
-            formatted_arguments = self.visit(arguments)
+            formatted_arguments = self.arguments(arguments)
         end = self._indent(")")
         return f"{begin}{formatted_arguments}\n{end}"
 
@@ -619,7 +675,10 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
         with self.not_indented():
             result = self._try_to_format_into_single_line(
-                formatted_arguments.children, prefix=begin, postfix=")"
+                formatted_arguments.children,
+                prefix=begin,
+                postfix=")",
+                visitor=str,
             )
         if result is not None:
             return result
@@ -650,19 +709,19 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
     def _format_command_line(self, args):
         head, *tail = args
-        lines = [self.visit(head)]
+        lines = [self.arguments_atom(head)]
         force_next_line = is_commented_argument(head)
         for arg in tail:
-            if is_line_comment(arg):
-                lines += [self.visit(arg)]
+            if node_kind(arg) == "line_comment":
+                lines += [self.line_comment(arg)]
                 continue
 
             with self.not_indented():
-                formatted_arg = self.visit(arg)
+                formatted_arg = self.arguments_atom(arg)
             updated_line = f"{lines[-1]} {formatted_arg}"
             if force_next_line or self._should_start_new_line(updated_line, lines[-1]):
                 force_next_line = is_commented_argument(arg)
-                lines += [self.visit(arg)]
+                lines += [self.arguments_atom(arg)]
             else:
                 lines[-1] = updated_line
                 if is_commented_argument(arg):
