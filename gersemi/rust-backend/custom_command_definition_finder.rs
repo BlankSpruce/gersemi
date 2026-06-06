@@ -1,7 +1,7 @@
 use crate::argument_schema::is_keyword;
 use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, FileElement,
-    HelperNode, LineComment, Node, Position, Start,
+    Node, Position, Start,
 };
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
@@ -29,24 +29,6 @@ struct CustomCommandInterpreter {
     stack: HashMap<String, Vec<String>>,
     found_commands: HashMap<String, Vec<CustomCommand>>,
     filepath: String,
-}
-
-fn should_definition_be_ignored(body: &Vec<FileElement>) -> bool {
-    for child in body {
-        if let FileElement::HelperNode(HelperNode::IgnoreThisDefinition) = child {
-            return true;
-        }
-    }
-    false
-}
-
-fn get_block_end(body: &Vec<FileElement>) -> Option<String> {
-    for child in body {
-        if let FileElement::HelperNode(HelperNode::BlockEndCommand { value }) = child {
-            return Some(value.clone());
-        }
-    }
-    None
 }
 
 fn argument(node: Argument) -> String {
@@ -109,16 +91,6 @@ fn block_begin(node: Command) -> Option<(Argument, Vec<String>)> {
     }
 }
 
-fn get_hints(body: &Vec<FileElement>) -> Vec<String> {
-    let mut result = Vec::<String>::new();
-    for child in body {
-        if let FileElement::HelperNode(HelperNode::UseHint { value }) = child {
-            result.push(value.clone());
-        }
-    }
-    result
-}
-
 fn get_command_start(node: &Argument) -> Option<Position> {
     match node {
         Argument::Bracket { position, .. }
@@ -132,71 +104,6 @@ fn get_command_start(node: &Argument) -> Option<Position> {
                 ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
             },
         },
-    }
-}
-
-const BLOCK_END: &str = "gersemi: block_end ";
-const HINTS: &str = "gersemi: hints";
-const IGNORE: &str = "gersemi: ignore";
-
-fn simplify(node: ArgumentsAtom) -> Option<ArgumentsAtom> {
-    match node {
-        ArgumentsAtom::Argument(_) | ArgumentsAtom::CommentedArgument { .. } => Some(node),
-        ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
-    }
-}
-
-fn simplify_invocation(node: CommandInvocation) -> CommandInvocation {
-    match node {
-        CommandInvocation::KnownCommand {
-            identifier,
-            arguments,
-        } => CommandInvocation::KnownCommand {
-            identifier,
-            arguments: arguments.into_iter().filter_map(simplify).collect(),
-        },
-        CommandInvocation::CustomCommand { .. } => node,
-    }
-}
-
-fn simplify_file_element(node: FileElement) -> Option<FileElement> {
-    match node {
-        FileElement::Block { start, body, end } => Some(FileElement::Block {
-            start,
-            body: body.into_iter().filter_map(simplify_file_element).collect(),
-            end,
-        }),
-        FileElement::Command(node) => Some(FileElement::Command(match node {
-            Command::Element {
-                command_invocation,
-                line_comment,
-            } => Command::Element {
-                command_invocation: simplify_invocation(command_invocation),
-                line_comment,
-            },
-            Command::Invocation(node) => Command::Invocation(simplify_invocation(node)),
-        })),
-        FileElement::HelperNode(_) => Some(node),
-        FileElement::NonCommandElement { line_comment, .. } => match line_comment {
-            None => None,
-            Some(LineComment { value }) => {
-                let value = value.trim();
-                if let Some((_, content)) = value.split_once(BLOCK_END) {
-                    Some(FileElement::HelperNode(HelperNode::BlockEndCommand {
-                        value: content.to_string(),
-                    }))
-                } else if let Some((_, content)) = value.split_once(HINTS) {
-                    Some(FileElement::HelperNode(HelperNode::UseHint {
-                        value: content.to_string(),
-                    }))
-                } else if value.starts_with(IGNORE) {
-                    Some(FileElement::HelperNode(HelperNode::IgnoreThisDefinition))
-                } else {
-                    None
-                }
-            }
-        },
-        FileElement::StandaloneIdentifier { .. } | FileElement::NewlineOrGap { .. } => None,
     }
 }
 
@@ -256,14 +163,14 @@ impl CustomCommandInterpreter {
     }
 
     fn block(&mut self, start: Command, body: Vec<FileElement>) {
-        if should_definition_be_ignored(&body) {
+        if body.iter().any(FileElement::is_ignore_directive) {
             return;
         }
 
-        let block_end = get_block_end(&body);
+        let block_end = body.iter().find_map(FileElement::get_block_end);
         let mut subinterpreter = self.get_subinterpreter();
         let command_node = block_begin(start);
-        let hints = get_hints(&body);
+        let hints = body.iter().filter_map(FileElement::get_hint).collect();
         let keywords = subinterpreter.block_body(body);
 
         self.found_commands.extend(subinterpreter.found_commands);
@@ -374,7 +281,7 @@ impl CustomCommandInterpreter {
     }
 
     fn start(&mut self, node: Start) {
-        for child in node.children.into_iter().filter_map(simplify_file_element) {
+        for child in node.children {
             match child {
                 FileElement::Block { start, body, .. } => {
                     self.block(start, body);
@@ -382,8 +289,7 @@ impl CustomCommandInterpreter {
                 FileElement::Command(node) => {
                     self.command(node);
                 }
-                FileElement::HelperNode(_)
-                | FileElement::NonCommandElement { .. }
+                FileElement::NonCommandElement { .. }
                 | FileElement::StandaloneIdentifier { .. }
                 | FileElement::NewlineOrGap { .. } => (),
             }

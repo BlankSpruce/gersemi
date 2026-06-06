@@ -361,37 +361,6 @@ impl LineComment {
     }
 }
 
-pub enum HelperNode {
-    BlockEndCommand { value: String },
-    IgnoreThisDefinition,
-    UseHint { value: String },
-}
-
-impl HelperNode {
-    pub fn into_node(self) -> Node {
-        match self {
-            Self::BlockEndCommand { value } => Node::Token {
-                type_: "HELPER_BLOCK_END_COMMAND".to_string(),
-                value,
-                line: None,
-                column: None,
-            },
-            Self::IgnoreThisDefinition => Node::Token {
-                type_: "HELPER_IGNORE_THIS_DEFINITION".to_string(),
-                value: String::new(),
-                line: None,
-                column: None,
-            },
-            Self::UseHint { value } => Node::Token {
-                type_: "HELPER_USE_HINT".to_string(),
-                value,
-                line: None,
-                column: None,
-            },
-        }
-    }
-}
-
 pub enum FileElement {
     Block {
         start: Command,
@@ -399,7 +368,6 @@ pub enum FileElement {
         end: Command,
     },
     Command(Command),
-    HelperNode(HelperNode),
     StandaloneIdentifier {
         value: String,
     },
@@ -412,7 +380,40 @@ pub enum FileElement {
     },
 }
 
+const BLOCK_END: &str = "gersemi: block_end ";
+const HINTS: &str = "gersemi: hints";
+const IGNORE: &str = "gersemi: ignore";
+
 impl FileElement {
+    fn get_standalone_line_comment_content(&self) -> Option<&str> {
+        if let Self::NonCommandElement {
+            line_comment: Some(LineComment { ref value }),
+            ..
+        } = self
+        {
+            Some(value.trim())
+        } else {
+            None
+        }
+    }
+
+    pub fn is_ignore_directive(&self) -> bool {
+        self.get_standalone_line_comment_content()
+            .is_some_and(|value| value.starts_with(IGNORE))
+    }
+
+    pub fn get_block_end(&self) -> Option<String> {
+        self.get_standalone_line_comment_content()
+            .and_then(|value| value.split_once(BLOCK_END))
+            .map(|(_, rhs)| rhs.to_string())
+    }
+
+    pub fn get_hint(&self) -> Option<String> {
+        self.get_standalone_line_comment_content()
+            .and_then(|value| value.split_once(HINTS))
+            .map(|(_, rhs)| rhs.to_string())
+    }
+
     pub fn into_node(self) -> Node {
         match self {
             Self::Block { start, body, end } => Node::Tree {
@@ -427,7 +428,6 @@ impl FileElement {
                 ],
             },
             Self::Command(command) => command.into_node(),
-            Self::HelperNode(node) => node.into_node(),
             Self::StandaloneIdentifier { value } => Node::Tree {
                 data: "standalone_identifier".to_string(),
                 children: vec![Node::Token {

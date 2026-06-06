@@ -90,9 +90,10 @@ fn regex(pattern: &str) -> Regex {
         LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
 
     let mut regexes = REGEXES.lock().unwrap();
-    regexes.entry(pattern.to_string()).or_insert_with(||{
-        Regex::new(pattern).unwrap()
-    }).clone()
+    regexes
+        .entry(pattern.to_string())
+        .or_insert_with(|| Regex::new(pattern).unwrap())
+        .clone()
 }
 
 impl Parser {
@@ -336,10 +337,7 @@ impl Parser {
         if let Some((comment, offset)) = self.line_comment(offset) {
             if let Some((newline, offset)) = self.newline(offset) {
                 return Ok(Some((
-                    CommentedArgumentComment::LineComment {
-                        comment,
-                        newline,
-                    },
+                    CommentedArgumentComment::LineComment { comment, newline },
                     offset,
                 )));
             }
