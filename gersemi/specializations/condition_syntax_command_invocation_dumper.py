@@ -50,11 +50,7 @@ class ConditionSyntaxCommandInvocationDumper(Dumper):
         return gersemi_rust_backend.condition_syntax_preprocess_arguments(arguments)
 
     def _split_arguments(self, arguments):
-        if len(arguments) < 1:
-            return arguments
-
-        head, *tail = arguments
-        return [[head], tail]
+        return arguments
 
     def argument(self, child):
         kind = child.data if isinstance(child, Tree) else child.type
@@ -63,9 +59,6 @@ class ConditionSyntaxCommandInvocationDumper(Dumper):
         if kind == "unary_operation":
             return self.unary_operation(child)
         return super().argument(child)
-
-    def arguments(self, tree):
-        return "\n".join(map(self.arguments_atom, tree.children))
 
     def complex_argument(self, tree):
         arguments, *_ = tree.children

@@ -541,10 +541,8 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
         return canonical_name
 
-    def format_signature(self, tree):
-        raw_identifier, arguments = tree.children
+    def format_signature(self, raw_identifier, arguments):
         identifier = self.format_command_name(raw_identifier)
-        arguments = self._preprocess_arguments(arguments)
         begin = f"{identifier}("
         end = ")"
 
@@ -638,7 +636,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         return self.signatures.get(None, None)
 
     def format_command(self, tree):
-        _, arguments = tree.children
+        identifier, arguments = tree.children
         arguments = self._preprocess_arguments(arguments)
         arguments_only = filterfalse(is_comment, arguments.children)
         signature = None
@@ -649,7 +647,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
                 break
 
         with self.patched(signature):
-            return self.format_signature(tree)
+            return self.format_signature(identifier, arguments)
 
     def _preprocess_content(self, content):
         if content.strip() == "":
