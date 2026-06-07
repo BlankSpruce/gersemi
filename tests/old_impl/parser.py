@@ -11,8 +11,8 @@ from gersemi.exceptions import (
     UnbalancedQuotes,
 )
 from gersemi.types import Tree
-from tests.old_parser.parsing_transformer import ParsingTransformer
-from tests.old_parser.postprocessor import postprocess
+from tests.old_impl.parsing_transformer import ParsingTransformer
+from tests.old_impl.postprocessor import postprocess
 
 
 @dataclass

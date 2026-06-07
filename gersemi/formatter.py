@@ -1,5 +1,4 @@
 from collections import ChainMap
-from copy import deepcopy
 from functools import lru_cache
 import re
 from typing import List, Tuple
@@ -7,7 +6,6 @@ from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import LineRanges, OutcomeConfiguration
 from gersemi.dumper import Dumper
 from gersemi.parser import Parser
-from gersemi.sanity_checker import check_code_equivalence
 from gersemi.warnings import FormatterWarnings
 
 GERSEMI_OFF = "# gersemi: off"
@@ -127,13 +125,10 @@ class Formatter:
             code = add_line_range_fences(code, self.lines_to_format)
 
         tree = self.parser.parse(code)
-        if not self.configuration.unsafe:
-            original = deepcopy(tree)
-
         dumper = Dumper(self.configuration, self.known_definitions)
         formatted = dumper.visit(tree)
         if not self.configuration.unsafe:
-            check_code_equivalence(self.parser, original, formatted)
+            self.parser.check_code_equivalence(code, formatted)
 
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:

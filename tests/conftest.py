@@ -16,7 +16,7 @@ from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
-from tests.old_parser.parser import create_parser, create_parser_with_postprocessing
+from tests.old_impl.parser import create_parser, create_parser_with_postprocessing
 from tests.utils import Parser
 
 

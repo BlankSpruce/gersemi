@@ -1,7 +1,7 @@
 import pickle
 import pytest
 from gersemi.exceptions import ASTMismatch
-from gersemi.sanity_checker import check_code_equivalence
+from tests.old_impl.sanity_checker import check_code_equivalence
 from tests.tests_generator import generate_input_output_tests
 from tests.utils import preprocess
 
@@ -36,7 +36,6 @@ def test_abstract_syntax_tree_equivalence(
     for p in [
         lark_based_parser,
         lark_based_parser_with_simple_grammar,
-        rust_parser,
     ]:
         # ruff: noqa: PERF203
         try:
@@ -45,6 +44,12 @@ def test_abstract_syntax_tree_equivalence(
         except ASTMismatch:
             pytest.fail("ASTs mismatch")
             raise
+
+    try:
+        rust_parser.check_code_equivalence(case.given, case.expected)
+    except ASTMismatch:
+        pytest.fail("ASTs mismatch")
+        raise
 
 
 pytest_generate_tests = generate_input_output_tests(

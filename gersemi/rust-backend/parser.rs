@@ -12,7 +12,7 @@ struct BlockCommand {
     re: regex::Regex,
 }
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
 pub struct ParserDefinitions {
     blocks: BlockDefinitions,
     known_commands: Vec<String>,

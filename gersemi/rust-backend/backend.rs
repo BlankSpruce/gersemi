@@ -3,6 +3,7 @@ mod custom_command_definition_finder;
 mod keyword_preprocessor;
 mod node;
 mod parser;
+mod sanity_checker;
 mod two_words_keyword_isolator;
 
 use pyo3::pymodule;
@@ -16,6 +17,7 @@ mod gersemi_rust_backend {
     };
     use crate::node::{Node, Nodes, Start};
     use crate::parser::{tree, Error, Parser, ParserDefinitions};
+    use crate::sanity_checker::check_equivalence;
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
     use std::collections::HashMap;
@@ -116,6 +118,18 @@ mod gersemi_rust_backend {
     ) -> HashMap<String, Vec<CustomCommand>> {
         let parser = Parser::new(text, definitions);
         crate::custom_command_definition_finder::find_custom_command_definitions(&parser, filepath)
+    }
+
+    #[pyfunction]
+    fn check_code_equivalence(
+        definitions: ParserDefinitions,
+        before: String,
+        after: String,
+    ) -> Result<bool, Error> {
+        let before = Parser::new(before, definitions.clone()).start()?;
+        let after = Parser::new(after, definitions).start()?;
+
+        Ok(check_equivalence(before, after))
     }
 
     #[pyfunction]

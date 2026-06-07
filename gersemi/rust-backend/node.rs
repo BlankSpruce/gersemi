@@ -57,13 +57,13 @@ impl Node {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Position {
     pub line: usize,
     pub column: usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Argument {
     Bracket {
         start: String,
@@ -135,7 +135,7 @@ impl Argument {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum CommentedArgumentComment {
     BracketComment(BracketComment),
     LineComment {
@@ -144,7 +144,7 @@ pub enum CommentedArgumentComment {
     },
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum ArgumentsAtom {
     CommentedArgument {
         argument: Argument,
@@ -188,6 +188,7 @@ impl ArgumentsAtom {
 
 pub type ArgumentsNode = Vec<ArgumentsAtom>;
 
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
 pub enum CommandInvocation {
     KnownCommand {
         identifier: String,
@@ -271,6 +272,7 @@ impl CommandInvocation {
     }
 }
 
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
 pub enum Command {
     Element {
         command_invocation: CommandInvocation,
@@ -300,7 +302,7 @@ impl Command {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct BracketComment {
     pub value: String,
 }
@@ -327,7 +329,7 @@ impl BracketComment {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct LineComment {
     pub value: String,
 }
@@ -361,6 +363,7 @@ impl LineComment {
     }
 }
 
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
 pub enum FileElement {
     Block {
         start: Command,

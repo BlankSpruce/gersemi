@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import gersemi_rust_backend
+from gersemi.exceptions import ASTMismatch
 
 
 @dataclass
@@ -32,6 +33,12 @@ class Parser:
         self.known_definitions = ParserDefinitions.from_dict(
             {} if known_definitions is None else known_definitions
         )
+
+    def check_code_equivalence(self, before, after):
+        if not gersemi_rust_backend.check_code_equivalence(
+            self.known_definitions, before, after
+        ):
+            raise ASTMismatch
 
     def parse(self, text):
         return gersemi_rust_backend.parse(text, self.known_definitions)
