@@ -55,7 +55,7 @@ const MAKE_STYLE_REFERENCE_R: &str = r##"\$\([^\)\n\"#]+?\)"##;
 const QUOTED_CONTINUATION_R: &str = r"\\\n";
 const QUOTED_ELEMENT_R: &str = r#"[^\\\"]|\n"#;
 
-fn quoted_argument_pattern() -> &'static str {
+pub fn quoted_argument_pattern() -> &'static str {
     static RE: LazyLock<String> = LazyLock::new(|| {
         format!(r#""({QUOTED_ELEMENT_R}|{ESCAPE_SEQUENCE_R}|{QUOTED_CONTINUATION_R})*?""#)
     });

@@ -1,5 +1,6 @@
 mod argument_schema;
 mod custom_command_definition_finder;
+mod formatter;
 mod keyword_preprocessor;
 mod node;
 mod parser;
@@ -130,6 +131,11 @@ mod gersemi_rust_backend {
         let after = Parser::new(after, definitions).start()?;
 
         Ok(check_equivalence(before, after))
+    }
+
+    #[pyfunction]
+    fn safe_indent(s: &str, indent_symbol: &str) -> String {
+        crate::formatter::safe_indent(s, indent_symbol)
     }
 
     #[pyfunction]

@@ -2,7 +2,6 @@ from collections import defaultdict
 from contextlib import contextmanager
 from functools import lru_cache
 from itertools import filterfalse
-import re
 from textwrap import indent
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 import gersemi_rust_backend
@@ -38,58 +37,8 @@ from gersemi.keywords import AnyMatcher
 from gersemi.types import Node, Nodes, Tree
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
-BRACKET_ARGUMENT_REGEX = r"(\[(?P<equal_signs>(=*))\[(?:[\s\S]+?)\](?P=equal_signs)\])"
-QUOTED_ARGUMENT_REGEX = r'("(?:[^\\\"]|\n|(?:\\(?:[^A-Za-z0-9]|[nrt]))|\\\n)*")'
 LINE_COMMENT_BEGIN = "#"
 BRACKET_COMMENT_BEGIN = "#["
-
-
-def flat_split(pattern, string):
-    m = re.search(pattern, string)
-    if m is None:
-        return (string,)
-
-    begin, end = m.span()
-    return string[:begin], string[begin:end], string[end:]
-
-
-def split_by_line_comment(string):
-    return flat_split(r"\s*" + LINE_COMMENT_BEGIN, string)
-
-
-def split_by_bracket_arguments(string):
-    return flat_split(BRACKET_ARGUMENT_REGEX, string)
-
-
-def split_by_quoted_arguments(string):
-    return re.split(QUOTED_ARGUMENT_REGEX, string)
-
-
-def split_into_segments(string):
-    head, *comment = split_by_line_comment(string)
-    line_comment = "".join(comment)
-    if '"' in head:
-        head += line_comment
-        line_comment = ""
-    segments = split_by_bracket_arguments(head)
-    result = [split_by_quoted_arguments(segment) for segment in segments]
-    result += [[line_comment]]
-    return [item for segment in result for item in segment if item != ""]
-
-
-def indent_segment(segment, indent_symbol):
-    if segment[:1] in ["[", '"']:
-        return segment
-
-    if segment.startswith(" ") or segment.startswith("\t"):
-        return segment
-
-    return indent(segment, indent_symbol, lambda s: not s.startswith("\n"))
-
-
-def safe_indent(string, indent_symbol):
-    segments = split_into_segments(string)
-    return "".join(indent_segment(segment, indent_symbol) for segment in segments)
 
 
 def strip_empty_lines_from_edges(s):
@@ -682,7 +631,7 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             return result
 
         indent_symbol = remove_common_beginning(self.indent_symbol, indentation)
-        body = safe_indent(
+        body = gersemi_rust_backend.safe_indent(
             self._preprocess_content(content),
             indent_symbol,
         )
