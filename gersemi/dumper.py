@@ -41,42 +41,6 @@ LINE_COMMENT_BEGIN = "#"
 BRACKET_COMMENT_BEGIN = "#["
 
 
-def strip_empty_lines_from_edges(s):
-    lines = s.splitlines()
-    while lines and not lines[0].strip():
-        lines.pop(0)
-    while lines and not lines[-1].strip():
-        lines.pop()
-    return "\n".join(lines)
-
-
-def find_line_comment_begin(s):
-    start = 0
-    while True:
-        index = s.rfind(LINE_COMMENT_BEGIN, start)
-        if index == -1:
-            return index
-
-        if index == s.rfind(BRACKET_COMMENT_BEGIN, start):
-            start = index + 1
-        else:
-            return index
-
-
-def ends_with_line_comment(s):
-    return find_line_comment_begin(s) != -1
-
-
-def remove_common_beginning(s, other):
-    index = 0
-    for left, right in zip(s, other):
-        if left != right:
-            break
-        index += 1
-
-    return s[index:]
-
-
 def get_indent(indent_type: Indent) -> str:
     if isinstance(indent_type, Tabs):
         return "\t"
@@ -603,8 +567,10 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             return ""
 
         begin = "\n" if content.startswith("\n") else ""
-        stripped_content = strip_empty_lines_from_edges(content)
-        if ends_with_line_comment(stripped_content):
+        stripped_content = gersemi_rust_backend.strip_empty_lines_from_edges(
+            str(content)
+        )
+        if gersemi_rust_backend.ends_with_line_comment(stripped_content):
             end = "\n"
             return f"{begin}{stripped_content}{end}"
 
@@ -630,7 +596,9 @@ class Dumper:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         if result is not None:
             return result
 
-        indent_symbol = remove_common_beginning(self.indent_symbol, indentation)
+        indent_symbol = gersemi_rust_backend.remove_common_beginning(
+            self.indent_symbol, str(indentation)
+        )
         body = gersemi_rust_backend.safe_indent(
             self._preprocess_content(content),
             indent_symbol,

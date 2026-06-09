@@ -1,6 +1,52 @@
 use regex::Regex;
+use std::iter::zip;
 
 use crate::parser::quoted_argument_pattern;
+
+pub fn remove_common_beginning(s: &str, other: &str) -> String {
+    let mut index = 0;
+    for (lhs, rhs) in zip(s.chars(), other.chars()) {
+        if lhs != rhs {
+            break;
+        }
+        index += 1;
+    }
+
+    s[index..].to_string()
+}
+
+pub fn strip_empty_lines_from_edges(s: &str) -> String {
+    let mut result = s
+        .lines()
+        .skip_while(|x| x.trim().is_empty())
+        .collect::<Vec<&str>>()
+        .into_iter()
+        .rev()
+        .skip_while(|x| x.trim().is_empty())
+        .collect::<Vec<&str>>();
+    result.reverse();
+    result.join("\n")
+}
+
+pub fn ends_with_line_comment(s: &str) -> bool {
+    let mut start = 0;
+    loop {
+        let line_comment_begin_index = s[start..].rfind('#');
+        match line_comment_begin_index {
+            None => {
+                return false;
+            }
+            Some(index) => {
+                let bracket_comment_begin_index = s[start..].rfind("#[");
+                if bracket_comment_begin_index == Some(index) {
+                    start = index + 1;
+                } else {
+                    return true;
+                }
+            }
+        }
+    }
+}
 
 fn flat_split(pattern: &str, s: &str) -> (String, Option<[String; 2]>) {
     let regex = Regex::new(pattern).unwrap();

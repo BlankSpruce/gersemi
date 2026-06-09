@@ -134,6 +134,21 @@ mod gersemi_rust_backend {
     }
 
     #[pyfunction]
+    fn remove_common_beginning(s: &str, other: &str) -> String {
+        crate::formatter::remove_common_beginning(s, other)
+    }
+
+    #[pyfunction]
+    fn strip_empty_lines_from_edges(s: &str) -> String {
+        crate::formatter::strip_empty_lines_from_edges(s)
+    }
+
+    #[pyfunction]
+    fn ends_with_line_comment(s: &str) -> bool {
+        crate::formatter::ends_with_line_comment(s)
+    }
+
+    #[pyfunction]
     fn safe_indent(s: &str, indent_symbol: &str) -> String {
         crate::formatter::safe_indent(s, indent_symbol)
     }
