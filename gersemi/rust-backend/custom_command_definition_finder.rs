@@ -31,23 +31,6 @@ struct CustomCommandInterpreter {
     filepath: String,
 }
 
-fn argument(node: Argument) -> String {
-    match node {
-        Argument::Complex { arguments } => arguments
-            .into_iter()
-            .filter_map(|x| match x {
-                ArgumentsAtom::Argument(node)
-                | ArgumentsAtom::CommentedArgument { argument: node, .. } => Some(argument(node)),
-                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
-            })
-            .collect::<Vec<_>>()
-            .join(" "),
-        Argument::Bracket { value, .. }
-        | Argument::Quoted { value, .. }
-        | Argument::Unquoted { value, .. } => value,
-    }
-}
-
 fn into_arguments(node: ArgumentsNode) -> Arguments {
     node.into_iter()
         .filter_map(|x| match x {
@@ -68,7 +51,7 @@ fn new_command(identifier: &str, node: ArgumentsNode) -> Option<(Argument, Vec<S
     let positional_arguments: Arguments = arguments.drain(1..).collect();
     let name = arguments.pop();
 
-    let positional_arguments = positional_arguments.into_iter().map(argument).collect();
+    let positional_arguments = positional_arguments.iter().map(Argument::get_value).collect();
     Some((name?, positional_arguments))
 }
 
@@ -138,16 +121,16 @@ impl CustomCommandInterpreter {
 
     fn add_command(
         &mut self,
-        name: Argument,
+        name: &Argument,
         positional_arguments: Vec<String>,
         keywords: Keywords,
         block_end: Option<String>,
     ) {
-        let (line, column) = match get_command_start(&name) {
+        let (line, column) = match get_command_start(name) {
             None => (0, 0),
             Some(Position { line, column }) => (line, column),
         };
-        let canonical_name = argument(name);
+        let canonical_name = name.get_value();
         self.found_commands
             .entry(canonical_name.to_lowercase())
             .or_insert(vec![])
@@ -192,7 +175,7 @@ impl CustomCommandInterpreter {
             }
         };
 
-        self.add_command(name, positional_arguments, keywords, block_end);
+        self.add_command(&name, positional_arguments, keywords, block_end);
     }
 
     fn eval_variables(&self, mut arg: String) -> Vec<String> {
@@ -230,15 +213,15 @@ impl CustomCommandInterpreter {
         };
 
         Some(Keywords {
-            options: self.eval_variables(argument(options.clone())),
-            one_value_keywords: self.eval_variables(argument(one_value_arguments.clone())),
-            multi_value_keywords: self.eval_variables(argument(multi_value_arguments.clone())),
+            options: self.eval_variables(options.get_value()),
+            one_value_keywords: self.eval_variables(one_value_arguments.get_value()),
+            multi_value_keywords: self.eval_variables(multi_value_arguments.get_value()),
             hints: vec![],
         })
     }
 
-    fn set(&mut self, arguments: Arguments) {
-        let arguments = arguments.into_iter().map(argument).collect::<Vec<String>>();
+    fn set(&mut self, arguments: &Arguments) {
+        let arguments = arguments.iter().map(Argument::get_value).collect::<Vec<String>>();
         let Some(name) = arguments.first() else {
             return;
         };
@@ -253,9 +236,9 @@ impl CustomCommandInterpreter {
         self.stack.insert(name.clone(), result);
     }
 
-    fn command_invocation(&mut self, identifier: &str, arguments: Arguments) -> Option<Keywords> {
+    fn command_invocation(&mut self, identifier: &str, arguments: &Arguments) -> Option<Keywords> {
         match identifier {
-            "cmake_parse_arguments" => self.cmake_parse_arguments(&arguments),
+            "cmake_parse_arguments" => self.cmake_parse_arguments(arguments),
             "set" => {
                 self.set(arguments);
                 None
@@ -274,7 +257,7 @@ impl CustomCommandInterpreter {
                 CommandInvocation::KnownCommand {
                     ref identifier,
                     arguments,
-                } => self.command_invocation(identifier, into_arguments(arguments)),
+                } => self.command_invocation(identifier, &into_arguments(arguments)),
                 CommandInvocation::CustomCommand { .. } => None,
             },
         }

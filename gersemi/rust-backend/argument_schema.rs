@@ -1,4 +1,4 @@
-use crate::node::{Node, Nodes};
+use crate::node::{ArgumentsAtom, Node, Nodes, RefinedArgumentsAtom, RefinedArgumentsNode};
 use crate::parser::tree;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
@@ -417,21 +417,51 @@ impl ArgumentSchema {
     }
 }
 
-fn isolate_unary_operators(operators: &[KeywordMatcher], arguments: Nodes) -> Nodes {
-    let mut one_behind: Option<Node> = None;
-    let mut result = Nodes::new();
+impl RefinedArgumentsAtom {
+    pub fn is_one_of_keywords(&self, matchers: &[KeywordMatcher]) -> bool {
+        match self {
+            Self::Atom(atom) => match atom {
+                ArgumentsAtom::CommentedArgument { argument, .. }
+                | ArgumentsAtom::Argument(argument) => {
+                    let value = argument.get_value();
+                    for matcher in matchers {
+                        if matcher.first == value {
+                            return true;
+                        }
+                    }
+                    false
+                }
+                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => false,
+            },
+            Self::BinaryOperation { .. } | Self::UnaryOperation { .. } => false,
+        }
+    }
+}
+
+fn isolate_unary_operators(
+    operators: &[KeywordMatcher],
+    arguments: RefinedArgumentsNode,
+) -> RefinedArgumentsNode {
+    let mut one_behind: Option<RefinedArgumentsAtom> = None;
+    let mut result = RefinedArgumentsNode::new();
     for current in arguments {
         match one_behind {
             None => {
                 one_behind = Some(current);
             }
             Some(one_behind_node) => {
-                if is_one_of_keywords(operators, &one_behind_node) {
-                    if current.is_comment() {
-                        result.push(tree("unary_operation", vec![one_behind_node]));
+                if one_behind_node.is_one_of_keywords(operators) {
+                    if current.clone().into_node().is_comment() {
+                        result.push(RefinedArgumentsAtom::UnaryOperation {
+                            operation: Box::new(one_behind_node),
+                            operand: None,
+                        });
                         result.push(current);
                     } else {
-                        result.push(tree("unary_operation", vec![one_behind_node, current]));
+                        result.push(RefinedArgumentsAtom::UnaryOperation {
+                            operation: Box::new(one_behind_node),
+                            operand: Some(Box::new(current.clone())),
+                        });
                     }
                     one_behind = None;
                 } else {
@@ -449,10 +479,13 @@ fn isolate_unary_operators(operators: &[KeywordMatcher], arguments: Nodes) -> No
     result
 }
 
-fn isolate_binary_tests(operators: &[KeywordMatcher], arguments: Nodes) -> Nodes {
-    let mut two_behind: Option<Node> = None;
-    let mut one_behind: Option<Node> = None;
-    let mut result = Nodes::new();
+fn isolate_binary_tests(
+    operators: &[KeywordMatcher],
+    arguments: RefinedArgumentsNode,
+) -> RefinedArgumentsNode {
+    let mut two_behind: Option<RefinedArgumentsAtom> = None;
+    let mut one_behind: Option<RefinedArgumentsAtom> = None;
+    let mut result = RefinedArgumentsNode::new();
 
     for current in arguments {
         match (two_behind, one_behind) {
@@ -461,11 +494,12 @@ fn isolate_binary_tests(operators: &[KeywordMatcher], arguments: Nodes) -> Nodes
                 one_behind = Some(current);
             }
             (Some(two_behind_node), Some(one_behind_node)) => {
-                if is_one_of_keywords(operators, &one_behind_node) {
-                    result.push(tree(
-                        "binary_operation",
-                        vec![two_behind_node, one_behind_node, current],
-                    ));
+                if one_behind_node.is_one_of_keywords(operators) {
+                    result.push(RefinedArgumentsAtom::BinaryOperation {
+                        lhs: Box::new(two_behind_node),
+                        operation: Box::new(one_behind_node),
+                        rhs: Box::new(current),
+                    });
                     two_behind = None;
                     one_behind = None;
                 } else {
@@ -493,7 +527,7 @@ fn isolate_binary_tests(operators: &[KeywordMatcher], arguments: Nodes) -> Nodes
     result
 }
 
-pub fn isolate_conditions(arguments: Nodes) -> Nodes {
+pub fn isolate_conditions(arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
     let unary_operators = [
         "COMMAND",
         "POLICY",

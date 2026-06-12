@@ -16,7 +16,9 @@ mod gersemi_rust_backend {
     use crate::keyword_preprocessor::{
         keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
     };
-    use crate::node::{Node, Nodes, Start};
+    use crate::node::{
+        ConvertFromNode, Node, Nodes, RefinedArgumentsAtom, RefinedArgumentsNode, Start,
+    };
     use crate::parser::{tree, Error, Parser, ParserDefinitions};
     use crate::sanity_checker::check_equivalence;
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
@@ -37,12 +39,16 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     fn condition_syntax_preprocess_arguments(arguments_node: Node) -> Node {
-        let Node::Tree { data, children } = arguments_node else {
-            return arguments_node;
-        };
+        let arguments: RefinedArgumentsNode = ConvertFromNode::arguments(&arguments_node)
+            .into_iter()
+            .map(RefinedArgumentsAtom::Atom)
+            .collect();
         Node::Tree {
-            data,
-            children: isolate_conditions(children),
+            data: "arguments".to_string(),
+            children: isolate_conditions(arguments)
+                .into_iter()
+                .map(RefinedArgumentsAtom::into_node)
+                .collect(),
         }
     }
 
@@ -151,6 +157,12 @@ mod gersemi_rust_backend {
     #[pyfunction]
     fn safe_indent(s: &str, indent_symbol: &str) -> String {
         crate::formatter::safe_indent(s, indent_symbol)
+    }
+
+    #[pyfunction]
+    fn convert_node(node: Node) -> Option<Node> {
+        let start = crate::node::ConvertFromNode::start(&node);
+        Some(start?.into_node())
     }
 
     #[pyfunction]

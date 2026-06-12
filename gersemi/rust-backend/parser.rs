@@ -556,8 +556,7 @@ impl Parser {
                         arguments,
                         formatted_node: self
                             .formatted_node(custom_formatting_start, custom_formatting_end),
-                        line,
-                        column,
+                        position: Position { line, column },
                     }
                 }
             }
