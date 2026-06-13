@@ -1,7 +1,6 @@
-use crate::argument_schema::is_keyword;
 use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, FileElement,
-    Node, Position, Start,
+    Position, Start,
 };
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
@@ -195,17 +194,8 @@ impl CustomCommandInterpreter {
     }
 
     fn cmake_parse_arguments(&self, children: &Arguments) -> Option<Keywords> {
-        let first_child = children.first()?.clone().into_node();
-        let Node::Tree {
-            ref data,
-            children: ref first_children,
-        } = first_child
-        else {
-            return None;
-        };
-
-        let parse_argv = "PARSE_ARGV".to_string();
-        let part = if is_keyword(&parse_argv, data, first_children) {
+        let first_child = children.first()?.get_value();
+        let part = if "PARSE_ARGV" == first_child {
             [children.get(3), children.get(4), children.get(5)]
         } else {
             [children.get(1), children.get(2), children.get(3)]
