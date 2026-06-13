@@ -426,7 +426,8 @@ impl RefinedArgumentsAtom {
             | Self::MultiValueArgument { .. }
             | Self::PositionalArguments(_)
             | Self::Section { .. }
-            | Self::KeywordArgument { .. } => false,
+            | Self::KeywordArgument { .. }
+            | Self::Pair { .. } => false,
         }
     }
 
@@ -471,7 +472,8 @@ impl RefinedArgumentsAtom {
             | Self::MultiValueArgument { keyword, .. }
             | Self::Section {
                 header: keyword, ..
-            } => keyword.is_one_of_keywords(matchers),
+            }
+            | Self::Pair { first: keyword, .. } => keyword.is_one_of_keywords(matchers),
             Self::BinaryOperation { .. }
             | Self::UnaryOperation { .. }
             | Self::PositionalArguments(_) => false,

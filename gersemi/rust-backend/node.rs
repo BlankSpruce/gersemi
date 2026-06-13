@@ -845,6 +845,10 @@ pub enum RefinedArgumentsAtom {
         in_between: Vec<ArgumentsAtom>,
         second: ArgumentsAtom,
     },
+    Pair {
+        first: Box<RefinedArgumentsAtom>,
+        rest: Vec<RefinedArgumentsAtom>,
+    },
 }
 
 pub type RefinedArgumentsNode = Vec<RefinedArgumentsAtom>;
@@ -914,6 +918,14 @@ impl RefinedArgumentsAtom {
                     result.extend(in_between.into_iter().map(ArgumentsAtom::into_node));
                     result.push(second.into_node());
                     result
+                },
+            },
+            Self::Pair { first, rest } => Node::Tree {
+                data: "pair".to_string(),
+                children: {
+                    let mut children: Nodes = vec![first.into_node()];
+                    children.extend(rest.into_iter().map(RefinedArgumentsAtom::into_node));
+                    children
                 },
             },
         }

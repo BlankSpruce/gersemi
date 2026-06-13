@@ -1,6 +1,6 @@
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
-    CommentedArgumentComment, FileElement, LineComment, Node, Nodes, Position, Start,
+    CommentedArgumentComment, FileElement, LineComment, Position, Start,
 };
 use pyo3::{FromPyObject, PyErr};
 use regex::Regex;
@@ -36,13 +36,6 @@ pub struct Error {
     pub explanation: String,
     pub line: usize,
     pub column: usize,
-}
-
-pub fn tree(data: &str, children: Nodes) -> Node {
-    Node::Tree {
-        data: data.to_string(),
-        children,
-    }
 }
 
 fn add_ignores(pattern: &str) -> String {

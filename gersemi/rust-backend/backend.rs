@@ -19,7 +19,7 @@ mod gersemi_rust_backend {
     use crate::node::{
         ConvertFromNode, Node, Nodes, RefinedArgumentsAtom, RefinedArgumentsNode, Start,
     };
-    use crate::parser::{tree, Error, Parser, ParserDefinitions};
+    use crate::parser::{Error, Parser, ParserDefinitions};
     use crate::sanity_checker::check_equivalence;
     use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
@@ -80,8 +80,13 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     fn pair_arguments(arguments: Nodes) -> Nodes {
-        let mut result = Nodes::new();
-        let mut accumulator = Nodes::new();
+        let arguments: RefinedArgumentsNode = arguments
+            .into_iter()
+            .map(|x| ConvertFromNode::refined_arguments_atom(&x))
+            .collect();
+
+        let mut result = RefinedArgumentsNode::new();
+        let mut accumulator = RefinedArgumentsNode::new();
         for argument in arguments {
             if accumulator.is_empty() {
                 if argument.is_comment() {
@@ -93,16 +98,28 @@ mod gersemi_rust_backend {
                 let is_comment_node = argument.is_comment();
                 accumulator.push(argument);
                 if !is_comment_node {
-                    let accumulator = std::mem::take(&mut accumulator);
-                    result.push(tree("pair", accumulator));
+                    let mut accumulator = std::mem::take(&mut accumulator);
+                    let rest = accumulator.split_off(1);
+                    result.push(RefinedArgumentsAtom::Pair {
+                        first: Box::new(accumulator.pop().unwrap()),
+                        rest,
+                    });
                 }
             }
         }
 
         if !accumulator.is_empty() {
-            result.push(tree("pair", accumulator));
+            let rest = accumulator.split_off(1);
+            result.push(RefinedArgumentsAtom::Pair {
+                first: Box::new(accumulator.pop().unwrap()),
+                rest,
+            });
         }
+
         result
+            .into_iter()
+            .map(RefinedArgumentsAtom::into_node)
+            .collect()
     }
 
     #[pyfunction]
