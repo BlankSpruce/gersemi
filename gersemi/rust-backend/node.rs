@@ -48,15 +48,6 @@ impl<'py> IntoPyObject<'py> for Node {
 
 pub type Nodes = Vec<Node>;
 
-impl Node {
-    pub fn is_comment(&self) -> bool {
-        match self {
-            Node::Token { .. } => false,
-            Node::Tree { data, .. } => data == "bracket_comment" || data == "line_comment",
-        }
-    }
-}
-
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Position {
     pub line: usize,
@@ -671,6 +662,44 @@ impl ConvertFromNode {
             return todo;
         };
         match data.as_str() {
+            "binary_operation" => RefinedArgumentsAtom::BinaryOperation {
+                lhs: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+                operation: Box::new(Self::refined_arguments_atom(children.get(1).expect(data))),
+                rhs: Box::new(Self::refined_arguments_atom(children.get(2).expect(data))),
+            },
+            "unary_operation" => RefinedArgumentsAtom::UnaryOperation {
+                operation: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+                operand: children
+                    .get(1)
+                    .map(|operand| Box::new(Self::refined_arguments_atom(operand))),
+            },
+            "option_argument" => RefinedArgumentsAtom::OptionArgument {
+                keyword: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+            },
+            "one_value_argument" => RefinedArgumentsAtom::OneValueArgument {
+                keyword: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+                arguments: children[1..]
+                    .iter()
+                    .map(Self::refined_arguments_atom)
+                    .collect(),
+            },
+            "multi_value_argument" => RefinedArgumentsAtom::MultiValueArgument {
+                keyword: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+                arguments: children[1..]
+                    .iter()
+                    .map(Self::refined_arguments_atom)
+                    .collect(),
+            },
+            "positional_arguments" => RefinedArgumentsAtom::PositionalArguments(
+                children.iter().map(Self::refined_arguments_atom).collect(),
+            ),
+            "section" => RefinedArgumentsAtom::Section {
+                header: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+                values: children[1..]
+                    .iter()
+                    .map(Self::refined_arguments_atom)
+                    .collect(),
+            },
             "keyword_argument" => RefinedArgumentsAtom::KeywordArgument {
                 first: Self::arguments_atom(children.first().expect(data)),
                 in_between: children[1..children.len() - 1]
@@ -678,6 +707,13 @@ impl ConvertFromNode {
                     .map(Self::arguments_atom)
                     .collect(),
                 second: Self::arguments_atom(children.last().expect(data)),
+            },
+            "pair" => RefinedArgumentsAtom::Pair {
+                first: Box::new(Self::refined_arguments_atom(children.first().expect(data))),
+                rest: children[1..]
+                    .iter()
+                    .map(Self::refined_arguments_atom)
+                    .collect(),
             },
             _ => RefinedArgumentsAtom::Atom(Self::arguments_atom(node)),
         }

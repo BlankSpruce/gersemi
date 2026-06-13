@@ -1,44 +1,131 @@
 use std::collections::HashSet;
 
-use crate::node::{Node, Nodes};
+use crate::node::{
+    Argument, ArgumentsAtom, BracketComment, CommentedArgumentComment, LineComment,
+    RefinedArgumentsAtom, RefinedArgumentsNode,
+};
 
-fn get_node_value(node: &Node, case_insensitive: bool) -> String {
-    let result = match node {
-        Node::Token { value, .. } => value.clone(),
-        Node::Tree { data, children } => {
-            let result = children
-                .iter()
-                .map(|child| get_node_value(child, case_insensitive))
-                .collect::<String>();
-            match data.as_str() {
-                "complex_argument" => format!("({result})"),
-                _ => result,
-            }
+fn get_argument_value(argument: &Argument) -> String {
+    match argument {
+        Argument::Bracket {
+            start, value, end, ..
+        } => format!("{start}{value}{end}"),
+        Argument::Complex { arguments } => {
+            format!(
+                "({})",
+                arguments.iter().map(get_atom_value).collect::<String>()
+            )
         }
-    };
-    if case_insensitive {
-        result.to_lowercase()
-    } else {
-        result
+        Argument::Quoted { value, .. } => format!("\"{value}\""),
+        Argument::Unquoted { value, .. } => value.clone(),
     }
 }
 
-type Bucket = Vec<Node>;
+fn get_atom_value(atom: &ArgumentsAtom) -> String {
+    match atom {
+        ArgumentsAtom::CommentedArgument { argument, comment } => {
+            let comment_value = match comment {
+                CommentedArgumentComment::BracketComment(BracketComment { value })
+                | CommentedArgumentComment::LineComment {
+                    comment: LineComment { value },
+                    ..
+                } => value,
+            };
+            format!("{}{}", get_argument_value(argument), comment_value)
+        }
+        ArgumentsAtom::Argument(argument) => get_argument_value(argument),
+        ArgumentsAtom::BracketComment(BracketComment { value })
+        | ArgumentsAtom::LineComment(LineComment { value }) => value.clone(),
+    }
+}
+
+fn get_node_value(atom: &RefinedArgumentsAtom) -> String {
+    let mut result = String::new();
+    let mut add = |atom| result.push_str(&get_node_value(atom));
+    match atom {
+        RefinedArgumentsAtom::Atom(atom) => {
+            result.push_str(&get_atom_value(atom));
+        }
+        RefinedArgumentsAtom::BinaryOperation {
+            lhs,
+            operation,
+            rhs,
+        } => {
+            add(lhs);
+            add(operation);
+            add(rhs);
+        }
+        RefinedArgumentsAtom::UnaryOperation { operation, operand } => {
+            add(operation);
+            operand.as_deref().map(get_node_value);
+        }
+        RefinedArgumentsAtom::OptionArgument { keyword } => {
+            add(keyword);
+        }
+        RefinedArgumentsAtom::PositionalArguments(arguments) => {
+            for arg in arguments {
+                add(arg);
+            }
+        }
+        RefinedArgumentsAtom::KeywordArgument {
+            first,
+            in_between,
+            second,
+        } => {
+            result.push_str(&get_atom_value(first));
+            for arg in in_between {
+                result.push_str(&get_atom_value(arg));
+            }
+            result.push_str(&get_atom_value(second));
+        }
+        RefinedArgumentsAtom::OneValueArgument {
+            keyword: first,
+            arguments: rest,
+        }
+        | RefinedArgumentsAtom::MultiValueArgument {
+            keyword: first,
+            arguments: rest,
+        }
+        | RefinedArgumentsAtom::Section {
+            header: first,
+            values: rest,
+        }
+        | RefinedArgumentsAtom::Pair { first, rest } => {
+            add(first);
+            for arg in rest {
+                add(arg);
+            }
+        }
+    }
+
+    result
+}
+
+type Bucket = Vec<RefinedArgumentsAtom>;
+
+fn get_node_value_impl(atom: &RefinedArgumentsAtom, case_insensitive: bool) -> String {
+    let value = get_node_value(atom);
+    if case_insensitive {
+        value.to_lowercase()
+    } else {
+        value
+    }
+}
 
 fn get_bucket_value(bucket: &Bucket, case_insensitive: bool) -> (String, Vec<String>) {
     let node = bucket.last().unwrap();
     (
-        get_node_value(node, case_insensitive),
+        get_node_value_impl(node, case_insensitive),
         bucket
             .iter()
-            .map(|node| get_node_value(node, case_insensitive))
+            .map(|x| get_node_value_impl(x, case_insensitive))
             .collect(),
     )
 }
 
-fn bucket_arguments_with_their_preceding_comments(nodes: Nodes) -> Vec<Bucket> {
+fn bucket_arguments_with_their_preceding_comments(nodes: RefinedArgumentsNode) -> Vec<Bucket> {
     let mut result = Vec::<Bucket>::new();
-    let mut accumulator = Bucket::new();
+    let mut accumulator = RefinedArgumentsNode::new();
     for node in nodes {
         let is_comment_node = node.is_comment();
         accumulator.push(node);
@@ -55,7 +142,7 @@ fn bucket_arguments_with_their_preceding_comments(nodes: Nodes) -> Vec<Bucket> {
     result
 }
 
-pub fn keep_unique_arguments(nodes: Nodes) -> Nodes {
+pub fn keep_unique_arguments(nodes: RefinedArgumentsNode) -> RefinedArgumentsNode {
     let buckets = bucket_arguments_with_their_preceding_comments(nodes);
     let mut known = HashSet::<(String, Vec<String>)>::new();
     let mut unique_buckets = Vec::<Bucket>::new();
@@ -67,7 +154,7 @@ pub fn keep_unique_arguments(nodes: Nodes) -> Nodes {
         }
     }
 
-    let mut result = Nodes::new();
+    let mut result = RefinedArgumentsNode::new();
     for bucket in unique_buckets {
         for node in bucket {
             result.push(node);
@@ -77,11 +164,11 @@ pub fn keep_unique_arguments(nodes: Nodes) -> Nodes {
     result
 }
 
-pub fn sort_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
+pub fn sort_arguments(nodes: RefinedArgumentsNode, case_insensitive: bool) -> RefinedArgumentsNode {
     let mut buckets = bucket_arguments_with_their_preceding_comments(nodes);
     buckets.sort_by_key(|bucket| get_bucket_value(bucket, case_insensitive));
 
-    let mut result = Nodes::new();
+    let mut result = RefinedArgumentsNode::new();
     for bucket in buckets {
         for node in bucket {
             result.push(node);
@@ -91,6 +178,9 @@ pub fn sort_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
     result
 }
 
-pub fn sort_and_keep_unique_arguments(nodes: Nodes, case_insensitive: bool) -> Nodes {
+pub fn sort_and_keep_unique_arguments(
+    nodes: RefinedArgumentsNode,
+    case_insensitive: bool,
+) -> RefinedArgumentsNode {
     sort_arguments(keep_unique_arguments(nodes), case_insensitive)
 }

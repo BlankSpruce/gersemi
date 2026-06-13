@@ -129,12 +129,22 @@ mod gersemi_rust_backend {
         preprocessor: String,
         case_insensitive: bool,
     ) -> Nodes {
-        match preprocessor.as_str() {
+        let nodes: RefinedArgumentsNode = nodes
+            .into_iter()
+            .map(|x| ConvertFromNode::refined_arguments_atom(&x))
+            .collect();
+
+        let nodes = match preprocessor.as_str() {
             "sort" => sort_arguments(nodes, case_insensitive),
             "unique" => keep_unique_arguments(nodes),
             "sort+unique" => sort_and_keep_unique_arguments(nodes, case_insensitive),
             _ => nodes,
-        }
+        };
+
+        nodes
+            .into_iter()
+            .map(RefinedArgumentsAtom::into_node)
+            .collect()
     }
 
     #[pyfunction]
