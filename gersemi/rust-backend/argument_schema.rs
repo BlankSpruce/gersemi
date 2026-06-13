@@ -1,5 +1,4 @@
-use crate::node::{ArgumentsAtom, Node, Nodes, RefinedArgumentsAtom, RefinedArgumentsNode};
-use crate::parser::tree;
+use crate::node::{ArgumentsAtom, Node, RefinedArgumentsAtom, RefinedArgumentsNode};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
@@ -130,31 +129,36 @@ enum AccumulatorKind {
 
 struct Accumulator {
     kind: AccumulatorKind,
-    nodes: Nodes,
+    nodes: RefinedArgumentsNode,
 }
 
 struct KeywordSplitter {
-    groups: Nodes,
+    groups: RefinedArgumentsNode,
     accumulator: Accumulator,
-    comment_accumulator: Nodes,
+    comment_accumulator: RefinedArgumentsNode,
 }
 
 impl KeywordSplitter {
     fn flush_accumulators(&mut self) {
-        let nodes = std::mem::take(&mut self.accumulator.nodes);
+        let mut nodes = std::mem::take(&mut self.accumulator.nodes);
         if !nodes.is_empty() {
-            self.groups.push(tree(
-                match self.accumulator.kind {
-                    AccumulatorKind::PositionalArguments => "positional_arguments",
-                    AccumulatorKind::Nodes => "multi_value_argument",
-                },
-                nodes,
-            ));
+            self.groups.push(match self.accumulator.kind {
+                AccumulatorKind::PositionalArguments => {
+                    RefinedArgumentsAtom::PositionalArguments(nodes)
+                }
+                AccumulatorKind::Nodes => {
+                    let arguments = nodes.split_off(1);
+                    RefinedArgumentsAtom::MultiValueArgument {
+                        keyword: Box::new(nodes.pop().unwrap()),
+                        arguments,
+                    }
+                }
+            });
         }
         self.groups.append(&mut self.comment_accumulator);
     }
 
-    fn split(&mut self, schema: &ArgumentSchema, arguments: Nodes) {
+    fn split(&mut self, schema: &ArgumentSchema, arguments: RefinedArgumentsNode) {
         let mut iterator = arguments.into_iter();
 
         while let Some(argument) = iterator.next() {
@@ -162,18 +166,23 @@ impl KeywordSplitter {
                 self.comment_accumulator.push(argument);
             } else if schema.is_one_of_options(&argument) {
                 self.flush_accumulators();
-                self.groups.push(tree("option_argument", vec![argument]));
+                self.groups.push(RefinedArgumentsAtom::OptionArgument {
+                    keyword: Box::new(argument),
+                });
             } else if schema.is_one_of_one_value_keywords(&argument) {
                 self.flush_accumulators();
-                let mut group = vec![argument];
+                let mut arguments = vec![];
                 for n in iterator.by_ref() {
                     let stop = !n.is_comment();
-                    group.push(n);
+                    arguments.push(n);
                     if stop {
                         break;
                     }
                 }
-                self.groups.push(tree("one_value_argument", group));
+                self.groups.push(RefinedArgumentsAtom::OneValueArgument {
+                    keyword: Box::new(argument),
+                    arguments,
+                });
             } else if schema.is_one_of_multi_value_keywords(&argument) {
                 self.flush_accumulators();
                 self.accumulator.kind = AccumulatorKind::Nodes;
@@ -195,16 +204,6 @@ impl KeywordSplitter {
     }
 }
 
-fn is_among_section_keywords(section_schema: Option<&ArgumentSchema>, argument: &Node) -> bool {
-    match section_schema {
-        None => false,
-        Some(section_schema) => match argument {
-            Node::Token { .. } => false,
-            Node::Tree { children, .. } => section_schema.is_one_of_schema_keywords(&children[0]),
-        },
-    }
-}
-
 pub fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
     for matcher in matchers {
         if matcher.matches(node) {
@@ -215,25 +214,25 @@ pub fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
 }
 
 impl ArgumentSchema {
-    fn is_one_of_options(&self, node: &Node) -> bool {
-        is_one_of_keywords(&self.options, node)
+    fn is_one_of_options(&self, node: &RefinedArgumentsAtom) -> bool {
+        node.is_one_of_keywords(&self.options)
     }
 
-    fn is_one_of_one_value_keywords(&self, node: &Node) -> bool {
-        is_one_of_keywords(&self.one_value_keywords, node)
+    fn is_one_of_one_value_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
+        node.is_one_of_keywords(&self.one_value_keywords)
     }
 
-    fn is_one_of_multi_value_keywords(&self, node: &Node) -> bool {
-        is_one_of_keywords(&self.multi_value_keywords, node)
+    fn is_one_of_multi_value_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
+        node.is_one_of_keywords(&self.multi_value_keywords)
     }
 
-    fn is_one_of_schema_keywords(&self, node: &Node) -> bool {
+    fn is_one_of_schema_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
         self.is_one_of_options(node)
             || self.is_one_of_one_value_keywords(node)
             || self.is_one_of_multi_value_keywords(node)
     }
 
-    fn find_pivot(&self, arguments: &[Node]) -> Option<usize> {
+    fn find_pivot(&self, arguments: &[RefinedArgumentsAtom]) -> Option<usize> {
         for (index, argument) in arguments.iter().enumerate() {
             if self.is_one_of_schema_keywords(argument) {
                 return Some(index);
@@ -242,7 +241,10 @@ impl ArgumentSchema {
         None
     }
 
-    fn separate_front(&self, mut arguments: Nodes) -> (Nodes, Nodes) {
+    fn separate_front(
+        &self,
+        mut arguments: RefinedArgumentsNode,
+    ) -> (RefinedArgumentsNode, RefinedArgumentsNode) {
         match self.find_pivot(&arguments) {
             None => (arguments, vec![]),
             Some(pivot) => {
@@ -252,22 +254,25 @@ impl ArgumentSchema {
         }
     }
 
-    fn split_positional_arguments(&self, mut arguments: Nodes) -> Nodes {
+    fn split_positional_arguments(
+        &self,
+        mut arguments: RefinedArgumentsNode,
+    ) -> RefinedArgumentsNode {
         let last_index = min(arguments.len(), self.front_positional_arguments.len());
         let rest = arguments.split_off(last_index);
         let mut arguments = arguments
             .into_iter()
-            .map(|argument| tree("positional_arguments", vec![argument]))
+            .map(|argument| RefinedArgumentsAtom::PositionalArguments(vec![argument]))
             .collect::<Vec<_>>();
 
         if !rest.is_empty() {
-            arguments.push(tree("positional_arguments", rest));
+            arguments.push(RefinedArgumentsAtom::PositionalArguments(rest));
         }
 
         arguments
     }
 
-    fn split_by_keywords(&self, arguments: Nodes) -> Nodes {
+    fn split_by_keywords(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
         let mut keyword_splitter = KeywordSplitter {
             groups: vec![],
             accumulator: Accumulator {
@@ -280,7 +285,7 @@ impl ArgumentSchema {
         keyword_splitter.groups
     }
 
-    fn split_arguments(&self, mut arguments: Nodes) -> Nodes {
+    fn split_arguments(&self, mut arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
         let back = if self.back_positional_arguments.len() > arguments.len() {
             vec![]
         } else {
@@ -295,105 +300,96 @@ impl ArgumentSchema {
             .into_iter()
             .chain(keyworded_arguments)
             .chain(back)
-            .collect::<Nodes>()
+            .collect()
     }
 
-    fn get_section_schema(&self, node: &Node) -> Option<&ArgumentSchema> {
+    fn get_section_schema(&self, argument: &RefinedArgumentsAtom) -> Option<&ArgumentSchema> {
         for (item, schema) in &self.sections {
-            if item.matches(node) {
+            if argument.is_one_of_keywords(std::slice::from_ref(item)) {
                 return Some(schema);
             }
         }
         None
     }
 
-    fn split_multi_value_argument(&self, data: String, children: Nodes) -> Node {
-        let first_node = children.first();
-        let Some(first_node) = first_node else {
-            return Node::Tree { data, children };
+    fn split_multi_value_argument(
+        &self,
+        keyword: RefinedArgumentsAtom,
+        arguments: Vec<RefinedArgumentsAtom>,
+    ) -> RefinedArgumentsAtom {
+        let Some(section_schema) = self.get_section_schema(&keyword) else {
+            return RefinedArgumentsAtom::MultiValueArgument {
+                keyword: Box::new(keyword),
+                arguments,
+            };
         };
 
-        let Some(section_schema) = self.get_section_schema(first_node) else {
-            return Node::Tree { data, children };
-        };
-
-        let mut result = children;
-        let rest = result.split_off(1);
-        let rest = section_schema.split_arguments_with_sections(rest);
+        let rest = section_schema.split_arguments_with_sections(arguments);
+        let mut values = Vec::<RefinedArgumentsAtom>::new();
         for argument in rest {
             match argument {
-                Node::Token { .. } => result.push(argument),
-                Node::Tree { data, mut children } => match data.as_str() {
-                    "positional_arguments" => result.append(&mut children),
-                    _ => result.push(Node::Tree { data, children }),
-                },
+                RefinedArgumentsAtom::PositionalArguments(mut arguments) => {
+                    values.append(&mut arguments);
+                }
+                _ => values.push(argument),
             }
         }
 
-        tree("section", result)
+        RefinedArgumentsAtom::Section {
+            header: Box::new(keyword),
+            values,
+        }
     }
 
-    fn fix_back_positional_arguments(&self, data: &str, section_children: &mut Nodes) {
-        if data != "section" {
-            return;
-        }
-
+    fn fix_back_positional_arguments(&self, section_values: &mut Vec<RefinedArgumentsAtom>) {
         let pivot = self.back_positional_arguments.len();
         if pivot == 0 {
             return;
         }
 
-        let last = section_children.last_mut();
-        let Some(Node::Tree {
-            data,
-            children: last_children,
-        }) = last
-        else {
+        let last = section_values.last_mut();
+        let Some(atom) = last else {
             return;
         };
 
-        match data.as_str() {
-            "one_value_argument" | "multi_value_argument" => {
-                let last_rest = last_children.split_off(1);
+        match atom {
+            RefinedArgumentsAtom::OneValueArgument { arguments, .. }
+            | RefinedArgumentsAtom::MultiValueArgument { arguments, .. } => {
+                let last_rest = arguments.split_off(1);
 
                 let mut left_in_place = last_rest;
                 let back_positional_arguments =
                     left_in_place.split_off(left_in_place.len() - pivot);
-                last_children.append(&mut left_in_place);
+                arguments.append(&mut left_in_place);
 
-                section_children.push(tree("positional_arguments", back_positional_arguments));
+                section_values.push(RefinedArgumentsAtom::PositionalArguments(
+                    back_positional_arguments,
+                ));
             }
             _ => (),
         }
     }
 
-    fn form_sections(&self, arguments: Nodes) -> Nodes {
-        let mut result = Nodes::new();
+    fn form_sections(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
+        let mut result = RefinedArgumentsNode::new();
         let mut section_schema: Option<&ArgumentSchema> = None;
 
         for argument in arguments {
-            if is_among_section_keywords(section_schema, &argument) {
+            if section_schema.is_some_and(|x| x.is_one_of_schema_keywords(&argument)) {
                 let last = result.last_mut();
-                if let Some(Node::Tree { children, .. }) = last {
-                    children.push(argument);
+                if let Some(RefinedArgumentsAtom::Section { values, .. }) = last {
+                    values.push(argument);
                 }
             } else {
                 if let Some(section_schema) = section_schema {
-                    if let Some(Node::Tree { data, children }) = result.last_mut() {
-                        section_schema.fix_back_positional_arguments(data, children);
+                    if let Some(RefinedArgumentsAtom::Section { ref mut values, .. }) =
+                        result.last_mut()
+                    {
+                        section_schema.fix_back_positional_arguments(values);
                     }
                 }
 
-                section_schema = if let Node::Tree { children, .. } = &argument {
-                    if let Some(first) = children.first() {
-                        self.get_section_schema(first)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                };
-
+                section_schema = self.get_section_schema(&argument);
                 result.push(argument);
             }
         }
@@ -401,16 +397,18 @@ impl ArgumentSchema {
         result
     }
 
-    pub fn split_arguments_with_sections(&self, arguments: Nodes) -> Nodes {
+    pub fn split_arguments_with_sections(
+        &self,
+        arguments: RefinedArgumentsNode,
+    ) -> RefinedArgumentsNode {
         let arguments = self.split_arguments(arguments);
         let preprocessed = arguments
             .into_iter()
             .map(|argument| match argument {
-                Node::Token { .. } => argument,
-                Node::Tree { data, children } => match data.as_str() {
-                    "multi_value_argument" => self.split_multi_value_argument(data, children),
-                    _ => Node::Tree { data, children },
-                },
+                RefinedArgumentsAtom::MultiValueArgument { keyword, arguments } => {
+                    self.split_multi_value_argument(*keyword, arguments)
+                }
+                _ => argument,
             })
             .collect();
         self.form_sections(preprocessed)
@@ -418,22 +416,68 @@ impl ArgumentSchema {
 }
 
 impl RefinedArgumentsAtom {
-    pub fn is_one_of_keywords(&self, matchers: &[KeywordMatcher]) -> bool {
+    pub fn is_comment(&self) -> bool {
         match self {
             Self::Atom(atom) => match atom {
-                ArgumentsAtom::CommentedArgument { argument, .. }
-                | ArgumentsAtom::Argument(argument) => {
-                    let value = argument.get_value();
+                ArgumentsAtom::CommentedArgument { .. } | ArgumentsAtom::Argument(_) => false,
+                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => true,
+            },
+            Self::BinaryOperation { .. }
+            | Self::UnaryOperation { .. }
+            | Self::OptionArgument { .. }
+            | Self::OneValueArgument { .. }
+            | Self::MultiValueArgument { .. }
+            | Self::PositionalArguments(_)
+            | Self::Section { .. }
+            | Self::KeywordArgument { .. } => false,
+        }
+    }
+
+    pub fn is_one_of_keywords(&self, matchers: &[KeywordMatcher]) -> bool {
+        match self {
+            Self::Atom(atom) => match atom.get_value() {
+                None => false,
+                Some(value) => {
                     for matcher in matchers {
-                        if matcher.first == value {
+                        if (matcher.first == value) && matcher.second.is_none() {
                             return true;
                         }
                     }
                     false
                 }
-                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => false,
             },
-            Self::BinaryOperation { .. } | Self::UnaryOperation { .. } => false,
+            Self::KeywordArgument { first, second, .. } => {
+                let Some(first_value) = first.get_value() else {
+                    return false;
+                };
+                let second_value = second.get_value();
+                for matcher in matchers {
+                    if matcher.first != first_value {
+                        continue;
+                    }
+
+                    match &matcher.second {
+                        None | Some(SecondKeyword::Any) => {
+                            return true;
+                        }
+                        Some(SecondKeyword::String(second)) => {
+                            if Some(second) == second_value.as_ref() {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                false
+            }
+            Self::OptionArgument { keyword }
+            | Self::OneValueArgument { keyword, .. }
+            | Self::MultiValueArgument { keyword, .. }
+            | Self::Section {
+                header: keyword, ..
+            } => keyword.is_one_of_keywords(matchers),
+            Self::BinaryOperation { .. }
+            | Self::UnaryOperation { .. }
+            | Self::PositionalArguments(_) => false,
         }
     }
 }
@@ -451,7 +495,7 @@ fn isolate_unary_operators(
             }
             Some(one_behind_node) => {
                 if one_behind_node.is_one_of_keywords(operators) {
-                    if current.clone().into_node().is_comment() {
+                    if current.is_comment() {
                         result.push(RefinedArgumentsAtom::UnaryOperation {
                             operation: Box::new(one_behind_node),
                             operand: None,

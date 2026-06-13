@@ -34,7 +34,15 @@ mod gersemi_rust_backend {
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn dumper_split_arguments(schema: ArgumentSchema, arguments: Nodes) -> Nodes {
-        schema.split_arguments_with_sections(arguments)
+        let arguments: RefinedArgumentsNode = arguments
+            .into_iter()
+            .map(|x| ConvertFromNode::refined_arguments_atom(&x))
+            .collect();
+        schema
+            .split_arguments_with_sections(arguments)
+            .into_iter()
+            .map(RefinedArgumentsAtom::into_node)
+            .collect()
     }
 
     #[pyfunction]

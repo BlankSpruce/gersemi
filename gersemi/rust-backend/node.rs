@@ -2,7 +2,7 @@ use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyAnyMethods, PyType};
 use pyo3::{Bound, FromPyObject, IntoPyObject, Py, PyAny, PyErr, Python};
 
-#[derive(Clone, FromPyObject)]
+#[derive(FromPyObject)]
 pub enum Node {
     Tree {
         data: String,
@@ -175,6 +175,14 @@ pub enum ArgumentsAtom {
 }
 
 impl ArgumentsAtom {
+    pub fn get_value(&self) -> Option<String> {
+        match self {
+            ArgumentsAtom::CommentedArgument { argument, .. }
+            | ArgumentsAtom::Argument(argument) => Some(argument.get_value()),
+            ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
+        }
+    }
+
     pub fn into_node(self) -> Node {
         match self {
             Self::CommentedArgument { argument, comment } => Node::Tree {
@@ -606,7 +614,7 @@ impl ConvertFromNode {
         }
     }
 
-    fn arguments_atom(node: &Node) -> ArgumentsAtom {
+    pub fn arguments_atom(node: &Node) -> ArgumentsAtom {
         let todo = ArgumentsAtom::LineComment(Self::line_comment(node));
         let Node::Tree { data, children } = node else {
             return todo;
@@ -638,6 +646,24 @@ impl ConvertFromNode {
             return vec![];
         }
         children.iter().map(Self::arguments_atom).collect()
+    }
+
+    pub fn refined_arguments_atom(node: &Node) -> RefinedArgumentsAtom {
+        let todo = RefinedArgumentsAtom::Atom(ArgumentsAtom::LineComment(Self::line_comment(node)));
+        let Node::Tree { data, children } = node else {
+            return todo;
+        };
+        match data.as_str() {
+            "keyword_argument" => RefinedArgumentsAtom::KeywordArgument {
+                first: Self::arguments_atom(children.first().expect(data)),
+                in_between: children[1..children.len() - 1]
+                    .iter()
+                    .map(Self::arguments_atom)
+                    .collect(),
+                second: Self::arguments_atom(children.last().expect(data)),
+            },
+            _ => RefinedArgumentsAtom::Atom(Self::arguments_atom(node)),
+        }
     }
 
     fn command_invocation(node: &Node) -> CommandInvocation {
@@ -781,6 +807,27 @@ pub enum RefinedArgumentsAtom {
         operation: Box<RefinedArgumentsAtom>,
         operand: Option<Box<RefinedArgumentsAtom>>,
     },
+    OptionArgument {
+        keyword: Box<RefinedArgumentsAtom>,
+    },
+    OneValueArgument {
+        keyword: Box<RefinedArgumentsAtom>,
+        arguments: Vec<RefinedArgumentsAtom>,
+    },
+    MultiValueArgument {
+        keyword: Box<RefinedArgumentsAtom>,
+        arguments: Vec<RefinedArgumentsAtom>,
+    },
+    PositionalArguments(Vec<RefinedArgumentsAtom>),
+    Section {
+        header: Box<RefinedArgumentsAtom>,
+        values: Vec<RefinedArgumentsAtom>,
+    },
+    KeywordArgument {
+        first: ArgumentsAtom,
+        in_between: Vec<ArgumentsAtom>,
+        second: ArgumentsAtom,
+    },
 }
 
 pub type RefinedArgumentsNode = Vec<RefinedArgumentsAtom>;
@@ -802,6 +849,54 @@ impl RefinedArgumentsAtom {
                 children: match operand {
                     None => vec![operation.into_node()],
                     Some(operand) => vec![operation.into_node(), operand.into_node()],
+                },
+            },
+            Self::OptionArgument { keyword } => Node::Tree {
+                data: "option_argument".to_string(),
+                children: vec![keyword.into_node()],
+            },
+            Self::OneValueArgument { keyword, arguments } => Node::Tree {
+                data: "one_value_argument".to_string(),
+                children: {
+                    let mut children: Nodes = vec![keyword.into_node()];
+                    children.extend(arguments.into_iter().map(RefinedArgumentsAtom::into_node));
+                    children
+                },
+            },
+            Self::MultiValueArgument { keyword, arguments } => Node::Tree {
+                data: "multi_value_argument".to_string(),
+                children: {
+                    let mut children: Nodes = vec![keyword.into_node()];
+                    children.extend(arguments.into_iter().map(RefinedArgumentsAtom::into_node));
+                    children
+                },
+            },
+            Self::PositionalArguments(arguments) => Node::Tree {
+                data: "positional_arguments".to_string(),
+                children: arguments
+                    .into_iter()
+                    .map(RefinedArgumentsAtom::into_node)
+                    .collect(),
+            },
+            Self::Section { header, values } => Node::Tree {
+                data: "section".to_string(),
+                children: {
+                    let mut children: Nodes = vec![header.into_node()];
+                    children.extend(values.into_iter().map(RefinedArgumentsAtom::into_node));
+                    children
+                },
+            },
+            Self::KeywordArgument {
+                first,
+                in_between,
+                second,
+            } => Node::Tree {
+                data: "keyword_argument".to_string(),
+                children: {
+                    let mut result = vec![first.into_node()];
+                    result.extend(in_between.into_iter().map(ArgumentsAtom::into_node));
+                    result.push(second.into_node());
+                    result
                 },
             },
         }

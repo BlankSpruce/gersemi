@@ -51,7 +51,10 @@ fn new_command(identifier: &str, node: ArgumentsNode) -> Option<(Argument, Vec<S
     let positional_arguments: Arguments = arguments.drain(1..).collect();
     let name = arguments.pop();
 
-    let positional_arguments = positional_arguments.iter().map(Argument::get_value).collect();
+    let positional_arguments = positional_arguments
+        .iter()
+        .map(Argument::get_value)
+        .collect();
     Some((name?, positional_arguments))
 }
 
@@ -221,7 +224,10 @@ impl CustomCommandInterpreter {
     }
 
     fn set(&mut self, arguments: &Arguments) {
-        let arguments = arguments.iter().map(Argument::get_value).collect::<Vec<String>>();
+        let arguments = arguments
+            .iter()
+            .map(Argument::get_value)
+            .collect::<Vec<String>>();
         let Some(name) = arguments.first() else {
             return;
         };
