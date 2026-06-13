@@ -65,15 +65,16 @@ mod gersemi_rust_backend {
         two_words_keywords: Vec<TwoWordKeywordMatcher>,
         arguments_node: Node,
     ) -> Node {
-        let Node::Tree { data, children } = arguments_node else {
-            return arguments_node;
-        };
+        let arguments: RefinedArgumentsNode = ConvertFromNode::refined_arguments(&arguments_node);
         Node::Tree {
-            data,
+            data: "arguments".to_string(),
             children: crate::two_words_keyword_isolator::preprocess_arguments(
                 two_words_keywords,
-                children,
-            ),
+                arguments,
+            )
+            .into_iter()
+            .map(RefinedArgumentsAtom::into_node)
+            .collect(),
         }
     }
 

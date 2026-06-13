@@ -1,4 +1,4 @@
-use crate::node::{ArgumentsAtom, Node, RefinedArgumentsAtom, RefinedArgumentsNode};
+use crate::node::{Node, RefinedArgumentsAtom, RefinedArgumentsNode};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
@@ -418,10 +418,7 @@ impl ArgumentSchema {
 impl RefinedArgumentsAtom {
     pub fn is_comment(&self) -> bool {
         match self {
-            Self::Atom(atom) => match atom {
-                ArgumentsAtom::CommentedArgument { .. } | ArgumentsAtom::Argument(_) => false,
-                ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => true,
-            },
+            Self::Atom(atom) => atom.is_comment(),
             Self::BinaryOperation { .. }
             | Self::UnaryOperation { .. }
             | Self::OptionArgument { .. }

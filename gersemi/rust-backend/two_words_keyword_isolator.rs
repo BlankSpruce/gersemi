@@ -1,6 +1,5 @@
-use crate::argument_schema::{is_keyword, SecondKeyword};
-use crate::node::{Node, Nodes};
-use crate::parser::tree;
+use crate::argument_schema::SecondKeyword;
+use crate::node::{ArgumentsNode, RefinedArgumentsAtom, RefinedArgumentsNode};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
@@ -34,21 +33,24 @@ impl FromPyObject<'_, '_> for TwoWordKeywordMatcher {
     }
 }
 
-fn isolate_two_words_keyword(matcher: &TwoWordKeywordMatcher, arguments: Nodes) -> Nodes {
-    let mut result = Nodes::new();
-    let mut accumulator = Nodes::new();
+fn isolate_two_words_keyword(
+    matcher: &TwoWordKeywordMatcher,
+    arguments: RefinedArgumentsNode,
+) -> RefinedArgumentsNode {
+    let mut result = RefinedArgumentsNode::new();
+    let mut accumulator = ArgumentsNode::new();
     for argument in arguments {
+        let RefinedArgumentsAtom::Atom(argument) = argument else {
+            result.push(argument);
+            continue;
+        };
         if accumulator.is_empty() {
-            match &argument {
-                Node::Token { .. } => {
-                    result.push(argument);
+            match argument.get_value() {
+                Some(value) if value == matcher.first => {
+                    accumulator = vec![argument];
                 }
-                Node::Tree { data, children } => {
-                    if is_keyword(&matcher.first, data, children) {
-                        accumulator = vec![argument];
-                    } else {
-                        result.push(argument);
-                    }
+                _ => {
+                    result.push(RefinedArgumentsAtom::Atom(argument));
                 }
             }
         } else if argument.is_comment() {
@@ -56,29 +58,38 @@ fn isolate_two_words_keyword(matcher: &TwoWordKeywordMatcher, arguments: Nodes) 
         } else {
             let is_keyword_argument = match &matcher.second {
                 SecondKeyword::Any => true,
-                SecondKeyword::String(m) => match &argument {
-                    Node::Token { .. } => false,
-                    Node::Tree { data, children } => is_keyword(m, data, children),
+                SecondKeyword::String(m) => match argument.get_value() {
+                    Some(value) => value == *m,
+                    None => false,
                 },
             };
             if is_keyword_argument {
-                accumulator.push(argument);
-                result.push(tree("keyword_argument", std::mem::take(&mut accumulator)));
+                let in_between = accumulator.split_off(1);
+                result.push(RefinedArgumentsAtom::KeywordArgument {
+                    first: accumulator.pop().unwrap(),
+                    in_between,
+                    second: argument,
+                });
             } else {
-                result.append(&mut accumulator);
+                result.extend(
+                    std::mem::take(&mut accumulator)
+                        .into_iter()
+                        .map(RefinedArgumentsAtom::Atom),
+                );
                 accumulator = vec![argument];
             }
         }
     }
 
-    result.append(&mut accumulator);
+    let accumulator = std::mem::take(&mut accumulator);
+    result.extend(accumulator.into_iter().map(RefinedArgumentsAtom::Atom));
     result
 }
 
 pub fn preprocess_arguments(
     two_words_keywords: Vec<TwoWordKeywordMatcher>,
-    mut arguments: Nodes,
-) -> Nodes {
+    mut arguments: RefinedArgumentsNode,
+) -> RefinedArgumentsNode {
     for matcher in two_words_keywords {
         arguments = isolate_two_words_keyword(&matcher, arguments);
     }

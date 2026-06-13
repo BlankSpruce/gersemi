@@ -175,6 +175,13 @@ pub enum ArgumentsAtom {
 }
 
 impl ArgumentsAtom {
+    pub fn is_comment(&self) -> bool {
+        match self {
+            ArgumentsAtom::CommentedArgument { .. } | ArgumentsAtom::Argument(_) => false,
+            ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => true,
+        }
+    }
+
     pub fn get_value(&self) -> Option<String> {
         match self {
             ArgumentsAtom::CommentedArgument { argument, .. }
@@ -636,6 +643,16 @@ impl ConvertFromNode {
             "bracket_comment" => ArgumentsAtom::BracketComment(Self::bracket_comment(node)),
             _ => ArgumentsAtom::Argument(Self::argument(node)),
         }
+    }
+
+    pub fn refined_arguments(node: &Node) -> RefinedArgumentsNode {
+        let Node::Tree { data, children } = node else {
+            return vec![];
+        };
+        if data != "arguments" {
+            return vec![];
+        }
+        children.iter().map(Self::refined_arguments_atom).collect()
     }
 
     pub fn arguments(node: &Node) -> ArgumentsNode {
