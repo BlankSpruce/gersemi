@@ -24,12 +24,14 @@ mod gersemi_rust_backend {
     use std::collections::HashMap;
 
     #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
     fn parse(text: String, schemas: CommandSchemas) -> Result<Start, Error> {
         let parser = Parser::new(text, &schemas);
         parser.start()
     }
 
     #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
     fn find_custom_command_definitions(
         text: String,
         schemas: CommandSchemas,
@@ -40,6 +42,7 @@ mod gersemi_rust_backend {
     }
 
     #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
     fn check_code_equivalence(
         schemas: CommandSchemas,
         before: String,

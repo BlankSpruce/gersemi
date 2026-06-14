@@ -309,7 +309,43 @@ fn pair_arguments(arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
     result
 }
 
-#[allow(clippy::unused_self)]
+fn line_comment_is_only_at_rightmost_edge<Part: HasLineComment>(
+    parts: &[Part],
+    postfix: &str,
+) -> bool {
+    if parts.is_empty() {
+        return true;
+    }
+
+    let end_index = if postfix.is_empty() {
+        parts.len() - 1
+    } else {
+        parts.len()
+    };
+
+    !parts
+        .iter()
+        .take(end_index)
+        .any(HasLineComment::has_line_comment)
+}
+
+fn preprocess_content(content: &str) -> String {
+    if content.trim().is_empty() {
+        return String::new();
+    }
+
+    let begin = if content.starts_with('\n') { "\n" } else { "" };
+    let stripped_content = strip_empty_lines_from_edges(content);
+    if ends_with_line_comment(&stripped_content) {
+        return format!("{begin}{stripped_content}\n");
+    }
+
+    let end = if content.ends_with('\n') { "\n" } else { "" };
+
+    let stripped_content = stripped_content.trim_end();
+    format!("{begin}{stripped_content}{end}")
+}
+
 impl Formatter<'_> {
     fn not_indented(&self) -> Self {
         let mut result = self.clone();
@@ -1055,27 +1091,6 @@ impl Formatter<'_> {
         indent(value, &self.indent_symbol, |x| !x.trim().is_empty())
     }
 
-    fn line_comment_is_only_at_rightmost_edge<Part: HasLineComment>(
-        &self,
-        parts: &[Part],
-        postfix: &str,
-    ) -> bool {
-        if parts.is_empty() {
-            return true;
-        }
-
-        let end_index = if postfix.is_empty() {
-            parts.len() - 1
-        } else {
-            parts.len()
-        };
-
-        !parts
-            .iter()
-            .take(end_index)
-            .any(HasLineComment::has_line_comment)
-    }
-
     fn try_to_format_into_single_line<
         Part: HasLineComment,
         Visitor: Fn(&mut Formatter, &Part) -> String,
@@ -1090,7 +1105,7 @@ impl Formatter<'_> {
             return None;
         }
 
-        if !self.line_comment_is_only_at_rightmost_edge(parts, postfix) {
+        if !line_comment_is_only_at_rightmost_edge(parts, postfix) {
             return None;
         }
 
@@ -1118,23 +1133,6 @@ impl Formatter<'_> {
         };
 
         Some(format!("{}{prefix}{result}{postfix}", self.indent_symbol))
-    }
-
-    fn preprocess_content(&self, content: &str) -> String {
-        if content.trim().is_empty() {
-            return String::new();
-        }
-
-        let begin = if content.starts_with('\n') { "\n" } else { "" };
-        let stripped_content = strip_empty_lines_from_edges(content);
-        if ends_with_line_comment(&stripped_content) {
-            return format!("{begin}{stripped_content}\n");
-        }
-
-        let end = if content.ends_with('\n') { "\n" } else { "" };
-
-        let stripped_content = stripped_content.trim_end();
-        format!("{begin}{stripped_content}{end}")
     }
 
     fn custom_command(
@@ -1167,7 +1165,7 @@ impl Formatter<'_> {
         }
 
         let indent_symbol = remove_common_beginning(&self.indent_symbol, indentation);
-        let content = self.preprocess_content(formatted_node);
+        let content = preprocess_content(formatted_node);
         let body = safe_indent(&content, &indent_symbol);
         let body: &str = if formatted_node.starts_with('\n') {
             &body
@@ -1284,14 +1282,13 @@ impl Formatter<'_> {
     }
 }
 
-#[allow(unused)]
 pub fn format(
     node: Start,
     configuration: &OutcomeConfiguration,
     schemas: &CommandSchemas,
 ) -> (String, UnknownCommandsUsed) {
     let unknown_commands_used: RefCell<UnknownCommandsUsed> = UnknownCommandsUsed::new().into();
-    let mut formatter = Formatter {
+    let formatter = Formatter {
         active_command: None,
         favour_expansion: false,
         indent_symbol: String::new(),
