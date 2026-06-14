@@ -121,9 +121,9 @@ impl FromPyObject<'_, '_> for SortOrder {
 pub struct OutcomeConfiguration {
     #[pyo3(attribute("indent"))]
     pub indent_type: IndentType,
-
     pub line_length: usize,
     pub list_expansion: ListExpansion,
-
     pub sort_order: SortOrder,
+    #[pyo3(attribute("unsafe"))]
+    pub disable_sanity_checks: bool,
 }

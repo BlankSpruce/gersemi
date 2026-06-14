@@ -213,7 +213,7 @@ impl ArgumentsAtom {
 
 pub type ArgumentsNode = Vec<ArgumentsAtom>;
 
-#[derive(Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum CommandInvocation {
     KnownCommand {
         identifier: String,
@@ -295,7 +295,7 @@ impl CommandInvocation {
     }
 }
 
-#[derive(Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Command {
     Element {
         command_invocation: CommandInvocation,
@@ -386,7 +386,7 @@ impl LineComment {
     }
 }
 
-#[derive(Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum FileElement {
     Block {
         start: Command,
@@ -499,6 +499,7 @@ impl<'py> IntoPyObject<'py> for FileElement {
     }
 }
 
+#[derive(Clone)]
 pub struct Start {
     pub children: Vec<FileElement>,
 }

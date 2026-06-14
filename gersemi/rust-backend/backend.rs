@@ -20,6 +20,7 @@ mod gersemi_rust_backend {
     use crate::parser::{Error, Parser, ParserDefinitions};
     use crate::sanity_checker::check_equivalence;
     use pyo3::pyfunction;
+    use pyo3::PyErr;
     use std::collections::HashMap;
 
     #[pyfunction]
@@ -50,6 +51,8 @@ mod gersemi_rust_backend {
         Ok(check_equivalence(before, after))
     }
 
+    pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
+
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn format_code(
@@ -57,13 +60,24 @@ mod gersemi_rust_backend {
         text: String,
         configuration: OutcomeConfiguration,
         command_schemas: CommandSchemas,
-    ) -> Result<(String, UnknownCommandsUsed), Error> {
-        let node = Parser::new(text, definitions).start()?;
-        Ok(crate::formatter::format(
-            node,
-            &configuration,
-            &command_schemas,
-        ))
+    ) -> Result<(String, UnknownCommandsUsed), PyErr> {
+        let node = Parser::new(text, definitions.clone()).start()?;
+        let before = if configuration.disable_sanity_checks {
+            None
+        } else {
+            Some(node.clone())
+        };
+
+        let (result, warnings) = crate::formatter::format(node, &configuration, &command_schemas);
+        if let Some(before) = before {
+            let after = Parser::new(result.clone(), definitions).start()?;
+            if !check_equivalence(before, after) {
+                return Err(ASTMismatch::new_err(
+                    "Reformatting doesn't produce equivalent code.",
+                ));
+            }
+        }
+        Ok((result, warnings))
     }
 
     #[pyfunction]
