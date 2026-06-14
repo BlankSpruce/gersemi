@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 from gersemi.immutable import ImmutableDict, make_immutable
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
 from gersemi.keywords import KeywordMatcher, TwoWordKeywordMatcher
@@ -47,15 +47,17 @@ def argument_schemas_from_dict(schemas: Mapping) -> Mapping[Any, ArgumentSchema]
 class StandardCommand:
     schema: ArgumentSchema
     signatures: Signatures = field(default_factory=ImmutableDict)
-    block_end: Optional[str] = None
-    canonical_name: Optional[str] = None
-    inhibit_favour_expansion: bool = False
     two_words_keywords: Iterable[TwoWordKeywordMatcher] = ()
 
 
 @dataclass(eq=True, frozen=True)
 class SpecializedCommand:
-    impl: object
+    impl: str
+
+
+@dataclass(eq=True, frozen=True)
+class Command:
+    details: Union[StandardCommand, SpecializedCommand]
     block_end: Optional[str] = None
     canonical_name: Optional[str] = None
     inhibit_favour_expansion: bool = False

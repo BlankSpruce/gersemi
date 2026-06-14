@@ -1,6 +1,6 @@
 import gersemi_rust_backend
 import yaml
-from gersemi.argument_schema import StandardCommand, argument_schema_from_dict
+from gersemi.argument_schema import Command, StandardCommand, argument_schema_from_dict
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.immutable import make_immutable
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
@@ -41,10 +41,12 @@ def create_command(canonical_name, positional_arguments, keywords, block_end):
             }
         ),
     }
-    return StandardCommand(
+    return Command(
         canonical_name=canonical_name,
-        schema=argument_schema_from_dict(schema),
         block_end=block_end,
+        details=StandardCommand(
+            schema=argument_schema_from_dict(schema),
+        ),
     )
 
 

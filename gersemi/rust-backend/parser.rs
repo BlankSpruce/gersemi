@@ -849,12 +849,7 @@ fn prepare_blocks(schemas: &CommandSchemas) -> Vec<(BlockCommand, BlockCommand)>
     schemas
         .values()
         .filter_map(|schema| match schema {
-            CommandSchema::StandardCommand {
-                canonical_name: Some(canonical_name),
-                block_end: Some(block_end),
-                ..
-            }
-            | CommandSchema::SpecializedCommand {
+            CommandSchema {
                 canonical_name: Some(canonical_name),
                 block_end: Some(block_end),
                 ..

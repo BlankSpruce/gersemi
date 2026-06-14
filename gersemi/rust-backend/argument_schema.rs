@@ -567,23 +567,24 @@ pub type Signatures = HashMap<Option<KeywordMatcher>, ArgumentSchema>;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone, FromPyObject)]
-pub enum CommandSchema {
+pub enum CommandSchemaDetails {
     StandardCommand {
         schema: ArgumentSchema,
         signatures: Signatures,
-        block_end: Option<String>,
-        canonical_name: Option<String>,
-        inhibit_favour_expansion: bool,
         two_words_keywords: Vec<TwoWordKeywordMatcher>,
     },
     SpecializedCommand {
-        canonical_name: Option<String>,
-        block_end: Option<String>,
-        inhibit_favour_expansion: bool,
-
         #[pyo3(attribute("impl"))]
         specialization: String,
     },
+}
+
+#[derive(Clone, FromPyObject)]
+pub struct CommandSchema {
+    pub block_end: Option<String>,
+    pub canonical_name: Option<String>,
+    pub inhibit_favour_expansion: bool,
+    pub details: CommandSchemaDetails,
 }
 
 pub type CommandSchemas = HashMap<String, CommandSchema>;

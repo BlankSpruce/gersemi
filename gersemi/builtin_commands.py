@@ -2,6 +2,7 @@
 # ruff: noqa: C420
 from typing import Iterable, List, Mapping
 from gersemi.argument_schema import (
+    Command,
     SpecializedCommand,
     StandardCommand,
     argument_schema_from_dict,
@@ -3622,26 +3623,21 @@ def preprocess_definitions(definitions):
     return make_immutable(
         {
             key.strip().lower(): (
-                StandardCommand(
+                Command(
+                    block_end=value.get("block_end", None),
                     canonical_name=key,
                     inhibit_favour_expansion=value.get(
                         "_inhibit_favour_expansion", False
                     ),
-                    two_words_keywords=tuple(value.get("_two_words_keywords", ())),
-                    schema=argument_schema_from_dict(value),
-                    signatures=argument_schemas_from_dict(
-                        value.get("signatures", ImmutableDict())
-                    ),
-                    block_end=value.get("block_end", None),
-                )
-                if "__impl" not in value
-                else SpecializedCommand(
-                    canonical_name=key,
-                    impl=value.get("__impl"),
-                    inhibit_favour_expansion=value.get(
-                        "_inhibit_favour_expansion", False
-                    ),
-                    block_end=value.get("block_end", None),
+                    details=StandardCommand(
+                        two_words_keywords=tuple(value.get("_two_words_keywords", ())),
+                        schema=argument_schema_from_dict(value),
+                        signatures=argument_schemas_from_dict(
+                            value.get("signatures", ImmutableDict())
+                        ),
+                    )
+                    if "__impl" not in value
+                    else SpecializedCommand(impl=value.get("__impl")),
                 )
             )
             for key, value in definitions.items()

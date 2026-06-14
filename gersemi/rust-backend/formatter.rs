@@ -1,5 +1,5 @@
 use crate::argument_schema::{
-    ArgumentSchema, CommandSchema, CommandSchemas, KeywordMatcher, Signatures,
+    ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemas, KeywordMatcher, Signatures,
 };
 use crate::configuration::{
     IndentType, KeywordFormatter, KeywordPreprocessor, ListExpansion, OutcomeConfiguration,
@@ -413,8 +413,12 @@ impl Formatter<'_> {
     fn two_words_keywords(&self) -> &Vec<TwoWordKeywordMatcher> {
         static EMPTY: Vec<TwoWordKeywordMatcher> = vec![];
         match self.active_command {
-            Some(CommandSchema::StandardCommand {
-                ref two_words_keywords,
+            Some(CommandSchema {
+                details:
+                    CommandSchemaDetails::StandardCommand {
+                        ref two_words_keywords,
+                        ..
+                    },
                 ..
             }) => two_words_keywords,
             _ => &EMPTY,
@@ -446,7 +450,10 @@ impl Formatter<'_> {
 
     fn signatures(&self) -> Option<&Signatures> {
         match self.active_command {
-            Some(CommandSchema::StandardCommand { ref signatures, .. }) => Some(signatures),
+            Some(CommandSchema {
+                details: CommandSchemaDetails::StandardCommand { ref signatures, .. },
+                ..
+            }) => Some(signatures),
             _ => None,
         }
     }
@@ -516,8 +523,12 @@ impl Formatter<'_> {
 
     fn shall_use_condition_syntax(&self) -> bool {
         match self.active_command {
-            Some(CommandSchema::SpecializedCommand {
-                ref specialization, ..
+            Some(CommandSchema {
+                details:
+                    CommandSchemaDetails::SpecializedCommand {
+                        ref specialization, ..
+                    },
+                ..
             }) => matches!(
                 specialization.as_str(),
                 "condition_syntax_with_dedent" | "condition_syntax"
@@ -696,7 +707,7 @@ impl Formatter<'_> {
         rest: &RefinedArgumentsNode,
     ) -> String {
         match &self.active_command {
-            Some(CommandSchema::StandardCommand {
+            Some(CommandSchema {
                 canonical_name: Some(name),
                 ..
             }) if (name == "set_property") => {
@@ -801,7 +812,10 @@ impl Formatter<'_> {
 
     fn get_preprocessor(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordPreprocessor> {
         match &self.active_command {
-            Some(CommandSchema::StandardCommand { schema, .. }) => atom
+            Some(CommandSchema {
+                details: CommandSchemaDetails::StandardCommand { schema, .. },
+                ..
+            }) => atom
                 .get_value()
                 .and_then(|key| schema.keyword_preprocessors.get(&key).cloned()),
             _ => None,
@@ -810,7 +824,10 @@ impl Formatter<'_> {
 
     fn get_formatter(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordFormatter> {
         match &self.active_command {
-            Some(CommandSchema::StandardCommand { schema, .. }) => atom
+            Some(CommandSchema {
+                details: CommandSchemaDetails::StandardCommand { schema, .. },
+                ..
+            }) => atom
                 .get_value()
                 .and_then(|key| schema.keyword_formatters.get(&key).cloned()),
             _ => None,
@@ -835,7 +852,7 @@ impl Formatter<'_> {
 
     fn positional_arguments(&mut self, arguments: &RefinedArgumentsNode) -> String {
         match &self.active_command {
-            Some(CommandSchema::StandardCommand {
+            Some(CommandSchema {
                 canonical_name: Some(name),
                 ..
             }) if name == "add_custom_target" => self.format_command_line(arguments.clone()),
@@ -924,16 +941,10 @@ impl Formatter<'_> {
 
     fn inhibit_favour_expansion(&self) -> bool {
         match self.active_command {
-            Some(
-                CommandSchema::StandardCommand {
-                    inhibit_favour_expansion,
-                    ..
-                }
-                | CommandSchema::SpecializedCommand {
-                    inhibit_favour_expansion,
-                    ..
-                },
-            ) => inhibit_favour_expansion,
+            Some(CommandSchema {
+                inhibit_favour_expansion,
+                ..
+            }) => inhibit_favour_expansion,
             _ => false,
         }
     }
@@ -955,9 +966,10 @@ impl Formatter<'_> {
 
     fn split_arguments(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
         match &self.active_command {
-            Some(CommandSchema::StandardCommand { schema, .. }) => {
-                schema.split_arguments_with_sections(arguments)
-            }
+            Some(CommandSchema {
+                details: CommandSchemaDetails::StandardCommand { schema, .. },
+                ..
+            }) => schema.split_arguments_with_sections(arguments),
             _ => arguments,
         }
     }
@@ -1026,21 +1038,22 @@ impl Formatter<'_> {
     fn create_schema_patch(&self, schema: Option<&ArgumentSchema>) -> Option<CommandSchema> {
         let schema = schema?;
         match &self.active_command {
-            Some(CommandSchema::StandardCommand {
-                signatures,
-                canonical_name,
-                block_end,
-                inhibit_favour_expansion,
-                two_words_keywords,
-                ..
-            }) => Some(CommandSchema::StandardCommand {
-                schema: schema.clone(),
-                signatures: signatures.clone(),
-                canonical_name: canonical_name.clone(),
-                block_end: block_end.clone(),
-                inhibit_favour_expansion: *inhibit_favour_expansion,
-                two_words_keywords: two_words_keywords.clone(),
-            }),
+            Some(command_schema) => match &command_schema.details {
+                CommandSchemaDetails::StandardCommand {
+                    signatures,
+                    two_words_keywords,
+                    ..
+                } => {
+                    let mut result = command_schema.clone();
+                    result.details = CommandSchemaDetails::StandardCommand {
+                        schema: schema.clone(),
+                        signatures: signatures.clone(),
+                        two_words_keywords: two_words_keywords.clone(),
+                    };
+                    Some(result)
+                }
+                CommandSchemaDetails::SpecializedCommand { .. } => None,
+            },
             _ => None,
         }
     }
@@ -1052,8 +1065,12 @@ impl Formatter<'_> {
         let f = self.patched(signature);
 
         match f.active_command {
-            Some(CommandSchema::SpecializedCommand {
-                ref specialization, ..
+            Some(CommandSchema {
+                details:
+                    CommandSchemaDetails::SpecializedCommand {
+                        ref specialization, ..
+                    },
+                ..
             }) if specialization == "condition_syntax_with_dedent" => f.dedented(),
             _ => f,
         }
@@ -1067,16 +1084,10 @@ impl Formatter<'_> {
 
     fn format_command_name(&self, name: &str) -> String {
         match &self.active_command {
-            Some(
-                CommandSchema::SpecializedCommand {
-                    canonical_name: Some(value),
-                    ..
-                }
-                | CommandSchema::StandardCommand {
-                    canonical_name: Some(value),
-                    ..
-                },
-            ) => value.clone(),
+            Some(CommandSchema {
+                canonical_name: Some(value),
+                ..
+            }) => value.clone(),
             _ => {
                 if name.contains('@') {
                     name.to_string()
