@@ -5,14 +5,11 @@ from gersemi.builtin_commands import _builtin_commands
 from gersemi.immutable import make_immutable
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
 from gersemi.keywords import Hint, Keywords
-from gersemi.parser import ParserDefinitions
 
 
 def find_custom_command_definitions(code, filepath="---"):
     return gersemi_rust_backend.find_custom_command_definitions(
-        code,
-        ParserDefinitions.from_dict(_builtin_commands),
-        str(filepath),
+        code, dict(_builtin_commands), str(filepath)
     )
 
 

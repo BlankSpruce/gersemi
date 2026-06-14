@@ -993,6 +993,7 @@ impl Formatter<'_> {
             Some(CommandSchema::StandardCommand {
                 signatures,
                 canonical_name,
+                block_end,
                 inhibit_favour_expansion,
                 two_words_keywords,
                 ..
@@ -1000,6 +1001,7 @@ impl Formatter<'_> {
                 schema: schema.clone(),
                 signatures: signatures.clone(),
                 canonical_name: canonical_name.clone(),
+                block_end: block_end.clone(),
                 inhibit_favour_expansion: *inhibit_favour_expansion,
                 two_words_keywords: two_words_keywords.clone(),
             }),

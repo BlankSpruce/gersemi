@@ -5,7 +5,6 @@ from typing import List, Tuple
 import gersemi_rust_backend
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import LineRanges, OutcomeConfiguration
-from gersemi.parser import ParserDefinitions
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
 GERSEMI_OFF = "# gersemi: off"
@@ -117,7 +116,6 @@ class Formatter:
     ):
         self.configuration = configuration
         self.known_definitions = ChainMap(known_definitions, _builtin_commands)
-        self.parser_definitions = ParserDefinitions.from_dict(self.known_definitions)
         self.lines_to_format = lines_to_format
 
     def get_warnings(self, raw):
@@ -135,10 +133,7 @@ class Formatter:
             code = add_line_range_fences(code, self.lines_to_format)
 
         formatted, raw_warnings = gersemi_rust_backend.format_code(
-            self.parser_definitions,
-            code,
-            self.configuration,
-            dict(self.known_definitions),
+            code, self.configuration, dict(self.known_definitions)
         )
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:

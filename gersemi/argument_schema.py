@@ -56,5 +56,6 @@ class StandardCommand:
 @dataclass(eq=True, frozen=True)
 class SpecializedCommand:
     impl: object
+    block_end: Optional[str] = None
     canonical_name: Optional[str] = None
     inhibit_favour_expansion: bool = False

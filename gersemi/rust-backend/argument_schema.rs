@@ -571,12 +571,14 @@ pub enum CommandSchema {
     StandardCommand {
         schema: ArgumentSchema,
         signatures: Signatures,
+        block_end: Option<String>,
         canonical_name: Option<String>,
         inhibit_favour_expansion: bool,
         two_words_keywords: Vec<TwoWordKeywordMatcher>,
     },
     SpecializedCommand {
         canonical_name: Option<String>,
+        block_end: Option<String>,
         inhibit_favour_expansion: bool,
 
         #[pyo3(attribute("impl"))]

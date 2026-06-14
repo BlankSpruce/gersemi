@@ -1,8 +1,9 @@
+use crate::argument_schema::{CommandSchema, CommandSchemas};
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
     CommentedArgumentComment, FileElement, LineComment, Position, Start,
 };
-use pyo3::{FromPyObject, PyErr};
+use pyo3::PyErr;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -12,16 +13,10 @@ struct BlockCommand {
     re: regex::Regex,
 }
 
-#[derive(Clone, FromPyObject)]
-pub struct ParserDefinitions {
-    blocks: BlockDefinitions,
-    known_commands: Vec<String>,
-}
-
-pub struct Parser {
+pub struct Parser<'a> {
     text: String,
     blocks: Vec<(BlockCommand, BlockCommand)>,
-    known_commands: Vec<String>,
+    schemas: &'a CommandSchemas,
 }
 
 pub enum ErrorType {
@@ -89,12 +84,12 @@ fn regex(pattern: &str) -> Regex {
         .clone()
 }
 
-impl Parser {
-    pub fn new(text: String, definitions: ParserDefinitions) -> Self {
+impl Parser<'_> {
+    pub fn new(text: String, schemas: &CommandSchemas) -> Parser<'_> {
         Parser {
             text,
-            blocks: prepare_blocks(definitions.blocks),
-            known_commands: definitions.known_commands,
+            blocks: prepare_blocks(schemas),
+            schemas,
         }
     }
 
@@ -830,9 +825,7 @@ impl Parser {
 
     fn is_known_command(&self, command_name: &str) -> bool {
         let command_name = command_name.to_lowercase();
-        self.known_commands
-            .iter()
-            .any(|item| item.as_str() == command_name)
+        self.schemas.contains_key(&command_name)
     }
 
     fn is_block_edge_command(&self, command_name: &str) -> bool {
@@ -843,19 +836,31 @@ impl Parser {
     }
 }
 
-pub type BlockDefinition = (String, String);
-pub type BlockDefinitions = Vec<BlockDefinition>;
-
-fn block_command(name: String) -> BlockCommand {
+fn block_command(name: &str) -> BlockCommand {
     let pattern = format!("(?i)^({name})[ \t]*");
     let re = regex(pattern.as_str());
-    BlockCommand { name, re }
+    BlockCommand {
+        name: name.to_string(),
+        re,
+    }
 }
 
-fn prepare_blocks(blocks: BlockDefinitions) -> Vec<(BlockCommand, BlockCommand)> {
-    blocks
-        .into_iter()
-        .map(|(start, end)| (block_command(start), block_command(end)))
+fn prepare_blocks(schemas: &CommandSchemas) -> Vec<(BlockCommand, BlockCommand)> {
+    schemas
+        .values()
+        .filter_map(|schema| match schema {
+            CommandSchema::StandardCommand {
+                canonical_name: Some(canonical_name),
+                block_end: Some(block_end),
+                ..
+            }
+            | CommandSchema::SpecializedCommand {
+                canonical_name: Some(canonical_name),
+                block_end: Some(block_end),
+                ..
+            } => Some((block_command(canonical_name), block_command(block_end))),
+            _ => None,
+        })
         .collect()
 }
 

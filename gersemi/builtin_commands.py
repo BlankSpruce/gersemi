@@ -174,6 +174,7 @@ builtin_commands = {
     "block": {
         "_inhibit_favour_expansion": True,
         "multi_value_keywords": ["SCOPE_FOR", "PROPAGATE"],
+        "block_end": "endblock",
     },
     "break": {},
     "cmake_host_system_information": {
@@ -489,15 +490,29 @@ builtin_commands = {
         "multi_value_keywords": ["FILE_PERMISSIONS"],
     },
     "continue": {},
-    **{
-        key: {
-            "__impl": "condition_syntax_with_dedent"
-            if key in ("else", "elseif")
-            else "condition_syntax",
-            "_inhibit_favour_expansion": True,
-        }
-        for key in ("elseif", "else", "endif", "endwhile", "if", "while")
+    "if": {
+        "__impl": "condition_syntax",
+        "_inhibit_favour_expansion": True,
+        "block_end": "endif",
     },
+    "elseif": {
+        "__impl": "condition_syntax_with_dedent",
+        "_inhibit_favour_expansion": True,
+    },
+    "else": {
+        "__impl": "condition_syntax_with_dedent",
+        "_inhibit_favour_expansion": True,
+    },
+    "endif": {
+        "__impl": "condition_syntax",
+        "_inhibit_favour_expansion": True,
+    },
+    "while": {
+        "__impl": "condition_syntax",
+        "_inhibit_favour_expansion": True,
+        "block_end": "endwhile",
+    },
+    "endwhile": {"__impl": "condition_syntax"},
     "endblock": {},
     "endforeach": {},
     "endfunction": {},
@@ -940,10 +955,12 @@ builtin_commands = {
         "front_positional_arguments": ["<loop_var>"],
         "options": ["IN"],
         "multi_value_keywords": ["RANGE", "LISTS", "ITEMS", "ZIP_LISTS"],
+        "block_end": "endforeach",
     },
     "function": {
         "_inhibit_favour_expansion": True,
         "front_positional_arguments": ["<name>"],
+        "block_end": "endfunction",
     },
     "get_cmake_property": {
         "front_positional_arguments": ["<var>", "<property>"],
@@ -1107,6 +1124,7 @@ builtin_commands = {
     "macro": {
         "_inhibit_favour_expansion": True,
         "front_positional_arguments": ["<name>"],
+        "block_end": "endmacro",
     },
     "mark_as_advanced": {
         "options": ["CLEAR", "FORCE"],
@@ -3623,6 +3641,7 @@ def preprocess_definitions(definitions):
                     inhibit_favour_expansion=value.get(
                         "_inhibit_favour_expansion", False
                     ),
+                    block_end=value.get("block_end", None),
                 )
             )
             for key, value in definitions.items()
