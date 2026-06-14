@@ -1,7 +1,7 @@
-from gersemi.ast_helpers import is_newline
 from gersemi.exceptions import ASTMismatch
-from gersemi.transformer import Discard, Transformer_InPlace
 from gersemi.types import Tree
+from tests.old_impl.ast_helpers import is_newline
+from tests.old_impl.transformer import Discard, Transformer_InPlace
 
 
 def is_not_newline(node):

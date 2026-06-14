@@ -2,15 +2,15 @@ from collections import ChainMap
 from itertools import dropwhile
 from typing import List
 from lark import Token
-from gersemi.ast_helpers import (
+from gersemi.builtin_commands import _builtin_commands
+from gersemi.types import Nodes, Tree
+from tests.old_impl.ast_helpers import (
     is_commented_argument,
     is_newline,
     is_quoted_argument,
     is_unquoted_argument,
 )
-from gersemi.builtin_commands import _builtin_commands
-from gersemi.transformer import Discard, Transformer_InPlace
-from gersemi.types import Nodes, Tree
+from tests.old_impl.transformer import Discard, Transformer_InPlace
 
 
 class PostProcessorStageOne(Transformer_InPlace):
