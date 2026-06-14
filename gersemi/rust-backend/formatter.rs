@@ -13,9 +13,8 @@ use crate::node::{
     CommentedArgumentComment, FileElement, LineComment, Position, RefinedArgumentsAtom,
     RefinedArgumentsNode, Start,
 };
-use crate::parser::quoted_argument_pattern;
+use crate::parser::{quoted_argument_pattern, regex};
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
-use regex::Regex;
 use std::cell::RefCell;
 use std::iter::zip;
 
@@ -79,8 +78,8 @@ pub fn ends_with_line_comment(s: &str) -> bool {
 }
 
 fn flat_split(pattern: &str, s: &str) -> (String, Option<[String; 2]>) {
-    let regex = Regex::new(pattern).unwrap();
-    match regex.find(s) {
+    let re = regex(pattern);
+    match re.find(s) {
         None => (s.to_string(), None),
         Some(m) => (
             s[..m.start()].to_string(),
@@ -94,7 +93,7 @@ fn split_by_line_comment(s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
-    let regex_start = Regex::new(r"\[(=*)\[").unwrap();
+    let regex_start = regex(r"\[(=*)\[");
     if let Some(captures) = regex_start.captures(s) {
         if let Some(matched_left_bracket) = captures.get(1) {
             let equal_signs = "=".repeat(matched_left_bracket.len());
@@ -107,10 +106,10 @@ fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_quoted_arguments(s: &String) -> Vec<String> {
-    let regex = Regex::new(quoted_argument_pattern()).unwrap();
+    let re = regex(quoted_argument_pattern());
     let mut s: &str = s;
     let mut result = Vec::<String>::new();
-    while let Some(matched) = regex.find(s) {
+    while let Some(matched) = re.find(s) {
         result.push(s[..matched.start()].to_string());
         result.push(s[matched.range()].to_string());
         s = &s[matched.end()..];

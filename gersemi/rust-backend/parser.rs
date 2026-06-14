@@ -73,7 +73,7 @@ fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
     format!(r"^(\[{equal_signs}\[)([\s\S]+?)(\]{equal_signs}\])[ \t]*")
 }
 
-fn regex(pattern: &str) -> Regex {
+pub fn regex(pattern: &str) -> Regex {
     static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
         LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
 
