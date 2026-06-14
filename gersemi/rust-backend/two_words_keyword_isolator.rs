@@ -5,6 +5,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
 use pyo3::{FromPyObject, PyAny};
 
+#[derive(Clone)]
 pub struct TwoWordKeywordMatcher {
     first: String,
     second: SecondKeyword,
@@ -87,11 +88,11 @@ fn isolate_two_words_keyword(
 }
 
 pub fn preprocess_arguments(
-    two_words_keywords: Vec<TwoWordKeywordMatcher>,
+    two_words_keywords: &Vec<TwoWordKeywordMatcher>,
     mut arguments: RefinedArgumentsNode,
 ) -> RefinedArgumentsNode {
     for matcher in two_words_keywords {
-        arguments = isolate_two_words_keyword(&matcher, arguments);
+        arguments = isolate_two_words_keyword(matcher, arguments);
     }
     arguments
 }

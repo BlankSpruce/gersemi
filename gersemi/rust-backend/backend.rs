@@ -1,4 +1,5 @@
 mod argument_schema;
+mod configuration;
 mod custom_command_definition_finder;
 mod formatter;
 mod keyword_preprocessor;
@@ -11,17 +12,13 @@ use pyo3::pymodule;
 
 #[pymodule]
 mod gersemi_rust_backend {
-    use crate::argument_schema::{isolate_conditions, ArgumentSchema, KeywordMatcher};
+    use crate::argument_schema::CommandSchemas;
+    use crate::configuration::OutcomeConfiguration;
     use crate::custom_command_definition_finder::CustomCommand;
-    use crate::keyword_preprocessor::{
-        keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
-    };
-    use crate::node::{
-        ConvertFromNode, Node, Nodes, RefinedArgumentsAtom, RefinedArgumentsNode, Start,
-    };
+    use crate::formatter::UnknownCommandsUsed;
+    use crate::node::Start;
     use crate::parser::{Error, Parser, ParserDefinitions};
     use crate::sanity_checker::check_equivalence;
-    use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
     use pyo3::pyfunction;
     use std::collections::HashMap;
 
@@ -29,128 +26,6 @@ mod gersemi_rust_backend {
     fn parse(text: String, definitions: ParserDefinitions) -> Result<Start, Error> {
         let parser = Parser::new(text, definitions);
         parser.start()
-    }
-
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    fn dumper_split_arguments(schema: ArgumentSchema, arguments: Nodes) -> Nodes {
-        let arguments: RefinedArgumentsNode = arguments
-            .into_iter()
-            .map(|x| ConvertFromNode::refined_arguments_atom(&x))
-            .collect();
-        schema
-            .split_arguments_with_sections(arguments)
-            .into_iter()
-            .map(RefinedArgumentsAtom::into_node)
-            .collect()
-    }
-
-    #[pyfunction]
-    fn condition_syntax_preprocess_arguments(arguments_node: Node) -> Node {
-        let arguments: RefinedArgumentsNode = ConvertFromNode::arguments(&arguments_node)
-            .into_iter()
-            .map(RefinedArgumentsAtom::Atom)
-            .collect();
-        Node::Tree {
-            data: "arguments".to_string(),
-            children: isolate_conditions(arguments)
-                .into_iter()
-                .map(RefinedArgumentsAtom::into_node)
-                .collect(),
-        }
-    }
-
-    #[pyfunction]
-    fn isolate_two_words_keywords(
-        two_words_keywords: Vec<TwoWordKeywordMatcher>,
-        arguments_node: Node,
-    ) -> Node {
-        let arguments: RefinedArgumentsNode = ConvertFromNode::refined_arguments(&arguments_node);
-        Node::Tree {
-            data: "arguments".to_string(),
-            children: crate::two_words_keyword_isolator::preprocess_arguments(
-                two_words_keywords,
-                arguments,
-            )
-            .into_iter()
-            .map(RefinedArgumentsAtom::into_node)
-            .collect(),
-        }
-    }
-
-    #[pyfunction]
-    fn pair_arguments(arguments: Nodes) -> Nodes {
-        let arguments: RefinedArgumentsNode = arguments
-            .into_iter()
-            .map(|x| ConvertFromNode::refined_arguments_atom(&x))
-            .collect();
-
-        let mut result = RefinedArgumentsNode::new();
-        let mut accumulator = RefinedArgumentsNode::new();
-        for argument in arguments {
-            if accumulator.is_empty() {
-                if argument.is_comment() {
-                    result.push(argument);
-                } else {
-                    accumulator.push(argument);
-                }
-            } else {
-                let is_comment_node = argument.is_comment();
-                accumulator.push(argument);
-                if !is_comment_node {
-                    let mut accumulator = std::mem::take(&mut accumulator);
-                    let rest = accumulator.split_off(1);
-                    result.push(RefinedArgumentsAtom::Pair {
-                        first: Box::new(accumulator.pop().unwrap()),
-                        rest,
-                    });
-                }
-            }
-        }
-
-        if !accumulator.is_empty() {
-            let rest = accumulator.split_off(1);
-            result.push(RefinedArgumentsAtom::Pair {
-                first: Box::new(accumulator.pop().unwrap()),
-                rest,
-            });
-        }
-
-        result
-            .into_iter()
-            .map(RefinedArgumentsAtom::into_node)
-            .collect()
-    }
-
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    fn preprocess_keyword_values(
-        nodes: Nodes,
-        preprocessor: String,
-        case_insensitive: bool,
-    ) -> Nodes {
-        let nodes: RefinedArgumentsNode = nodes
-            .into_iter()
-            .map(|x| ConvertFromNode::refined_arguments_atom(&x))
-            .collect();
-
-        let nodes = match preprocessor.as_str() {
-            "sort" => sort_arguments(nodes, case_insensitive),
-            "unique" => keep_unique_arguments(nodes),
-            "sort+unique" => sort_and_keep_unique_arguments(nodes, case_insensitive),
-            _ => nodes,
-        };
-
-        nodes
-            .into_iter()
-            .map(RefinedArgumentsAtom::into_node)
-            .collect()
-    }
-
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    fn is_one_of_keywords(matchers: Vec<KeywordMatcher>, node: Node) -> bool {
-        crate::argument_schema::is_one_of_keywords(&matchers, &node)
     }
 
     #[pyfunction]
@@ -176,29 +51,19 @@ mod gersemi_rust_backend {
     }
 
     #[pyfunction]
-    fn remove_common_beginning(s: &str, other: &str) -> String {
-        crate::formatter::remove_common_beginning(s, other)
-    }
-
-    #[pyfunction]
-    fn strip_empty_lines_from_edges(s: &str) -> String {
-        crate::formatter::strip_empty_lines_from_edges(s)
-    }
-
-    #[pyfunction]
-    fn ends_with_line_comment(s: &str) -> bool {
-        crate::formatter::ends_with_line_comment(s)
-    }
-
-    #[pyfunction]
-    fn safe_indent(s: &str, indent_symbol: &str) -> String {
-        crate::formatter::safe_indent(s, indent_symbol)
-    }
-
-    #[pyfunction]
-    fn convert_node(node: Node) -> Option<Node> {
-        let start = crate::node::ConvertFromNode::start(&node);
-        Some(start?.into_node())
+    #[allow(clippy::needless_pass_by_value)]
+    fn format_code(
+        definitions: ParserDefinitions,
+        text: String,
+        configuration: OutcomeConfiguration,
+        command_schemas: CommandSchemas,
+    ) -> Result<(String, UnknownCommandsUsed), Error> {
+        let node = Parser::new(text, definitions).start()?;
+        Ok(crate::formatter::format(
+            node,
+            &configuration,
+            &command_schemas,
+        ))
     }
 
     #[pyfunction]

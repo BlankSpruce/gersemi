@@ -1,0 +1,129 @@
+use pyo3::exceptions::PyRuntimeError;
+use pyo3::types::{PyAnyMethods, PyString};
+use pyo3::{Borrowed, BoundObject, FromPyObject, PyAny, PyErr};
+
+fn string_enum_value(obj: Borrowed<'_, '_, PyAny>) -> Result<String, PyErr> {
+    let value = match obj.getattr("value") {
+        Ok(value) => value,
+        _ => obj.into_bound(),
+    };
+
+    Ok(value.cast::<PyString>()?.str()?.to_string())
+}
+
+#[derive(Clone)]
+pub enum KeywordFormatter {
+    CommandLine,
+    Pairs,
+}
+
+impl FromPyObject<'_, '_> for KeywordFormatter {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        let value = string_enum_value(obj)?;
+        match value.as_str() {
+            "command_line" => Ok(KeywordFormatter::CommandLine),
+            "pairs" => Ok(KeywordFormatter::Pairs),
+            _ => Err(PyRuntimeError::new_err("Invalid KeywordFormatter")),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum KeywordPreprocessor {
+    Sort,
+    Unique,
+    SortAndUnique,
+}
+
+impl FromPyObject<'_, '_> for KeywordPreprocessor {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        let value = string_enum_value(obj)?;
+        match value.as_str() {
+            "sort" => Ok(KeywordPreprocessor::Sort),
+            "unique" => Ok(KeywordPreprocessor::Unique),
+            "sort+unique" => Ok(KeywordPreprocessor::SortAndUnique),
+            _ => Err(PyRuntimeError::new_err("Invalid KeywordPreprocessor")),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct Tabs;
+
+#[derive(Clone, FromPyObject)]
+pub enum IndentType {
+    Spaces(usize),
+    Tabs(Tabs),
+}
+
+impl IndentType {
+    pub fn as_string(&self) -> String {
+        match self {
+            IndentType::Tabs(_) => "\t".to_string(),
+            IndentType::Spaces(spaces) => " ".repeat(*spaces),
+        }
+    }
+}
+
+impl FromPyObject<'_, '_> for Tabs {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        if string_enum_value(obj)? == "tabs" {
+            Ok(Tabs)
+        } else {
+            Err(PyRuntimeError::new_err("Invalid Tabs"))
+        }
+    }
+}
+
+pub enum ListExpansion {
+    FavourInlining,
+    FavourExpansion,
+}
+
+impl FromPyObject<'_, '_> for ListExpansion {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        let value = string_enum_value(obj)?;
+        match value.as_str() {
+            "favour-inlining" => Ok(Self::FavourInlining),
+            "favour-expansion" => Ok(Self::FavourExpansion),
+            _ => Err(PyRuntimeError::new_err("Invalid ListExpansion")),
+        }
+    }
+}
+
+pub enum SortOrder {
+    CaseSensitive,
+    CaseInsensitive,
+}
+
+impl FromPyObject<'_, '_> for SortOrder {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        let value = string_enum_value(obj)?;
+        match value.as_str() {
+            "case-sensitive" => Ok(Self::CaseSensitive),
+            "case-insensitive" => Ok(Self::CaseInsensitive),
+            _ => Err(PyRuntimeError::new_err("Invalid ListExpansion")),
+        }
+    }
+}
+
+#[derive(FromPyObject)]
+pub struct OutcomeConfiguration {
+    #[pyo3(attribute("indent"))]
+    pub indent_type: IndentType,
+
+    pub line_length: usize,
+    pub list_expansion: ListExpansion,
+
+    pub sort_order: SortOrder,
+}

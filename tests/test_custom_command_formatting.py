@@ -3,7 +3,7 @@ from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
-from tests.utils import Dumper, Parser
+from tests.utils import Formatter
 
 
 def test_custom_command_without_keyworded_arguments_formatting():
@@ -35,11 +35,8 @@ some_custom_command_without_keyworded_arguments(
 """
 
     definitions = get_just_definitions(find_custom_command_definitions(given))
-    dumper = Dumper(definitions)
-
-    after = Parser(known_definitions=definitions)
-    parsed_again = after.parse(given)
-    formatted = dumper.visit(parsed_again)
+    formatter = Formatter(known_definitions=definitions)
+    formatted, _ = formatter.format(given)
 
     assert formatted == expected
 
@@ -71,11 +68,8 @@ some_custom_command_without_keyworded_arguments(long____________________________
 """
 
     definitions = get_just_definitions(find_custom_command_definitions(given))
-    dumper = Dumper(definitions)
-
-    after = Parser(known_definitions=definitions)
-    parsed_again = after.parse(given)
-    formatted = dumper.visit(parsed_again)
+    formatter = Formatter(known_definitions=definitions)
+    formatted, _ = formatter.format(given)
 
     assert formatted == expected
 
@@ -103,10 +97,7 @@ endfunction()
 """
 
     definitions = get_just_definitions(find_custom_command_definitions(given))
-    dumper = Dumper(definitions)
-
-    after = Parser(known_definitions=definitions)
-    parsed_again = after.parse(given)
-    formatted = dumper.visit(parsed_again)
+    formatter = Formatter(known_definitions=definitions)
+    formatted, _ = formatter.format(given)
 
     assert formatted == expected

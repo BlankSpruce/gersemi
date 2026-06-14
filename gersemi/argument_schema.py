@@ -43,13 +43,6 @@ def argument_schemas_from_dict(schemas: Mapping) -> Mapping[Any, ArgumentSchema]
     )
 
 
-def create_schema_patch(source_schema, old_class):
-    class Impl(old_class):
-        schema = source_schema
-
-    return Impl
-
-
 @dataclass(eq=True, frozen=True)
 class StandardCommand:
     schema: ArgumentSchema
@@ -64,3 +57,4 @@ class StandardCommand:
 class SpecializedCommand:
     impl: object
     canonical_name: Optional[str] = None
+    inhibit_favour_expansion: bool = False

@@ -2,7 +2,7 @@ from gersemi.custom_command_definition_finder import (
     find_custom_command_definitions,
     get_just_definitions,
 )
-from tests.utils import Dumper, Parser
+from tests.utils import Formatter
 from .tests_generator import generate_input_only_tests
 
 custom_command_to_format = """
@@ -28,13 +28,10 @@ custom_command_properly_formatted = """Seven_Samurai(
 """
 
 
-def test_custom_command_generated_dumper(case):  # pylint: disable=redefined-outer-name
+def test_custom_command_generated_formatter(case):  # pylint: disable=redefined-outer-name
     definitions = get_just_definitions(find_custom_command_definitions(case.content))
-
-    after = Parser(known_definitions=definitions)
-    parsed_function = after.parse(custom_command_to_format)
-    dumper = Dumper(definitions)
-    custom_command_formatted = dumper.visit(parsed_function)
+    formatter = Formatter(known_definitions=definitions)
+    custom_command_formatted, _ = formatter.format(custom_command_to_format)
 
     assert custom_command_formatted == custom_command_properly_formatted
 

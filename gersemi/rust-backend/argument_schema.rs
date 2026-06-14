@@ -1,4 +1,6 @@
-use crate::node::{Node, RefinedArgumentsAtom, RefinedArgumentsNode};
+use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
+use crate::node::{RefinedArgumentsAtom, RefinedArgumentsNode};
+use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
@@ -6,13 +8,13 @@ use pyo3::{FromPyObject, PyAny};
 use std::cmp::min;
 use std::collections::HashMap;
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq)]
 pub enum SecondKeyword {
     String(String),
     Any,
 }
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq)]
 pub struct KeywordMatcher {
     first: String,
     second: Option<SecondKeyword>,
@@ -25,7 +27,7 @@ fn single_word_matcher(s: &str) -> KeywordMatcher {
     }
 }
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
 pub struct ArgumentSchema {
     options: Vec<KeywordMatcher>,
     one_value_keywords: Vec<KeywordMatcher>,
@@ -35,6 +37,9 @@ pub struct ArgumentSchema {
 
     #[pyo3(default)]
     sections: HashMap<KeywordMatcher, ArgumentSchema>,
+
+    pub keyword_preprocessors: HashMap<String, KeywordPreprocessor>,
+    pub keyword_formatters: HashMap<String, KeywordFormatter>,
 }
 
 impl FromPyObject<'_, '_> for KeywordMatcher {
@@ -59,66 +64,6 @@ impl FromPyObject<'_, '_> for KeywordMatcher {
         };
 
         Ok(KeywordMatcher { first, second })
-    }
-}
-
-pub fn is_keyword(matcher: &String, data: &str, children: &[Node]) -> bool {
-    if children.is_empty() {
-        return false;
-    }
-
-    match data {
-        "commented_argument" => match &children[0] {
-            Node::Token { .. } => false,
-            Node::Tree { data, children } => is_keyword(matcher, data, children),
-        },
-        _ => match &children[0] {
-            Node::Token { value, .. } => value == matcher,
-            Node::Tree { .. } => false,
-        },
-    }
-}
-
-fn matches_second(matcher: &SecondKeyword, data: &str, children: &[Node]) -> bool {
-    match matcher {
-        SecondKeyword::Any => true,
-        SecondKeyword::String(matcher) => is_keyword(matcher, data, children),
-    }
-}
-
-impl KeywordMatcher {
-    fn matches(&self, node: &Node) -> bool {
-        let Node::Tree { data, children } = node else {
-            return false;
-        };
-
-        let Some(second) = &self.second else {
-            return is_keyword(&self.first, data, children);
-        };
-
-        if data != "keyword_argument" {
-            return false;
-        }
-
-        match &children[0] {
-            Node::Tree {
-                data: first_data,
-                children: first_children,
-            } => {
-                if !is_keyword(&self.first, first_data, first_children) {
-                    return false;
-                }
-
-                match &children[1] {
-                    Node::Tree {
-                        data: second_data,
-                        children: second_children,
-                    } => matches_second(second, second_data, second_children),
-                    Node::Token { .. } => false,
-                }
-            }
-            Node::Token { .. } => false,
-        }
     }
 }
 
@@ -202,15 +147,6 @@ impl KeywordSplitter {
 
         self.flush_accumulators();
     }
-}
-
-pub fn is_one_of_keywords(matchers: &[KeywordMatcher], node: &Node) -> bool {
-    for matcher in matchers {
-        if matcher.matches(node) {
-            return true;
-        }
-    }
-    false
 }
 
 impl ArgumentSchema {
@@ -626,3 +562,26 @@ pub fn isolate_conditions(arguments: RefinedArgumentsNode) -> RefinedArgumentsNo
         ),
     )
 }
+
+pub type Signatures = HashMap<Option<KeywordMatcher>, ArgumentSchema>;
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Clone, FromPyObject)]
+pub enum CommandSchema {
+    StandardCommand {
+        schema: ArgumentSchema,
+        signatures: Signatures,
+        canonical_name: Option<String>,
+        inhibit_favour_expansion: bool,
+        two_words_keywords: Vec<TwoWordKeywordMatcher>,
+    },
+    SpecializedCommand {
+        canonical_name: Option<String>,
+        inhibit_favour_expansion: bool,
+
+        #[pyo3(attribute("impl"))]
+        specialization: String,
+    },
+}
+
+pub type CommandSchemas = HashMap<String, CommandSchema>;

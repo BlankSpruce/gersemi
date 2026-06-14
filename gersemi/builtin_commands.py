@@ -10,11 +10,6 @@ from gersemi.argument_schema import (
 from gersemi.immutable import ImmutableDict, make_immutable
 from gersemi.keyword_kind import KeywordFormatter
 from gersemi.keywords import AnyMatcher, KeywordMatcher
-from gersemi.specializations.add_custom_target import add_custom_target
-from gersemi.specializations.condition_syntax_command_invocation_dumper import (
-    condition_syntax_commands,
-)
-from gersemi.specializations.set_property import set_property
 
 _COMPARE_EQUAL = ("COMPARE", "EQUAL")
 _COMPARE_GREATER = ("COMPARE", "GREATER")
@@ -494,7 +489,15 @@ builtin_commands = {
         "multi_value_keywords": ["FILE_PERMISSIONS"],
     },
     "continue": {},
-    **condition_syntax_commands,
+    **{
+        key: {
+            "__impl": "condition_syntax_with_dedent"
+            if key in ("else", "elseif")
+            else "condition_syntax",
+            "_inhibit_favour_expansion": True,
+        }
+        for key in ("elseif", "else", "endif", "endwhile", "if", "while")
+    },
     "endblock": {},
     "endforeach": {},
     "endfunction": {},
@@ -1144,7 +1147,20 @@ builtin_commands = {
         "multi_value_keywords": ["PROPERTIES"],
         "keyword_formatters": {"PROPERTIES": KeywordFormatter.Pairs},
     },
-    **set_property,
+    "set_property": {
+        "options": ["GLOBAL", "APPEND", "APPEND_STRING"],
+        "multi_value_keywords": [
+            "TARGET",
+            "SOURCE",
+            "INSTALL",
+            "TEST",
+            "CACHE",
+            "PROPERTY",
+            "TARGET_DIRECTORIES",
+            "DIRECTORY",
+            "FILE_SET",
+        ],
+    },
     "set": {
         "front_positional_arguments": ["<variable>"],
         "options": ["PARENT_SCOPE", "FORCE"],
@@ -1458,7 +1474,18 @@ builtin_commands = {
             },
         },
     },
-    **add_custom_target,
+    "add_custom_target": {
+        "front_positional_arguments": ["Name"],
+        "options": ["ALL", "VERBATIM", "USES_TERMINAL", "COMMAND_EXPAND_LISTS"],
+        "one_value_keywords": [
+            "WORKING_DIRECTORY",
+            "COMMENT",
+            "JOB_POOL",
+            "JOB_SERVER_AWARE",
+        ],
+        "multi_value_keywords": ["COMMAND", "DEPENDS", "BYPRODUCTS", "SOURCES"],
+        "keyword_formatters": {"COMMAND": KeywordFormatter.CommandLine},
+    },
     "add_definitions": {},
     "add_dependencies": {
         "front_positional_arguments": ["<target>"],
@@ -3590,7 +3617,13 @@ def preprocess_definitions(definitions):
                     block_end=value.get("block_end", None),
                 )
                 if "__impl" not in value
-                else SpecializedCommand(canonical_name=key, impl=value.get("__impl"))
+                else SpecializedCommand(
+                    canonical_name=key,
+                    impl=value.get("__impl"),
+                    inhibit_favour_expansion=value.get(
+                        "_inhibit_favour_expansion", False
+                    ),
+                )
             )
             for key, value in definitions.items()
         }

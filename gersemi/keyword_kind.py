@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Union
+from typing import Union
 
 
 class KeywordFormatter(Enum):
@@ -14,25 +14,3 @@ class KeywordPreprocessor(Enum):
 
 
 KeywordKind = Union[KeywordFormatter, KeywordPreprocessor]
-
-
-def get_formatter_kind(
-    kind: Union[None, str, KeywordFormatter],
-) -> Optional[KeywordFormatter]:
-    if isinstance(kind, KeywordFormatter):
-        return kind
-
-    return (
-        KeywordFormatter(kind) if kind in [e.value for e in KeywordFormatter] else None
-    )
-
-
-def kind_to_formatter(kind: Union[None, str, KeywordFormatter]) -> Optional[str]:
-    proper_kind = get_formatter_kind(kind)
-    if proper_kind is None:
-        return None
-
-    return {
-        KeywordFormatter.CommandLine: "_format_command_line",
-        KeywordFormatter.Pairs: "_format_keyword_with_pairs",
-    }.get(proper_kind)

@@ -1,12 +1,12 @@
-from collections import ChainMap
+from collections import ChainMap, defaultdict
 from functools import lru_cache
 import re
 from typing import List, Tuple
+import gersemi_rust_backend
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import LineRanges, OutcomeConfiguration
-from gersemi.dumper import Dumper
 from gersemi.parser import Parser
-from gersemi.warnings import FormatterWarnings
+from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
 GERSEMI_OFF = "# gersemi: off"
 GERSEMI_ON = "# gersemi: on"
@@ -120,13 +120,27 @@ class Formatter:
         self.parser = Parser(self.known_definitions)
         self.lines_to_format = lines_to_format
 
+    def get_warnings(self, raw):
+        warnings = defaultdict(list)
+        for name, line, column in raw:
+            warnings[name].append((line, column))
+
+        return [
+            UnknownCommandWarning(command_name=name, positions=positions)
+            for name, positions in warnings.items()
+        ]
+
     def format(self, code) -> Tuple[str, FormatterWarnings]:
         if self.lines_to_format:
             code = add_line_range_fences(code, self.lines_to_format)
 
-        tree = self.parser.parse(code)
-        dumper = Dumper(self.configuration, self.known_definitions)
-        formatted = dumper.visit(tree)
+        formatted, raw_warnings = gersemi_rust_backend.format_code(
+            self.parser.known_definitions,
+            code,
+            self.configuration,
+            dict(self.known_definitions),
+        )
+
         if not self.configuration.unsafe:
             self.parser.check_code_equivalence(code, formatted)
 
@@ -134,7 +148,7 @@ class Formatter:
         if self.lines_to_format:
             result = remove_line_range_fences(result)
 
-        return result, dumper.get_warnings()
+        return result, self.get_warnings(raw_warnings)
 
 
 class NullFormatter:
