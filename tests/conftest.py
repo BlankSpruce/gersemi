@@ -10,7 +10,7 @@ from gersemi.configuration import (
     indent_type,
 )
 from gersemi.extensions import preprocess_definitions
-from gersemi.formatter import create_formatter
+from gersemi.formatter import Formatter
 from gersemi.noop import noop
 from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
@@ -54,7 +54,7 @@ def get_custom_command_definitions(configuration_definitions):
 @pytest.fixture(scope="module")
 def formatter_creator():
     def creator(config):
-        return create_formatter(
+        return Formatter(
             OutcomeConfiguration(
                 unsafe=config.get("unsafe", True),
                 line_length=config.get("line_length", 80),

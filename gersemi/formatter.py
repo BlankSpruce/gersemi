@@ -50,11 +50,3 @@ class Formatter:
 class NullFormatter:
     def format(self, code):
         return code, []
-
-
-def create_formatter(
-    configuration: OutcomeConfiguration,
-    known_definitions,
-    lines_to_format,
-):
-    return Formatter(configuration, known_definitions, lines_to_format)

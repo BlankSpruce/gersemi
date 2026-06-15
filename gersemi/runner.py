@@ -28,7 +28,7 @@ from gersemi.custom_command_definition_finder import (
 )
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.formatted_file import FormattedFile
-from gersemi.formatter import Formatter, NullFormatter, create_formatter
+from gersemi.formatter import Formatter, NullFormatter
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
@@ -339,7 +339,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         configuration.outcome.extensions
     )
 
-    formatter = create_formatter(
+    formatter = Formatter(
         configuration.outcome,
         ChainMap(custom_command_definitions, extension_definitions),
         lines_to_format,
