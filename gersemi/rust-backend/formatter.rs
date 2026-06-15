@@ -13,12 +13,16 @@ use crate::node::{
     CommentedArgumentComment, FileElement, LineComment, Position, RefinedArgumentsAtom,
     RefinedArgumentsNode, Start,
 };
-use crate::parser::{Parser, quoted_argument_pattern, regex};
+use crate::parser::{quoted_argument_pattern, regex, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
-use pyo3::{pyclass, pymethods, PyErr};
+use pyo3::{pyclass, pymethods, FromPyObject, PyErr};
+use regex::Regex;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::iter::zip;
+use std::str::SplitInclusive;
+use std::sync::LazyLock;
 
 type UnknownCommandsUsed = Vec<(String, usize, usize)>;
 
@@ -1313,10 +1317,156 @@ fn format(
     (formatted_code, unknown_commands_used.into_inner())
 }
 
+#[derive(FromPyObject)]
+struct LineRange {
+    start: usize,
+    end: usize,
+}
+
 #[pyclass]
 pub struct Formatter {
     configuration: OutcomeConfiguration,
     schemas: CommandSchemas,
+    lines_to_format: Vec<LineRange>,
+}
+
+const GERSEMI_OFF: &str = "# gersemi: off";
+const GERSEMI_ON: &str = "# gersemi: on";
+const CMAKE_FORMAT_OFF: &str = "# cmake-format: off";
+const CMAKE_FORMAT_ON: &str = "# cmake-format: on";
+const FMT_OFF: &str = "# fmt: off";
+const FMT_ON: &str = "# fmt: on";
+
+const BUG: &str =
+    "#-#-# gersemi: If you see this there is a bug in gersemi, please report it.#-#-#";
+
+fn line_range_fence_off() -> &'static str {
+    static VALUE: LazyLock<String> = LazyLock::new(|| format!("{GERSEMI_OFF}\n{BUG}\n"));
+    VALUE.as_str()
+}
+
+fn line_range_fence_on() -> &'static str {
+    static VALUE: LazyLock<String> = LazyLock::new(|| format!("{BUG}\n{GERSEMI_ON}\n"));
+    VALUE.as_str()
+}
+
+fn add_line_range_fences(code: String, lines_to_format: &[LineRange]) -> String {
+    if lines_to_format.is_empty() {
+        return code;
+    }
+
+    let lines: Vec<_> = code.split_inclusive('\n').collect();
+
+    let number_of_lines = lines.len();
+    let ends: Vec<_> = lines_to_format.iter().map(|x| x.end).collect();
+    if ends.iter().max().copied().unwrap_or(0) > number_of_lines {
+        return code;
+    }
+
+    let starts: Vec<_> = lines_to_format.iter().map(|x| x.start).collect();
+
+    let mut result = Vec::<&str>::new();
+    if !starts.contains(&1) {
+        result.push(line_range_fence_off());
+    }
+
+    for (line_number, line) in (1..).zip(lines) {
+        if starts.contains(&line_number) && (line_number != 1) {
+            result.push(line_range_fence_on());
+        }
+
+        result.push(line);
+
+        if ends.contains(&line_number) && (line_number != number_of_lines) {
+            result.push(line_range_fence_off());
+        }
+    }
+
+    if !ends.contains(&number_of_lines) {
+        result.push(line_range_fence_on());
+    }
+
+    result.into_iter().collect::<String>()
+}
+
+fn disabled_formatting_fences() -> &'static HashMap<&'static str, &'static str> {
+    static VALUE: LazyLock<HashMap<&str, &str>> = LazyLock::new(|| {
+        let mut value = HashMap::new();
+        value.insert(GERSEMI_OFF, GERSEMI_ON);
+        value.insert(CMAKE_FORMAT_OFF, CMAKE_FORMAT_ON);
+        value.insert(FMT_OFF, FMT_ON);
+        value
+    });
+    &VALUE
+}
+
+fn consume_until<'a>(iterator: &mut SplitInclusive<'a, char>, target: &str) -> Option<&'a str> {
+    loop {
+        match iterator.next() {
+            None => {
+                return None;
+            }
+            Some(line) => {
+                if line.trim() == target {
+                    return Some(line);
+                }
+            }
+        }
+    }
+}
+
+fn reconstruct_disabled_formatting_zones(original: &str, formatted: String) -> String {
+    if disabled_formatting_fences()
+        .keys()
+        .all(|x| !original.contains(x))
+    {
+        return formatted;
+    }
+
+    let mut other = original.split_inclusive('\n');
+    let mut active = formatted.split_inclusive('\n');
+    let mut closing_fence: Option<&str> = None;
+    let mut line: &str;
+
+    let mut result = Vec::<&str>::new();
+    while let Some(next_line) = active.next() {
+        line = next_line;
+        let command = line.trim();
+
+        if closing_fence.is_none() {
+            closing_fence = disabled_formatting_fences().get(command).map(|v| &**v);
+            if closing_fence.is_some() {
+                consume_until(&mut other, command);
+                (other, active) = (active, other);
+            }
+        }
+
+        if Some(command) == closing_fence {
+            let gersemi_on = consume_until(&mut other, command);
+            if let Some(gersemi_on) = gersemi_on {
+                line = gersemi_on;
+            }
+
+            (other, active) = (active, other);
+            closing_fence = None;
+        }
+
+        result.push(line);
+    }
+
+    result.into_iter().collect::<String>()
+}
+
+fn line_range_fence_regex() -> Regex {
+    let off_pattern = format!("[ \t]*{GERSEMI_OFF}\\n{BUG}\\n");
+    let on_pattern = format!("{BUG}\\n[ \t]*{GERSEMI_ON}\\n");
+    let pattern = format!("{off_pattern}|{on_pattern}");
+    regex(&pattern)
+}
+
+fn remove_line_range_fences(formatted_code: &str) -> String {
+    let pattern = line_range_fence_regex();
+    pattern.replace_all(formatted_code, "").to_string()
 }
 
 pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
@@ -1324,15 +1474,21 @@ pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
 #[pymethods]
 impl Formatter {
     #[new]
-    fn new(configuration: OutcomeConfiguration, schemas: CommandSchemas) -> Self {
+    fn new(
+        configuration: OutcomeConfiguration,
+        schemas: CommandSchemas,
+        lines_to_format: Vec<LineRange>,
+    ) -> Self {
         Self {
             configuration,
             schemas,
+            lines_to_format,
         }
     }
 
     fn format(&self, text: String) -> Result<(String, UnknownCommandsUsed), PyErr> {
-        let node = Parser::new(text, &self.schemas).start()?;
+        let text = add_line_range_fences(text, &self.lines_to_format);
+        let node = Parser::new(text.clone(), &self.schemas).start()?;
         let before = if self.configuration.disable_sanity_checks {
             None
         } else {
@@ -1348,6 +1504,13 @@ impl Formatter {
                 ));
             }
         }
+
+        let result = reconstruct_disabled_formatting_zones(&text, result);
+        let result = if self.lines_to_format.is_empty() {
+            result
+        } else {
+            remove_line_range_fences(&result)
+        };
         Ok((result, warnings))
     }
 }

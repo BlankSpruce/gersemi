@@ -53,7 +53,7 @@ mod gersemi_rust_backend {
 
     #[pymodule_export]
     use crate::formatter::Formatter;
-    
+
     #[pyfunction]
     fn version() -> &'static str {
         static RESULT: &str = env!("CARGO_VERSION");

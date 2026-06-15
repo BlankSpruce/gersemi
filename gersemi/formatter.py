@@ -1,110 +1,9 @@
 from collections import ChainMap, defaultdict
-from functools import lru_cache
-import re
-from typing import List, Tuple
+from typing import Tuple
 import gersemi_rust_backend
 from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import LineRanges, OutcomeConfiguration
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
-
-GERSEMI_OFF = "# gersemi: off"
-GERSEMI_ON = "# gersemi: on"
-DISABLED_FORMATTING_FENCES = {
-    GERSEMI_OFF: GERSEMI_ON,
-    "# cmake-format: off": "# cmake-format: on",
-    "# fmt: off": "# fmt: on",
-}
-BUG = "#-#-# gersemi: If you see this there is a bug in gersemi, please report it.#-#-#"
-LINE_RANGE_FENCE_OFF = f"{GERSEMI_OFF}\n{BUG}\n"
-LINE_RANGE_FENCE_ON = f"{BUG}\n{GERSEMI_ON}\n"
-
-
-@lru_cache(maxsize=None)
-def line_range_fence_regex():
-    off_pattern = f"[ \t]*{GERSEMI_OFF}\\n{BUG}\\n"
-    on_pattern = f"{BUG}\\n[ \t]*{GERSEMI_ON}\\n"
-    return re.compile(f"{off_pattern}|{on_pattern}")
-
-
-def consume_until(iterator, target):
-    while True:
-        line = next(iterator, None)
-        if line is None:
-            return None
-
-        if line.strip() == target:
-            return line
-
-
-def reconstruct_disabled_formatting_zones_impl(original, formatted):
-    other = iter(original.splitlines(keepends=True))
-    active = iter(formatted.splitlines(keepends=True))
-    closing_fence = None
-
-    while True:
-        line = next(active, None)
-        if line is None:
-            break
-
-        command = line.strip()
-
-        if closing_fence is None:
-            closing_fence = DISABLED_FORMATTING_FENCES.get(command)
-            if closing_fence is not None:
-                consume_until(other, command)
-                other, active = active, other
-
-        if command == closing_fence:
-            gersemi_on = consume_until(other, command)
-            if gersemi_on is not None:
-                line = gersemi_on
-            other, active = active, other
-            closing_fence = None
-
-        yield line
-
-
-def reconstruct_disabled_formatting_zones(original, formatted):
-    if all(off_pattern not in original for off_pattern in DISABLED_FORMATTING_FENCES):
-        return formatted
-
-    return "".join(reconstruct_disabled_formatting_zones_impl(original, formatted))
-
-
-def add_line_range_fences_impl(lines: List[str], lines_to_format: LineRanges):
-    N = len(lines)
-
-    starts = [r.start for r in lines_to_format]
-    ends = [r.end for r in lines_to_format]
-
-    if 1 not in starts:
-        yield LINE_RANGE_FENCE_OFF
-
-    for line_number, line in enumerate(lines, start=1):
-        if (line_number in starts) and (line_number != 1):
-            yield LINE_RANGE_FENCE_ON
-
-        yield line
-
-        if (line_number in ends) and (line_number != N):
-            yield LINE_RANGE_FENCE_OFF
-
-    if N not in ends:
-        yield LINE_RANGE_FENCE_ON
-
-
-def add_line_range_fences(code: str, lines_to_format: LineRanges) -> str:
-    lines = code.splitlines(keepends=True)
-    N = len(lines)
-    if max(r.end for r in lines_to_format) > N:
-        return code
-
-    return "".join(add_line_range_fences_impl(lines, lines_to_format))
-
-
-def remove_line_range_fences(formatted_code: str) -> str:
-    pattern = line_range_fence_regex()
-    return pattern.sub("", formatted_code)
 
 
 class Formatter:
@@ -116,12 +15,12 @@ class Formatter:
     ):
         self.configuration = configuration
         self.known_definitions = dict(ChainMap(known_definitions, _builtin_commands))
-        self.lines_to_format = lines_to_format
+        self.lines_to_format = list(lines_to_format)
         self.init_backend()
 
     def init_backend(self):
         self.impl = gersemi_rust_backend.Formatter(
-            self.configuration, self.known_definitions
+            self.configuration, self.known_definitions, self.lines_to_format
         )
 
     def __getstate__(self):
@@ -144,14 +43,7 @@ class Formatter:
         ]
 
     def format(self, code) -> Tuple[str, FormatterWarnings]:
-        if self.lines_to_format:
-            code = add_line_range_fences(code, self.lines_to_format)
-
-        formatted, raw_warnings = self.impl.format(code)
-        result = reconstruct_disabled_formatting_zones(code, formatted)
-        if self.lines_to_format:
-            result = remove_line_range_fences(result)
-
+        result, raw_warnings = self.impl.format(code)
         return result, self.get_warnings(raw_warnings)
 
 
