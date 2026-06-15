@@ -115,8 +115,23 @@ class Formatter:
         lines_to_format: LineRanges,
     ):
         self.configuration = configuration
-        self.known_definitions = ChainMap(known_definitions, _builtin_commands)
+        self.known_definitions = dict(ChainMap(known_definitions, _builtin_commands))
         self.lines_to_format = lines_to_format
+        self.init_backend()
+
+    def init_backend(self):
+        self.impl = gersemi_rust_backend.Formatter(
+            self.configuration, self.known_definitions
+        )
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["impl"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.init_backend()
 
     def get_warnings(self, raw):
         warnings = defaultdict(list)
@@ -132,9 +147,7 @@ class Formatter:
         if self.lines_to_format:
             code = add_line_range_fences(code, self.lines_to_format)
 
-        formatted, raw_warnings = gersemi_rust_backend.format_code(
-            code, self.configuration, dict(self.known_definitions)
-        )
+        formatted, raw_warnings = self.impl.format(code)
         result = reconstruct_disabled_formatting_zones(code, formatted)
         if self.lines_to_format:
             result = remove_line_range_fences(result)

@@ -13,15 +13,17 @@ use crate::node::{
     CommentedArgumentComment, FileElement, LineComment, Position, RefinedArgumentsAtom,
     RefinedArgumentsNode, Start,
 };
-use crate::parser::{quoted_argument_pattern, regex};
+use crate::parser::{Parser, quoted_argument_pattern, regex};
+use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
+use pyo3::{pyclass, pymethods, PyErr};
 use std::cell::RefCell;
 use std::iter::zip;
 
-pub type UnknownCommandsUsed = Vec<(String, usize, usize)>;
+type UnknownCommandsUsed = Vec<(String, usize, usize)>;
 
 #[derive(Clone)]
-struct Formatter<'a> {
+struct FormatterImpl<'a> {
     active_command: Option<CommandSchema>,
     favour_expansion: bool,
     indent_symbol: String,
@@ -32,7 +34,7 @@ struct Formatter<'a> {
     schemas: &'a CommandSchemas,
 }
 
-pub fn remove_common_beginning(s: &str, other: &str) -> String {
+fn remove_common_beginning(s: &str, other: &str) -> String {
     let mut index = 0;
     for (lhs, rhs) in zip(s.chars(), other.chars()) {
         if lhs != rhs {
@@ -44,7 +46,7 @@ pub fn remove_common_beginning(s: &str, other: &str) -> String {
     s[index..].to_string()
 }
 
-pub fn strip_empty_lines_from_edges(s: &str) -> String {
+fn strip_empty_lines_from_edges(s: &str) -> String {
     let mut result = s
         .lines()
         .skip_while(|x| x.trim().is_empty())
@@ -57,7 +59,7 @@ pub fn strip_empty_lines_from_edges(s: &str) -> String {
     result.join("\n")
 }
 
-pub fn ends_with_line_comment(s: &str) -> bool {
+fn ends_with_line_comment(s: &str) -> bool {
     let mut start = 0;
     loop {
         let line_comment_begin_index = s[start..].rfind('#');
@@ -181,7 +183,7 @@ fn indent_segment(segment: &str, indent_symbol: &str) -> String {
     indent(segment, indent_symbol, |x| !x.starts_with('\n'))
 }
 
-pub fn safe_indent(s: &str, indent_symbol: &str) -> String {
+fn safe_indent(s: &str, indent_symbol: &str) -> String {
     let result = split_into_segments(s)
         .into_iter()
         .map(|x| indent_segment(&x, indent_symbol))
@@ -345,7 +347,7 @@ fn preprocess_content(content: &str) -> String {
     format!("{begin}{stripped_content}{end}")
 }
 
-impl Formatter<'_> {
+impl FormatterImpl<'_> {
     fn not_indented(&self) -> Self {
         let mut result = self.clone();
         result.indent_symbol = String::new();
@@ -1103,7 +1105,7 @@ impl Formatter<'_> {
 
     fn try_to_format_into_single_line<
         Part: HasLineComment,
-        Visitor: Fn(&mut Formatter, &Part) -> String,
+        Visitor: Fn(&mut FormatterImpl, &Part) -> String,
     >(
         &self,
         prefix: &str,
@@ -1292,13 +1294,13 @@ impl Formatter<'_> {
     }
 }
 
-pub fn format(
+fn format(
     node: Start,
     configuration: &OutcomeConfiguration,
     schemas: &CommandSchemas,
 ) -> (String, UnknownCommandsUsed) {
     let unknown_commands_used: RefCell<UnknownCommandsUsed> = UnknownCommandsUsed::new().into();
-    let formatter = Formatter {
+    let formatter = FormatterImpl {
         active_command: None,
         favour_expansion: false,
         indent_symbol: String::new(),
@@ -1309,4 +1311,43 @@ pub fn format(
     };
     let formatted_code = formatter.start(node);
     (formatted_code, unknown_commands_used.into_inner())
+}
+
+#[pyclass]
+pub struct Formatter {
+    configuration: OutcomeConfiguration,
+    schemas: CommandSchemas,
+}
+
+pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
+
+#[pymethods]
+impl Formatter {
+    #[new]
+    fn new(configuration: OutcomeConfiguration, schemas: CommandSchemas) -> Self {
+        Self {
+            configuration,
+            schemas,
+        }
+    }
+
+    fn format(&self, text: String) -> Result<(String, UnknownCommandsUsed), PyErr> {
+        let node = Parser::new(text, &self.schemas).start()?;
+        let before = if self.configuration.disable_sanity_checks {
+            None
+        } else {
+            Some(node.clone())
+        };
+
+        let (result, warnings) = format(node, &self.configuration, &self.schemas);
+        if let Some(before) = before {
+            let after = Parser::new(result.clone(), &self.schemas).start()?;
+            if !check_equivalence(before, after) {
+                return Err(ASTMismatch::new_err(
+                    "Reformatting doesn't produce equivalent code.",
+                ));
+            }
+        }
+        Ok((result, warnings))
+    }
 }
