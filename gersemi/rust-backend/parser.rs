@@ -9,13 +9,12 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 struct BlockCommand {
-    name: String,
     re: regex::Regex,
 }
 
 pub struct Parser<'a> {
     text: String,
-    blocks: Vec<(BlockCommand, BlockCommand)>,
+    blocks: Vec<(String, BlockCommand)>,
     schemas: &'a CommandSchemas,
 }
 
@@ -228,15 +227,14 @@ impl Parser<'_> {
         command: &BlockCommand,
         offset: usize,
     ) -> Result<Option<(Command, usize)>, Error> {
-        let compute_position = matches!(command.name.as_str(), "function" | "macro");
-        self.command_element_t(&command.re, true, compute_position, offset)
+        self.command_element_t(&command.re, offset)
     }
 
     fn block_body(
         &self,
         end_command: &BlockCommand,
         mut offset: usize,
-    ) -> Result<Option<(Vec<FileElement>, usize)>, Error> {
+    ) -> Result<(Vec<FileElement>, Option<Command>, usize), Error> {
         if let Some((_, new_offset)) = self.newline_or_gap(offset) {
             offset = new_offset;
         }
@@ -244,8 +242,8 @@ impl Parser<'_> {
         let mut result: Vec<FileElement> = vec![];
         let mut last_newline_or_gap: Option<FileElement> = None;
         loop {
-            if self.element_t(end_command, offset)?.is_some() {
-                break;
+            if let Some((end_command, offset)) = self.element_t(end_command, offset)? {
+                return Ok((result, Some(end_command), offset));
             }
 
             match self.file_element(offset)? {
@@ -273,42 +271,57 @@ impl Parser<'_> {
                     offset = new_offset;
                 }
                 None => {
-                    return Ok(Some((result, offset)));
+                    return Ok((result, None, offset));
                 }
             }
         }
 
-        Ok(Some((result, offset)))
+        Ok((result, None, offset))
     }
 
     fn block_t(
         &self,
-        start_command: &BlockCommand,
+        start_node: &Command,
         end_command: &BlockCommand,
         offset: usize,
-    ) -> Result<Option<(FileElement, usize)>, Error> {
-        match self.element_t(start_command, offset)? {
-            None => Ok(None),
-            Some((start, offset)) => match self.block_body(end_command, offset)? {
-                None => Err(self.unbalanced_block(offset)),
-                Some((body, offset)) => match self.element_t(end_command, offset)? {
-                    None => Err(self.unbalanced_block(offset)),
-                    Some((end, offset)) => {
-                        Ok(Some((FileElement::Block { start, body, end }, offset)))
-                    }
+    ) -> Result<(FileElement, usize), Error> {
+        let (body, end_command, offset) = self.block_body(end_command, offset)?;
+        match end_command {
+            None => Err(self.unbalanced_block(offset)),
+            Some(end) => Ok((
+                FileElement::Block {
+                    start: start_node.clone(),
+                    body,
+                    end,
                 },
-            },
+                offset,
+            )),
         }
     }
 
-    fn block(&self, offset: usize) -> Result<Option<(FileElement, usize)>, Error> {
-        for (block_start, block_end) in &self.blocks {
-            if let Some(matched) = self.block_t(block_start, block_end, offset)? {
-                return Ok(Some(matched));
-            }
+    fn block(
+        &self,
+        start_node: Command,
+        offset: usize,
+    ) -> Result<(FileElement, usize), Error> {
+        let start_node_name = start_node.command_name().to_lowercase();
+        if let Some((_, block_end)) = self
+            .blocks
+            .iter()
+            .find(|(block_start, _)| block_start.as_str() == start_node_name)
+        {
+            return self.block_t(&start_node, block_end, offset);
         }
 
-        Ok(None)
+        let start_node = match start_node {
+            Command::Element {
+                command_invocation,
+                line_comment: None,
+            } => Command::Invocation(command_invocation),
+            _ => start_node,
+        };
+
+        Ok((FileElement::Command(start_node), offset))
     }
 
     fn commented_argument_atom(
@@ -551,38 +564,24 @@ impl Parser<'_> {
         }
     }
 
-    fn identifier(
-        &self,
-        re: &regex::Regex,
-        offset: usize,
-        block_edge: bool,
-    ) -> Option<(String, usize)> {
-        match self.raw_terminal(re, offset) {
-            None => None,
-            Some((value, offset)) => {
-                if block_edge || !self.is_block_edge_command(value.as_str()) {
-                    return Some((value, offset));
-                }
-
-                None
-            }
-        }
-    }
-
     fn command_invocation_t(
         &self,
         re: &regex::Regex,
         offset: usize,
-        block_edge: bool,
-        compute_position: bool,
     ) -> Result<Option<(CommandInvocation, usize)>, Error> {
         let initial_offset = offset;
-        Ok(match self.identifier(re, offset, block_edge) {
+        Ok(match self.raw_terminal(re, offset) {
             None => None,
             Some((matched_identifier, identifier_offset)) => {
                 match self.left_paren(identifier_offset) {
                     None => None,
-                    Some((_, offset)) => match self.arguments(offset, compute_position)? {
+                    Some((_, offset)) => match self.arguments(
+                        offset,
+                        matches!(
+                            matched_identifier.to_lowercase().as_str(),
+                            "function" | "macro"
+                        ),
+                    )? {
                         None => None,
                         Some((matched_arguments, arguments_offset)) => {
                             let (_, offset) = self.right_paren(arguments_offset)?;
@@ -606,42 +605,28 @@ impl Parser<'_> {
     fn command_element_t(
         &self,
         re: &regex::Regex,
-        block_edge: bool,
-        compute_position: bool,
         offset: usize,
     ) -> Result<Option<(Command, usize)>, Error> {
-        Ok(
-            match self.command_invocation_t(re, offset, block_edge, compute_position)? {
-                None => None,
-                Some((matched, offset)) => match self.line_comment(offset) {
-                    None => {
-                        if block_edge {
-                            Some((
-                                Command::Element {
-                                    command_invocation: matched,
-                                    line_comment: None,
-                                },
-                                offset,
-                            ))
-                        } else {
-                            Some((Command::Invocation(matched), offset))
-                        }
-                    }
-                    Some((matched_comment, new_offset)) => Some((
-                        Command::Element {
-                            command_invocation: matched,
-                            line_comment: Some(matched_comment),
-                        },
-                        new_offset,
-                    )),
-                },
-            },
-        )
+        Ok(self
+            .command_invocation_t(re, offset)?
+            .map(|(command_invocation, offset)| {
+                let (line_comment, offset) = match self.line_comment(offset) {
+                    None => (None, offset),
+                    Some((matched_comment, new_offset)) => (Some(matched_comment), new_offset),
+                };
+                (
+                    Command::Element {
+                        command_invocation,
+                        line_comment,
+                    },
+                    offset,
+                )
+            }))
     }
 
     fn command_element(&self, offset: usize) -> Result<Option<(Command, usize)>, Error> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-        self.command_element_t(&RE, false, false, offset)
+        self.command_element_t(&RE, offset)
     }
 
     fn standalone_identifier(&self, offset: usize) -> Option<(FileElement, usize)> {
@@ -735,12 +720,8 @@ impl Parser<'_> {
     }
 
     fn file_element(&self, offset: usize) -> Result<Option<(FileElement, usize)>, Error> {
-        if let Some(result) = self.block(offset)? {
-            return Ok(Some(result));
-        }
-
         if let Some((result, offset)) = self.command_element(offset)? {
-            return Ok(Some((FileElement::Command(result), offset)));
+            return Ok(Some(self.block(result, offset)?));
         }
 
         if let Some(result) = self.standalone_identifier(offset) {
@@ -827,25 +808,15 @@ impl Parser<'_> {
         let command_name = command_name.to_lowercase();
         self.schemas.contains_key(&command_name)
     }
-
-    fn is_block_edge_command(&self, command_name: &str) -> bool {
-        let name = command_name.to_lowercase();
-        self.blocks
-            .iter()
-            .any(|(start, end)| start.name == name || end.name == name)
-    }
 }
 
 fn block_command(name: &str) -> BlockCommand {
     let pattern = format!("(?i)^({name})[ \t]*");
     let re = regex(pattern.as_str());
-    BlockCommand {
-        name: name.to_string(),
-        re,
-    }
+    BlockCommand { re }
 }
 
-fn prepare_blocks(schemas: &CommandSchemas) -> Vec<(BlockCommand, BlockCommand)> {
+fn prepare_blocks(schemas: &CommandSchemas) -> Vec<(String, BlockCommand)> {
     schemas
         .values()
         .filter_map(|schema| match schema {
@@ -853,7 +824,10 @@ fn prepare_blocks(schemas: &CommandSchemas) -> Vec<(BlockCommand, BlockCommand)>
                 canonical_name: Some(canonical_name),
                 block_end: Some(block_end),
                 ..
-            } => Some((block_command(canonical_name), block_command(block_end))),
+            } => Some((
+                canonical_name.trim().to_lowercase(),
+                block_command(block_end),
+            )),
             _ => None,
         })
         .collect()

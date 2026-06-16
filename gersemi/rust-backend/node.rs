@@ -305,6 +305,18 @@ pub enum Command {
 }
 
 impl Command {
+    pub fn command_name(&self) -> &str {
+        match self {
+            Self::Element {
+                command_invocation, ..
+            }
+            | Self::Invocation(command_invocation) => match command_invocation {
+                CommandInvocation::KnownCommand { identifier, .. }
+                | CommandInvocation::CustomCommand { identifier, .. } => identifier,
+            },
+        }
+    }
+
     pub fn into_node(self) -> Node {
         match self {
             Self::Element {
