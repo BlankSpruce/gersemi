@@ -28,7 +28,8 @@ type UnknownCommandsUsed = Vec<(String, usize, usize)>;
 
 #[derive(Clone)]
 struct FormatterImpl<'a> {
-    active_command: Option<CommandSchema>,
+    active_schema: Option<&'a ArgumentSchema>,
+    active_command: Option<&'a CommandSchema>,
     favour_expansion: bool,
     indent_symbol: String,
 
@@ -379,11 +380,17 @@ impl FormatterImpl<'_> {
         result
     }
 
-    fn patched(&self, active_command: Option<CommandSchema>) -> Self {
-        if active_command.is_none() {
-            return self.clone();
-        }
+    fn patch_active_command<'a>(
+        &'a self,
+        active_command: Option<&'a CommandSchema>,
+    ) -> FormatterImpl<'a> {
         let mut result = self.clone();
+        if let Some(active_command) = active_command {
+            result.active_schema = match &active_command.details {
+                CommandSchemaDetails::StandardCommand { schema, .. } => Some(schema),
+                CommandSchemaDetails::SpecializedCommand { .. } => None,
+            };
+        }
         result.active_command = active_command;
         result
     }
@@ -410,9 +417,9 @@ impl FormatterImpl<'_> {
             .collect::<String>()
     }
 
-    fn get_patch(&self, identifier: &str) -> Option<CommandSchema> {
+    fn get_patch(&self, identifier: &str) -> Option<&CommandSchema> {
         let identifier = identifier.to_lowercase();
-        self.schemas.get(&identifier).cloned()
+        self.schemas.get(&identifier)
     }
 
     fn two_words_keywords(&self) -> &Vec<TwoWordKeywordMatcher> {
@@ -816,11 +823,8 @@ impl FormatterImpl<'_> {
     }
 
     fn get_preprocessor(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordPreprocessor> {
-        match &self.active_command {
-            Some(CommandSchema {
-                details: CommandSchemaDetails::StandardCommand { schema, .. },
-                ..
-            }) => atom
+        match &self.active_schema {
+            Some(schema) => atom
                 .get_value()
                 .and_then(|key| schema.keyword_preprocessors.get(&key).cloned()),
             _ => None,
@@ -828,11 +832,8 @@ impl FormatterImpl<'_> {
     }
 
     fn get_formatter(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordFormatter> {
-        match &self.active_command {
-            Some(CommandSchema {
-                details: CommandSchemaDetails::StandardCommand { schema, .. },
-                ..
-            }) => atom
+        match &self.active_schema {
+            Some(schema) => atom
                 .get_value()
                 .and_then(|key| schema.keyword_formatters.get(&key).cloned()),
             _ => None,
@@ -949,7 +950,7 @@ impl FormatterImpl<'_> {
             Some(CommandSchema {
                 inhibit_favour_expansion,
                 ..
-            }) => inhibit_favour_expansion,
+            }) => *inhibit_favour_expansion,
             _ => false,
         }
     }
@@ -970,11 +971,8 @@ impl FormatterImpl<'_> {
     }
 
     fn split_arguments(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
-        match &self.active_command {
-            Some(CommandSchema {
-                details: CommandSchemaDetails::StandardCommand { schema, .. },
-                ..
-            }) => schema.split_arguments_with_sections(arguments),
+        match &self.active_schema {
+            Some(schema) => schema.split_arguments_with_sections(arguments),
             _ => arguments,
         }
     }
@@ -1040,34 +1038,18 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn create_schema_patch(&self, schema: Option<&ArgumentSchema>) -> Option<CommandSchema> {
-        let schema = schema?;
-        match &self.active_command {
-            Some(command_schema) => match &command_schema.details {
-                CommandSchemaDetails::StandardCommand {
-                    signatures,
-                    two_words_keywords,
-                    ..
-                } => {
-                    let mut result = command_schema.clone();
-                    result.details = CommandSchemaDetails::StandardCommand {
-                        schema: schema.clone(),
-                        signatures: signatures.clone(),
-                        two_words_keywords: two_words_keywords.clone(),
-                    };
-                    Some(result)
-                }
-                CommandSchemaDetails::SpecializedCommand { .. } => None,
-            },
-            _ => None,
+    fn patch_active_schema<'a>(&'a self, schema: Option<&'a ArgumentSchema>) -> FormatterImpl<'a> {
+        let mut result = self.clone();
+        if let Some(schema) = schema {
+            result.active_schema = Some(schema);
         }
+        result
     }
 
     fn format_command(&self, identifier: &str, arguments: ArgumentsNode) -> String {
         let arguments = self.preprocess_arguments(arguments);
         let signature = self.get_signature(&arguments);
-        let signature = self.create_schema_patch(signature);
-        let f = self.patched(signature);
+        let f = self.patch_active_schema(signature);
 
         match f.active_command {
             Some(CommandSchema {
@@ -1083,7 +1065,7 @@ impl FormatterImpl<'_> {
     }
 
     fn known_command(&self, identifier: &str, arguments: ArgumentsNode) -> String {
-        self.patched(self.get_patch(identifier))
+        self.patch_active_command(self.get_patch(identifier))
             .format_command(identifier, arguments)
     }
 
@@ -1305,6 +1287,7 @@ fn format(
 ) -> (String, UnknownCommandsUsed) {
     let unknown_commands_used: RefCell<UnknownCommandsUsed> = UnknownCommandsUsed::new().into();
     let formatter = FormatterImpl {
+        active_schema: None,
         active_command: None,
         favour_expansion: false,
         indent_symbol: String::new(),
