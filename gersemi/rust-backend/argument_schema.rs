@@ -136,8 +136,7 @@ impl KeywordSplitter {
                 self.accumulator.nodes.append(&mut self.comment_accumulator);
                 self.accumulator.nodes.push(argument);
             } else {
-                if let AccumulatorKind::PositionalArguments = self.accumulator.kind {
-                } else {
+                if !matches!(self.accumulator.kind, AccumulatorKind::PositionalArguments) {
                     self.accumulator.kind = AccumulatorKind::PositionalArguments;
                 }
                 self.accumulator.nodes.append(&mut self.comment_accumulator);

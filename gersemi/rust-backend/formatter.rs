@@ -189,11 +189,10 @@ fn indent_segment(segment: &str, indent_symbol: &str) -> String {
 }
 
 fn safe_indent(s: &str, indent_symbol: &str) -> String {
-    let result = split_into_segments(s)
+    split_into_segments(s)
         .into_iter()
         .map(|x| indent_segment(&x, indent_symbol))
-        .collect::<Vec<String>>();
-    result.into_iter().collect::<String>()
+        .collect::<String>()
 }
 
 trait HasLineComment {

@@ -148,8 +148,7 @@ pub fn keep_unique_arguments(nodes: RefinedArgumentsNode) -> RefinedArgumentsNod
     let mut unique_buckets = Vec::<Bucket>::new();
     for bucket in buckets {
         let value = get_bucket_value(&bucket, false);
-        if !known.contains(&value) {
-            known.insert(value);
+        if known.insert(value) {
             unique_buckets.push(bucket);
         }
     }
