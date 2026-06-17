@@ -507,12 +507,11 @@ impl FormatterImpl<'_> {
         }
 
         let begin = self.indent("(\n");
-        let arguments = self.indented().arguments(
-            arguments
-                .iter()
-                .map(|x| RefinedArgumentsAtom::Atom(x.clone()))
-                .collect(),
-        );
+        let arguments = arguments
+            .iter()
+            .map(|x| RefinedArgumentsAtom::Atom(x.clone()))
+            .collect();
+        let arguments = self.indented().arguments(&arguments);
         let end = self.indent(")");
         format!("{begin}{arguments}\n{end}")
     }
@@ -528,7 +527,7 @@ impl FormatterImpl<'_> {
         }
 
         let begin = self.indent("(\n");
-        let formatted_arguments = self.indented().arguments(arguments);
+        let formatted_arguments = self.indented().arguments(&arguments);
         let end = self.indent(")");
         format!("{begin}{formatted_arguments}\n{end}")
     }
@@ -955,8 +954,7 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn inlining_condition(&self, arguments: &RefinedArgumentsNode) -> bool {
-        let groups = self.split_arguments(arguments.clone());
+    fn inlining_condition(&self, groups: &RefinedArgumentsNode) -> bool {
         let mut group_sizes = groups.iter().map(Self::group_size);
         let threshold = if (matches!(
             self.configuration.list_expansion,
@@ -977,8 +975,7 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn arguments(&mut self, arguments: RefinedArgumentsNode) -> String {
-        let arguments = self.split_arguments(arguments);
+    fn arguments(&mut self, arguments: &RefinedArgumentsNode) -> String {
         arguments
             .iter()
             .map(|x| self.arguments_atom(x))
@@ -989,10 +986,10 @@ impl FormatterImpl<'_> {
     fn format_command_with_short_name(
         &self,
         begin: &str,
-        arguments: RefinedArgumentsNode,
+        arguments: &RefinedArgumentsNode,
         end: &str,
     ) -> String {
-        let have_no_line_comments = !is_line_comment_in_any_of(&arguments);
+        let have_no_line_comments = !is_line_comment_in_any_of(arguments);
         let formatted_arguments = self
             .indented()
             .arguments(arguments)
@@ -1010,7 +1007,7 @@ impl FormatterImpl<'_> {
         )
     }
 
-    fn format_signature(&self, identifier: &str, arguments: RefinedArgumentsNode) -> String {
+    fn format_signature(&self, identifier: &str, mut arguments: RefinedArgumentsNode) -> String {
         let begin = format!("{}(", self.format_command_name(identifier));
         let end = ")";
 
@@ -1019,20 +1016,23 @@ impl FormatterImpl<'_> {
                 formatter.arguments_atom(x)
             })
         {
+            arguments = self.split_arguments(arguments);
             if self.inlining_condition(&arguments) {
                 return result;
             }
+        } else {
+            arguments = self.split_arguments(arguments);
         }
 
         let f = self.select_expansion_strategy();
         match f.configuration.indent_type {
             IndentType::Spaces(spaces) if begin.len() == spaces => {
-                f.format_command_with_short_name(&begin, arguments, end)
+                f.format_command_with_short_name(&begin, &arguments, end)
             }
             _ => format!(
                 "{}\n{}\n{}",
                 f.indent(&begin),
-                f.indented().arguments(arguments),
+                f.indented().arguments(&arguments),
                 f.indent(end)
             ),
         }
