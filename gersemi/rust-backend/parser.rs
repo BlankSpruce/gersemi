@@ -195,6 +195,11 @@ impl Parser<'_> {
         }
     }
 
+    fn raw_find(&self, re: &regex::Regex, offset: usize) -> Option<usize> {
+        re.find(&self.text[offset..])
+            .map(|matched| offset + matched.len())
+    }
+
     fn raw_terminal(&self, re: &regex::Regex, offset: usize) -> Option<(String, usize)> {
         match re.captures(&self.text[offset..]) {
             None => None,
@@ -209,20 +214,17 @@ impl Parser<'_> {
 
     fn pound_sign(&self, offset: usize) -> Option<usize> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
-        match RE.captures(&self.text[offset..]) {
-            None => None,
-            Some(captures) => captures.get(1).map(|_| offset + captures.get_match().len()),
-        }
+        self.raw_find(&RE, offset)
     }
 
-    fn left_paren(&self, offset: usize) -> Option<(String, usize)> {
+    fn left_paren(&self, offset: usize) -> Option<usize> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\()[ \t]*"));
-        self.raw_terminal(&RE, offset)
+        self.raw_find(&RE, offset)
     }
 
-    fn right_paren(&self, offset: usize) -> Result<(String, usize), Error> {
+    fn right_paren(&self, offset: usize) -> Result<usize, Error> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\))[ \t]*"));
-        match self.raw_terminal(&RE, offset) {
+        match self.raw_find(&RE, offset) {
             None => Err(self.unbalanced_parentheses(offset)),
             Some(matched) => Ok(matched),
         }
@@ -354,9 +356,9 @@ impl Parser<'_> {
         Ok(None)
     }
 
-    fn quotation_mark(&self, offset: usize) -> Option<(String, usize)> {
+    fn quotation_mark(&self, offset: usize) -> Option<usize> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r#"^(")"#));
-        self.raw_terminal(&RE, offset)
+        self.raw_find(&RE, offset)
     }
 
     fn quoted_argument(
@@ -421,10 +423,10 @@ impl Parser<'_> {
     fn complex_argument(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
         Ok(match self.left_paren(offset) {
             None => None,
-            Some((_, offset)) => match self.arguments(offset, false)? {
+            Some(offset) => match self.arguments(offset, false)? {
                 None => None,
                 Some((matched_arguments, offset)) => {
-                    let (_, offset) = self.right_paren(offset)?;
+                    let offset = self.right_paren(offset)?;
                     Some((
                         Argument::Complex {
                             arguments: matched_arguments,
@@ -582,7 +584,7 @@ impl Parser<'_> {
             Some((matched_identifier, identifier_offset)) => {
                 match self.left_paren(identifier_offset) {
                     None => None,
-                    Some((_, offset)) => match self.arguments(
+                    Some(offset) => match self.arguments(
                         offset,
                         matches!(
                             matched_identifier.to_lowercase().as_str(),
@@ -591,7 +593,7 @@ impl Parser<'_> {
                     )? {
                         None => None,
                         Some((matched_arguments, arguments_offset)) => {
-                            let (_, offset) = self.right_paren(arguments_offset)?;
+                            let offset = self.right_paren(arguments_offset)?;
                             Some((
                                 self.create_command_invocation_node(
                                     matched_identifier,
@@ -804,7 +806,7 @@ impl Parser<'_> {
         }
 
         if offset != self.text.len() {
-            let (_, offset) = self.right_paren(offset)?;
+            let offset = self.right_paren(offset)?;
             return Err(self.unbalanced_parentheses(offset));
         }
 
