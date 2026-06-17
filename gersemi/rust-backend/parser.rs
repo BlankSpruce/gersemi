@@ -14,6 +14,7 @@ struct BlockCommand {
 
 pub struct Parser<'a> {
     text: String,
+    line_offsets: Vec<usize>,
     blocks: Vec<(String, BlockCommand)>,
     schemas: &'a CommandSchemas,
 }
@@ -85,15 +86,25 @@ pub fn regex(pattern: &str) -> Regex {
 
 impl Parser<'_> {
     pub fn new(text: String, schemas: &CommandSchemas) -> Parser<'_> {
+        let line_offsets = text
+            .chars()
+            .enumerate()
+            .filter(|(_, c)| *c == '\n')
+            .map(|(i, _)| i)
+            .collect::<Vec<_>>();
         Parser {
             text,
+            line_offsets,
             blocks: prepare_blocks(schemas),
             schemas,
         }
     }
 
     fn line(&self, offset: usize) -> usize {
-        self.text[..offset].chars().filter(|&c| c == '\n').count()
+        self.line_offsets
+            .iter()
+            .take_while(|&line_offset| *line_offset < offset)
+            .count()
     }
 
     fn column(&self, offset: usize) -> usize {
@@ -299,11 +310,7 @@ impl Parser<'_> {
         }
     }
 
-    fn block(
-        &self,
-        start_node: Command,
-        offset: usize,
-    ) -> Result<(FileElement, usize), Error> {
+    fn block(&self, start_node: Command, offset: usize) -> Result<(FileElement, usize), Error> {
         let start_node_name = start_node.command_name().to_lowercase();
         if let Some((_, block_end)) = self
             .blocks
