@@ -557,9 +557,7 @@ impl FormatterImpl<'_> {
 
     fn argument(&self, argument: &Argument) -> String {
         match argument {
-            Argument::Bracket {
-                start, value, end, ..
-            } => format!("{}{start}{value}{end}", self.indent_symbol),
+            Argument::Bracket(arg) => format!("{}{}", self.indent_symbol, arg.flatten()),
             Argument::Complex { arguments } => self.complex_argument(arguments),
             Argument::Quoted { value, .. } => format!("{}\"{value}\"", self.indent_symbol),
             Argument::Unquoted { value, .. } => format!("{}{value}", self.indent_symbol),

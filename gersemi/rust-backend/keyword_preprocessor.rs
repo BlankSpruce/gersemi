@@ -7,9 +7,7 @@ use crate::node::{
 
 fn get_argument_value(argument: &Argument) -> String {
     match argument {
-        Argument::Bracket {
-            start, value, end, ..
-        } => format!("{start}{value}{end}"),
+        Argument::Bracket(arg) => arg.flatten(),
         Argument::Complex { arguments } => {
             format!(
                 "({})",

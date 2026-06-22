@@ -55,13 +55,22 @@ pub struct Position {
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct BracketArgument {
+    pub bracket_width: usize,
+    pub value: String,
+    pub position: Option<Position>,
+}
+
+impl BracketArgument {
+    pub fn flatten(&self) -> String {
+        let equal_signs = "=".repeat(self.bracket_width);
+        format!("[{equal_signs}[{}]{equal_signs}]", self.value)
+    }
+}
+
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Argument {
-    Bracket {
-        start: String,
-        value: String,
-        end: String,
-        position: Option<Position>,
-    },
+    Bracket(BracketArgument),
     Complex {
         arguments: ArgumentsNode,
     },
@@ -91,7 +100,7 @@ impl Argument {
                 })
                 .collect::<Vec<_>>()
                 .join(" "),
-            Self::Bracket { value, .. }
+            Self::Bracket(BracketArgument { value, .. })
             | Self::Quoted { value, .. }
             | Self::Unquoted { value, .. } => value.clone(),
         }
@@ -99,18 +108,13 @@ impl Argument {
 
     pub fn into_node(self) -> Node {
         match self {
-            Self::Bracket {
-                start,
-                value,
-                end,
-                position,
-            } => Node::Tree {
+            Self::Bracket(arg) => Node::Tree {
                 data: "bracket_argument".to_string(),
                 children: vec![Node::Token {
                     type_: "BRACKET_ARGUMENT".to_string(),
-                    value: format!("{start}{value}{end}"),
-                    line: position.as_ref().map(|x| x.line),
-                    column: position.map(|x| x.column),
+                    value: arg.flatten(),
+                    line: arg.position.as_ref().map(|x| x.line),
+                    column: arg.position.map(|x| x.column),
                 }],
             },
             Self::Complex { arguments } => Node::Tree {

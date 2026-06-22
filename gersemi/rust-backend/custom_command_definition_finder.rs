@@ -1,6 +1,6 @@
 use crate::node::{
-    Argument, Arguments, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, FileElement,
-    Position, Start,
+    Argument, Arguments, ArgumentsAtom, ArgumentsNode, BracketArgument, Command, CommandInvocation,
+    FileElement, Position, Start,
 };
 use crate::parser::Parser;
 use pyo3::IntoPyObject;
@@ -78,7 +78,7 @@ fn block_begin(node: Command) -> Option<(Argument, Vec<String>)> {
 
 fn get_command_start(node: &Argument) -> Option<Position> {
     match node {
-        Argument::Bracket { position, .. }
+        Argument::Bracket(BracketArgument { position, .. })
         | Argument::Quoted { position, .. }
         | Argument::Unquoted { position, .. } => position.clone(),
         Argument::Complex { arguments } => match arguments.first() {

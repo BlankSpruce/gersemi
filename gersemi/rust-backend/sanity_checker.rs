@@ -1,19 +1,20 @@
 use crate::node::{
-    Argument, ArgumentsAtom, ArgumentsNode, Command, CommandInvocation, CommentedArgumentComment,
-    FileElement, LineComment, Start,
+    Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, Command, CommandInvocation,
+    CommentedArgumentComment, FileElement, LineComment, Start,
 };
 use std::collections::BTreeSet;
 
 fn simplify_argument(node: Argument) -> Argument {
     match node {
-        Argument::Bracket {
-            start, value, end, ..
-        } => Argument::Bracket {
-            start,
+        Argument::Bracket(BracketArgument {
+            bracket_width,
             value,
-            end,
+            ..
+        }) => Argument::Bracket(BracketArgument {
+            bracket_width,
+            value,
             position: None,
-        },
+        }),
         Argument::Complex { arguments } => Argument::Complex {
             arguments: simplify_arguments(arguments),
         },

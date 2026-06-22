@@ -1,7 +1,7 @@
 use crate::argument_schema::{CommandSchema, CommandSchemas};
 use crate::node::{
-    Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
-    CommentedArgumentComment, FileElement, LineComment, Position, Start,
+    Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, BracketComment, Command,
+    CommandInvocation, CommentedArgumentComment, FileElement, LineComment, Position, Start,
 };
 use pyo3::PyErr;
 use regex::Regex;
@@ -70,7 +70,7 @@ fn unquoted_argument_pattern() -> &'static str {
 
 fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
     let equal_signs = "=".repeat(number_of_equal_signs);
-    format!(r"^(\[{equal_signs}\[)([\s\S]+?)(\]{equal_signs}\])[ \t]*")
+    format!(r"^\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\][ \t]*")
 }
 
 pub fn regex(pattern: &str) -> Regex {
@@ -165,30 +165,27 @@ impl Parser<'_> {
             Some(captures) => match captures.get(1) {
                 None => Ok(None),
                 Some(matched_left_bracket) => {
-                    let re_pattern = bracket_argument_pattern(matched_left_bracket.len());
+                    let bracket_width = matched_left_bracket.len();
+                    let re_pattern = bracket_argument_pattern(bracket_width);
                     let re = regex(re_pattern.as_str());
                     match re.captures(&self.text[offset..]) {
                         None => Err(self.unbalanced_brackets(offset)),
-                        Some(captures) => {
-                            Ok(match (captures.get(1), captures.get(2), captures.get(3)) {
-                                (Some(start), Some(value), Some(end)) => Some((
-                                    Argument::Bracket {
-                                        start: start.as_str().to_string(),
-                                        value: value.as_str().to_string(),
-                                        end: end.as_str().to_string(),
-                                        position: {
-                                            if compute_position {
-                                                Some(self.position(offset))
-                                            } else {
-                                                None
-                                            }
-                                        },
+                        Some(captures) => Ok(captures.get(1).map(|value| {
+                            (
+                                Argument::Bracket(BracketArgument {
+                                    bracket_width,
+                                    value: value.as_str().to_string(),
+                                    position: {
+                                        if compute_position {
+                                            Some(self.position(offset))
+                                        } else {
+                                            None
+                                        }
                                     },
-                                    offset + captures.get_match().len(),
-                                )),
-                                _ => None,
-                            })
-                        }
+                                }),
+                                offset + captures.get_match().len(),
+                            )
+                        })),
                     }
                 }
             },
@@ -675,17 +672,11 @@ impl Parser<'_> {
             return Ok(None);
         }
 
-        if let Some((
-            Argument::Bracket {
-                start, value, end, ..
-            },
-            new_offset,
-        )) = self.bracket_argument(offset, false)?
-        {
+        if let Some((Argument::Bracket(arg), new_offset)) = self.bracket_argument(offset, false)? {
             offset = new_offset;
             return Ok(Some((
                 BracketComment {
-                    value: format!("{start}{value}{end}"),
+                    value: arg.flatten(),
                 },
                 offset,
             )));
