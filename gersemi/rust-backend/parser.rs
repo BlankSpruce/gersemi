@@ -195,11 +195,6 @@ impl Parser<'_> {
         }
     }
 
-    fn raw_find(&self, re: &regex::Regex, offset: usize) -> Option<usize> {
-        re.find(&self.text[offset..])
-            .map(|matched| offset + matched.len())
-    }
-
     fn raw_terminal(&self, re: &regex::Regex, offset: usize) -> Option<(String, usize)> {
         match re.captures(&self.text[offset..]) {
             None => None,
@@ -213,26 +208,48 @@ impl Parser<'_> {
     }
 
     fn pound_sign(&self, offset: usize) -> Option<usize> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(#)"));
-        self.raw_find(&RE, offset)
+        if self.text[offset..].starts_with('#') {
+            Some(offset + 1)
+        } else {
+            None
+        }
+    }
+
+    fn skip_space(&self, mut offset: usize) -> usize {
+        while self.text[offset..].starts_with([' ', '\t']) {
+            offset += 1;
+        }
+        offset
     }
 
     fn left_paren(&self, offset: usize) -> Option<usize> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\()[ \t]*"));
-        self.raw_find(&RE, offset)
+        if self.text[offset..].starts_with('(') {
+            Some(self.skip_space(offset + 1))
+        } else {
+            None
+        }
     }
 
     fn right_paren(&self, offset: usize) -> Result<usize, Error> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\))[ \t]*"));
-        match self.raw_find(&RE, offset) {
-            None => Err(self.unbalanced_parentheses(offset)),
-            Some(matched) => Ok(matched),
+        if self.text[offset..].starts_with(')') {
+            Ok(self.skip_space(offset + 1))
+        } else {
+            Err(self.unbalanced_parentheses(offset))
         }
     }
 
     fn newline(&self, offset: usize) -> Option<(String, usize)> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n+)[ \t]*"));
-        self.raw_terminal(&RE, offset)
+        let mut result = offset;
+        while self.text[result..].starts_with('\n') {
+            result += 1;
+        }
+
+        if result == offset {
+            return None;
+        }
+
+        let s = self.text[offset..result].to_string();
+        Some((s, self.skip_space(result)))
     }
 
     fn element_t(
@@ -357,8 +374,11 @@ impl Parser<'_> {
     }
 
     fn quotation_mark(&self, offset: usize) -> Option<usize> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(r#"^(")"#));
-        self.raw_find(&RE, offset)
+        if self.text[offset..].starts_with('"') {
+            Some(offset + 1)
+        } else {
+            None
+        }
     }
 
     fn quoted_argument(
