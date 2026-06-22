@@ -33,10 +33,6 @@ pub struct Error {
     pub column: usize,
 }
 
-fn add_ignores(pattern: &str) -> String {
-    format!("^({pattern})[ \t]*")
-}
-
 const ESCAPE_SEQUENCE_R: &str = r"\\([^A-Za-z0-9]|[nrt])";
 const IDENTIFIER_R: &str = r"^([A-Za-z_@][A-Za-z0-9_@]*)[ \t]*";
 const MAKE_STYLE_REFERENCE_R: &str = r##"\$\([^\)\n\"#]+?\)"##;
@@ -57,7 +53,7 @@ fn unquoted_legacy_pattern() -> String {
 fn unquoted_argument_pattern() -> &'static str {
     static RE: LazyLock<String> = LazyLock::new(|| {
         format!(
-            "^(({}|{}|{}|{}|{})+)[ \t]*",
+            "^(({}|{}|{}|{}|{})+)",
             unquoted_legacy_pattern(),
             MAKE_STYLE_REFERENCE_R,
             ESCAPE_SEQUENCE_R,
@@ -70,7 +66,7 @@ fn unquoted_argument_pattern() -> &'static str {
 
 fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
     let equal_signs = "=".repeat(number_of_equal_signs);
-    format!(r"^\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\][ \t]*")
+    format!(r"^([\s\S]+?)\]{equal_signs}\]")
 }
 
 pub fn regex(pattern: &str) -> Regex {
@@ -159,36 +155,32 @@ impl Parser<'_> {
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
-        static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[(=*)\["));
-        match RE_START.captures(&self.text[offset..]) {
+        static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[=*\["));
+        match RE_START.find(&self.text[offset..]) {
             None => Ok(None),
-            Some(captures) => match captures.get(1) {
-                None => Ok(None),
-                Some(matched_left_bracket) => {
-                    let bracket_width = matched_left_bracket.len();
-                    let re_pattern = bracket_argument_pattern(bracket_width);
-                    let re = regex(re_pattern.as_str());
-                    match re.captures(&self.text[offset..]) {
-                        None => Err(self.unbalanced_brackets(offset)),
-                        Some(captures) => Ok(captures.get(1).map(|value| {
-                            (
-                                Argument::Bracket(BracketArgument {
-                                    bracket_width,
-                                    value: value.as_str().to_string(),
-                                    position: {
-                                        if compute_position {
-                                            Some(self.position(offset))
-                                        } else {
-                                            None
-                                        }
-                                    },
-                                }),
-                                offset + captures.get_match().len(),
-                            )
-                        })),
-                    }
+            Some(matched_left_bracket) => {
+                let bracket_width = matched_left_bracket.len() - 2;
+                let re_pattern = bracket_argument_pattern(bracket_width);
+                let re = regex(re_pattern.as_str());
+                let offset = offset + bracket_width + 2;
+                match re.find(&self.text[offset..]) {
+                    None => Err(self.unbalanced_brackets(offset)),
+                    Some(value) => Ok(Some((
+                        Argument::Bracket(BracketArgument {
+                            bracket_width,
+                            value: value.as_str()[..value.len() - bracket_width - 2].to_string(),
+                            position: {
+                                if compute_position {
+                                    Some(self.position(offset))
+                                } else {
+                                    None
+                                }
+                            },
+                        }),
+                        self.skip_space(offset + value.len()),
+                    ))),
                 }
-            },
+            }
         }
     }
 
@@ -383,31 +375,30 @@ impl Parser<'_> {
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
-        static PATTERN: LazyLock<String> = LazyLock::new(|| add_ignores(quoted_argument_pattern()));
+        static PATTERN: LazyLock<String> =
+            LazyLock::new(|| format!("^{}", quoted_argument_pattern()));
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
-        match RE.captures(&self.text[offset..]) {
+        match RE.find(&self.text[offset..]) {
             None => match self.quotation_mark(offset) {
                 None => Ok(None),
                 Some(_) => Err(self.generic_parsing_error(offset)),
             },
-            Some(captures) => Ok(captures.get(1).map(|matched| {
-                (
-                    Argument::Quoted {
-                        value: {
-                            let result = matched.as_str();
-                            result[1..result.len() - 1].to_string()
-                        },
-                        position: {
-                            if compute_position {
-                                Some(self.position(offset))
-                            } else {
-                                None
-                            }
-                        },
+            Some(matched) => Ok(Some((
+                Argument::Quoted {
+                    value: {
+                        let result = matched.as_str();
+                        result[1..result.len() - 1].to_string()
                     },
-                    offset + captures.get_match().len(),
-                )
-            })),
+                    position: {
+                        if compute_position {
+                            Some(self.position(offset))
+                        } else {
+                            None
+                        }
+                    },
+                },
+                self.skip_space(offset + matched.len()),
+            ))),
         }
     }
 
@@ -417,24 +408,21 @@ impl Parser<'_> {
         compute_position: bool,
     ) -> Option<(Argument, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
-        match RE.captures(&self.text[offset..]) {
-            None => None,
-            Some(captures) => captures.get(1).map(|matched| {
-                (
-                    Argument::Unquoted {
-                        value: matched.as_str().to_string(),
-                        position: {
-                            if compute_position {
-                                Some(self.position(offset))
-                            } else {
-                                None
-                            }
-                        },
+        RE.find(&self.text[offset..]).map(|matched| {
+            (
+                Argument::Unquoted {
+                    value: matched.as_str().to_string(),
+                    position: {
+                        if compute_position {
+                            Some(self.position(offset))
+                        } else {
+                            None
+                        }
                     },
-                    offset + captures.get_match().len(),
-                )
-            }),
-        }
+                },
+                self.skip_space(offset + matched.len()),
+            )
+        })
     }
 
     fn complex_argument(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
