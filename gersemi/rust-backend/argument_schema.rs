@@ -7,6 +7,7 @@ use pyo3::types::{PyString, PyTuple};
 use pyo3::{FromPyObject, PyAny};
 use std::cmp::min;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub enum SecondKeyword {
@@ -506,56 +507,63 @@ fn isolate_binary_tests(
 }
 
 pub fn isolate_conditions(arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
-    let unary_operators = [
-        "COMMAND",
-        "POLICY",
-        "TARGET",
-        "TEST",
-        "EXISTS",
-        "IS_DIRECTORY",
-        "IS_SYMLINK",
-        "IS_ABSOLUTE",
-        "DEFINED",
-        "IS_READABLE",
-        "IS_WRITABLE",
-        "IS_EXECUTABLE",
-    ]
-    .map(single_word_matcher);
-    let binary_operators = [
-        "IS_NEWER_THAN",
-        "MATCHES",
-        "LESS",
-        "GREATER",
-        "EQUAL",
-        "LESS_EQUAL",
-        "GREATER_EQUAL",
-        "STRLESS",
-        "STRGREATER",
-        "STREQUAL",
-        "STRLESS_EQUAL",
-        "STRGREATER_EQUAL",
-        "VERSION_LESS",
-        "VERSION_GREATER",
-        "VERSION_EQUAL",
-        "VERSION_LESS_EQUAL",
-        "VERSION_GREATER_EQUAL",
-        "IN_LIST",
-        "PATH_EQUAL",
-    ]
-    .map(single_word_matcher);
-    let not_operator = [single_word_matcher("NOT")];
-    let and_operator = [single_word_matcher("AND")];
-    let or_operator = [single_word_matcher("OR")];
+    static UNARY_OPERATORS: LazyLock<[KeywordMatcher; 12]> = LazyLock::new(|| {
+        [
+            "COMMAND",
+            "POLICY",
+            "TARGET",
+            "TEST",
+            "EXISTS",
+            "IS_DIRECTORY",
+            "IS_SYMLINK",
+            "IS_ABSOLUTE",
+            "DEFINED",
+            "IS_READABLE",
+            "IS_WRITABLE",
+            "IS_EXECUTABLE",
+        ]
+        .map(single_word_matcher)
+    });
+    static BINARY_OPERATORS: LazyLock<[KeywordMatcher; 19]> = LazyLock::new(|| {
+        [
+            "IS_NEWER_THAN",
+            "MATCHES",
+            "LESS",
+            "GREATER",
+            "EQUAL",
+            "LESS_EQUAL",
+            "GREATER_EQUAL",
+            "STRLESS",
+            "STRGREATER",
+            "STREQUAL",
+            "STRLESS_EQUAL",
+            "STRGREATER_EQUAL",
+            "VERSION_LESS",
+            "VERSION_GREATER",
+            "VERSION_EQUAL",
+            "VERSION_LESS_EQUAL",
+            "VERSION_GREATER_EQUAL",
+            "IN_LIST",
+            "PATH_EQUAL",
+        ]
+        .map(single_word_matcher)
+    });
+    static NOT_OPERATOR: LazyLock<[KeywordMatcher; 1]> =
+        LazyLock::new(|| [single_word_matcher("NOT")]);
+    static AND_OPERATOR: LazyLock<[KeywordMatcher; 1]> =
+        LazyLock::new(|| [single_word_matcher("AND")]);
+    static OR_OPERATOR: LazyLock<[KeywordMatcher; 1]> =
+        LazyLock::new(|| [single_word_matcher("OR")]);
 
     isolate_unary_operators(
-        &or_operator,
+        OR_OPERATOR.as_ref(),
         isolate_unary_operators(
-            &and_operator,
+            AND_OPERATOR.as_ref(),
             isolate_unary_operators(
-                &not_operator,
+                NOT_OPERATOR.as_ref(),
                 isolate_binary_tests(
-                    &binary_operators,
-                    isolate_unary_operators(&unary_operators, arguments),
+                    BINARY_OPERATORS.as_ref(),
+                    isolate_unary_operators(UNARY_OPERATORS.as_ref(), arguments),
                 ),
             ),
         ),
