@@ -1105,12 +1105,15 @@ impl FormatterImpl<'_> {
         }
 
         let reserved_space = prefix.len() + postfix.len() + self.indent_symbol.len();
-        let result = {
+        {
             let mut f = self.not_indented();
-            let mut result = Vec::<String>::new();
+            let mut result = self.indent_symbol.clone();
+            result.push_str(prefix);
             let mut line_length = reserved_space;
 
             let limit = f.configuration.line_length;
+            let mut add_space = false;
+
             for part in parts.iter().map(|p| (visitor)(&mut f, p)) {
                 if part.contains('\n') {
                     return None;
@@ -1121,13 +1124,17 @@ impl FormatterImpl<'_> {
                     return None;
                 }
 
-                result.push(part);
+                if add_space {
+                    result.push(' ');
+                }
+                result.push_str(&part);
                 line_length += 1;
-            }
-            result.join(" ")
-        };
 
-        Some(format!("{}{prefix}{result}{postfix}", self.indent_symbol))
+                add_space = true;
+            }
+            result.push_str(postfix);
+            Some(result)
+        }
     }
 
     fn custom_command(
