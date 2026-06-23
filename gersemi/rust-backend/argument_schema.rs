@@ -110,38 +110,42 @@ impl KeywordSplitter {
         while let Some(argument) = iterator.next() {
             if argument.is_comment() {
                 self.comment_accumulator.push(argument);
-            } else if schema.is_one_of_options(&argument) {
-                self.flush_accumulators();
-                self.groups.push(RefinedArgumentsAtom::OptionArgument {
-                    keyword: Box::new(argument),
-                });
-            } else if schema.is_one_of_one_value_keywords(&argument) {
-                self.flush_accumulators();
-                let mut arguments = vec![];
-                for n in iterator.by_ref() {
-                    let stop = !n.is_comment();
-                    arguments.push(n);
-                    if stop {
-                        break;
-                    }
-                }
-                self.groups.push(RefinedArgumentsAtom::OneValueArgument {
-                    keyword: Box::new(argument),
-                    arguments,
-                });
-            } else if schema.is_one_of_multi_value_keywords(&argument) {
-                self.flush_accumulators();
-                self.accumulator.kind = AccumulatorKind::Nodes;
-                self.accumulator.nodes = vec![argument];
-            } else if !self.accumulator.nodes.is_empty() {
-                self.accumulator.nodes.append(&mut self.comment_accumulator);
-                self.accumulator.nodes.push(argument);
             } else {
-                if !matches!(self.accumulator.kind, AccumulatorKind::PositionalArguments) {
-                    self.accumulator.kind = AccumulatorKind::PositionalArguments;
+                let value = argument.get_keyword_value();
+                let value = value.as_ref();
+                if is_one_of_keywords(value, &schema.options) {
+                    self.flush_accumulators();
+                    self.groups.push(RefinedArgumentsAtom::OptionArgument {
+                        keyword: Box::new(argument),
+                    });
+                } else if is_one_of_keywords(value, &schema.one_value_keywords) {
+                    self.flush_accumulators();
+                    let mut arguments = vec![];
+                    for n in iterator.by_ref() {
+                        let stop = !n.is_comment();
+                        arguments.push(n);
+                        if stop {
+                            break;
+                        }
+                    }
+                    self.groups.push(RefinedArgumentsAtom::OneValueArgument {
+                        keyword: Box::new(argument),
+                        arguments,
+                    });
+                } else if is_one_of_keywords(value, &schema.multi_value_keywords) {
+                    self.flush_accumulators();
+                    self.accumulator.kind = AccumulatorKind::Nodes;
+                    self.accumulator.nodes = vec![argument];
+                } else if !self.accumulator.nodes.is_empty() {
+                    self.accumulator.nodes.append(&mut self.comment_accumulator);
+                    self.accumulator.nodes.push(argument);
+                } else {
+                    if !matches!(self.accumulator.kind, AccumulatorKind::PositionalArguments) {
+                        self.accumulator.kind = AccumulatorKind::PositionalArguments;
+                    }
+                    self.accumulator.nodes.append(&mut self.comment_accumulator);
+                    self.accumulator.nodes.push(argument);
                 }
-                self.accumulator.nodes.append(&mut self.comment_accumulator);
-                self.accumulator.nodes.push(argument);
             }
         }
 
@@ -150,22 +154,12 @@ impl KeywordSplitter {
 }
 
 impl ArgumentSchema {
-    fn is_one_of_options(&self, node: &RefinedArgumentsAtom) -> bool {
-        node.is_one_of_keywords(&self.options)
-    }
-
-    fn is_one_of_one_value_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
-        node.is_one_of_keywords(&self.one_value_keywords)
-    }
-
-    fn is_one_of_multi_value_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
-        node.is_one_of_keywords(&self.multi_value_keywords)
-    }
-
     fn is_one_of_schema_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
-        self.is_one_of_options(node)
-            || self.is_one_of_one_value_keywords(node)
-            || self.is_one_of_multi_value_keywords(node)
+        let value = node.get_keyword_value();
+        let value = value.as_ref();
+        is_one_of_keywords(value, &self.options)
+            || is_one_of_keywords(value, &self.one_value_keywords)
+            || is_one_of_keywords(value, &self.multi_value_keywords)
     }
 
     fn find_pivot(&self, arguments: &[RefinedArgumentsAtom]) -> Option<usize> {
@@ -240,8 +234,10 @@ impl ArgumentSchema {
     }
 
     fn get_section_schema(&self, argument: &RefinedArgumentsAtom) -> Option<&ArgumentSchema> {
+        let value = argument.get_keyword_value();
+        let value = value.as_ref();
         for (item, schema) in &self.sections {
-            if argument.is_one_of_keywords(std::slice::from_ref(item)) {
+            if is_one_of_keywords(value, std::slice::from_ref(item)) {
                 return Some(schema);
             }
         }
@@ -351,6 +347,56 @@ impl ArgumentSchema {
     }
 }
 
+pub struct KeywordValue {
+    first: String,
+    second: Option<String>,
+}
+
+pub fn is_one_of_keywords(
+    keyword_value: Option<&KeywordValue>,
+    matchers: &[KeywordMatcher],
+) -> bool {
+    let Some(keyword_value) = keyword_value else {
+        return false;
+    };
+
+    match keyword_value {
+        KeywordValue {
+            first,
+            second: None,
+        } => {
+            for matcher in matchers {
+                if (matcher.first.as_str() == first) && matcher.second.is_none() {
+                    return true;
+                }
+            }
+            false
+        }
+        KeywordValue {
+            first,
+            second: Some(second),
+        } => {
+            for matcher in matchers {
+                if matcher.first.as_str() != first {
+                    continue;
+                }
+
+                match &matcher.second {
+                    None | Some(SecondKeyword::Any) => {
+                        return true;
+                    }
+                    Some(SecondKeyword::String(matcher_second)) => {
+                        if matcher_second.as_str() == second {
+                            return true;
+                        }
+                    }
+                }
+            }
+            false
+        }
+    }
+}
+
 impl RefinedArgumentsAtom {
     pub fn is_comment(&self) -> bool {
         match self {
@@ -367,52 +413,26 @@ impl RefinedArgumentsAtom {
         }
     }
 
-    pub fn is_one_of_keywords(&self, matchers: &[KeywordMatcher]) -> bool {
+    pub fn get_keyword_value(&self) -> Option<KeywordValue> {
         match self {
-            Self::Atom(atom) => match atom.get_value() {
-                None => false,
-                Some(value) => {
-                    for matcher in matchers {
-                        if (matcher.first == value) && matcher.second.is_none() {
-                            return true;
-                        }
-                    }
-                    false
-                }
-            },
-            Self::KeywordArgument { first, second, .. } => {
-                let Some(first_value) = first.get_value() else {
-                    return false;
-                };
-                let second_value = second.get_value();
-                for matcher in matchers {
-                    if matcher.first != first_value {
-                        continue;
-                    }
-
-                    match &matcher.second {
-                        None | Some(SecondKeyword::Any) => {
-                            return true;
-                        }
-                        Some(SecondKeyword::String(second)) => {
-                            if Some(second) == second_value.as_ref() {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                false
-            }
+            Self::Atom(atom) => atom.get_value().map(|value| KeywordValue {
+                first: value,
+                second: None,
+            }),
+            Self::KeywordArgument { first, second, .. } => Some(KeywordValue {
+                first: first.get_value()?,
+                second: second.get_value(),
+            }),
             Self::OptionArgument { keyword }
             | Self::OneValueArgument { keyword, .. }
             | Self::MultiValueArgument { keyword, .. }
             | Self::Section {
                 header: keyword, ..
             }
-            | Self::Pair { first: keyword, .. } => keyword.is_one_of_keywords(matchers),
+            | Self::Pair { first: keyword, .. } => keyword.get_keyword_value(),
             Self::BinaryOperation { .. }
             | Self::UnaryOperation { .. }
-            | Self::PositionalArguments(_) => false,
+            | Self::PositionalArguments(_) => None,
         }
     }
 }
@@ -429,7 +449,7 @@ fn isolate_unary_operators(
                 one_behind = Some(current);
             }
             Some(one_behind_node) => {
-                if one_behind_node.is_one_of_keywords(operators) {
+                if is_one_of_keywords(one_behind_node.get_keyword_value().as_ref(), operators) {
                     if current.is_comment() {
                         result.push(RefinedArgumentsAtom::UnaryOperation {
                             operation: Box::new(one_behind_node),
@@ -473,7 +493,7 @@ fn isolate_binary_tests(
                 one_behind = Some(current);
             }
             (Some(two_behind_node), Some(one_behind_node)) => {
-                if one_behind_node.is_one_of_keywords(operators) {
+                if is_one_of_keywords(one_behind_node.get_keyword_value().as_ref(), operators) {
                     result.push(RefinedArgumentsAtom::BinaryOperation {
                         lhs: Box::new(two_behind_node),
                         operation: Box::new(one_behind_node),

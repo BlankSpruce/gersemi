@@ -1,5 +1,6 @@
 use crate::argument_schema::{
-    ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemas, KeywordMatcher, Signatures,
+    is_one_of_keywords, ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemas,
+    KeywordMatcher, Signatures,
 };
 use crate::configuration::{
     IndentType, KeywordFormatter, KeywordPreprocessor, ListExpansion, OutcomeConfiguration,
@@ -471,11 +472,13 @@ impl FormatterImpl<'_> {
 
     fn get_signature_from_atom(&self, atom: &RefinedArgumentsAtom) -> Option<&ArgumentSchema> {
         let signatures = self.signatures()?;
+        let value = atom.get_keyword_value();
+        let value = value.as_ref();
         for (item, signature) in signatures {
             let Some(item) = item else {
                 continue;
             };
-            if atom.is_one_of_keywords(std::slice::from_ref(item)) {
+            if is_one_of_keywords(value, std::slice::from_ref(item)) {
                 return Some(signature);
             }
         }
