@@ -14,13 +14,15 @@ class Formatter:
         lines_to_format: LineRanges,
     ):
         self.configuration = configuration
-        self.known_definitions = dict(ChainMap(known_definitions, _builtin_commands))
+        self.known_definitions = known_definitions
         self.lines_to_format = list(lines_to_format)
         self.init_backend()
 
     def init_backend(self):
         self.impl = gersemi_rust_backend.Formatter(
-            self.configuration, self.known_definitions, self.lines_to_format
+            self.configuration,
+            dict(ChainMap(self.known_definitions, _builtin_commands)),
+            self.lines_to_format,
         )
 
     def __getstate__(self):
