@@ -95,8 +95,12 @@ def get_files_from_directory(path: Path, respect_ignore_files: bool) -> Iterable
         return
 
     for entry in WalkBuilder(path).require_git(False).build():
-        path = entry.path().resolve(True)
-        if any(path.match(pattern) for pattern in FILE_PATTERNS):
+        path = entry.path()
+        if (
+            (path.name in ("CMakeLists.txt", "CMakeLists.txt.in"))
+            or (path.suffix == ".cmake")
+            or (path.suffixes[-2:] == [".cmake", ".in"])
+        ):
             yield path
 
 
@@ -113,9 +117,11 @@ def get_files_from_single_path(
 def get_files(paths: Iterable[Path], respect_ignore_files: bool) -> List[Path]:
     return sorted(
         {
-            item.resolve(True) if item != Path("-") else item
+            item
             for path in paths
-            for item in get_files_from_single_path(path, respect_ignore_files)
+            for item in get_files_from_single_path(
+                path.resolve(True) if path != Path("-") else path, respect_ignore_files
+            )
         }
     )
 
