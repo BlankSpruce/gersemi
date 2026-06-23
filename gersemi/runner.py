@@ -45,7 +45,7 @@ from gersemi.tasks.show_diff import show_diff
 from gersemi.utils import fromfile, smart_open
 from gersemi.warnings import UnknownCommandWarning
 
-CHUNKSIZE = 16
+CHUNKSIZE = 250
 FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
 
 
