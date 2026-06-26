@@ -17,8 +17,11 @@ mod gersemi_rust_backend {
     use crate::node::Start;
     use crate::parser::{Error, Parser};
     use crate::sanity_checker::check_equivalence;
-    use pyo3::pyfunction;
+    use ignore::WalkBuilder;
+    use pyo3::exceptions::PyRuntimeError;
+    use pyo3::{pyfunction, PyResult};
     use std::collections::HashMap;
+    use std::path::PathBuf;
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
@@ -53,6 +56,45 @@ mod gersemi_rust_backend {
 
     #[pymodule_export]
     use crate::formatter::Formatter;
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
+        let Some(first) = paths.first() else {
+            return Ok(vec![]);
+        };
+
+        let mut builder = WalkBuilder::new(first);
+        for path in paths.into_iter().skip(1) {
+            builder.add(path);
+        }
+
+        let fail = Err(PyRuntimeError::new_err("Failed to find files"));
+        let mut result = Vec::<PathBuf>::new();
+        for entry in builder
+            .require_git(false)
+            .standard_filters(respect_ignore_files)
+            .build()
+        {
+            let Ok(entry) = entry else {
+                return fail;
+            };
+
+            let name = entry.file_name();
+            let Some(name) = name.to_str() else {
+                return fail;
+            };
+            if (name == "CMakeLists.txt")
+                || (name == "CMakeLists.txt.in")
+                || (name.ends_with("cmake"))
+                || (name.ends_with("cmake.in"))
+            {
+                result.push(entry.into_path().canonicalize()?);
+            }
+        }
+
+        Ok(result)
+    }
 
     #[pyfunction]
     fn version() -> &'static str {

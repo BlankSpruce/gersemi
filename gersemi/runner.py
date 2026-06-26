@@ -6,7 +6,7 @@ from hashlib import sha1
 from pathlib import Path
 import sys
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
-from ignore import WalkBuilder  # pylint: disable=no-name-in-module
+import gersemi_rust_backend
 from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
@@ -87,42 +87,12 @@ class StatusCode:
         raise RuntimeError(f"Invalid type: {type(other)}")
 
 
-def get_files_from_directory(path: Path, respect_ignore_files: bool) -> Iterable[Path]:
-    if not respect_ignore_files:
-        for pattern in FILE_PATTERNS:
-            yield from path.rglob(pattern)
-
-        return
-
-    for entry in WalkBuilder(path).require_git(False).build():
-        path = entry.path()
-        if (
-            (path.name in ("CMakeLists.txt", "CMakeLists.txt.in"))
-            or (path.suffix == ".cmake")
-            or (path.suffixes[-2:] == [".cmake", ".in"])
-        ):
-            yield path
-
-
-def get_files_from_single_path(
-    path: Path, respect_ignore_files: bool
-) -> Iterable[Path]:
-    if path.is_dir():
-        yield from get_files_from_directory(path, respect_ignore_files)
-        return
-
-    yield path
-
-
 def get_files(paths: Iterable[Path], respect_ignore_files: bool) -> List[Path]:
+    if Path("-") in paths:
+        return sorted(paths)
+
     return sorted(
-        {
-            item
-            for path in paths
-            for item in get_files_from_single_path(
-                path.resolve(True) if path != Path("-") else path, respect_ignore_files
-            )
-        }
+        set(gersemi_rust_backend.get_files(list(paths), respect_ignore_files))
     )
 
 
