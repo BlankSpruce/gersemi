@@ -16,25 +16,12 @@ from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
-from tests.old_impl.parser import create_parser, create_parser_with_postprocessing
 from tests.utils import Parser
 
 
 @pytest.fixture(scope="module")
 def rust_parser():
     return Parser()
-
-
-@pytest.fixture(scope="module")
-def lark_based_parser_with_simple_grammar():
-    this_file_dir = pathlib.Path(__file__).resolve().parent
-    grammar = this_file_dir / "simple_cmake.lark"
-    return create_parser(grammar)
-
-
-@pytest.fixture(scope="module")
-def lark_based_parser():  # pylint: disable=redefined-outer-name
-    return create_parser_with_postprocessing(create_parser())
 
 
 def get_custom_command_definitions(configuration_definitions):

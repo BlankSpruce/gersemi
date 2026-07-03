@@ -14,5 +14,5 @@ class Parser:
         ):
             raise ASTMismatch
 
-    def parse(self, text):
-        return gersemi_rust_backend.parse(text, self.known_definitions)
+    def validate(self, text):
+        return gersemi_rust_backend.validate(text, self.known_definitions)

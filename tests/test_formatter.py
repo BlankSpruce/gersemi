@@ -1,7 +1,6 @@
 import pickle
 import pytest
 from gersemi.exceptions import ASTMismatch
-from tests.old_impl.sanity_checker import check_code_equivalence
 from tests.tests_generator import generate_input_output_tests
 from tests.utils import preprocess
 
@@ -27,24 +26,7 @@ def test_formatter_can_be_unpickled_for_multiprocessing(formatter_creator):
     pickle.loads(pickle.dumps(formatter))
 
 
-def test_abstract_syntax_tree_equivalence(
-    lark_based_parser,
-    lark_based_parser_with_simple_grammar,
-    rust_parser,
-    case,
-):
-    for p in [
-        lark_based_parser,
-        lark_based_parser_with_simple_grammar,
-    ]:
-        # ruff: noqa: PERF203
-        try:
-            parsed = p.parse(case.given)
-            check_code_equivalence(p, parsed, case.expected)
-        except ASTMismatch:
-            pytest.fail("ASTs mismatch")
-            raise
-
+def test_abstract_syntax_tree_equivalence(rust_parser, case):
     try:
         rust_parser.check_code_equivalence(case.given, case.expected)
     except ASTMismatch:

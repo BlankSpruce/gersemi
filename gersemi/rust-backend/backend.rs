@@ -14,7 +14,6 @@ use pyo3::pymodule;
 mod gersemi_rust_backend {
     use crate::argument_schema::CommandSchemas;
     use crate::custom_command_definition_finder::CustomCommand;
-    use crate::node::Start;
     use crate::parser::{Error, Parser};
     use crate::sanity_checker::check_equivalence;
     use ignore::WalkBuilder;
@@ -25,9 +24,9 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn parse(text: String, schemas: CommandSchemas) -> Result<Start, Error> {
+    fn validate(text: String, schemas: CommandSchemas) -> Result<(), Error> {
         let parser = Parser::new(text, &schemas);
-        parser.start()
+        parser.start().and(Ok(()))
     }
 
     #[pyfunction]
