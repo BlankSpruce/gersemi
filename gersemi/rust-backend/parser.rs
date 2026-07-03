@@ -765,10 +765,11 @@ impl Parser<'_> {
     }
 
     pub fn start(&self) -> Result<Start, Error> {
-        let mut offset = match self.newline_or_gap(0) {
+        let offset = match self.newline_or_gap(0) {
             Some((_, new_offset)) => new_offset,
             None => 0usize,
         };
+        let mut offset = self.skip_space(offset);
         let mut result: Vec<FileElement> = vec![];
         let mut last_newline_or_gap: Option<FileElement> = None;
 
