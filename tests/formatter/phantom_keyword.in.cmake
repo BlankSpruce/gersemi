@@ -29,3 +29,5 @@ clang-format #
 
 set(commented_phantom_keyword #[[gersemi: sort+unique]] # my line comment
 c.h a.h d_____________________________________________.h c.h a.h b.h #[[gersemi: pairs]] #[[my bracket comment]] "J. Robert Oppenheimer" "Cillian Murphy" "Kitty Oppenheimer" "Emily Blunt" "General Leslie Groves" "Matt Damon" CACHE INTERNAL "Short docstring" FORCE)
+
+set(raw_phantom_keyword_just_indents #[[gersemi: raw]] c.h a.h d_____________________________________________.h c.h a.h b.h CACHE INTERNAL "Short docstring" FORCE)

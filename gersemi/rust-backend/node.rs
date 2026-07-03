@@ -22,6 +22,7 @@ impl BracketArgument {
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum PhantomKind {
+    Raw,
     KeywordPreprocessor(KeywordPreprocessor),
     KeywordFormatter(KeywordFormatter),
 }

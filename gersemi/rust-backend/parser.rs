@@ -468,6 +468,7 @@ impl Parser<'_> {
             "unique" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::Unique),
             "command_line" => PhantomKind::KeywordFormatter(KeywordFormatter::CommandLine),
             "pairs" => PhantomKind::KeywordFormatter(KeywordFormatter::Pairs),
+            "raw" => PhantomKind::Raw,
             _ => {
                 return Ok(None);
             }

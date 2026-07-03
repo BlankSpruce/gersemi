@@ -104,3 +104,16 @@ set(commented_phantom_keyword
     "Short docstring"
     FORCE
 )
+
+set(raw_phantom_keyword_just_indents
+    #[[gersemi: raw]]
+        c.h
+        a.h
+        d_____________________________________________.h
+        c.h
+        a.h
+        b.h
+    CACHE INTERNAL
+    "Short docstring"
+    FORCE
+)
