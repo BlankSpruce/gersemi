@@ -87,27 +87,9 @@ class StatusCode:
         raise RuntimeError(f"Invalid type: {type(other)}")
 
 
-def get_files(paths: Iterable[Path], respect_ignore_files: bool) -> List[Path]:
-    if Path("-") in paths:
-        return sorted(paths)
-
-    return sorted(
-        set(gersemi_rust_backend.get_files(list(paths), respect_ignore_files))
-    )
-
-
-def has_custom_command_definition(code: str) -> bool:
-    lowercased = code.lower()
-    has_function_definition = "function" in lowercased and "endfunction" in lowercased
-    has_macro_definition = "macro" in lowercased and "endmacro" in lowercased
-    return has_function_definition or has_macro_definition
-
-
 def find_custom_command_definitions_in_file_impl(filepath: Path) -> Dict[str, Keywords]:
     with smart_open(filepath, "r") as f:
         code = f.read()
-    if not has_custom_command_definition(code):
-        return {}
 
     return find_custom_command_definitions(code, filepath)
 
@@ -136,15 +118,10 @@ def find_all_custom_command_definitions(
 ) -> Dict[str, Keywords]:
     result: Dict = {}
 
-    try:
-        files = get_files(
-            paths,
-            respect_ignore_files=respect_ignore_files,
-        )
-    except FileNotFoundError as e:
-        # pylint: disable=broad-exception-raised
-        raise Exception(f"Definition path doesn't exist: {e.filename}") from e
-
+    files = gersemi_rust_backend.get_files(
+        paths=list(paths),
+        respect_ignore_files=respect_ignore_files,
+    )
     find = find_custom_command_definitions_in_file
 
     for defs in pool.imap_unordered(find, files):
@@ -418,15 +395,10 @@ def print_configuration_report(
 # pylint: disable=too-many-locals
 def run(args: argparse.Namespace):
     control = make_control_configuration(args)
-
-    try:
-        requested_files = get_files(
-            args.sources,
-            respect_ignore_files=control.respect_ignore_files,
-        )
-    except FileNotFoundError as e:
-        # pylint: disable=broad-exception-raised
-        raise Exception(f"Source path doesn't exist: {e.filename}") from e
+    requested_files = gersemi_rust_backend.get_files(
+        paths=list(args.sources),
+        respect_ignore_files=control.respect_ignore_files,
+    )
 
     if args.line_ranges and len(requested_files) > 1:
         # pylint: disable=broad-exception-raised

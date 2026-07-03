@@ -30,12 +30,22 @@ mod gersemi_rust_backend {
         parser.start().and(Ok(()))
     }
 
+    fn has_custom_command_definition(code: &str) -> bool {
+        let code = code.to_lowercase();
+        (code.contains("function") && code.contains("endfunction"))
+            || (code.contains("macro") && code.contains("endmacro"))
+    }
+
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn find_custom_command_definitions(
         text: String,
         filepath: String,
     ) -> HashMap<String, Vec<CustomCommand>> {
+        if !has_custom_command_definition(&text) {
+            return HashMap::new();
+        }
+
         let schemas = CommandSchemas {
             schemas: HashMap::new(),
         };
@@ -63,6 +73,14 @@ mod gersemi_rust_backend {
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
+        if paths
+            .iter()
+            .find(|path| path.to_str().is_some_and(|value| value == "-"))
+            .is_some()
+        {
+            return Ok(paths);
+        }
+
         let Some(first) = paths.first() else {
             return Ok(vec![]);
         };
@@ -96,6 +114,8 @@ mod gersemi_rust_backend {
             }
         }
 
+        result.sort();
+        result.dedup();
         Ok(result)
     }
 

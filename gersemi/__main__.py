@@ -343,7 +343,6 @@ def is_stdin_mixed_with_file_input(sources):
 
 
 def postprocess_args(args):
-    args.sources = set(args.sources)
     if args.definitions is not None:
         args.definitions = set(args.definitions)
 
@@ -356,6 +355,13 @@ def postprocess_args(args):
         args.configuration_file = normalize_path(args.configuration_file)
 
     args.line_ranges = {line_range for arg in args.line_ranges for line_range in arg}
+
+    try:
+        if pathlib.Path("-") not in args.sources:
+            args.sources = tuple(normalize_path(s) for s in set(args.sources))
+    except FileNotFoundError as e:
+        # pylint: disable=broad-exception-raised
+        raise Exception(f"Source path doesn't exist: {e.filename}") from e
 
 
 def error(text):
