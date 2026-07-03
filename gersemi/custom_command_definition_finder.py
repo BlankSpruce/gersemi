@@ -1,16 +1,13 @@
 import gersemi_rust_backend
 import yaml
 from gersemi.argument_schema import Command, StandardCommand, argument_schema_from_dict
-from gersemi.builtin_commands import _builtin_commands
 from gersemi.immutable import make_immutable
 from gersemi.keyword_kind import KeywordFormatter, KeywordPreprocessor
 from gersemi.keywords import Hint, Keywords
 
 
 def find_custom_command_definitions(code, filepath="---"):
-    return gersemi_rust_backend.find_custom_command_definitions(
-        code, dict(_builtin_commands), str(filepath)
-    )
+    return gersemi_rust_backend.find_custom_command_definitions(code, str(filepath))
 
 
 def create_command(canonical_name, positional_arguments, keywords, block_end):

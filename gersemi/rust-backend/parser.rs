@@ -1,4 +1,4 @@
-use crate::argument_schema::{CommandSchema, CommandSchemas};
+use crate::argument_schema::{builtin_schemas, CommandSchema, CommandSchemas};
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, BracketComment, Command,
     CommandInvocation, CommentedArgumentComment, FileElement, LineComment, Position, Start,
@@ -8,7 +8,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
-struct BlockCommand {
+pub struct BlockCommand {
     re: regex::Regex,
 }
 
@@ -91,7 +91,7 @@ impl Parser<'_> {
         Parser {
             text,
             line_offsets,
-            blocks: prepare_blocks(schemas),
+            blocks: schemas.prepare_blocks(),
             schemas,
         }
     }
@@ -824,21 +824,24 @@ fn block_command(name: &str) -> BlockCommand {
     BlockCommand { re }
 }
 
-fn prepare_blocks(schemas: &CommandSchemas) -> Vec<(String, BlockCommand)> {
-    schemas
-        .values()
-        .filter_map(|schema| match schema {
-            CommandSchema {
-                canonical_name: Some(canonical_name),
-                block_end: Some(block_end),
-                ..
-            } => Some((
-                canonical_name.trim().to_lowercase(),
-                block_command(block_end),
-            )),
-            _ => None,
-        })
-        .collect()
+impl CommandSchemas {
+    pub fn prepare_blocks(&self) -> Vec<(String, BlockCommand)> {
+        self.schemas
+            .values()
+            .chain(builtin_schemas().values())
+            .filter_map(|schema| match schema {
+                CommandSchema {
+                    canonical_name: Some(canonical_name),
+                    block_end: Some(block_end),
+                    ..
+                } => Some((
+                    canonical_name.trim().to_lowercase(),
+                    block_command(block_end),
+                )),
+                _ => None,
+            })
+            .collect()
+    }
 }
 
 pyo3::import_exception!(gersemi.exceptions, GenericParsingError);

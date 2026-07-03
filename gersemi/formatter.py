@@ -1,7 +1,6 @@
-from collections import ChainMap, defaultdict
+from collections import defaultdict
 from typing import Tuple
 import gersemi_rust_backend
-from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import LineRanges, OutcomeConfiguration
 from gersemi.warnings import FormatterWarnings, UnknownCommandWarning
 
@@ -21,7 +20,7 @@ class Formatter:
     def init_backend(self):
         self.impl = gersemi_rust_backend.Formatter(
             self.configuration,
-            dict(ChainMap(self.known_definitions, _builtin_commands)),
+            dict(self.known_definitions),
             self.lines_to_format,
         )
 

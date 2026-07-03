@@ -614,4 +614,30 @@ pub struct CommandSchema {
     pub details: CommandSchemaDetails,
 }
 
-pub type CommandSchemas = HashMap<String, CommandSchema>;
+pub type CommandSchemaMapping = HashMap<String, CommandSchema>;
+
+pub fn builtin_schemas() -> &'static CommandSchemaMapping {
+    static RESULT: LazyLock<CommandSchemaMapping> = LazyLock::new(|| {
+        Python::attach(|py| {
+            PyModule::import(py, "gersemi.builtin_commands")?
+                .getattr("_builtin_commands")?
+                .extract()
+        })
+        .unwrap()
+    });
+    &RESULT
+}
+
+pub struct CommandSchemas {
+    pub schemas: CommandSchemaMapping,
+}
+
+impl CommandSchemas {
+    pub fn get(&self, key: &str) -> Option<&CommandSchema> {
+        self.schemas.get(key).or_else(|| builtin_schemas().get(key))
+    }
+
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.schemas.contains_key(key) || builtin_schemas().contains_key(key)
+    }
+}

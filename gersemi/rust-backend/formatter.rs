@@ -1,6 +1,6 @@
 use crate::argument_schema::{
-    is_one_of_keywords, ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemas,
-    KeywordMatcher, Signatures,
+    is_one_of_keywords, ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemaMapping,
+    CommandSchemas, KeywordMatcher, Signatures,
 };
 use crate::configuration::{
     IndentType, KeywordFormatter, KeywordPreprocessor, ListExpansion, OutcomeConfiguration,
@@ -1466,12 +1466,12 @@ impl Formatter {
     #[new]
     fn new(
         configuration: OutcomeConfiguration,
-        schemas: CommandSchemas,
+        schemas: CommandSchemaMapping,
         lines_to_format: Vec<LineRange>,
     ) -> Self {
         Self {
             configuration,
-            schemas,
+            schemas: CommandSchemas { schemas },
             lines_to_format,
         }
     }

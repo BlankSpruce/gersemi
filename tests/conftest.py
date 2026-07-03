@@ -2,7 +2,6 @@ from collections import ChainMap
 import pathlib
 import shutil
 import pytest
-from gersemi.builtin_commands import _builtin_commands
 from gersemi.configuration import (
     ListExpansion,
     OutcomeConfiguration,
@@ -54,7 +53,6 @@ def formatter_creator():
             known_definitions=ChainMap(
                 get_custom_command_definitions(config.get("definitions", [])),
                 preprocess_definitions(testing_extension.command_definitions),
-                _builtin_commands,
             ),
             lines_to_format=(),
         )
