@@ -11,7 +11,7 @@ fn string_enum_value(obj: Borrowed<'_, '_, PyAny>) -> Result<String, PyErr> {
     Ok(value.cast::<PyString>()?.str()?.to_string())
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum KeywordFormatter {
     CommandLine,
     Pairs,
@@ -30,7 +30,7 @@ impl FromPyObject<'_, '_> for KeywordFormatter {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum KeywordPreprocessor {
     Sort,
     Unique,

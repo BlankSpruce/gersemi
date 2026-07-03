@@ -132,7 +132,9 @@ impl KeywordSplitter {
                         keyword: Box::new(argument),
                         arguments,
                     });
-                } else if is_one_of_keywords(value, &schema.multi_value_keywords) {
+                } else if argument.is_phantom()
+                    || is_one_of_keywords(value, &schema.multi_value_keywords)
+                {
                     self.flush_accumulators();
                     self.accumulator.kind = AccumulatorKind::Nodes;
                     self.accumulator.nodes = vec![argument];
@@ -154,7 +156,10 @@ impl KeywordSplitter {
 }
 
 impl ArgumentSchema {
-    fn is_one_of_schema_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
+    fn is_one_of_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
+        if node.is_phantom() {
+            return true;
+        }
         let value = node.get_keyword_value();
         let value = value.as_ref();
         is_one_of_keywords(value, &self.options)
@@ -164,7 +169,7 @@ impl ArgumentSchema {
 
     fn find_pivot(&self, arguments: &[RefinedArgumentsAtom]) -> Option<usize> {
         for (index, argument) in arguments.iter().enumerate() {
-            if self.is_one_of_schema_keywords(argument) {
+            if self.is_one_of_keywords(argument) {
                 return Some(index);
             }
         }
@@ -307,7 +312,7 @@ impl ArgumentSchema {
         let mut section_schema: Option<&ArgumentSchema> = None;
 
         for argument in arguments {
-            if section_schema.is_some_and(|x| x.is_one_of_schema_keywords(&argument)) {
+            if section_schema.is_some_and(|x| x.is_one_of_keywords(&argument)) {
                 let last = result.last_mut();
                 if let Some(RefinedArgumentsAtom::Section { values, .. }) = last {
                     values.push(argument);

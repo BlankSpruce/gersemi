@@ -1,3 +1,5 @@
+use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
+
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Position {
     pub line: usize,
@@ -19,6 +21,12 @@ impl BracketArgument {
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub enum PhantomKind {
+    KeywordPreprocessor(KeywordPreprocessor),
+    KeywordFormatter(KeywordFormatter),
+}
+
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Argument {
     Bracket(BracketArgument),
     Complex {
@@ -31,6 +39,10 @@ pub enum Argument {
     Unquoted {
         value: String,
         position: Option<Position>,
+    },
+    Phantom {
+        kind: PhantomKind,
+        value: String,
     },
 }
 
@@ -52,7 +64,8 @@ impl Argument {
                 .join(" "),
             Self::Bracket(BracketArgument { value, .. })
             | Self::Quoted { value, .. }
-            | Self::Unquoted { value, .. } => value.clone(),
+            | Self::Unquoted { value, .. }
+            | Self::Phantom { value, .. } => value.clone(),
         }
     }
 }
@@ -256,6 +269,29 @@ impl RefinedArgumentsAtom {
     pub fn get_value(&self) -> Option<String> {
         match self {
             Self::Atom(atom) => atom.get_value(),
+            _ => None,
+        }
+    }
+
+    pub fn is_phantom(&self) -> bool {
+        match self {
+            RefinedArgumentsAtom::Atom(
+                ArgumentsAtom::CommentedArgument { argument, .. }
+                | ArgumentsAtom::Argument(argument),
+            ) => matches!(argument, Argument::Phantom { .. }),
+            _ => false,
+        }
+    }
+
+    pub fn get_phantom_kind(&self) -> Option<PhantomKind> {
+        match self {
+            RefinedArgumentsAtom::Atom(
+                ArgumentsAtom::CommentedArgument {
+                    argument: Argument::Phantom { kind, .. },
+                    ..
+                }
+                | ArgumentsAtom::Argument(Argument::Phantom { kind, .. }),
+            ) => Some(kind.clone()),
             _ => None,
         }
     }

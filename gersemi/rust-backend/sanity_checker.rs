@@ -26,6 +26,7 @@ fn simplify_argument(node: Argument) -> Argument {
             value,
             position: None,
         },
+        Argument::Phantom { .. } => node,
     }
 }
 

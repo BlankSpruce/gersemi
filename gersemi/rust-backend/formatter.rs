@@ -11,8 +11,8 @@ use crate::keyword_preprocessor::{
 };
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
-    CommentedArgumentComment, FileElement, LineComment, Position, RefinedArgumentsAtom,
-    RefinedArgumentsNode, Start,
+    CommentedArgumentComment, FileElement, LineComment, PhantomKind, Position,
+    RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
 use crate::parser::{quoted_argument_pattern, regex, Parser};
 use crate::sanity_checker::check_equivalence;
@@ -564,6 +564,7 @@ impl FormatterImpl<'_> {
             Argument::Complex { arguments } => self.complex_argument(arguments),
             Argument::Quoted { value, .. } => format!("{}\"{value}\"", self.indent_symbol),
             Argument::Unquoted { value, .. } => format!("{}{value}", self.indent_symbol),
+            Argument::Phantom { value, .. } => format!("{}#{value}", self.indent_symbol),
         }
     }
 
@@ -822,6 +823,10 @@ impl FormatterImpl<'_> {
     }
 
     fn get_preprocessor(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordPreprocessor> {
+        if let Some(PhantomKind::KeywordPreprocessor(p)) = atom.get_phantom_kind() {
+            return Some(p);
+        }
+
         match &self.active_schema {
             Some(schema) => atom
                 .get_value()
@@ -831,6 +836,10 @@ impl FormatterImpl<'_> {
     }
 
     fn get_formatter(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordFormatter> {
+        if let Some(PhantomKind::KeywordFormatter(f)) = atom.get_phantom_kind() {
+            return Some(f);
+        }
+
         match &self.active_schema {
             Some(schema) => atom
                 .get_value()

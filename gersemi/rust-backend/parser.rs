@@ -1,7 +1,9 @@
 use crate::argument_schema::{builtin_schemas, CommandSchema, CommandSchemas};
+use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, BracketComment, Command,
-    CommandInvocation, CommentedArgumentComment, FileElement, LineComment, Position, Start,
+    CommandInvocation, CommentedArgumentComment, FileElement, LineComment, PhantomKind, Position,
+    Start,
 };
 use pyo3::PyErr;
 use regex::Regex;
@@ -343,6 +345,10 @@ impl Parser<'_> {
         &self,
         offset: usize,
     ) -> Result<Option<(CommentedArgumentComment, usize)>, Error> {
+        if self.phantom(offset)?.is_some() {
+            return Ok(None);
+        }
+
         if let Some((matched, offset)) = self.bracket_comment(offset)? {
             return Ok(Some((
                 CommentedArgumentComment::BracketComment(matched),
@@ -443,11 +449,41 @@ impl Parser<'_> {
         })
     }
 
+    fn phantom(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
+        let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? else {
+            return Ok(None);
+        };
+
+        let Some(hint) = value.strip_prefix("[[gersemi: ") else {
+            return Ok(None);
+        };
+
+        let Some(hint) = hint.strip_suffix("]]") else {
+            return Ok(None);
+        };
+
+        let kind = match hint {
+            "sort+unique" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::SortAndUnique),
+            "sort" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::Sort),
+            "unique" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::Unique),
+            "command_line" => PhantomKind::KeywordFormatter(KeywordFormatter::CommandLine),
+            "pairs" => PhantomKind::KeywordFormatter(KeywordFormatter::Pairs),
+            _ => {
+                return Ok(None);
+            }
+        };
+        Ok(Some((Argument::Phantom { value, kind }, offset)))
+    }
+
     fn argument(
         &self,
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
+        if let Some(matched) = self.phantom(offset)? {
+            return Ok(Some(matched));
+        }
+
         if let Some(matched) = self.bracket_argument(offset, compute_position)? {
             return Ok(Some(matched));
         }
