@@ -110,7 +110,7 @@ mod gersemi_rust_backend {
                 || (name.ends_with("cmake"))
                 || (name.ends_with("cmake.in"))
             {
-                result.push(entry.into_path().canonicalize()?);
+                result.push(std::path::absolute(entry.into_path())?);
             }
         }
 
