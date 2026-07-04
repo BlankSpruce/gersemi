@@ -109,8 +109,8 @@ mod gersemi_rust_backend {
             };
             if (name == "CMakeLists.txt")
                 || (name == "CMakeLists.txt.in")
-                || (name.ends_with("cmake"))
-                || (name.ends_with("cmake.in"))
+                || (name.ends_with(".cmake"))
+                || (name.ends_with(".cmake.in"))
             {
                 result.push(std::path::absolute(entry.into_path())?);
             }
