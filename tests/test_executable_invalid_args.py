@@ -1,4 +1,4 @@
-from tests.fixtures.app import fail
+from tests.fixtures.app import fail, success
 
 
 def test_invalid_source_path(app, testfiles):
@@ -36,5 +36,22 @@ def test_invalid_extension_module(app, testfiles):
     assert app("--extensions", extension, "--check", source) == fail(
         stdout="",
         stderr=f"""Missing extension {extension}
+""",
+    )
+
+
+def test_invalid_definition_code(app, testfiles):
+    definition = (testfiles / "invalid_definition.cmake").resolve()
+    source = (testfiles / "formatted_file.cmake").resolve()
+    with open(definition, "w", encoding="utf-8") as f:
+        f.write("""function(foo)
+endfunction(""")
+
+    assert app("--definitions", definition, "--check", source) == success(
+        stdout="",
+        stderr=f"""{definition}:2:14: unbalanced parentheses
+endfunction(
+             ^
+
 """,
     )

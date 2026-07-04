@@ -41,9 +41,9 @@ mod gersemi_rust_backend {
     fn find_custom_command_definitions(
         text: String,
         filepath: String,
-    ) -> HashMap<String, Vec<CustomCommand>> {
+    ) -> PyResult<HashMap<String, Vec<CustomCommand>>> {
         if !has_custom_command_definition(&text) {
-            return HashMap::new();
+            return Ok(HashMap::new());
         }
 
         let schemas = CommandSchemas {

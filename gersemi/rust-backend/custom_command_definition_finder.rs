@@ -3,7 +3,7 @@ use crate::node::{
     FileElement, Position, Start,
 };
 use crate::parser::Parser;
-use pyo3::IntoPyObject;
+use pyo3::{IntoPyObject, PyResult};
 use std::collections::HashMap;
 
 #[derive(IntoPyObject)]
@@ -280,15 +280,13 @@ impl CustomCommandInterpreter {
 pub fn find_custom_command_definitions(
     parser: &Parser,
     filepath: String,
-) -> HashMap<String, Vec<CustomCommand>> {
+) -> PyResult<HashMap<String, Vec<CustomCommand>>> {
     let mut interpreter = CustomCommandInterpreter {
         stack: HashMap::new(),
         found_commands: HashMap::new(),
         filepath,
     };
-    let Ok(node) = parser.start() else {
-        return HashMap::new();
-    };
+    let node = parser.start()?;
     interpreter.start(node);
-    interpreter.found_commands
+    Ok(interpreter.found_commands)
 }
