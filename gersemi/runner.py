@@ -12,14 +12,11 @@ from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
     LineRanges,
-    MaxWorkers,
     NotSupportedKeys,
     OutcomeConfiguration,
-    Workers,
     find_closest_dot_gersemirc,
     make_control_configuration,
     make_outcome_configuration,
-    max_number_of_workers,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
 from gersemi.custom_command_definition_finder import (
@@ -112,7 +109,6 @@ def check_conflicting_definitions(definitions, warning_sink: WarningSink):
 
 def find_all_custom_command_definitions(
     paths: Iterable[Path],
-    pool,
     warning_sink: WarningSink,
     respect_ignore_files: bool,
 ) -> Dict[str, Keywords]:
@@ -124,7 +120,7 @@ def find_all_custom_command_definitions(
     )
     find = find_custom_command_definitions_in_file
 
-    for defs in pool.imap_unordered(find, files):
+    for defs in map(find, files):
         if isinstance(defs, Error):
             warning_sink(get_error_message(defs))
             continue
@@ -188,26 +184,6 @@ def consume_task_result(
         warning_sink(task_result.to_stderr)
 
     return task_result.path, task_result.return_code, (len(warnings) > 0)
-
-
-class AdaptivePool:
-    def __init__(self, workers: Workers):
-        self.workers = (
-            max_number_of_workers()
-            if isinstance(workers, MaxWorkers)
-            else max(1, workers)
-        )
-
-    def imap_unordered(self, func, iterable):
-        processes = min(self.workers, (len(iterable) + CHUNKSIZE - 1) // CHUNKSIZE)
-        if processes <= 1:
-            yield from map(func, iterable)
-            return
-
-        import multiprocessing
-
-        with multiprocessing.Pool(processes=processes) as pool:
-            yield from pool.imap_unordered(func, iterable, CHUNKSIZE)
 
 
 def summarize_configuration(configuration, extension_definitions):
@@ -277,14 +253,12 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     mode: Mode,
     configuration: Configuration,
     cache,
-    pool,
     warning_sink: WarningSink,
     files_to_format: Iterable[Path],
     lines_to_format: LineRanges,
 ) -> Iterable[int]:
     custom_command_definitions = find_all_custom_command_definitions(
         set(configuration.outcome.definitions),
-        pool,
         warning_sink,
         configuration.control.respect_ignore_files,
     )
@@ -302,7 +276,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
 
     results = [
         consume_task_result(result, configuration, warning_sink)
-        for result in pool.imap_unordered(execute, files_to_format)
+        for result in map(execute, files_to_format)
     ]
     store_files_in_cache(
         mode,
@@ -406,7 +380,6 @@ def run(args: argparse.Namespace):
 
     mode = get_mode(args)
     warning_sink = WarningSink(control.quiet)
-    pool = AdaptivePool(workers=control.workers)
 
     buckets = split_files_by_configuration_file(requested_files, control)
     get_configuration = GetConfiguration(args, control, warning_sink)
@@ -433,7 +406,6 @@ def run(args: argparse.Namespace):
                 mode,
                 config,
                 cache,
-                pool,
                 warning_sink,
                 files_to_format,
                 control.line_ranges,

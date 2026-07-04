@@ -24,14 +24,9 @@ def rust_parser():
 
 
 def get_custom_command_definitions(configuration_definitions):
-    class Pool:
-        def imap_unordered(self, func, files, *args, **kwargs):  # pylint: disable=unused-argument
-            yield from map(func, files)
-
     paths = [pathlib.Path(d).resolve() for d in configuration_definitions]
     return find_all_custom_command_definitions(
         paths=paths,
-        pool=Pool(),
         warning_sink=noop,
         respect_ignore_files=False,
     )
