@@ -29,7 +29,7 @@ from gersemi.formatter import Formatter, NullFormatter
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
-from gersemi.result import Error, Result, apply, get_error_message
+from gersemi.result import get_error_message
 from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
 from gersemi.task_result import TaskResult
 from gersemi.tasks.check_and_show_diff import check_and_show_diff
@@ -84,17 +84,11 @@ class StatusCode:
         raise RuntimeError(f"Invalid type: {type(other)}")
 
 
-def find_custom_command_definitions_in_file_impl(filepath: Path) -> Dict[str, Keywords]:
+def find_custom_command_definitions_in_file(filepath: Path) -> Dict[str, Keywords]:
     with smart_open(filepath, "r") as f:
         code = f.read()
 
     return find_custom_command_definitions(code, filepath)
-
-
-def find_custom_command_definitions_in_file(
-    filepath: Path,
-) -> Result[Dict[str, Keywords]]:
-    return apply(find_custom_command_definitions_in_file_impl, filepath)
 
 
 def check_conflicting_definitions(definitions, warning_sink: WarningSink):
@@ -118,11 +112,11 @@ def find_all_custom_command_definitions(
         paths=list(paths),
         respect_ignore_files=respect_ignore_files,
     )
-    find = find_custom_command_definitions_in_file
-
-    for defs in map(find, files):
-        if isinstance(defs, Error):
-            warning_sink(get_error_message(defs))
+    for f in files:
+        try:
+            defs = find_custom_command_definitions_in_file(f)
+        except Exception as exception:  # pylint: disable=broad-except
+            warning_sink(get_error_message(exception, f))
             continue
 
         for name, info in defs.items():
@@ -152,22 +146,18 @@ def run_task(
     path: Path,
     formatter: Union[NullFormatter, Formatter],
     task: Callable[[FormattedFile], TaskResult],
-) -> TaskResult:
-    formatted_file: Result[FormattedFile] = apply(format_file, path, formatter)
-    if isinstance(formatted_file, Error):
-        return TaskResult(
-            path=path,
-            return_code=INTERNAL_ERROR,
-            to_stderr=get_error_message(formatted_file),
-        )
-    return task(formatted_file)
-
-
-def consume_task_result(
-    task_result: TaskResult,
     configuration: Configuration,
     warning_sink: WarningSink,
 ) -> Tuple[Path, int, bool]:
+    try:
+        task_result = task(format_file(path, formatter))
+    except Exception as exception:  # pylint: disable=broad-exception-caught
+        task_result = TaskResult(
+            path=path,
+            return_code=INTERNAL_ERROR,
+            to_stderr=get_error_message(exception, path),
+        )
+
     if task_result.to_stdout != "":
         print_to_stdout(task_result.to_stdout)
 
@@ -241,10 +231,9 @@ def handle_already_formatted_files(
 ) -> Iterable[int]:
     task = select_task_for_already_formatted_files(mode)
     formatter = NullFormatter()
-    execute = partial(run_task, formatter=formatter, task=task)
     results = [
-        consume_task_result(result, configuration, warning_sink)
-        for result in map(execute, already_formatted_files)
+        run_task(f, formatter, task, configuration, warning_sink)
+        for f in already_formatted_files
     ]
     return (code for _, code, _ in results)
 
@@ -272,11 +261,9 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         lines_to_format,
     )
     task = select_task(mode, configuration)
-    execute = partial(run_task, formatter=formatter, task=task)
-
     results = [
-        consume_task_result(result, configuration, warning_sink)
-        for result in map(execute, files_to_format)
+        run_task(f, formatter, task, configuration, warning_sink)
+        for f in files_to_format
     ]
     store_files_in_cache(
         mode,

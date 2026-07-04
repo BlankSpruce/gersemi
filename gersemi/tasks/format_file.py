@@ -1,7 +1,8 @@
 import codecs
 from pathlib import Path
+from typing import Union
 from gersemi.formatted_file import FormattedFile
-from gersemi.formatter import Formatter
+from gersemi.formatter import Formatter, NullFormatter
 from gersemi.utils import smart_open
 
 
@@ -20,7 +21,9 @@ def translate_newlines_to_line_feed(code: str) -> str:
 BOM = codecs.BOM_UTF8.decode()
 
 
-def format_file(path: Path, formatter: Formatter) -> FormattedFile:
+def format_file(
+    path: Path, formatter: Union[NullFormatter, Formatter]
+) -> FormattedFile:
     with smart_open(path, "r", newline="") as f:
         code = f.read()
 

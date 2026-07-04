@@ -1,27 +1,6 @@
-from dataclasses import astuple, dataclass
 from pathlib import Path
-from typing import Callable, TypeVar, Union
 from gersemi.exceptions import ASTMismatch, ParsingError
 from gersemi.utils import fromfile
-
-T_co = TypeVar("T_co", covariant=True)
-
-
-@dataclass
-class Error:
-    exception: Exception
-    path: Path
-
-
-Result = Union[T_co, Error]
-
-
-def apply(function: Callable[..., T_co], path: Path, *args, **kwargs) -> Result[T_co]:
-    try:
-        return function(path, *args, **kwargs)
-    except Exception as exception:  # pylint: disable=broad-except
-        return Error(exception, path)
-
 
 ERROR_MESSAGE_TEMPLATES = {
     ASTMismatch: "{path}: AST mismatch after formatting",
@@ -31,8 +10,7 @@ ERROR_MESSAGE_TEMPLATES = {
 FALLBACK_ERROR_MESSAGE_TEMPLATE = "{path}: runtime error, {exception}"
 
 
-def get_error_message(error: Error) -> str:
-    exception, path = astuple(error)
+def get_error_message(exception: Exception, path: Path) -> str:
     message = FALLBACK_ERROR_MESSAGE_TEMPLATE
     for exception_type, template in ERROR_MESSAGE_TEMPLATES.items():
         if isinstance(exception, exception_type):
