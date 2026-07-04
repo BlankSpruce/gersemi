@@ -46,8 +46,3 @@ class Formatter:
     def format(self, code) -> Tuple[str, FormatterWarnings]:
         result, raw_warnings = self.impl.format(code)
         return result, self.get_warnings(raw_warnings)
-
-
-class NullFormatter:
-    def format(self, code):
-        return code, []

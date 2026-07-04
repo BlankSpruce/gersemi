@@ -5,7 +5,7 @@ from functools import partial
 from hashlib import sha1
 from pathlib import Path
 import sys
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 import gersemi_rust_backend
 from gersemi.cache import create_cache
 from gersemi.configuration import (
@@ -25,7 +25,7 @@ from gersemi.custom_command_definition_finder import (
 )
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.formatted_file import FormattedFile
-from gersemi.formatter import Formatter, NullFormatter
+from gersemi.formatter import Formatter
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
@@ -144,7 +144,7 @@ def select_task(mode: Mode, configuration: Configuration):
 
 def run_task(
     path: Path,
-    formatter: Union[NullFormatter, Formatter],
+    formatter: Optional[Formatter],
     task: Callable[[FormattedFile], TaskResult],
     configuration: Configuration,
     warning_sink: WarningSink,
@@ -230,7 +230,7 @@ def handle_already_formatted_files(
     already_formatted_files: Iterable[Path],
 ) -> Iterable[int]:
     task = select_task_for_already_formatted_files(mode)
-    formatter = NullFormatter()
+    formatter = None
     results = [
         run_task(f, formatter, task, configuration, warning_sink)
         for f in already_formatted_files
