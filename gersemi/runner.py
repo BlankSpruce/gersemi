@@ -25,7 +25,6 @@ from gersemi.custom_command_definition_finder import (
 )
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.formatted_file import FormattedFile
-from gersemi.formatter import Formatter
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
@@ -144,7 +143,7 @@ def select_task(mode: Mode, configuration: Configuration):
 
 def run_task(
     path: Path,
-    formatter: Optional[Formatter],
+    formatter: Optional[gersemi_rust_backend.Formatter],
     task: Callable[[FormattedFile], TaskResult],
     configuration: Configuration,
     warning_sink: WarningSink,
@@ -255,10 +254,10 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         configuration.outcome.extensions
     )
 
-    formatter = Formatter(
+    formatter = gersemi_rust_backend.Formatter(
         configuration.outcome,
-        ChainMap(custom_command_definitions, extension_definitions),
-        lines_to_format,
+        dict(ChainMap(custom_command_definitions, extension_definitions)),
+        list(lines_to_format),
     )
     task = select_task(mode, configuration)
     results = [

@@ -14,13 +14,15 @@ use pyo3::pymodule;
 mod gersemi_rust_backend {
     use crate::argument_schema::{CommandSchemaMapping, CommandSchemas};
     use crate::custom_command_definition_finder::CustomCommand;
+    use crate::formatter::UnknownCommandsUsed;
     use crate::parser::{Error, Parser};
     use crate::sanity_checker::check_equivalence;
     use ignore::WalkBuilder;
     use pyo3::exceptions::PyRuntimeError;
-    use pyo3::{pyfunction, PyResult};
+    use pyo3::types::{PyAnyMethods, PyModule};
+    use pyo3::{pyfunction, PyResult, Python};
     use std::collections::HashMap;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
@@ -70,14 +72,14 @@ mod gersemi_rust_backend {
     #[pymodule_export]
     use crate::formatter::Formatter;
 
+    fn is_stdin(path: &Path) -> bool {
+        path.to_str().is_some_and(|value| value == "-")
+    }
+
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
-        if paths
-            .iter()
-            .find(|path| path.to_str().is_some_and(|value| value == "-"))
-            .is_some()
-        {
+        if paths.iter().find(|path| is_stdin(path)).is_some() {
             return Ok(paths);
         }
 
@@ -117,6 +119,49 @@ mod gersemi_rust_backend {
         result.sort();
         result.dedup();
         Ok(result)
+    }
+
+    fn read_code(path: &Path) -> PyResult<String> {
+        if is_stdin(path) {
+            Python::attach(|py| {
+                PyModule::import(py, "gersemi.utils")?
+                    .getattr("StdinWrapper")?
+                    .getattr("read")?
+                    .call0()?
+                    .extract()
+            })
+        } else {
+            Ok(std::fs::read_to_string(path)?)
+        }
+    }
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn format_file(
+        path: PathBuf,
+        formatter: Option<&Formatter>,
+    ) -> PyResult<(String, String, String, UnknownCommandsUsed)> {
+        const BOM: char = '\u{feff}';
+
+        let code = read_code(&path)?;
+        let (preserve_bom, code) = match code.strip_prefix(BOM) {
+            None => (false, code.as_str()),
+            Some(code) => (true, code),
+        };
+        let newlines_style = if code.contains("\r\n") { "\r\n" } else { "\n" };
+        let code = code.replace("\r\n", "\n").replace('\r', "\n");
+        let (formatted_code, warnings) = match formatter {
+            None => (code.clone(), vec![]),
+            Some(formatter) => formatter.format(code.clone())?,
+        };
+
+        let formatted_code = if preserve_bom {
+            format!("{BOM}{formatted_code}")
+        } else {
+            formatted_code
+        };
+
+        Ok((code, formatted_code, newlines_style.to_string(), warnings))
     }
 
     #[pyfunction]

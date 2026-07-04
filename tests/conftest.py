@@ -1,6 +1,7 @@
 from collections import ChainMap
 import pathlib
 import shutil
+import gersemi_rust_backend
 import pytest
 from gersemi.configuration import (
     ListExpansion,
@@ -9,7 +10,6 @@ from gersemi.configuration import (
     indent_type,
 )
 from gersemi.extensions import preprocess_definitions
-from gersemi.formatter import Formatter
 from gersemi.noop import noop
 from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
@@ -35,8 +35,8 @@ def get_custom_command_definitions(configuration_definitions):
 @pytest.fixture(scope="module")
 def formatter_creator():
     def creator(config):
-        return Formatter(
-            OutcomeConfiguration(
+        return gersemi_rust_backend.Formatter(
+            configuration=OutcomeConfiguration(
                 unsafe=config.get("unsafe", True),
                 line_length=config.get("line_length", 80),
                 indent=indent_type(config.get("indent", 4)),
@@ -45,11 +45,13 @@ def formatter_creator():
                 ),
                 sort_order=SortOrder(config.get("sort_order", SortOrder.CaseSensitive)),
             ),
-            known_definitions=ChainMap(
-                get_custom_command_definitions(config.get("definitions", [])),
-                preprocess_definitions(testing_extension.command_definitions),
+            schemas=dict(
+                ChainMap(
+                    get_custom_command_definitions(config.get("definitions", [])),
+                    preprocess_definitions(testing_extension.command_definitions),
+                )
             ),
-            lines_to_format=(),
+            lines_to_format=[],
         )
 
     return creator

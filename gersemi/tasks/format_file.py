@@ -1,49 +1,33 @@
-import codecs
+from collections import defaultdict
 from pathlib import Path
 from typing import Optional
+import gersemi_rust_backend
 from gersemi.formatted_file import FormattedFile
-from gersemi.formatter import Formatter
-from gersemi.utils import smart_open
-from gersemi.warnings import FormatterWarnings
+from gersemi.warnings import UnknownCommandWarning
 
 
-def get_newlines_style(code: str) -> str:
-    crlf = "\r\n"
-    if crlf in code:
-        return crlf
+def process_warnings(raw_warnings):
+    warnings = defaultdict(list)
+    for name, line, column in raw_warnings:
+        warnings[name].append((line, column))
 
-    return "\n"
-
-
-def translate_newlines_to_line_feed(code: str) -> str:
-    return code.replace("\r\n", "\n").replace("\r", "\n")
-
-
-BOM = codecs.BOM_UTF8.decode()
+    return [
+        UnknownCommandWarning(command_name=name, positions=positions)
+        for name, positions in warnings.items()
+    ]
 
 
-def format_file(path: Path, formatter: Optional[Formatter]) -> FormattedFile:
-    with smart_open(path, "r", newline="") as f:
-        code = f.read()
-
-    preserve_bom = code.startswith(BOM)
-    code = code.lstrip(BOM)
-
-    newlines_style = get_newlines_style(code)
-    code = translate_newlines_to_line_feed(code)
-    if formatter is None:
-        formatted_code = code
-        warnings: FormatterWarnings = []
-    else:
-        formatted_code, warnings = formatter.format(code)
-
-    if preserve_bom:
-        formatted_code = f"{BOM}{formatted_code}"
+def format_file(
+    path: Path, formatter: Optional[gersemi_rust_backend.Formatter]
+) -> FormattedFile:
+    code, formatted_code, newlines_style, warnings = gersemi_rust_backend.format_file(
+        path=path, formatter=formatter
+    )
 
     return FormattedFile(
         before=code,
         after=formatted_code,
         newlines_style=newlines_style,
         path=path,
-        warnings=warnings,
+        warnings=process_warnings(warnings),
     )

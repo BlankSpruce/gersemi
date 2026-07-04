@@ -1,5 +1,5 @@
+import gersemi_rust_backend
 from gersemi.configuration import OutcomeConfiguration
-import gersemi.formatter
 import gersemi.parser
 
 
@@ -20,10 +20,13 @@ class Parser(gersemi.parser.Parser):
         )
 
 
-class Formatter(gersemi.formatter.Formatter):
+class Formatter:
     def __init__(self, known_definitions=None):
-        super().__init__(
+        self.impl = gersemi_rust_backend.Formatter(
             configuration=OutcomeConfiguration(line_length=80, indent=4),
-            known_definitions={} if known_definitions is None else known_definitions,
-            lines_to_format=(),
+            schemas={} if known_definitions is None else known_definitions,
+            lines_to_format=[],
         )
+
+    def format(self, code):
+        return self.impl.format(code)

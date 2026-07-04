@@ -25,7 +25,7 @@ use std::iter::zip;
 use std::str::SplitInclusive;
 use std::sync::LazyLock;
 
-type UnknownCommandsUsed = Vec<(String, usize, usize)>;
+pub type UnknownCommandsUsed = Vec<(String, usize, usize)>;
 
 #[derive(Clone)]
 struct FormatterImpl<'a> {
@@ -1513,7 +1513,7 @@ impl Formatter {
         }
     }
 
-    fn format(&self, text: String) -> Result<(String, UnknownCommandsUsed), PyErr> {
+    pub fn format(&self, text: String) -> Result<(String, UnknownCommandsUsed), PyErr> {
         let text = add_line_range_fences(text, &self.lines_to_format);
         let node = Parser::new(text.clone(), &self.schemas).start()?;
         let before = if self.configuration.disable_sanity_checks {
