@@ -469,9 +469,14 @@ impl Parser<'_> {
             "command_line" => PhantomKind::KeywordFormatter(KeywordFormatter::CommandLine),
             "pairs" => PhantomKind::KeywordFormatter(KeywordFormatter::Pairs),
             "raw" => PhantomKind::Raw,
-            _ => {
-                return Ok(None);
-            }
+            _ => match hint.strip_prefix("as_command=") {
+                None => {
+                    return Ok(None);
+                }
+                Some(hint) => PhantomKind::AsCommand {
+                    command: hint.to_lowercase(),
+                },
+            },
         };
         Ok(Some((Argument::Phantom { value, kind }, offset)))
     }

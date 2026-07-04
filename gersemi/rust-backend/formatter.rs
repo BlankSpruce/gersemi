@@ -437,9 +437,18 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn standard_preprocess_arguments(&self, arguments: ArgumentsNode) -> RefinedArgumentsNode {
+    fn standard_preprocess_arguments(
+        &self,
+        arguments: RefinedArgumentsNode,
+    ) -> RefinedArgumentsNode {
         crate::two_words_keyword_isolator::preprocess_arguments(
             self.two_words_keywords(),
+            arguments,
+        )
+    }
+
+    fn preprocess_arguments(&self, arguments: ArgumentsNode) -> RefinedArgumentsNode {
+        self.preprocess_refined_arguments(
             arguments
                 .into_iter()
                 .map(RefinedArgumentsAtom::Atom)
@@ -447,14 +456,12 @@ impl FormatterImpl<'_> {
         )
     }
 
-    fn preprocess_arguments(&self, arguments: ArgumentsNode) -> RefinedArgumentsNode {
+    fn preprocess_refined_arguments(
+        &self,
+        arguments: RefinedArgumentsNode,
+    ) -> RefinedArgumentsNode {
         if self.shall_use_condition_syntax() {
-            crate::argument_schema::isolate_conditions(
-                arguments
-                    .into_iter()
-                    .map(RefinedArgumentsAtom::Atom)
-                    .collect(),
-            )
+            crate::argument_schema::isolate_conditions(arguments)
         } else {
             self.standard_preprocess_arguments(arguments)
         }
@@ -977,11 +984,32 @@ impl FormatterImpl<'_> {
         group_sizes.all(|x| x <= threshold)
     }
 
+    fn split_phantom_argument(&self, argument: RefinedArgumentsAtom) -> RefinedArgumentsAtom {
+        match argument {
+            RefinedArgumentsAtom::MultiValueArgument { keyword, arguments } => {
+                let arguments = match keyword.get_phantom_kind() {
+                    Some(PhantomKind::AsCommand { command }) => {
+                        let f = self.patch_active_command(self.get_patch(&command));
+                        let arguments = f.preprocess_refined_arguments(arguments);
+                        let f = f.patch_active_schema(f.get_signature(&arguments));
+                        f.split_arguments(arguments)
+                    }
+                    _ => arguments,
+                };
+                RefinedArgumentsAtom::MultiValueArgument { keyword, arguments }
+            }
+            _ => argument,
+        }
+    }
+
     fn split_arguments(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
         match &self.active_schema {
             Some(schema) => schema.split_arguments_with_sections(arguments),
             _ => arguments,
         }
+        .into_iter()
+        .map(|arg| self.split_phantom_argument(arg))
+        .collect()
     }
 
     fn arguments(&mut self, arguments: &RefinedArgumentsNode) -> String {

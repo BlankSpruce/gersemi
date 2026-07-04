@@ -117,3 +117,25 @@ set(raw_phantom_keyword_just_indents
     "Short docstring"
     FORCE
 )
+
+set(install_args
+    #[[gersemi: as_command=install]]
+        TARGETS
+            long_arg____________________________________________________________
+        EXPORT
+            long_arg____________________________________________________________
+        PUBLIC_HEADER
+            DESTINATION
+                long_arg____________________________________________________________
+            PERMISSIONS OWNER_READ
+            CONFIGURATIONS Debug
+            COMPONENT
+                long_arg____________________________________________________________
+            NAMELINK_COMPONENT
+                long_arg____________________________________________________________
+            OPTIONAL
+            EXCLUDE_FROM_ALL
+            NAMELINK_ONLY
+        INCLUDES DESTINATION
+            long_arg____________________________________________________________
+)

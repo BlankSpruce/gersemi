@@ -25,6 +25,7 @@ pub enum PhantomKind {
     Raw,
     KeywordPreprocessor(KeywordPreprocessor),
     KeywordFormatter(KeywordFormatter),
+    AsCommand { command: String },
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
