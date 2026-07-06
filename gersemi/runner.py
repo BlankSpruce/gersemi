@@ -5,7 +5,7 @@ from functools import partial
 from hashlib import sha1
 from pathlib import Path
 import sys
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 import gersemi_rust_backend
 from gersemi.cache import create_cache
 from gersemi.configuration import (
@@ -24,19 +24,11 @@ from gersemi.custom_command_definition_finder import (
     get_just_definitions,
 )
 from gersemi.extensions import load_definitions_from_extensions
-from gersemi.formatted_file import FormattedFile
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import get_error_message
 from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
-from gersemi.task_result import TaskResult
-from gersemi.tasks.check_and_show_diff import check_and_show_diff
-from gersemi.tasks.check_formatting import check_formatting
-from gersemi.tasks.do_nothing import do_nothing
-from gersemi.tasks.forward_to_stdout import forward_to_stdout
-from gersemi.tasks.rewrite_in_place import rewrite_in_place
-from gersemi.tasks.show_diff import show_diff
 from gersemi.utils import smart_open
 
 CHUNKSIZE = 250
@@ -127,18 +119,6 @@ def find_all_custom_command_definitions(
     return get_just_definitions(result)
 
 
-def select_task(mode: Mode, configuration: Configuration):
-    return {
-        Mode.ForwardToStdout: forward_to_stdout,
-        Mode.RewriteInPlace: rewrite_in_place,
-        Mode.CheckFormatting: check_formatting,
-        Mode.ShowDiff: partial(show_diff, configuration.control.color),
-        Mode.CheckFormattingAndShowDiff: partial(
-            check_and_show_diff, configuration.control.color
-        ),
-    }[mode]
-
-
 def run_task(
     path: Path,
     formatter: Optional[gersemi_rust_backend.Formatter],
@@ -147,42 +127,27 @@ def run_task(
     warning_sink: WarningSink,
 ) -> Tuple[Path, int, bool]:
     try:
-        code, formatted_code, newlines_style, warnings = (
-            gersemi_rust_backend.format_file(path=path, formatter=formatter)
+        return_code, to_stdout, warnings = gersemi_rust_backend.run_task(
+            path, formatter, mode, configuration
         )
-        if formatter is None:
-            task = select_task_for_already_formatted_files(mode)
-        else:
-            task = select_task(mode, configuration)
+        to_stderr = ""
 
-        task_result = task(
-            FormattedFile(
-                before=code,
-                after=formatted_code,
-                newlines_style=newlines_style,
-                path=path,
-                warnings=warnings
-                if configuration.outcome.warn_about_unknown_commands
-                else [],
-            )
-        )
     except Exception as exception:  # pylint: disable=broad-exception-caught
-        task_result = TaskResult(
-            path=path,
-            return_code=INTERNAL_ERROR,
-            to_stderr=get_error_message(exception, path),
-        )
+        return_code = INTERNAL_ERROR
+        to_stdout = ""
+        to_stderr = get_error_message(exception, path)
+        warnings = []
 
-    if task_result.to_stdout != "":
-        print_to_stdout(task_result.to_stdout)
+    if to_stdout != "":
+        print_to_stdout(to_stdout)
 
-    for warning in task_result.warnings:
+    for warning in warnings:
         warning_sink(warning)
 
-    if task_result.to_stderr != "":
-        warning_sink(task_result.to_stderr)
+    if to_stderr != "":
+        warning_sink(to_stderr)
 
-    return task_result.path, task_result.return_code, (len(task_result.warnings) > 0)
+    return path, return_code, (len(warnings) > 0)
 
 
 def summarize_configuration(configuration, extension_definitions):
@@ -224,12 +189,6 @@ def store_files_in_cache(
         Mode.RewriteInPlace,
     ]:
         cache.store_files(configuration_summary, files)
-
-
-def select_task_for_already_formatted_files(mode: Mode):
-    return {
-        Mode.ForwardToStdout: forward_to_stdout,
-    }.get(mode, do_nothing)
 
 
 def handle_already_formatted_files(

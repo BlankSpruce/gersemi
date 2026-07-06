@@ -126,4 +126,16 @@ pub struct OutcomeConfiguration {
     pub sort_order: SortOrder,
     #[pyo3(attribute("unsafe"))]
     pub disable_sanity_checks: bool,
+    pub warn_about_unknown_commands: bool,
+}
+
+#[derive(FromPyObject)]
+pub struct ControlConfiguration {
+    pub color: bool,
+}
+
+#[derive(FromPyObject)]
+pub struct Configuration {
+    pub outcome: OutcomeConfiguration,
+    pub control: ControlConfiguration,
 }

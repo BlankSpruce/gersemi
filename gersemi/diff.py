@@ -1,7 +1,5 @@
 from difflib import unified_diff
-from gersemi.formatted_file import FormattedFile
-from gersemi.return_codes import SUCCESS
-from gersemi.task_result import TaskResult
+from pathlib import Path
 from gersemi.utils import fromfile, tofile
 
 try:
@@ -28,23 +26,14 @@ except ImportError:
         yield from diff
 
 
-def get_diff(should_colorize: bool, formatted_file: FormattedFile) -> str:
+def get_diff(path: Path, should_colorize: bool, before: str, after: str) -> str:
     result = unified_diff(
-        a=f"{formatted_file.before}\n".splitlines(keepends=True),
-        b=f"{formatted_file.after}\n".splitlines(keepends=True),
-        fromfile=fromfile(formatted_file.path),
-        tofile=tofile(formatted_file.path),
+        a=f"{before}\n".splitlines(keepends=True),
+        b=f"{after}\n".splitlines(keepends=True),
+        fromfile=fromfile(path),
+        tofile=tofile(path),
         n=5,
     )
     if should_colorize:
         result = colorize(result)
     return "".join(result)
-
-
-def show_diff(should_colorize: bool, formatted_file: FormattedFile) -> TaskResult:
-    return TaskResult(
-        path=formatted_file.path,
-        return_code=SUCCESS,
-        to_stdout=get_diff(should_colorize, formatted_file),
-        warnings=formatted_file.warnings,
-    )
