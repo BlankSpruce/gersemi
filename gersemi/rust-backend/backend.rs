@@ -22,6 +22,7 @@ mod gersemi_rust_backend {
     use pyo3::types::{PyAnyMethods, PyModule};
     use pyo3::{pyfunction, PyResult, Python};
     use std::collections::HashMap;
+    use std::fmt::Write;
     use std::path::{Path, PathBuf};
 
     #[pyfunction]
@@ -135,12 +136,57 @@ mod gersemi_rust_backend {
         }
     }
 
+    fn unknown_command_warning(
+        command_name: &str,
+        positions: Vec<(usize, usize)>,
+        path: &str,
+    ) -> String {
+        positions.into_iter().fold(
+            format!("Warning: unknown command '{command_name}' used at:\n"),
+            |mut output, (line, column)| {
+                let _ = writeln!(output, "{path}:{line}:{column}");
+                output
+            },
+        )
+    }
+
+    fn unknown_command_warnings(unknown_commands: UnknownCommandsUsed, path: &str) -> Vec<String> {
+        type Position = (usize, usize);
+        let mut result = Vec::<(String, Vec<Position>)>::new();
+        for (name, line, column) in unknown_commands {
+            match result
+                .iter_mut()
+                .find(|(command, _)| command.as_str() == name)
+            {
+                None => {
+                    result.push((name, vec![(line, column)]));
+                }
+                Some((_, positions)) => {
+                    positions.push((line, column));
+                }
+            }
+        }
+
+        result
+            .into_iter()
+            .map(|(command, positions)| unknown_command_warning(&command, positions, path))
+            .collect()
+    }
+
+    fn fromfile(path: &Path) -> &str {
+        if is_stdin(path) {
+            "<stdin>"
+        } else {
+            path.to_str().unwrap_or("---")
+        }
+    }
+
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn format_file(
         path: PathBuf,
         formatter: Option<&Formatter>,
-    ) -> PyResult<(String, String, String, UnknownCommandsUsed)> {
+    ) -> PyResult<(String, String, String, Vec<String>)> {
         const BOM: char = '\u{feff}';
 
         let code = read_code(&path)?;
@@ -150,7 +196,7 @@ mod gersemi_rust_backend {
         };
         let newlines_style = if code.contains("\r\n") { "\r\n" } else { "\n" };
         let code = code.replace("\r\n", "\n").replace('\r', "\n");
-        let (formatted_code, warnings) = match formatter {
+        let (formatted_code, unknown_commands_used) = match formatter {
             None => (code.clone(), vec![]),
             Some(formatter) => formatter.format(code.clone())?,
         };
@@ -161,7 +207,13 @@ mod gersemi_rust_backend {
             formatted_code
         };
 
-        Ok((code, formatted_code, newlines_style.to_string(), warnings))
+        let path = fromfile(&path);
+        Ok((
+            code,
+            formatted_code,
+            newlines_style.to_string(),
+            unknown_command_warnings(unknown_commands_used, path),
+        ))
     }
 
     #[pyfunction]

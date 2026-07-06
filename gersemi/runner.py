@@ -34,7 +34,6 @@ from gersemi.task_result import TaskResult
 from gersemi.tasks.check_and_show_diff import check_and_show_diff
 from gersemi.tasks.check_formatting import check_formatting
 from gersemi.tasks.do_nothing import do_nothing
-from gersemi.tasks.format_file import format_file
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_diff
@@ -143,16 +142,28 @@ def select_task(mode: Mode, configuration: Configuration):
 def run_task(
     path: Path,
     formatter: Optional[gersemi_rust_backend.Formatter],
-    task: Callable[[FormattedFile], TaskResult],
+    mode: Mode,
     configuration: Configuration,
     warning_sink: WarningSink,
 ) -> Tuple[Path, int, bool]:
     try:
+        code, formatted_code, newlines_style, warnings = (
+            gersemi_rust_backend.format_file(path=path, formatter=formatter)
+        )
+        if formatter is None:
+            task = select_task_for_already_formatted_files(mode)
+        else:
+            task = select_task(mode, configuration)
+
         task_result = task(
-            format_file(
+            FormattedFile(
+                before=code,
+                after=formatted_code,
+                newlines_style=newlines_style,
                 path=path,
-                formatter=formatter,
-                warn_about_unknown_commands=configuration.outcome.warn_about_unknown_commands,
+                warnings=warnings
+                if configuration.outcome.warn_about_unknown_commands
+                else [],
             )
         )
     except Exception as exception:  # pylint: disable=broad-exception-caught
@@ -227,10 +238,9 @@ def handle_already_formatted_files(
     warning_sink: WarningSink,
     already_formatted_files: Iterable[Path],
 ) -> Iterable[int]:
-    task = select_task_for_already_formatted_files(mode)
     formatter = None
     results = [
-        run_task(f, formatter, task, configuration, warning_sink)
+        run_task(f, formatter, mode, configuration, warning_sink)
         for f in already_formatted_files
     ]
     return (code for _, code, _ in results)
@@ -258,9 +268,8 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         dict(ChainMap(custom_command_definitions, extension_definitions)),
         list(lines_to_format),
     )
-    task = select_task(mode, configuration)
     results = [
-        run_task(f, formatter, task, configuration, warning_sink)
+        run_task(f, formatter, mode, configuration, warning_sink)
         for f in files_to_format
     ]
     store_files_in_cache(
