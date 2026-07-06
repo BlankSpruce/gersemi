@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from gersemi.warnings import FormatterWarnings
+from typing import Sequence
 
 
 @dataclass
@@ -9,4 +9,4 @@ class FormattedFile:
     after: str
     newlines_style: str
     path: Path
-    warnings: FormatterWarnings
+    warnings: Sequence[str]

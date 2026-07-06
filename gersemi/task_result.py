@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from gersemi.warnings import FormatterWarnings
+from typing import Sequence
 
 
 @dataclass
@@ -9,4 +9,4 @@ class TaskResult:
     return_code: int
     to_stdout: str = ""
     to_stderr: str = ""
-    warnings: FormatterWarnings = ()
+    warnings: Sequence[str] = ()

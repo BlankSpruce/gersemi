@@ -38,8 +38,7 @@ from gersemi.tasks.format_file import format_file
 from gersemi.tasks.forward_to_stdout import forward_to_stdout
 from gersemi.tasks.rewrite_in_place import rewrite_in_place
 from gersemi.tasks.show_diff import show_diff
-from gersemi.utils import fromfile, smart_open
-from gersemi.warnings import UnknownCommandWarning
+from gersemi.utils import smart_open
 
 CHUNKSIZE = 250
 FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
@@ -149,7 +148,13 @@ def run_task(
     warning_sink: WarningSink,
 ) -> Tuple[Path, int, bool]:
     try:
-        task_result = task(format_file(path, formatter))
+        task_result = task(
+            format_file(
+                path=path,
+                formatter=formatter,
+                warn_about_unknown_commands=configuration.outcome.warn_about_unknown_commands,
+            )
+        )
     except Exception as exception:  # pylint: disable=broad-exception-caught
         task_result = TaskResult(
             path=path,
@@ -160,19 +165,13 @@ def run_task(
     if task_result.to_stdout != "":
         print_to_stdout(task_result.to_stdout)
 
-    warnings = (
-        [w for w in task_result.warnings if not isinstance(w, UnknownCommandWarning)]
-        if not configuration.outcome.warn_about_unknown_commands
-        else task_result.warnings
-    )
-
-    for warning in warnings:
-        warning_sink(warning.get_message(fromfile(task_result.path)))
+    for warning in task_result.warnings:
+        warning_sink(warning)
 
     if task_result.to_stderr != "":
         warning_sink(task_result.to_stderr)
 
-    return task_result.path, task_result.return_code, (len(warnings) > 0)
+    return task_result.path, task_result.return_code, (len(task_result.warnings) > 0)
 
 
 def summarize_configuration(configuration, extension_definitions):

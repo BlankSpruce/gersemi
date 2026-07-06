@@ -1,28 +1,24 @@
-from dataclasses import dataclass
-from typing import Sequence, Tuple, Union
+from pathlib import Path
+from typing import Sequence, Tuple
+from gersemi.utils import fromfile
 
 Position = Tuple[int, int]
 
 
-@dataclass
-class UnknownCommandWarning:
-    command_name: str
-    positions: Sequence[Position]
-
-    def get_message(self, filepath: str) -> str:
-        return "\n".join(
-            [
-                f"Warning: unknown command '{self.command_name}' used at:",
-                *(f"{filepath}:{line}:{column}" for line, column in self.positions),
-                "",
-            ]
-        )
-
-
-class WrongFormattingWarning:
-    def get_message(self, filepath: str) -> str:
-        return f"{filepath} would be reformatted"
+def unknown_command_warning(
+    command_name: str,
+    positions: Sequence[Position],
+    filepath: Path,
+) -> str:
+    filepath = fromfile(filepath)
+    return "\n".join(
+        [
+            f"Warning: unknown command '{command_name}' used at:",
+            *(f"{filepath}:{line}:{column}" for line, column in positions),
+            "",
+        ]
+    )
 
 
-FormatterWarning = Union[UnknownCommandWarning, WrongFormattingWarning]
-FormatterWarnings = Sequence[FormatterWarning]
+def wrong_formatting_warning(filepath: Path) -> str:
+    return f"{fromfile(filepath)} would be reformatted"
