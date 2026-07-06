@@ -127,19 +127,15 @@ def run_task(
     warning_sink: WarningSink,
 ) -> Tuple[Path, int, bool]:
     try:
-        return_code, to_stdout, warnings = gersemi_rust_backend.run_task(
+        return_code, warnings = gersemi_rust_backend.run_task(
             path, formatter, mode, configuration
         )
         to_stderr = ""
 
     except Exception as exception:  # pylint: disable=broad-exception-caught
         return_code = INTERNAL_ERROR
-        to_stdout = ""
         to_stderr = get_error_message(exception, path)
         warnings = []
-
-    if to_stdout != "":
-        print_to_stdout(to_stdout)
 
     for warning in warnings:
         warning_sink(warning)

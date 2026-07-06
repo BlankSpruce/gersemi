@@ -26,6 +26,7 @@ mod gersemi_rust_backend {
     use pyo3::{pyfunction, PyResult, Python};
     use std::collections::HashMap;
     use std::fmt::Write;
+    use std::io::Write as IoWrite;
     use std::path::{Path, PathBuf};
 
     #[pyfunction]
@@ -141,8 +142,7 @@ mod gersemi_rust_backend {
 
     fn write_code(path: &Path, code: &str) -> PyResult<()> {
         if is_stdin(path) {
-            print!("{code}");
-            Ok(())
+            Ok(to_stdout(code)?)
         } else {
             Ok(std::fs::write(path, code)?)
         }
@@ -226,12 +226,18 @@ mod gersemi_rust_backend {
         ))
     }
 
-    type TaskResult = (usize, String, Vec<String>);
+    type TaskResult = (usize, Vec<String>);
     const SUCCESS: usize = 0;
     const FAIL: usize = 1;
 
-    fn forward_to_stdout(after: String, warnings: Vec<String>) -> TaskResult {
-        (SUCCESS, after, warnings)
+    fn to_stdout(s: &str) -> PyResult<()> {
+        print!("{s}");
+        Ok(std::io::stdout().flush()?)
+    }
+
+    fn forward_to_stdout(after: &str, warnings: Vec<String>) -> PyResult<TaskResult> {
+        to_stdout(after)?;
+        Ok((SUCCESS, warnings))
     }
 
     fn rewrite_in_place(
@@ -245,7 +251,7 @@ mod gersemi_rust_backend {
             write_code(path, &after.replace('\n', newlines_style))?;
         }
 
-        Ok((SUCCESS, String::new(), warnings))
+        Ok((SUCCESS, warnings))
     }
 
     fn wrong_formatting_warning(path: &Path) -> String {
@@ -264,16 +270,18 @@ mod gersemi_rust_backend {
             warnings.push(wrong_formatting_warning(path));
             FAIL
         };
-        (code, String::new(), warnings)
+        (code, warnings)
     }
 
-    fn get_diff(path: &Path, should_colorize: bool, before: &str, after: &str) -> PyResult<String> {
-        Python::attach(|py| {
+    fn print_diff(path: &Path, should_colorize: bool, before: &str, after: &str) -> PyResult<()> {
+        let result: String = Python::attach(|py| {
             PyModule::import(py, "gersemi.diff")?
                 .getattr("get_diff")?
                 .call1((path, should_colorize, before, after))?
                 .extract()
-        })
+        })?;
+
+        to_stdout(&result)
     }
 
     fn show_diff(
@@ -283,11 +291,8 @@ mod gersemi_rust_backend {
         after: &str,
         warnings: Vec<String>,
     ) -> PyResult<TaskResult> {
-        Ok((
-            SUCCESS,
-            get_diff(path, should_colorize, before, after)?,
-            warnings,
-        ))
+        print_diff(path, should_colorize, before, after)?;
+        Ok((SUCCESS, warnings))
     }
 
     fn check_and_show_diff(
@@ -297,16 +302,13 @@ mod gersemi_rust_backend {
         after: &str,
         warnings: Vec<String>,
     ) -> PyResult<TaskResult> {
-        let (code, _, warnings) = check_formatting(path, before, after, warnings);
-        Ok((
-            code,
-            get_diff(path, should_colorize, before, after)?,
-            warnings,
-        ))
+        let (code, warnings) = check_formatting(path, before, after, warnings);
+        print_diff(path, should_colorize, before, after)?;
+        Ok((code, warnings))
     }
 
     fn do_nothing() -> TaskResult {
-        (SUCCESS, String::new(), Vec::new())
+        (SUCCESS, Vec::new())
     }
 
     #[pyfunction]
@@ -325,14 +327,14 @@ mod gersemi_rust_backend {
             Vec::new()
         };
 
-        let (code, to_stdout, warnings) = if formatter.is_none() {
+        let (code, warnings) = if formatter.is_none() {
             match mode {
-                Mode::ForwardToStdout => forward_to_stdout(after, warnings),
+                Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
                 _ => do_nothing(),
             }
         } else {
             match mode {
-                Mode::ForwardToStdout => forward_to_stdout(after, warnings),
+                Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
                 Mode::RewriteInPlace => {
                     rewrite_in_place(&path, &before, &after, &newlines_style, warnings)?
                 }
@@ -355,7 +357,7 @@ mod gersemi_rust_backend {
             }
         };
 
-        Ok((code, to_stdout, warnings))
+        Ok((code, warnings))
     }
 
     #[pyfunction]
