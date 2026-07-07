@@ -19,17 +19,12 @@ from gersemi.configuration import (
     make_outcome_configuration,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
-from gersemi.custom_command_definition_finder import (
-    find_custom_command_definitions,
-    get_just_definitions,
-)
+from gersemi.custom_command_definition_finder import get_just_definitions
 from gersemi.extensions import load_definitions_from_extensions
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
-from gersemi.result import get_error_message
 from gersemi.return_codes import FAIL, SUCCESS
-from gersemi.utils import smart_open
 
 CHUNKSIZE = 250
 FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
@@ -57,53 +52,18 @@ class StatusCode:
         raise RuntimeError(f"Invalid type: {type(other)}")
 
 
-def find_custom_command_definitions_in_file(filepath: Path) -> Dict[str, Keywords]:
-    with smart_open(filepath, "r") as f:
-        code = f.read()
-
-    return find_custom_command_definitions(code, filepath)
-
-
-def check_conflicting_definitions(definitions, warning_sink):
-    for name, info in definitions.items():
-        if len(info) > 1:
-            warning_sink(f"Warning: conflicting definitions for '{name}':")
-            places = sorted(where for _, where in info)
-            for index, where in enumerate(places):
-                kind = "(used)   " if index == 0 else "(ignored)"
-                warning_sink(f"{kind} {where}")
-
-
 def find_all_custom_command_definitions(
     paths: Iterable[Path],
     warning_sink,
-    respect_ignore_files: bool,
+    configuration: Configuration,
 ) -> Dict[str, Keywords]:
-    result: Dict = {}
-
-    files = gersemi_rust_backend.get_files(
-        paths=list(paths),
-        respect_ignore_files=respect_ignore_files,
+    return get_just_definitions(
+        dict(
+            gersemi_rust_backend.find_all_custom_command_definitions(
+                list(paths), warning_sink, configuration
+            )
+        )
     )
-    for f in files:
-        try:
-            defs = find_custom_command_definitions_in_file(f)
-        except Exception as exception:  # pylint: disable=broad-except
-            warning_sink(get_error_message(exception, f))
-            continue
-
-        for name, info in defs.items():
-            if name in result:
-                result[name].extend(info)
-            else:
-                result[name] = info
-
-    check_conflicting_definitions(result, warning_sink)
-
-    return get_just_definitions(result)
-
-
-run_task = gersemi_rust_backend.run_task
 
 
 def summarize_configuration(configuration, extension_definitions):
@@ -147,9 +107,6 @@ def store_files_in_cache(
         cache.store_files(configuration_summary, files)
 
 
-handle_already_formatted_files = gersemi_rust_backend.handle_already_formatted_files
-
-
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     mode: Mode,
     configuration: Configuration,
@@ -161,7 +118,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     custom_command_definitions = find_all_custom_command_definitions(
         set(configuration.outcome.definitions),
         warning_sink,
-        configuration.control.respect_ignore_files,
+        configuration,
     )
     extension_definitions = load_definitions_from_extensions(
         configuration.outcome.extensions
@@ -173,7 +130,12 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         list(lines_to_format),
     )
     results = [
-        (f, *run_task(f, formatter, mode, configuration, warning_sink))
+        (
+            f,
+            *gersemi_rust_backend.run_task(
+                f, formatter, mode, configuration, warning_sink
+            ),
+        )
         for f in files_to_format
     ]
     store_files_in_cache(
@@ -297,7 +259,7 @@ def run(args: argparse.Namespace):
                 cache, config.outcome, files
             )
 
-            status_code += handle_already_formatted_files(
+            status_code += gersemi_rust_backend.handle_already_formatted_files(
                 mode, config, warning_sink, already_formatted_files
             )
             status_code += handle_files_to_format(

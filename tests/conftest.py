@@ -4,13 +4,14 @@ import shutil
 import gersemi_rust_backend
 import pytest
 from gersemi.configuration import (
+    Configuration,
+    ControlConfiguration,
     ListExpansion,
     OutcomeConfiguration,
     SortOrder,
     indent_type,
 )
 from gersemi.extensions import preprocess_definitions
-from gersemi.noop import noop
 from gersemi.runner import find_all_custom_command_definitions
 import tests.custom_commands.extension as testing_extension
 from tests.fixtures.app import App
@@ -27,8 +28,11 @@ def get_custom_command_definitions(configuration_definitions):
     paths = [pathlib.Path(d).resolve() for d in configuration_definitions]
     return find_all_custom_command_definitions(
         paths=paths,
-        warning_sink=noop,
-        respect_ignore_files=False,
+        warning_sink=None,
+        configuration=Configuration(
+            control=ControlConfiguration(respect_ignore_files=False),
+            outcome=OutcomeConfiguration(),
+        ),
     )
 
 

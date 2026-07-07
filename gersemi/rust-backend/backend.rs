@@ -44,7 +44,7 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn find_custom_command_definitions(
+    pub fn find_custom_command_definitions(
         text: String,
         filepath: String,
     ) -> PyResult<HashMap<String, Vec<CustomCommand>>> {
@@ -78,7 +78,7 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
+    pub fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
         if paths.iter().find(|path| is_stdin(path)).is_some() {
             return Ok(paths);
         }
@@ -136,7 +136,7 @@ mod gersemi_rust_backend {
         let mut runner = Runner {
             mode,
             configuration,
-            warning_sink,
+            warning_sink: Some(warning_sink),
         };
         runner.run_task(&path, formatter)
     }
@@ -152,9 +152,23 @@ mod gersemi_rust_backend {
         let mut runner = Runner {
             mode,
             configuration,
-            warning_sink,
+            warning_sink: Some(warning_sink),
         };
         runner.handle_already_formatted_files(&already_formatted_files)
+    }
+
+    #[pyfunction]
+    fn find_all_custom_command_definitions(
+        paths: Vec<PathBuf>,
+        warning_sink: Option<&mut WarningSink>,
+        configuration: Configuration,
+    ) -> PyResult<Vec<(String, Vec<CustomCommand>)>> {
+        let mut runner = Runner {
+            mode: Mode::PrintConfig, // TODO
+            configuration,
+            warning_sink,
+        };
+        runner.find_all_custom_command_definitions(paths)
     }
 
     #[pyfunction]

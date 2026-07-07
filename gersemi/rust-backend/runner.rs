@@ -1,8 +1,10 @@
+use crate::custom_command_definition_finder::CustomCommand;
 use crate::formatter::Formatter;
+use crate::gersemi_rust_backend::{find_custom_command_definitions, get_files};
 use crate::mode::Mode;
 use crate::python_side::{print_diff, read_code};
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
-use pyo3::{pyclass, pymethods, PyResult};
+use pyo3::{pyclass, pymethods, PyResult, Python};
 use std::fmt::Write;
 use std::io::Write as IoWrite;
 use std::path::{Path, PathBuf};
@@ -83,7 +85,7 @@ impl WarningSink {
         }
     }
 
-    fn __call__(&mut self, s: String) {
+    pub fn __call__(&mut self, s: String) {
         self.at_least_one_warning_issued = true;
         if !self.quiet {
             self.records.push(s);
@@ -100,7 +102,7 @@ impl WarningSink {
 pub struct Runner<'a> {
     pub mode: Mode,
     pub configuration: Configuration,
-    pub warning_sink: &'a mut WarningSink,
+    pub warning_sink: Option<&'a mut WarningSink>,
 }
 
 type TaskResult = (usize, Vec<String>);
@@ -211,6 +213,8 @@ fn do_nothing() -> TaskResult {
     (SUCCESS, Vec::new())
 }
 
+type Definitions = Vec<(String, Vec<CustomCommand>)>;
+
 impl Runner<'_> {
     fn run_task_impl(
         &mut self,
@@ -258,7 +262,9 @@ impl Runner<'_> {
         let has_warnings = if self.configuration.outcome.warn_about_unknown_commands {
             let result = !warnings.is_empty();
             for warning in warnings {
-                self.warning_sink.__call__(warning);
+                if let Some(sink) = &mut self.warning_sink {
+                    sink.__call__(warning);
+                }
             }
             result
         } else {
@@ -271,8 +277,13 @@ impl Runner<'_> {
         match self.run_task_impl(path, formatter) {
             Ok(ok) => ok,
             Err(err) => {
-                self.warning_sink
-                    .__call__(format!("{}: {}", path.to_str().unwrap_or("---"), err));
+                if let Some(sink) = &mut self.warning_sink {
+                    sink.__call__(format!(
+                        "{}: {}",
+                        path.to_str().unwrap_or("---"),
+                        Python::attach(|py| err.value(py).to_string())
+                    ));
+                }
                 (INTERNAL_ERROR, false)
             }
         }
@@ -286,5 +297,69 @@ impl Runner<'_> {
                 code
             })
             .collect()
+    }
+
+    fn check_conflicting_definitions(&mut self, defs: &Definitions) {
+        let Some(sink) = &mut self.warning_sink else {
+            return;
+        };
+
+        for (name, info) in defs {
+            if info.len() <= 1 {
+                continue;
+            }
+
+            let mut warning = format!("Warning: conflicting definitions for '{name}':");
+            let mut locations: Vec<_> = info.iter().map(|(_, location)| location).collect();
+            locations.sort();
+
+            for (index, location) in (0..).zip(locations) {
+                let kind = if index == 0 { "(used)   " } else { "(ignored)" };
+                let _ = write!(warning, "\n{kind} {location}");
+            }
+            sink.__call__(warning);
+        }
+    }
+
+    pub fn find_all_custom_command_definitions(
+        &mut self,
+        paths: Vec<PathBuf>,
+    ) -> PyResult<Definitions> {
+        let mut result = Definitions::new();
+
+        for f in get_files(paths, self.configuration.control.respect_ignore_files)? {
+            let code = read_code(&f)?;
+            let path = f.to_str().unwrap_or("---");
+            let defs = match find_custom_command_definitions(code, path.to_string()) {
+                Err(err) => {
+                    if let Some(sink) = &mut self.warning_sink {
+                        sink.__call__(format!(
+                            "{path}:{}",
+                            Python::attach(|py| err.value(py).to_string())
+                        ));
+                    }
+                    continue;
+                }
+                Ok(defs) => defs,
+            };
+
+            for (name, mut info) in defs {
+                match result
+                    .iter_mut()
+                    .find(|(command, _)| command.as_str() == name)
+                {
+                    None => {
+                        result.push((name, info));
+                    }
+                    Some((_, values)) => {
+                        values.append(&mut info);
+                    }
+                }
+            }
+        }
+
+        self.check_conflicting_definitions(&result);
+
+        Ok(result)
     }
 }

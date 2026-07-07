@@ -8,18 +8,18 @@ use std::collections::HashMap;
 
 #[derive(IntoPyObject)]
 pub struct Keywords {
-    options: Vec<String>,
-    one_value_keywords: Vec<String>,
-    multi_value_keywords: Vec<String>,
-    hints: Vec<String>,
+    pub options: Vec<String>,
+    pub one_value_keywords: Vec<String>,
+    pub multi_value_keywords: Vec<String>,
+    pub hints: Vec<String>,
 }
 
 #[derive(IntoPyObject)]
 pub struct CustomCommandContent {
-    canonical_name: String,
-    positional_arguments: Vec<String>,
-    keywords: Keywords,
-    block_end: Option<String>,
+    pub canonical_name: String,
+    pub positional_arguments: Vec<String>,
+    pub keywords: Keywords,
+    pub block_end: Option<String>,
 }
 
 pub type CustomCommand = (CustomCommandContent, String);

@@ -132,6 +132,7 @@ pub struct OutcomeConfiguration {
 #[derive(FromPyObject)]
 pub struct ControlConfiguration {
     pub color: bool,
+    pub respect_ignore_files: bool,
 }
 
 #[derive(FromPyObject)]

@@ -1,2 +1,0 @@
-def noop(*_):
-    pass
