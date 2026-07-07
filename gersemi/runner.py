@@ -5,7 +5,7 @@ from functools import partial
 from hashlib import sha1
 from pathlib import Path
 import sys
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional
 import gersemi_rust_backend
 from gersemi.cache import create_cache
 from gersemi.configuration import (
@@ -28,7 +28,7 @@ from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.result import get_error_message
-from gersemi.return_codes import FAIL, INTERNAL_ERROR, SUCCESS
+from gersemi.return_codes import FAIL, SUCCESS
 from gersemi.utils import smart_open
 
 CHUNKSIZE = 250
@@ -37,22 +37,6 @@ FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
 
 print_to_stdout = partial(print, file=sys.stdout, end="")
 print_to_stderr = partial(print, file=sys.stderr)
-
-
-class WarningSink:
-    def __init__(self, quiet):
-        self.quiet = quiet
-        self.at_least_one_warning_issued = False
-        self.records = []
-
-    def __call__(self, s: str):
-        self.at_least_one_warning_issued = True
-        if not self.quiet:
-            self.records.append(s)
-
-    def flush(self):
-        for s in self.records:
-            print_to_stderr(s)
 
 
 class StatusCode:
@@ -80,7 +64,7 @@ def find_custom_command_definitions_in_file(filepath: Path) -> Dict[str, Keyword
     return find_custom_command_definitions(code, filepath)
 
 
-def check_conflicting_definitions(definitions, warning_sink: WarningSink):
+def check_conflicting_definitions(definitions, warning_sink):
     for name, info in definitions.items():
         if len(info) > 1:
             warning_sink(f"Warning: conflicting definitions for '{name}':")
@@ -92,7 +76,7 @@ def check_conflicting_definitions(definitions, warning_sink: WarningSink):
 
 def find_all_custom_command_definitions(
     paths: Iterable[Path],
-    warning_sink: WarningSink,
+    warning_sink,
     respect_ignore_files: bool,
 ) -> Dict[str, Keywords]:
     result: Dict = {}
@@ -119,31 +103,7 @@ def find_all_custom_command_definitions(
     return get_just_definitions(result)
 
 
-def run_task(
-    path: Path,
-    formatter: Optional[gersemi_rust_backend.Formatter],
-    mode: Mode,
-    configuration: Configuration,
-    warning_sink: WarningSink,
-) -> Tuple[Path, int, bool]:
-    try:
-        return_code, warnings = gersemi_rust_backend.run_task(
-            path, formatter, mode, configuration
-        )
-        to_stderr = ""
-
-    except Exception as exception:  # pylint: disable=broad-exception-caught
-        return_code = INTERNAL_ERROR
-        to_stderr = get_error_message(exception, path)
-        warnings = []
-
-    for warning in warnings:
-        warning_sink(warning)
-
-    if to_stderr != "":
-        warning_sink(to_stderr)
-
-    return path, return_code, (len(warnings) > 0)
+run_task = gersemi_rust_backend.run_task
 
 
 def summarize_configuration(configuration, extension_definitions):
@@ -190,22 +150,23 @@ def store_files_in_cache(
 def handle_already_formatted_files(
     mode: Mode,
     configuration: Configuration,
-    warning_sink: WarningSink,
+    warning_sink,
     already_formatted_files: Iterable[Path],
 ) -> Iterable[int]:
-    formatter = None
-    results = [
-        run_task(f, formatter, mode, configuration, warning_sink)
-        for f in already_formatted_files
-    ]
-    return (code for _, code, _ in results)
+    return (
+        code
+        for code, _ in (
+            run_task(f, None, mode, configuration, warning_sink)
+            for f in already_formatted_files
+        )
+    )
 
 
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     mode: Mode,
     configuration: Configuration,
     cache,
-    warning_sink: WarningSink,
+    warning_sink,
     files_to_format: Iterable[Path],
     lines_to_format: LineRanges,
 ) -> Iterable[int]:
@@ -224,7 +185,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         list(lines_to_format),
     )
     results = [
-        run_task(f, formatter, mode, configuration, warning_sink)
+        (f, *run_task(f, formatter, mode, configuration, warning_sink))
         for f in files_to_format
     ]
     store_files_in_cache(
@@ -245,7 +206,7 @@ class GetConfiguration:
         self,
         args: argparse.Namespace,
         control: ControlConfiguration,
-        warning_sink: WarningSink,
+        warning_sink,
     ):
         self.args = args
         self.control = control
@@ -328,7 +289,7 @@ def run(args: argparse.Namespace):
         raise Exception("Line range formatting available only with one source file")
 
     mode = get_mode(args)
-    warning_sink = WarningSink(control.quiet)
+    warning_sink = gersemi_rust_backend.WarningSink(control.quiet)
 
     buckets = split_files_by_configuration_file(requested_files, control)
     get_configuration = GetConfiguration(args, control, warning_sink)

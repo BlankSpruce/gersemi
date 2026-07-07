@@ -23,7 +23,7 @@ mod gersemi_rust_backend {
     use ignore::WalkBuilder;
     use pyo3::exceptions::PyRuntimeError;
     use pyo3::types::{PyAnyMethods, PyModule};
-    use pyo3::{pyfunction, PyResult, Python};
+    use pyo3::{pyclass, pyfunction, pymethods, PyResult, Python};
     use std::collections::HashMap;
     use std::fmt::Write;
     use std::io::Write as IoWrite;
@@ -229,6 +229,7 @@ mod gersemi_rust_backend {
     type TaskResult = (usize, Vec<String>);
     const SUCCESS: usize = 0;
     const FAIL: usize = 1;
+    const INTERNAL_ERROR: usize = 123;
 
     fn to_stdout(s: &str) -> PyResult<()> {
         print!("{s}");
@@ -311,16 +312,15 @@ mod gersemi_rust_backend {
         (SUCCESS, Vec::new())
     }
 
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    fn run_task(
-        path: PathBuf,
+    fn run_task_impl(
+        path: &Path,
         formatter: Option<&Formatter>,
-        mode: Mode,
-        configuration: Configuration,
-    ) -> PyResult<TaskResult> {
+        mode: &Mode,
+        configuration: &Configuration,
+        warning_sink: &mut WarningSink,
+    ) -> PyResult<(usize, bool)> {
         let (before, after, newlines_style, unknown_command_warnings) =
-            format_file(&path, formatter)?;
+            format_file(path, formatter)?;
         let warnings = if configuration.outcome.warn_about_unknown_commands {
             unknown_command_warnings
         } else {
@@ -336,18 +336,14 @@ mod gersemi_rust_backend {
             match mode {
                 Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
                 Mode::RewriteInPlace => {
-                    rewrite_in_place(&path, &before, &after, &newlines_style, warnings)?
+                    rewrite_in_place(path, &before, &after, &newlines_style, warnings)?
                 }
-                Mode::CheckFormatting => check_formatting(&path, &before, &after, warnings),
-                Mode::ShowDiff => show_diff(
-                    &path,
-                    configuration.control.color,
-                    &before,
-                    &after,
-                    warnings,
-                )?,
+                Mode::CheckFormatting => check_formatting(path, &before, &after, warnings),
+                Mode::ShowDiff => {
+                    show_diff(path, configuration.control.color, &before, &after, warnings)?
+                }
                 Mode::CheckFormattingAndShowDiff => check_and_show_diff(
-                    &path,
+                    path,
                     configuration.control.color,
                     &before,
                     &after,
@@ -357,7 +353,67 @@ mod gersemi_rust_backend {
             }
         };
 
-        Ok((code, warnings))
+        let has_warnings = if configuration.outcome.warn_about_unknown_commands {
+            let result = !warnings.is_empty();
+            for warning in warnings {
+                warning_sink.__call__(warning);
+            }
+            result
+        } else {
+            false
+        };
+        Ok((code, has_warnings))
+    }
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn run_task(
+        path: PathBuf,
+        formatter: Option<&Formatter>,
+        mode: Mode,
+        configuration: Configuration,
+        warning_sink: &mut WarningSink,
+    ) -> (usize, bool) {
+        match run_task_impl(&path, formatter, &mode, &configuration, warning_sink) {
+            Ok(ok) => ok,
+            Err(err) => {
+                warning_sink.__call__(format!("{}: {}", path.to_str().unwrap_or("---"), err));
+                (INTERNAL_ERROR, false)
+            }
+        }
+    }
+
+    #[pyclass]
+    struct WarningSink {
+        quiet: bool,
+        #[pyo3(get)]
+        pub at_least_one_warning_issued: bool,
+        records: Vec<String>,
+    }
+
+    #[pymethods]
+    impl WarningSink {
+        #[new]
+        fn new(quiet: bool) -> Self {
+            Self {
+                quiet,
+                at_least_one_warning_issued: false,
+                records: Vec::new(),
+            }
+        }
+
+        fn __call__(&mut self, s: String) {
+            self.at_least_one_warning_issued = true;
+            if !self.quiet {
+                self.records.push(s);
+            }
+        }
+
+        fn flush(&self) {
+            for record in &self.records {
+                eprintln!("{record}");
+            }
+        }
     }
 
     #[pyfunction]
