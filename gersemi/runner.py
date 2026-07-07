@@ -147,19 +147,7 @@ def store_files_in_cache(
         cache.store_files(configuration_summary, files)
 
 
-def handle_already_formatted_files(
-    mode: Mode,
-    configuration: Configuration,
-    warning_sink,
-    already_formatted_files: Iterable[Path],
-) -> Iterable[int]:
-    return (
-        code
-        for code, _ in (
-            run_task(f, None, mode, configuration, warning_sink)
-            for f in already_formatted_files
-        )
-    )
+handle_already_formatted_files = gersemi_rust_backend.handle_already_formatted_files
 
 
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments

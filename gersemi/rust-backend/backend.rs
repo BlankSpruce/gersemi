@@ -365,6 +365,22 @@ mod gersemi_rust_backend {
         Ok((code, has_warnings))
     }
 
+    fn run_task_args_by_ref(
+        path: &Path,
+        formatter: Option<&Formatter>,
+        mode: &Mode,
+        configuration: &Configuration,
+        warning_sink: &mut WarningSink,
+    ) -> (usize, bool) {
+        match run_task_impl(path, formatter, mode, configuration, warning_sink) {
+            Ok(ok) => ok,
+            Err(err) => {
+                warning_sink.__call__(format!("{}: {}", path.to_str().unwrap_or("---"), err));
+                (INTERNAL_ERROR, false)
+            }
+        }
+    }
+
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn run_task(
@@ -374,13 +390,7 @@ mod gersemi_rust_backend {
         configuration: Configuration,
         warning_sink: &mut WarningSink,
     ) -> (usize, bool) {
-        match run_task_impl(&path, formatter, &mode, &configuration, warning_sink) {
-            Ok(ok) => ok,
-            Err(err) => {
-                warning_sink.__call__(format!("{}: {}", path.to_str().unwrap_or("---"), err));
-                (INTERNAL_ERROR, false)
-            }
-        }
+        run_task_args_by_ref(&path, formatter, &mode, &configuration, warning_sink)
     }
 
     #[pyclass]
@@ -414,6 +424,23 @@ mod gersemi_rust_backend {
                 eprintln!("{record}");
             }
         }
+    }
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn handle_already_formatted_files(
+        mode: Mode,
+        configuration: Configuration,
+        warning_sink: &mut WarningSink,
+        already_formatted_files: Vec<PathBuf>,
+    ) -> Vec<usize> {
+        already_formatted_files
+            .iter()
+            .map(|f| {
+                let (code, _) = run_task_args_by_ref(f, None, &mode, &configuration, warning_sink);
+                code
+            })
+            .collect()
     }
 
     #[pyfunction]
