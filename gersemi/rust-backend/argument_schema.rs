@@ -1,5 +1,6 @@
 use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
 use crate::node::{RefinedArgumentsAtom, RefinedArgumentsNode};
+use crate::python_side::builtin_schemas;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
@@ -620,18 +621,6 @@ pub struct CommandSchema {
 }
 
 pub type CommandSchemaMapping = HashMap<String, CommandSchema>;
-
-pub fn builtin_schemas() -> &'static CommandSchemaMapping {
-    static RESULT: LazyLock<CommandSchemaMapping> = LazyLock::new(|| {
-        Python::attach(|py| {
-            PyModule::import(py, "gersemi.builtin_commands")?
-                .getattr("_builtin_commands")?
-                .extract()
-        })
-        .unwrap()
-    });
-    &RESULT
-}
 
 pub struct CommandSchemas {
     pub schemas: CommandSchemaMapping,

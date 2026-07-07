@@ -1,28 +1,14 @@
 use crate::formatter::Formatter;
 use crate::mode::Mode;
+use crate::python_side::{print_diff, read_code};
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
-use pyo3::types::{PyAnyMethods, PyModule};
-use pyo3::{pyclass, pymethods, PyResult, Python};
+use pyo3::{pyclass, pymethods, PyResult};
 use std::fmt::Write;
 use std::io::Write as IoWrite;
 use std::path::{Path, PathBuf};
 
 pub fn is_stdin(path: &Path) -> bool {
     path.to_str().is_some_and(|value| value == "-")
-}
-
-fn read_code(path: &Path) -> PyResult<String> {
-    if is_stdin(path) {
-        Python::attach(|py| {
-            PyModule::import(py, "gersemi.utils")?
-                .getattr("StdinWrapper")?
-                .getattr("read")?
-                .call0()?
-                .extract()
-        })
-    } else {
-        Ok(std::fs::read_to_string(path)?)
-    }
 }
 
 fn write_code(path: &Path, code: &str) -> PyResult<()> {
@@ -122,7 +108,7 @@ const SUCCESS: usize = 0;
 const FAIL: usize = 1;
 const INTERNAL_ERROR: usize = 123;
 
-fn to_stdout(s: &str) -> PyResult<()> {
+pub fn to_stdout(s: &str) -> PyResult<()> {
     print!("{s}");
     Ok(std::io::stdout().flush()?)
 }
@@ -196,17 +182,6 @@ fn check_formatting(
         FAIL
     };
     (code, warnings)
-}
-
-fn print_diff(path: &Path, should_colorize: bool, before: &str, after: &str) -> PyResult<()> {
-    let result: String = Python::attach(|py| {
-        PyModule::import(py, "gersemi.diff")?
-            .getattr("get_diff")?
-            .call1((path, should_colorize, before, after))?
-            .extract()
-    })?;
-
-    to_stdout(&result)
 }
 
 fn show_diff(

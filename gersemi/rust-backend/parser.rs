@@ -1,10 +1,11 @@
-use crate::argument_schema::{builtin_schemas, CommandSchema, CommandSchemas};
+use crate::argument_schema::{CommandSchema, CommandSchemas};
 use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, BracketComment, Command,
     CommandInvocation, CommentedArgumentComment, FileElement, LineComment, PhantomKind, Position,
     Start,
 };
+use crate::python_side::builtin_schemas;
 use pyo3::PyErr;
 use regex::Regex;
 use std::collections::HashMap;

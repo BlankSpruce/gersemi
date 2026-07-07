@@ -6,6 +6,7 @@ mod keyword_preprocessor;
 mod mode;
 mod node;
 mod parser;
+mod python_side;
 mod runner;
 mod sanity_checker;
 mod two_words_keyword_isolator;
