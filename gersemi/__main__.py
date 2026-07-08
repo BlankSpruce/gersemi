@@ -23,20 +23,12 @@ from gersemi.return_codes import FAIL, SUCCESS
 from gersemi.runner import print_to_stderr, run
 
 FROZEN = getattr(sys, "frozen", False)
-MISSING = "(missing)"
-
-try:
-    from colorama import __version__ as colorama_version
-
-except ImportError:
-    colorama_version = MISSING
 
 
 class ShowVersion(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         frozen_suffix = " (frozen)" if FROZEN else ""
         print(f"{__title__} {__version__}{frozen_suffix}")
-        print(f"colorama {colorama_version}")
         print(f"Python {sys.version}")
         print(gersemi_rust_backend.version())
         sys.exit(SUCCESS)
@@ -231,12 +223,6 @@ def create_argparser():
         default=None,
         help=f"{control_conf_doc['quiet']} [default: don't skip, same as --no-quiet]",
     )
-
-    if colorama_version == MISSING:
-        warn_about_missing_colorama = " Warning: missing colorama."
-    else:
-        warn_about_missing_colorama = ""
-
     control_configuration_group.add_argument(
         "--color",
         "--no-color",
@@ -246,7 +232,6 @@ def create_argparser():
         default=None,
         help=f"""
         {control_conf_doc["color"]}
-        {warn_about_missing_colorama}
         [default: don't colorize diff, same as --no-color]
         """,
     )

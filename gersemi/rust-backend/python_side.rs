@@ -1,5 +1,5 @@
 use crate::argument_schema::CommandSchemaMapping;
-use crate::runner::{is_stdin, to_stdout};
+use crate::runner::is_stdin;
 use pyo3::types::{PyAnyMethods, PyModule};
 use pyo3::{PyResult, Python};
 use std::path::Path;
@@ -29,15 +29,4 @@ pub fn read_code(path: &Path) -> PyResult<String> {
     } else {
         Ok(std::fs::read_to_string(path)?)
     }
-}
-
-pub fn print_diff(path: &Path, should_colorize: bool, before: &str, after: &str) -> PyResult<()> {
-    let result: String = Python::attach(|py| {
-        PyModule::import(py, "gersemi.diff")?
-            .getattr("get_diff")?
-            .call1((path, should_colorize, before, after))?
-            .extract()
-    })?;
-
-    to_stdout(&result)
 }

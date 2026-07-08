@@ -1,6 +1,7 @@
 mod argument_schema;
 mod configuration;
 mod custom_command_definition_finder;
+mod diff;
 mod formatter;
 mod keyword_preprocessor;
 mod mode;

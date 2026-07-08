@@ -118,8 +118,7 @@ control configuration:
   -q, --quiet, --no-quiet
                         Skip printing non-error messages to stderr.
                         [default: don't skip, same as --no-quiet]
-  --color, --no-color   If --diff is selected showed diff is colorized. Colorama has to
-                        be installed for this option to work.
+  --color, --no-color   If --diff is selected showed diff is colorized.
                         [default: don't colorize diff, same as --no-color]
   -w, --workers (INTEGER | max)
                         Explicit number of workers or 'max' for maximum possible number

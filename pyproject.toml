@@ -34,9 +34,6 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 
-[project.optional-dependencies]
-color = ["colorama>=0.4"]
-
 [project.scripts]
 gersemi = "gersemi.__main__:main"
 
@@ -51,7 +48,6 @@ skip = ["*-win32", "*-musllinux*", "*_i686"]
 
 [[tool.mypy.overrides]]
 module = [
-    "colorama",
     "gersemi_rust_backend",
     "platformdirs",
     "pytest",

@@ -1,8 +1,9 @@
 use crate::custom_command_definition_finder::CustomCommand;
+use crate::diff::print_diff;
 use crate::formatter::Formatter;
 use crate::gersemi_rust_backend::{find_custom_command_definitions, get_files};
 use crate::mode::Mode;
-use crate::python_side::{print_diff, read_code};
+use crate::python_side::read_code;
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
 use pyo3::{pyclass, pymethods, PyResult, Python};
 use std::fmt::Write;
@@ -58,9 +59,17 @@ fn unknown_command_warnings(unknown_commands: UnknownCommandsUsed, path: &str) -
         .collect()
 }
 
-fn fromfile(path: &Path) -> &str {
+pub fn fromfile(path: &Path) -> &str {
     if is_stdin(path) {
         "<stdin>"
+    } else {
+        path.to_str().unwrap_or("---")
+    }
+}
+
+pub fn tofile(path: &Path) -> &str {
+    if is_stdin(path) {
+        "<stdout>"
     } else {
         path.to_str().unwrap_or("---")
     }

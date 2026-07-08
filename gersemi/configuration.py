@@ -269,7 +269,6 @@ class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
             description=doc(
                 """
     If --diff is selected showed diff is colorized.
-    Colorama has to be installed for this option to work.
                 """
             ),
         ),
