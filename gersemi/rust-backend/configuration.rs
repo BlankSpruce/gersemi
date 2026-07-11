@@ -1,6 +1,7 @@
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::types::{PyAnyMethods, PyString};
-use pyo3::{Borrowed, BoundObject, FromPyObject, PyAny, PyErr};
+use pyo3::sync::PyOnceLock;
+use pyo3::types::{PyAnyMethods, PyString, PyType};
+use pyo3::{Borrowed, Bound, BoundObject, FromPyObject, IntoPyObject, Py, PyAny, PyErr, Python};
 
 fn string_enum_value(obj: Borrowed<'_, '_, PyAny>) -> Result<String, PyErr> {
     let value = match obj.getattr("value") {
@@ -118,6 +119,30 @@ impl FromPyObject<'_, '_> for SortOrder {
 }
 
 #[derive(FromPyObject)]
+pub struct Extension(String);
+
+impl<'py> IntoPyObject<'py> for &Extension {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        static FILE_EXT: PyOnceLock<Py<PyType>> = PyOnceLock::new();
+        static MODULE_EXT: PyOnceLock<Py<PyType>> = PyOnceLock::new();
+        let value = &self.0;
+        if value.ends_with(".py") {
+            FILE_EXT
+                .import(py, "gersemi.extension_type", "FileExtension")?
+                .call1((value,))
+        } else {
+            MODULE_EXT
+                .import(py, "gersemi.extension_type", "ModuleExtension")?
+                .call1((value,))
+        }
+    }
+}
+
+#[derive(FromPyObject)]
 pub struct OutcomeConfiguration {
     #[pyo3(attribute("indent"))]
     pub indent_type: IndentType,
@@ -127,6 +152,7 @@ pub struct OutcomeConfiguration {
     #[pyo3(attribute("unsafe"))]
     pub disable_sanity_checks: bool,
     pub warn_about_unknown_commands: bool,
+    pub extensions: Vec<Extension>,
 }
 
 #[derive(FromPyObject)]

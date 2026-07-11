@@ -16,5 +16,6 @@ crate-type = ["cdylib"]
 path = "backend.rs"
 
 [lints.clippy]
+case-sensitive-file-extension-comparisons = {level = "allow", priority = 1}
 struct-field-names = {level = "allow", priority = 1}
 pedantic = "warn"

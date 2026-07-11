@@ -10,9 +10,7 @@ from gersemi.configuration import (
     SortOrder,
     indent_type,
 )
-from gersemi.extensions import preprocess_definitions
 from gersemi.runner import find_all_custom_command_definitions
-import tests.custom_commands.extension as testing_extension
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
 from tests.utils import Parser
@@ -39,14 +37,12 @@ def formatter_creator():
                 definitions=[
                     pathlib.Path(d).resolve() for d in config.get("definitions", [])
                 ],
+                extensions=["tests/custom_commands/extension.py"],
             ),
         )
         return gersemi_rust_backend.Formatter(
             configuration=configuration,
             definition_schemas=find_all_custom_command_definitions(configuration),
-            extension_schemas=preprocess_definitions(
-                testing_extension.command_definitions
-            ),
             lines_to_format=[],
         )
 

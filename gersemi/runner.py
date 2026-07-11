@@ -126,7 +126,6 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     formatter = gersemi_rust_backend.Formatter(
         configuration,
         custom_command_definitions,
-        extension_definitions,
         list(lines_to_format),
     )
     results = [

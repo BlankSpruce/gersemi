@@ -15,6 +15,7 @@ use crate::node::{
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
 use crate::parser::{quoted_argument_pattern, regex, Parser};
+use crate::python_side::load_definitions_from_extensions;
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use pyo3::{pyclass, pymethods, FromPyObject, PyErr};
@@ -1504,9 +1505,9 @@ impl Formatter {
     fn new(
         configuration: Configuration,
         definition_schemas: CommandSchemaMapping,
-        extension_schemas: CommandSchemaMapping,
         lines_to_format: Vec<LineRange>,
     ) -> Self {
+        let extension_schemas = load_definitions_from_extensions(&configuration.outcome.extensions);
         Self {
             configuration: configuration.outcome,
             schemas: CommandSchemas {

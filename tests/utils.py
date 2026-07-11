@@ -33,7 +33,6 @@ class Formatter:
             definition_schemas=find_all_custom_command_definitions(
                 configuration=configuration,
             ),
-            extension_schemas={},
             lines_to_format=[],
         )
 

@@ -1,4 +1,5 @@
 use crate::argument_schema::CommandSchemaMapping;
+use crate::configuration::Extension;
 use crate::runner::is_stdin;
 use pyo3::types::{PyAnyMethods, PyModule};
 use pyo3::{PyResult, Python};
@@ -29,4 +30,14 @@ pub fn read_code(path: &Path) -> PyResult<String> {
     } else {
         Ok(std::fs::read_to_string(path)?)
     }
+}
+
+pub fn load_definitions_from_extensions(extensions: &Vec<Extension>) -> CommandSchemaMapping {
+    Python::attach(|py| {
+        PyModule::import(py, "gersemi.extensions")?
+            .getattr("load_definitions_from_extensions")?
+            .call1((extensions,))?
+            .extract()
+    })
+    .unwrap()
 }
