@@ -23,13 +23,15 @@ class Parser(gersemi.parser.Parser):
 
 class Formatter:
     def __init__(self, definitions):
-        outcome = OutcomeConfiguration(
-            line_length=80, indent=4, definitions=definitions
+        configuration = Configuration(
+            outcome=OutcomeConfiguration(
+                line_length=80, indent=4, definitions=definitions
+            )
         )
         self.impl = gersemi_rust_backend.Formatter(
-            configuration=outcome,
+            configuration=configuration,
             schemas=find_all_custom_command_definitions(
-                configuration=Configuration(outcome=outcome),
+                configuration=configuration,
             ),
             lines_to_format=[],
         )

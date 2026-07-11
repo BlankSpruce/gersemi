@@ -24,24 +24,12 @@ def rust_parser():
     return Parser()
 
 
-def get_custom_command_definitions(configuration_definitions):
-    return find_all_custom_command_definitions(
-        configuration=Configuration(
-            control=ControlConfiguration(respect_ignore_files=False),
-            outcome=OutcomeConfiguration(
-                definitions=[
-                    pathlib.Path(d).resolve() for d in configuration_definitions
-                ]
-            ),
-        ),
-    )
-
-
 @pytest.fixture(scope="module")
 def formatter_creator():
     def creator(config):
-        return gersemi_rust_backend.Formatter(
-            configuration=OutcomeConfiguration(
+        configuration = Configuration(
+            control=ControlConfiguration(respect_ignore_files=False),
+            outcome=OutcomeConfiguration(
                 unsafe=config.get("unsafe", True),
                 line_length=config.get("line_length", 80),
                 indent=indent_type(config.get("indent", 4)),
@@ -49,10 +37,16 @@ def formatter_creator():
                     config.get("list_expansion", ListExpansion.FavourInlining)
                 ),
                 sort_order=SortOrder(config.get("sort_order", SortOrder.CaseSensitive)),
+                definitions=[
+                    pathlib.Path(d).resolve() for d in config.get("definitions", [])
+                ],
             ),
+        )
+        return gersemi_rust_backend.Formatter(
+            configuration=configuration,
             schemas=dict(
                 ChainMap(
-                    get_custom_command_definitions(config.get("definitions", [])),
+                    find_all_custom_command_definitions(configuration),
                     preprocess_definitions(testing_extension.command_definitions),
                 )
             ),

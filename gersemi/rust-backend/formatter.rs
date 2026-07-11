@@ -3,8 +3,8 @@ use crate::argument_schema::{
     CommandSchemas, KeywordMatcher, Signatures,
 };
 use crate::configuration::{
-    IndentType, KeywordFormatter, KeywordPreprocessor, ListExpansion, OutcomeConfiguration,
-    SortOrder,
+    Configuration, IndentType, KeywordFormatter, KeywordPreprocessor, ListExpansion,
+    OutcomeConfiguration, SortOrder,
 };
 use crate::keyword_preprocessor::{
     keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
@@ -1502,12 +1502,12 @@ pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
 impl Formatter {
     #[new]
     fn new(
-        configuration: OutcomeConfiguration,
+        configuration: Configuration,
         schemas: CommandSchemaMapping,
         lines_to_format: Vec<LineRange>,
     ) -> Self {
         Self {
-            configuration,
+            configuration: configuration.outcome,
             schemas: CommandSchemas { schemas },
             lines_to_format,
         }
