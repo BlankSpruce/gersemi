@@ -1,4 +1,3 @@
-from collections import ChainMap
 import pathlib
 import shutil
 import gersemi_rust_backend
@@ -44,11 +43,9 @@ def formatter_creator():
         )
         return gersemi_rust_backend.Formatter(
             configuration=configuration,
-            schemas=dict(
-                ChainMap(
-                    find_all_custom_command_definitions(configuration),
-                    preprocess_definitions(testing_extension.command_definitions),
-                )
+            definition_schemas=find_all_custom_command_definitions(configuration),
+            extension_schemas=preprocess_definitions(
+                testing_extension.command_definitions
             ),
             lines_to_format=[],
         )

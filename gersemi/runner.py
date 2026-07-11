@@ -1,5 +1,5 @@
 import argparse
-from collections import ChainMap, defaultdict
+from collections import defaultdict
 import collections.abc
 from functools import partial
 from hashlib import sha1
@@ -125,7 +125,8 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
 
     formatter = gersemi_rust_backend.Formatter(
         configuration,
-        dict(ChainMap(custom_command_definitions, extension_definitions)),
+        custom_command_definitions,
+        extension_definitions,
         list(lines_to_format),
     )
     results = [

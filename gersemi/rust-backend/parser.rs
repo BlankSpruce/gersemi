@@ -870,8 +870,9 @@ fn block_command(name: &str) -> BlockCommand {
 
 impl CommandSchemas {
     pub fn prepare_blocks(&self) -> Vec<(String, BlockCommand)> {
-        self.schemas
+        self.definition_schemas
             .values()
+            .chain(self.extension_schemas.values())
             .chain(builtin_schemas().values())
             .filter_map(|schema| match schema {
                 CommandSchema {

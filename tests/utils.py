@@ -30,9 +30,10 @@ class Formatter:
         )
         self.impl = gersemi_rust_backend.Formatter(
             configuration=configuration,
-            schemas=find_all_custom_command_definitions(
+            definition_schemas=find_all_custom_command_definitions(
                 configuration=configuration,
             ),
+            extension_schemas={},
             lines_to_format=[],
         )
 

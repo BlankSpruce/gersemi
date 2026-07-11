@@ -1503,12 +1503,16 @@ impl Formatter {
     #[new]
     fn new(
         configuration: Configuration,
-        schemas: CommandSchemaMapping,
+        definition_schemas: CommandSchemaMapping,
+        extension_schemas: CommandSchemaMapping,
         lines_to_format: Vec<LineRange>,
     ) -> Self {
         Self {
             configuration: configuration.outcome,
-            schemas: CommandSchemas { schemas },
+            schemas: CommandSchemas {
+                definition_schemas,
+                extension_schemas,
+            },
             lines_to_format,
         }
     }

@@ -623,15 +623,22 @@ pub struct CommandSchema {
 pub type CommandSchemaMapping = HashMap<String, CommandSchema>;
 
 pub struct CommandSchemas {
-    pub schemas: CommandSchemaMapping,
+    pub definition_schemas: CommandSchemaMapping,
+    pub extension_schemas: CommandSchemaMapping,
 }
 
 impl CommandSchemas {
     pub fn get(&self, key: &str) -> Option<&CommandSchema> {
-        self.schemas.get(key).or_else(|| builtin_schemas().get(key))
+        self.definition_schemas.get(key).or_else(|| {
+            self.extension_schemas
+                .get(key)
+                .or_else(|| builtin_schemas().get(key))
+        })
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
-        self.schemas.contains_key(key) || builtin_schemas().contains_key(key)
+        self.definition_schemas.contains_key(key)
+            || self.extension_schemas.contains_key(key)
+            || builtin_schemas().contains_key(key)
     }
 }

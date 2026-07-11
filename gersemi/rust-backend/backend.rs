@@ -32,7 +32,10 @@ mod gersemi_rust_backend {
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn validate(text: String, schemas: CommandSchemaMapping) -> Result<(), Error> {
-        let schemas = CommandSchemas { schemas };
+        let schemas = CommandSchemas {
+            definition_schemas: schemas,
+            extension_schemas: HashMap::new(),
+        };
         let parser = Parser::new(text, &schemas);
         parser.start().and(Ok(()))
     }
@@ -54,7 +57,8 @@ mod gersemi_rust_backend {
         }
 
         let schemas = CommandSchemas {
-            schemas: HashMap::new(),
+            definition_schemas: HashMap::new(),
+            extension_schemas: HashMap::new(),
         };
         let parser = Parser::new(text, &schemas);
         crate::custom_command_definition_finder::find_custom_command_definitions(&parser, filepath)
@@ -67,7 +71,10 @@ mod gersemi_rust_backend {
         before: String,
         after: String,
     ) -> Result<bool, Error> {
-        let schemas = CommandSchemas { schemas };
+        let schemas = CommandSchemas {
+            definition_schemas: schemas,
+            extension_schemas: HashMap::new(),
+        };
         let before = Parser::new(before, &schemas).start()?;
         let after = Parser::new(after, &schemas).start()?;
 
