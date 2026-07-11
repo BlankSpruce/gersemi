@@ -53,14 +53,15 @@ class StatusCode:
 
 
 def find_all_custom_command_definitions(
-    paths: Iterable[Path],
-    warning_sink,
     configuration: Configuration,
+    warning_sink=None,
 ) -> Dict[str, Keywords]:
     return get_just_definitions(
         dict(
             gersemi_rust_backend.find_all_custom_command_definitions(
-                list(paths), warning_sink, configuration
+                list(set(configuration.outcome.definitions)),
+                warning_sink,
+                configuration,
             )
         )
     )
@@ -116,9 +117,7 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     lines_to_format: LineRanges,
 ) -> Iterable[int]:
     custom_command_definitions = find_all_custom_command_definitions(
-        set(configuration.outcome.definitions),
-        warning_sink,
-        configuration,
+        configuration, warning_sink
     )
     extension_definitions = load_definitions_from_extensions(
         configuration.outcome.extensions

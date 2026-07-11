@@ -1,7 +1,3 @@
-from gersemi.custom_command_definition_finder import (
-    find_custom_command_definitions,
-    get_just_definitions,
-)
 from tests.utils import Formatter
 from .tests_generator import generate_input_only_tests
 
@@ -28,9 +24,10 @@ custom_command_properly_formatted = """Seven_Samurai(
 """
 
 
-def test_custom_command_generated_formatter(case):  # pylint: disable=redefined-outer-name
-    definitions = get_just_definitions(find_custom_command_definitions(case.content))
-    formatter = Formatter(known_definitions=definitions)
+def test_custom_command_generated_formatter(case, tmp_path):  # pylint: disable=redefined-outer-name
+    definition_file = tmp_path / "definition.cmake"
+    definition_file.write_text(case.content)
+    formatter = Formatter(definitions=[definition_file])
     custom_command_formatted, _ = formatter.format(custom_command_to_format)
 
     assert custom_command_formatted == custom_command_properly_formatted

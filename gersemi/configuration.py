@@ -382,8 +382,8 @@ class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
 
 @dataclass
 class Configuration:
-    outcome: OutcomeConfiguration
-    control: ControlConfiguration
+    outcome: OutcomeConfiguration = field(default_factory=OutcomeConfiguration)
+    control: ControlConfiguration = field(default_factory=ControlConfiguration)
 
     def __hash__(self):
         return hash(astuple(self))

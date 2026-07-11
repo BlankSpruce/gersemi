@@ -25,13 +25,14 @@ def rust_parser():
 
 
 def get_custom_command_definitions(configuration_definitions):
-    paths = [pathlib.Path(d).resolve() for d in configuration_definitions]
     return find_all_custom_command_definitions(
-        paths=paths,
-        warning_sink=None,
         configuration=Configuration(
             control=ControlConfiguration(respect_ignore_files=False),
-            outcome=OutcomeConfiguration(),
+            outcome=OutcomeConfiguration(
+                definitions=[
+                    pathlib.Path(d).resolve() for d in configuration_definitions
+                ]
+            ),
         ),
     )
 
