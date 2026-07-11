@@ -49,6 +49,21 @@ def test_format_only_line_ranges(app, case):
     assert app(LR, given_range, "-", input=case.given) == success(stdout=case.expected)
 
 
+def test_formatted_files_with_line_ranges_are_not_stored_in_cache(
+    app, cache, testfiles
+):
+    cache.assert_that_has_no_tables()
+
+    assert app(
+        LR, "7-7", "--check", testfiles / "single-line--7-7.out.cmake"
+    ) == success(
+        stdout="",
+        stderr="",
+    )
+
+    cache.assert_that_has_no_tables()
+
+
 pytest_generate_tests = generate_input_output_tests(
     where="executable/line_ranges",
     input_extension=".in.cmake",
