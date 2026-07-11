@@ -11,7 +11,6 @@ from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
-    LineRanges,
     NotSupportedKeys,
     OutcomeConfiguration,
     find_closest_dot_gersemirc,
@@ -114,7 +113,6 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     cache,
     warning_sink,
     files_to_format: Iterable[Path],
-    lines_to_format: LineRanges,
 ) -> Iterable[int]:
     custom_command_definitions = find_all_custom_command_definitions(
         configuration, warning_sink
@@ -123,20 +121,13 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         configuration.outcome.extensions
     )
 
-    formatter = gersemi_rust_backend.Formatter(
+    results = gersemi_rust_backend.handle_files_to_format(
+        mode,
         configuration,
+        warning_sink,
+        files_to_format,
         custom_command_definitions,
-        list(lines_to_format),
     )
-    results = [
-        (
-            f,
-            *gersemi_rust_backend.run_task(
-                f, formatter, mode, configuration, warning_sink
-            ),
-        )
-        for f in files_to_format
-    ]
     store_files_in_cache(
         mode,
         cache,
@@ -262,12 +253,7 @@ def run(args: argparse.Namespace):
                 mode, config, warning_sink, already_formatted_files
             )
             status_code += handle_files_to_format(
-                mode,
-                config,
-                cache,
-                warning_sink,
-                files_to_format,
-                control.line_ranges,
+                mode, config, cache, warning_sink, files_to_format
             )
 
         status_code += (

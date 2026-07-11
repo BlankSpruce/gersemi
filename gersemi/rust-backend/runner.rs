@@ -1,3 +1,4 @@
+use crate::argument_schema::CommandSchemaMapping;
 use crate::custom_command_definition_finder::CustomCommand;
 use crate::diff::print_diff;
 use crate::formatter::Formatter;
@@ -328,6 +329,24 @@ impl Runner<'_> {
             }
             sink.__call__(warning);
         }
+    }
+
+    pub fn handle_files_to_format(
+        &mut self,
+        files: Vec<PathBuf>,
+        configuration: Configuration,
+        definition_schemas: CommandSchemaMapping,
+    ) -> Vec<(PathBuf, usize, bool)> {
+        let formatter = Formatter::new(configuration, definition_schemas);
+        let formatter = Some(&formatter);
+
+        files
+            .into_iter()
+            .map(|f| {
+                let (code, has_warnings) = self.run_task(&f, formatter);
+                (f, code, has_warnings)
+            })
+            .collect()
     }
 
     pub fn find_all_custom_command_definitions(

@@ -43,7 +43,6 @@ def formatter_creator():
         return gersemi_rust_backend.Formatter(
             configuration=configuration,
             definition_schemas=find_all_custom_command_definitions(configuration),
-            lines_to_format=[],
         )
 
     return creator

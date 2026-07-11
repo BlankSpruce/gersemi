@@ -3,7 +3,7 @@ use crate::argument_schema::{
     CommandSchemas, KeywordMatcher, Signatures,
 };
 use crate::configuration::{
-    Configuration, IndentType, KeywordFormatter, KeywordPreprocessor, ListExpansion,
+    Configuration, IndentType, KeywordFormatter, KeywordPreprocessor, LineRange, ListExpansion,
     OutcomeConfiguration, SortOrder,
 };
 use crate::keyword_preprocessor::{
@@ -18,7 +18,7 @@ use crate::parser::{quoted_argument_pattern, regex, Parser};
 use crate::python_side::load_definitions_from_extensions;
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
-use pyo3::{pyclass, pymethods, FromPyObject, PyErr};
+use pyo3::{pyclass, pymethods, PyErr};
 use regex::Regex;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -1345,12 +1345,6 @@ fn format(
     (formatted_code, unknown_commands_used.into_inner())
 }
 
-#[derive(FromPyObject)]
-struct LineRange {
-    start: usize,
-    end: usize,
-}
-
 #[pyclass]
 pub struct Formatter {
     configuration: OutcomeConfiguration,
@@ -1502,11 +1496,7 @@ pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
 #[pymethods]
 impl Formatter {
     #[new]
-    fn new(
-        configuration: Configuration,
-        definition_schemas: CommandSchemaMapping,
-        lines_to_format: Vec<LineRange>,
-    ) -> Self {
+    pub fn new(configuration: Configuration, definition_schemas: CommandSchemaMapping) -> Self {
         let extension_schemas = load_definitions_from_extensions(&configuration.outcome.extensions);
         Self {
             configuration: configuration.outcome,
@@ -1514,7 +1504,7 @@ impl Formatter {
                 definition_schemas,
                 extension_schemas,
             },
-            lines_to_format,
+            lines_to_format: configuration.control.line_ranges,
         }
     }
 

@@ -82,6 +82,7 @@ impl FromPyObject<'_, '_> for Tabs {
     }
 }
 
+#[derive(Clone)]
 pub enum ListExpansion {
     FavourInlining,
     FavourExpansion,
@@ -100,6 +101,7 @@ impl FromPyObject<'_, '_> for ListExpansion {
     }
 }
 
+#[derive(Clone)]
 pub enum SortOrder {
     CaseSensitive,
     CaseInsensitive,
@@ -118,7 +120,7 @@ impl FromPyObject<'_, '_> for SortOrder {
     }
 }
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
 pub struct Extension(String);
 
 impl<'py> IntoPyObject<'py> for &Extension {
@@ -142,7 +144,7 @@ impl<'py> IntoPyObject<'py> for &Extension {
     }
 }
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
 pub struct OutcomeConfiguration {
     #[pyo3(attribute("indent"))]
     pub indent_type: IndentType,
@@ -155,13 +157,20 @@ pub struct OutcomeConfiguration {
     pub extensions: Vec<Extension>,
 }
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
+pub struct LineRange {
+    pub start: usize,
+    pub end: usize,
+}
+
+#[derive(Clone, FromPyObject)]
 pub struct ControlConfiguration {
     pub color: bool,
     pub respect_ignore_files: bool,
+    pub line_ranges: Vec<LineRange>,
 }
 
-#[derive(FromPyObject)]
+#[derive(Clone, FromPyObject)]
 pub struct Configuration {
     pub outcome: OutcomeConfiguration,
     pub control: ControlConfiguration,

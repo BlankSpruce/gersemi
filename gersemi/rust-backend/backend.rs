@@ -166,6 +166,23 @@ mod gersemi_rust_backend {
     }
 
     #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn handle_files_to_format(
+        mode: Mode,
+        configuration: Configuration,
+        warning_sink: &mut WarningSink,
+        files_to_format: Vec<PathBuf>,
+        definition_schemas: CommandSchemaMapping,
+    ) -> Vec<(PathBuf, usize, bool)> {
+        let mut runner = Runner {
+            mode,
+            configuration: configuration.clone(),
+            warning_sink: Some(warning_sink),
+        };
+        runner.handle_files_to_format(files_to_format, configuration, definition_schemas)
+    }
+
+    #[pyfunction]
     fn find_all_custom_command_definitions(
         paths: Vec<PathBuf>,
         warning_sink: Option<&mut WarningSink>,
