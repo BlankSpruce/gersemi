@@ -104,7 +104,7 @@ def store_files_in_cache(
         Mode.CheckFormattingAndShowDiff,
         Mode.RewriteInPlace,
     ]:
-        cache.store_files(configuration_summary, files)
+        cache.store_files(configuration_summary, list(files))
 
 
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments

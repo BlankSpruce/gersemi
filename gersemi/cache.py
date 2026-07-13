@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from pathlib import Path
-import sqlite3
-from typing import Dict, Iterable, Tuple
+import gersemi_rust_backend
 from platformdirs import user_cache_dir
 from gersemi.__version__ import __author__, __title__, __version__
 
@@ -17,91 +16,6 @@ def cache_path(cache_dir: Path) -> Path:
     return cache_dir / "cache.db"
 
 
-def create_tables(cursor: sqlite3.Cursor):
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS files (
-            path TEXT PRIMARY KEY,
-            size INTEGER NOT NULL,
-            modification_time INTEGER NOT NULL
-        )"""
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS formatted (
-            path TEXT PRIMARY KEY,
-            configuration_summary TEXT NOT NULL,
-            FOREIGN KEY (path) REFERENCES files (path)
-        )"""
-    )
-
-
-@contextmanager
-def database_cursor(path):
-    connection = sqlite3.connect(str(path), detect_types=sqlite3.PARSE_DECLTYPES)
-    connection.execute("PRAGMA foreign_keys = 1")
-    try:
-        cursor = connection.cursor()
-        create_tables(cursor)
-        yield cursor
-    finally:
-        connection.commit()
-        connection.close()
-
-
-def create_file_entry(path: Path):
-    s = path.stat()
-    return str(path), s.st_size, s.st_mtime_ns
-
-
-class Cache:
-    def __init__(self, cursor: sqlite3.Cursor):
-        self.cursor = cursor
-
-    def store_files(self, configuration_summary: str, files: Iterable[Path]) -> None:
-        f = list(files)
-        self.cursor.executemany(
-            "INSERT OR REPLACE INTO files VALUES (?, ?, ?)",
-            map(create_file_entry, f),
-        )
-        self.cursor.executemany(
-            "INSERT OR REPLACE INTO formatted VALUES (?, ?)",
-            [(str(path), configuration_summary) for path in f],
-        )
-
-    def get_files(self, configuration_summary: str) -> Dict[Path, Tuple[int, int]]:
-        return {
-            Path(path): (size, modification_time)
-            for path, size, modification_time in self.cursor.execute(
-                """
-                SELECT *
-                FROM files
-                WHERE files.path IN (
-                    SELECT formatted.path
-                    FROM formatted
-                    WHERE formatted.configuration_summary = (?)
-                )""",
-                (configuration_summary,),
-            )
-        }
-
-
-class DummyCache:
-    def store_files(self, *args, **kwargs) -> None:
-        pass
-
-    def get_files(self, _) -> Dict[Path, Tuple[int, int, str]]:
-        return {}
-
-
 @contextmanager
 def create_cache(enable_cache: bool, cache_dir: Path):
-    if not enable_cache:
-        yield DummyCache()
-        return
-
-    try:
-        with database_cursor(cache_path(cache_dir)) as cursor:
-            yield Cache(cursor)
-    except sqlite3.Error:
-        yield DummyCache()
+    yield gersemi_rust_backend.Cache(enable_cache, cache_path(cache_dir))

@@ -1,4 +1,5 @@
 mod argument_schema;
+mod cache;
 mod configuration;
 mod custom_command_definition_finder;
 mod diff;
@@ -83,6 +84,9 @@ mod gersemi_rust_backend {
 
     #[pymodule_export]
     use crate::formatter::Formatter;
+
+    #[pymodule_export]
+    use crate::cache::Cache;
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
