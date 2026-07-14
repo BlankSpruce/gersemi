@@ -5,7 +5,7 @@ from functools import lru_cache
 import os
 from pathlib import Path
 import sys
-from typing import Iterable, Optional, Sequence, Tuple, Union
+from typing import Iterable, Optional, Union
 import yaml
 from gersemi.__version__ import __version__
 from gersemi.cache import default_cache_dir
@@ -500,27 +500,29 @@ def sanitize_list_expansion(list_expansion):
     )
 
 
-@dataclass
-class NotSupportedKeys:
-    path: Optional[Path] = None
-    unknown: Sequence[str] = ()
-    command_line_only: Sequence[str] = ()
+def log_not_supported_keys(path, content, warning_sink):
+    path = path.resolve()
+    unknown = [key for key in content if key not in CONFIGURATION_KEYS]
+    command_line_only = [key for key in content if key in CONTROL_CONFIGURATION_KEYS]
 
+    if command_line_only:
+        keys = ", ".join(sorted(command_line_only))
+        warning_sink(
+            f"{path}: these options are supported only through command line: {keys}"
+        )
 
-def get_not_supported_keys(path, content):
-    return NotSupportedKeys(
-        path=path.resolve(),
-        unknown=[key for key in content if key not in CONFIGURATION_KEYS],
-        command_line_only=[key for key in content if key in CONTROL_CONFIGURATION_KEYS],
-    )
+    if unknown:
+        keys = ", ".join(sorted(unknown))
+        warning_sink(f"{path}: these options are not supported: {keys}")
 
 
 @lru_cache(maxsize=None)
 def load_configuration_from_file(
     configuration_file_path: Optional[Path],
-) -> Tuple[OutcomeConfiguration, NotSupportedKeys]:
+    warning_sink,
+) -> OutcomeConfiguration:
     if configuration_file_path is None:
-        return OutcomeConfiguration(), NotSupportedKeys()
+        return OutcomeConfiguration()
 
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
@@ -530,8 +532,10 @@ def load_configuration_from_file(
                 for key, value in configuration_file_content.items()
                 if key in OUTCOME_CONFIGURATION_KEYS
             }
-            not_supported_keys = get_not_supported_keys(
-                configuration_file_path, configuration_file_content
+            log_not_supported_keys(
+                configuration_file_path,
+                configuration_file_content,
+                warning_sink,
             )
 
             if "definitions" in config:
@@ -544,7 +548,7 @@ def load_configuration_from_file(
                 config["indent"] = indent_type(config["indent"])
             if "extensions" in config:
                 config["extensions"] = normalize_extensions(config["extensions"])
-        return OutcomeConfiguration(**config), not_supported_keys
+        return OutcomeConfiguration(**config)
 
 
 def override_with_args(configuration, args):
@@ -559,10 +563,15 @@ def override_with_args(configuration, args):
 
 
 def make_outcome_configuration(
-    configuration_file, args
-) -> Tuple[OutcomeConfiguration, NotSupportedKeys]:
-    outcome, not_supported_keys = load_configuration_from_file(configuration_file)
-    return override_with_args(outcome, args), not_supported_keys
+    configuration_file,
+    args,
+    warning_sink,
+) -> OutcomeConfiguration:
+    outcome = load_configuration_from_file(
+        configuration_file,
+        warning_sink,
+    )
+    return override_with_args(outcome, args)
 
 
 def make_control_configuration(args) -> ControlConfiguration:

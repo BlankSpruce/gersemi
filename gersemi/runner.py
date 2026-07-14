@@ -4,12 +4,11 @@ import collections.abc
 from functools import partial
 from pathlib import Path
 import sys
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, Optional
 import gersemi_rust_backend
 from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
-    NotSupportedKeys,
     find_closest_dot_gersemirc,
     make_control_configuration,
     make_outcome_configuration,
@@ -59,49 +58,6 @@ def find_all_custom_command_definitions(
     )
 
 
-class GetConfiguration:
-    def __init__(
-        self,
-        args: argparse.Namespace,
-        control: ControlConfiguration,
-        warning_sink,
-    ):
-        self.args = args
-        self.control = control
-        self.processed_configuration_files: List[Path] = []
-        self.warning_sink = warning_sink
-
-    def _warn(self, item: NotSupportedKeys, text: str):
-        self.warning_sink(f"{item.path}: {text}")
-
-    def _inform_about_not_supported_keys(self, item: NotSupportedKeys):
-        if item.path in self.processed_configuration_files:
-            return
-
-        if item.path is None:
-            return
-
-        self.processed_configuration_files.append(item.path)
-
-        if len(item.command_line_only) > 0:
-            keys = ", ".join(sorted(item.command_line_only))
-            self._warn(
-                item, f"these options are supported only through command line: {keys}"
-            )
-
-        if len(item.unknown) > 0:
-            keys = ", ".join(sorted(item.unknown))
-            self._warn(item, f"these options are not supported: {keys}")
-
-    def __call__(self, configuration_file: Optional[Path]) -> Configuration:
-        outcome_configuration, not_supported_keys = make_outcome_configuration(
-            configuration_file=configuration_file,
-            args=self.args,
-        )
-        self._inform_about_not_supported_keys(not_supported_keys)
-        return Configuration(control=self.control, outcome=outcome_configuration)
-
-
 def split_files_by_configuration_file(
     paths: Iterable[Path], control: ControlConfiguration
 ):
@@ -116,19 +72,23 @@ def split_files_by_configuration_file(
 
 
 def print_configuration_report(
-    kind: PrintConfigKind,
+    args: argparse.Namespace,
     buckets: Dict[Optional[Path], Iterable[Path]],
-    get_configuration: GetConfiguration,
+    control: ControlConfiguration,
+    warning_sink,
 ):
     report = {
         PrintConfigKind.Minimal: lambda conf_file, conf, _: minimal_report(
             conf_file, conf
         ),
         PrintConfigKind.Verbose: verbose_report,
-    }.get(kind, lambda *args: None)
+    }.get(args.print_config, lambda *args: None)
 
     for config_file, target_files in buckets.items():
-        config = get_configuration(config_file)
+        config = Configuration(
+            control=control,
+            outcome=make_outcome_configuration(config_file, args, warning_sink),
+        )
         result = report(config_file, config.outcome, target_files)
         if result is not None:
             print_to_stdout(result)
@@ -151,14 +111,16 @@ def run(args: argparse.Namespace):
     warning_sink = gersemi_rust_backend.WarningSink(control.quiet)
 
     buckets = split_files_by_configuration_file(requested_files, control)
-    get_configuration = GetConfiguration(args, control, warning_sink)
     if mode == Mode.PrintConfig:
-        print_configuration_report(args.print_config, buckets, get_configuration)
+        print_configuration_report(args, buckets, control, warning_sink)
         return SUCCESS
 
     status_code = StatusCode()
     for config_file, files in buckets.items():
-        config = get_configuration(config_file)
+        config = Configuration(
+            control=control,
+            outcome=make_outcome_configuration(config_file, args, warning_sink),
+        )
         if config.outcome.disable_formatting:
             continue
 
