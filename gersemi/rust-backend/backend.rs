@@ -19,7 +19,7 @@ use pyo3::pymodule;
 mod gersemi_rust_backend {
     use crate::argument_schema::{CommandSchemaMapping, CommandSchemas};
     use crate::cache::file_entry;
-    use crate::configuration::Configuration;
+    use crate::configuration::{Configuration, OutcomeConfiguration};
     use crate::custom_command_definition_finder::CustomCommand;
     use crate::mode::Mode;
     use crate::parser::{Error, Parser};
@@ -162,9 +162,9 @@ mod gersemi_rust_backend {
         warning_sink: &mut WarningSink,
         files_to_format: Vec<PathBuf>,
         definition_schemas: CommandSchemaMapping,
-        configuration_summary: String,
         cache: &mut Cache,
-    ) -> Vec<usize> {
+    ) -> PyResult<Vec<usize>> {
+        let configuration_summary = configuration.outcome.summarize()?;
         let mut runner = Runner {
             mode,
             configuration: configuration.clone(),
@@ -199,10 +199,11 @@ mod gersemi_rust_backend {
     fn split_files_by_formatting_state(
         cache: &mut Cache,
         files: Vec<PathBuf>,
-        configuration_summary: String,
-    ) -> (Vec<PathBuf>, Vec<PathBuf>) {
+        configuration: OutcomeConfiguration,
+    ) -> PyResult<(Vec<PathBuf>, Vec<PathBuf>)> {
         let mut already_formatted_files = Vec::<PathBuf>::new();
         let mut files_to_format = Vec::<PathBuf>::new();
+        let configuration_summary = configuration.summarize()?;
         let known_files = cache.get_files(&configuration_summary);
 
         for f in files {
@@ -221,7 +222,7 @@ mod gersemi_rust_backend {
                 files_to_format.push(f);
             }
         }
-        (already_formatted_files, files_to_format)
+        Ok((already_formatted_files, files_to_format))
     }
 
     #[pyfunction]

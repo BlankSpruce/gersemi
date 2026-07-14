@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
 use pyo3::{FromPyObject, PyAny};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TwoWordKeywordMatcher {
     first: String,
     second: SecondKeyword,

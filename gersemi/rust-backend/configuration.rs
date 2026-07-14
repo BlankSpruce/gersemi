@@ -1,7 +1,11 @@
+use crate::python_side::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyAnyMethods, PyString, PyType};
-use pyo3::{Borrowed, Bound, BoundObject, FromPyObject, IntoPyObject, Py, PyAny, PyErr, Python};
+use pyo3::{
+    Borrowed, Bound, BoundObject, FromPyObject, IntoPyObject, Py, PyAny, PyErr, PyResult, Python,
+};
+use xxhash_rust::xxh3::xxh3_128;
 
 fn string_enum_value(obj: Borrowed<'_, '_, PyAny>) -> Result<String, PyErr> {
     let value = match obj.getattr("value") {
@@ -52,10 +56,10 @@ impl FromPyObject<'_, '_> for KeywordPreprocessor {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Tabs;
 
-#[derive(Clone, FromPyObject)]
+#[derive(Clone, Debug, FromPyObject)]
 pub enum IndentType {
     Spaces(usize),
     Tabs(Tabs),
@@ -82,7 +86,7 @@ impl FromPyObject<'_, '_> for Tabs {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ListExpansion {
     FavourInlining,
     FavourExpansion,
@@ -101,7 +105,7 @@ impl FromPyObject<'_, '_> for ListExpansion {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum SortOrder {
     CaseSensitive,
     CaseInsensitive,
@@ -120,7 +124,7 @@ impl FromPyObject<'_, '_> for SortOrder {
     }
 }
 
-#[derive(Clone, FromPyObject)]
+#[derive(Clone, Debug, FromPyObject)]
 pub struct Extension(String);
 
 impl<'py> IntoPyObject<'py> for &Extension {
@@ -144,7 +148,7 @@ impl<'py> IntoPyObject<'py> for &Extension {
     }
 }
 
-#[derive(Clone, FromPyObject)]
+#[derive(Clone, Debug, FromPyObject)]
 pub struct OutcomeConfiguration {
     #[pyo3(attribute("indent"))]
     pub indent_type: IndentType,
@@ -174,4 +178,12 @@ pub struct ControlConfiguration {
 pub struct Configuration {
     pub outcome: OutcomeConfiguration,
     pub control: ControlConfiguration,
+}
+
+impl OutcomeConfiguration {
+    pub fn summarize(&self) -> PyResult<String> {
+        let extension_schemas = load_definitions_from_extensions(&self.extensions)?;
+        let summary = format!("{self:?};{extension_schemas:?}");
+        Ok(format!("{:X}", xxh3_128(summary.as_bytes())))
+    }
 }

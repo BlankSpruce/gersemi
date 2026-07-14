@@ -347,8 +347,8 @@ impl Runner<'_> {
         configuration: Configuration,
         definition_schemas: CommandSchemaMapping,
         configuration_summary: &str,
-    ) -> Vec<usize> {
-        let formatter = Formatter::new(configuration, definition_schemas);
+    ) -> PyResult<Vec<usize>> {
+        let formatter = Formatter::new(configuration, definition_schemas)?;
         let formatter = Some(&formatter);
 
         let should_cache = self.should_cache();
@@ -367,7 +367,7 @@ impl Runner<'_> {
         if let Some(cache) = &self.cache {
             cache.store_files(configuration_summary, files_to_cache);
         }
-        result
+        Ok(result)
     }
 
     pub fn find_all_custom_command_definitions(

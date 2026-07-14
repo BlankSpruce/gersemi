@@ -10,13 +10,13 @@ use std::cmp::min;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum SecondKeyword {
     String(String),
     Any,
 }
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct KeywordMatcher {
     first: String,
     second: Option<SecondKeyword>,
@@ -29,7 +29,7 @@ fn single_word_matcher(s: &str) -> KeywordMatcher {
     }
 }
 
-#[derive(Clone, FromPyObject)]
+#[derive(Clone, Debug, FromPyObject)]
 pub struct ArgumentSchema {
     options: Vec<KeywordMatcher>,
     one_value_keywords: Vec<KeywordMatcher>,
@@ -599,7 +599,7 @@ pub fn isolate_conditions(arguments: RefinedArgumentsNode) -> RefinedArgumentsNo
 pub type Signatures = HashMap<Option<KeywordMatcher>, ArgumentSchema>;
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, FromPyObject)]
+#[derive(Clone, Debug, FromPyObject)]
 pub enum CommandSchemaDetails {
     StandardCommand {
         schema: ArgumentSchema,
@@ -612,7 +612,7 @@ pub enum CommandSchemaDetails {
     },
 }
 
-#[derive(Clone, FromPyObject)]
+#[derive(Clone, Debug, FromPyObject)]
 pub struct CommandSchema {
     pub block_end: Option<String>,
     pub canonical_name: Option<String>,

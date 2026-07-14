@@ -2,7 +2,6 @@ import argparse
 from collections import defaultdict
 import collections.abc
 from functools import partial
-from hashlib import sha1
 from pathlib import Path
 import sys
 from typing import Dict, Iterable, List, Optional
@@ -12,14 +11,12 @@ from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
     NotSupportedKeys,
-    OutcomeConfiguration,
     find_closest_dot_gersemirc,
     make_control_configuration,
     make_outcome_configuration,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
 from gersemi.custom_command_definition_finder import get_just_definitions
-from gersemi.extensions import load_definitions_from_extensions
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
@@ -66,24 +63,6 @@ def find_all_custom_command_definitions(
     )
 
 
-def summarize_configuration(configuration):
-    extension_definitions = load_definitions_from_extensions(configuration.extensions)
-    hasher = sha1()
-    hasher.update(repr(configuration).encode("utf-8"))
-    hasher.update(repr(extension_definitions).encode("utf-8"))
-    return hasher.hexdigest()
-
-
-def split_files_by_formatting_state(
-    cache,
-    configuration: OutcomeConfiguration,
-    files: Iterable[Path],
-):
-    return gersemi_rust_backend.split_files_by_formatting_state(
-        cache, list(files), summarize_configuration(configuration)
-    )
-
-
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     mode: Mode,
     configuration: Configuration,
@@ -100,7 +79,6 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         warning_sink,
         files_to_format,
         custom_command_definitions,
-        summarize_configuration(configuration.outcome),
         cache,
     )
 
@@ -209,8 +187,12 @@ def run(args: argparse.Namespace):
             if config.outcome.disable_formatting:
                 continue
 
-            already_formatted_files, files_to_format = split_files_by_formatting_state(
-                cache, config.outcome, files
+            already_formatted_files, files_to_format = (
+                gersemi_rust_backend.split_files_by_formatting_state(
+                    cache,
+                    list(files),
+                    config.outcome,
+                )
             )
 
             status_code += gersemi_rust_backend.handle_already_formatted_files(

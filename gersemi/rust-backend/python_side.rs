@@ -32,12 +32,13 @@ pub fn read_code(path: &Path) -> PyResult<String> {
     }
 }
 
-pub fn load_definitions_from_extensions(extensions: &Vec<Extension>) -> CommandSchemaMapping {
+pub fn load_definitions_from_extensions(
+    extensions: &Vec<Extension>,
+) -> PyResult<CommandSchemaMapping> {
     Python::attach(|py| {
         PyModule::import(py, "gersemi.extensions")?
             .getattr("load_definitions_from_extensions")?
             .call1((extensions,))?
             .extract()
     })
-    .unwrap()
 }
