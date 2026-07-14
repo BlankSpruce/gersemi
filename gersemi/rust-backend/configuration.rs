@@ -170,10 +170,14 @@ pub struct LineRange {
 }
 
 #[derive(Clone, FromPyObject)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct ControlConfiguration {
     pub color: bool,
     pub respect_ignore_files: bool,
     pub line_ranges: Vec<LineRange>,
+    pub cache: bool,
+    pub cache_dir: PathBuf,
+    pub quiet: bool,
 }
 
 #[derive(Clone, FromPyObject)]

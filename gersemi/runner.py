@@ -6,7 +6,6 @@ from pathlib import Path
 import sys
 from typing import Dict, Iterable, List, Optional
 import gersemi_rust_backend
-from gersemi.cache import create_cache
 from gersemi.configuration import (
     Configuration,
     ControlConfiguration,
@@ -148,6 +147,7 @@ def run(args: argparse.Namespace):
         raise Exception("Line range formatting available only with one source file")
 
     mode = get_mode(args)
+    app = gersemi_rust_backend.App(mode, control)
     warning_sink = gersemi_rust_backend.WarningSink(control.quiet)
 
     buckets = split_files_by_configuration_file(requested_files, control)
@@ -156,22 +156,18 @@ def run(args: argparse.Namespace):
         print_configuration_report(args.print_config, buckets, get_configuration)
         return SUCCESS
 
-    enable_cache = control.cache and (not control.line_ranges)
-    with create_cache(enable_cache, control.cache_dir) as cache:
-        status_code = StatusCode()
-        for config_file, files in buckets.items():
-            config = get_configuration(config_file)
-            if config.outcome.disable_formatting:
-                continue
+    status_code = StatusCode()
+    for config_file, files in buckets.items():
+        config = get_configuration(config_file)
+        if config.outcome.disable_formatting:
+            continue
 
-            status_code += gersemi_rust_backend.handle_files(
-                mode, cache, warning_sink, config, list(files)
-            )
+        status_code += app.handle_files(warning_sink, config, list(files))
 
-        status_code += (
-            FAIL
-            if (control.warnings_as_errors and warning_sink.at_least_one_warning_issued)
-            else SUCCESS
-        )
-        warning_sink.flush()
-        return status_code.value
+    status_code += (
+        FAIL
+        if (control.warnings_as_errors and warning_sink.at_least_one_warning_issued)
+        else SUCCESS
+    )
+    warning_sink.flush()
+    return status_code.value

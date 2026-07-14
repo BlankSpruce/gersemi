@@ -2,7 +2,7 @@ use pyo3::exceptions::PyRuntimeError;
 use pyo3::types::PyAnyMethods;
 use pyo3::{Borrowed, FromPyObject, PyAny, PyErr};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     ForwardToStdout,
     RewriteInPlace,

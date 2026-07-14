@@ -87,7 +87,7 @@ pub struct WarningSink {
 #[pymethods]
 impl WarningSink {
     #[new]
-    fn new(quiet: bool) -> Self {
+    pub fn new(quiet: bool) -> Self {
         Self {
             quiet,
             at_least_one_warning_issued: false,

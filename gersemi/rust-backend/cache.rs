@@ -124,9 +124,10 @@ fn create_connection(enable_cache: bool, cache_path: PathBuf) -> Option<Connecti
 #[pymethods]
 impl Cache {
     #[new]
-    pub fn new(enable_cache: bool, cache_path: PathBuf) -> Self {
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn new(enable_cache: bool, cache_dir: PathBuf) -> Self {
         Self {
-            connection: create_connection(enable_cache, cache_path).map(Mutex::new),
+            connection: create_connection(enable_cache, cache_dir.join("cache.db")).map(Mutex::new),
         }
     }
 
