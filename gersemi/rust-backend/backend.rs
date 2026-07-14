@@ -138,41 +138,6 @@ mod gersemi_rust_backend {
     use crate::runner::WarningSink;
 
     #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    fn handle_already_formatted_files(
-        mode: Mode,
-        configuration: Configuration,
-        warning_sink: &mut WarningSink,
-        already_formatted_files: Vec<PathBuf>,
-    ) -> Vec<usize> {
-        let mut runner = Runner {
-            mode,
-            configuration,
-            warning_sink: Some(warning_sink),
-            cache: None,
-        };
-        runner.handle_already_formatted_files(&already_formatted_files)
-    }
-
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    fn handle_files_to_format(
-        mode: Mode,
-        configuration: Configuration,
-        warning_sink: &mut WarningSink,
-        files_to_format: Vec<PathBuf>,
-        cache: &mut Cache,
-    ) -> PyResult<Vec<usize>> {
-        let mut runner = Runner {
-            mode,
-            configuration: configuration.clone(),
-            warning_sink: Some(warning_sink),
-            cache: Some(cache),
-        };
-        runner.handle_files_to_format(files_to_format, configuration)
-    }
-
-    #[pyfunction]
     fn find_all_custom_command_definitions(
         configuration: Configuration,
         warning_sink: Option<&mut WarningSink>,
@@ -186,12 +151,10 @@ mod gersemi_rust_backend {
         runner.find_all_custom_command_definitions()
     }
 
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
     fn split_files_by_formatting_state(
         cache: &mut Cache,
         files: Vec<PathBuf>,
-        configuration: OutcomeConfiguration,
+        configuration: &OutcomeConfiguration,
     ) -> PyResult<(Vec<PathBuf>, Vec<PathBuf>)> {
         let mut already_formatted_files = Vec::<PathBuf>::new();
         let mut files_to_format = Vec::<PathBuf>::new();
@@ -215,6 +178,28 @@ mod gersemi_rust_backend {
             }
         }
         Ok((already_formatted_files, files_to_format))
+    }
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    fn handle_files(
+        mode: Mode,
+        cache: &mut Cache,
+        warning_sink: &mut WarningSink,
+        configuration: Configuration,
+        files: Vec<PathBuf>,
+    ) -> PyResult<Vec<usize>> {
+        let (already_formatted_files, files_to_format) =
+            split_files_by_formatting_state(cache, files, &configuration.outcome)?;
+        let mut runner = Runner {
+            mode,
+            configuration,
+            warning_sink: Some(warning_sink),
+            cache: Some(cache),
+        };
+        let mut result = runner.handle_already_formatted_files(&already_formatted_files);
+        result.extend(runner.handle_files_to_format(files_to_format)?);
+        Ok(result)
     }
 
     #[pyfunction]

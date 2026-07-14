@@ -340,15 +340,11 @@ impl Runner<'_> {
             )
     }
 
-    pub fn handle_files_to_format(
-        &mut self,
-        files: Vec<PathBuf>,
-        configuration: Configuration,
-    ) -> PyResult<Vec<usize>> {
+    pub fn handle_files_to_format(&mut self, files: Vec<PathBuf>) -> PyResult<Vec<usize>> {
         let definitions = self.find_all_custom_command_definitions()?;
         let definition_schemas = get_just_schemas(definitions)?;
         let configuration_summary = self.configuration.outcome.summarize()?;
-        let formatter = Formatter::new(configuration, definition_schemas)?;
+        let formatter = Formatter::new(self.configuration.clone(), definition_schemas)?;
         let formatter = Some(&formatter);
 
         let should_cache = self.should_cache();

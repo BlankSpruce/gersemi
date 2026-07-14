@@ -164,23 +164,8 @@ def run(args: argparse.Namespace):
             if config.outcome.disable_formatting:
                 continue
 
-            already_formatted_files, files_to_format = (
-                gersemi_rust_backend.split_files_by_formatting_state(
-                    cache,
-                    list(files),
-                    config.outcome,
-                )
-            )
-
-            status_code += gersemi_rust_backend.handle_already_formatted_files(
-                mode, config, warning_sink, already_formatted_files
-            )
-            status_code += gersemi_rust_backend.handle_files_to_format(
-                mode,
-                config,
-                warning_sink,
-                files_to_format,
-                cache,
+            status_code += gersemi_rust_backend.handle_files(
+                mode, cache, warning_sink, config, list(files)
             )
 
         status_code += (
