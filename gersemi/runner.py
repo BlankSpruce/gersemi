@@ -96,17 +96,6 @@ def split_files_by_formatting_state(
     return already_formatted_files, files_to_format
 
 
-def store_files_in_cache(
-    mode: Mode, cache, configuration_summary: str, files: Iterable[Path]
-) -> None:
-    if mode in [
-        Mode.CheckFormatting,
-        Mode.CheckFormattingAndShowDiff,
-        Mode.RewriteInPlace,
-    ]:
-        cache.store_files(configuration_summary, list(files))
-
-
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     mode: Mode,
     configuration: Configuration,
@@ -121,24 +110,15 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
         configuration.outcome.extensions
     )
 
-    results = gersemi_rust_backend.handle_files_to_format(
+    return gersemi_rust_backend.handle_files_to_format(
         mode,
         configuration,
         warning_sink,
         files_to_format,
         custom_command_definitions,
-    )
-    store_files_in_cache(
-        mode,
-        cache,
         summarize_configuration(configuration.outcome, extension_definitions),
-        (
-            path
-            for path, code, has_warnings in results
-            if code == SUCCESS and path != Path("-") and (not has_warnings)
-        ),
+        cache,
     )
-    return (code for _, code, _ in results)
 
 
 class GetConfiguration:

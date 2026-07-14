@@ -138,23 +138,6 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn run_task(
-        path: PathBuf,
-        formatter: Option<&Formatter>,
-        mode: Mode,
-        configuration: Configuration,
-        warning_sink: &mut WarningSink,
-    ) -> (usize, bool) {
-        let mut runner = Runner {
-            mode,
-            configuration,
-            warning_sink: Some(warning_sink),
-        };
-        runner.run_task(&path, formatter)
-    }
-
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
     fn handle_already_formatted_files(
         mode: Mode,
         configuration: Configuration,
@@ -165,6 +148,7 @@ mod gersemi_rust_backend {
             mode,
             configuration,
             warning_sink: Some(warning_sink),
+            cache: None,
         };
         runner.handle_already_formatted_files(&already_formatted_files)
     }
@@ -177,13 +161,21 @@ mod gersemi_rust_backend {
         warning_sink: &mut WarningSink,
         files_to_format: Vec<PathBuf>,
         definition_schemas: CommandSchemaMapping,
-    ) -> Vec<(PathBuf, usize, bool)> {
+        configuration_summary: String,
+        cache: &mut Cache,
+    ) -> Vec<usize> {
         let mut runner = Runner {
             mode,
             configuration: configuration.clone(),
             warning_sink: Some(warning_sink),
+            cache: Some(cache),
         };
-        runner.handle_files_to_format(files_to_format, configuration, definition_schemas)
+        runner.handle_files_to_format(
+            files_to_format,
+            configuration,
+            definition_schemas,
+            &configuration_summary,
+        )
     }
 
     #[pyfunction]
@@ -196,6 +188,7 @@ mod gersemi_rust_backend {
             mode: Mode::PrintConfig, // TODO
             configuration,
             warning_sink,
+            cache: None,
         };
         runner.find_all_custom_command_definitions(paths)
     }

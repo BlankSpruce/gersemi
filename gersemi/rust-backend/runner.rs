@@ -1,4 +1,5 @@
 use crate::argument_schema::CommandSchemaMapping;
+use crate::cache::Cache;
 use crate::custom_command_definition_finder::CustomCommand;
 use crate::diff::print_diff;
 use crate::formatter::Formatter;
@@ -113,6 +114,7 @@ pub struct Runner<'a> {
     pub mode: Mode,
     pub configuration: Configuration,
     pub warning_sink: Option<&'a mut WarningSink>,
+    pub cache: Option<&'a mut Cache>,
 }
 
 type TaskResult = (usize, Vec<String>);
@@ -331,22 +333,41 @@ impl Runner<'_> {
         }
     }
 
+    fn should_cache(&self) -> bool {
+        self.cache.is_some()
+            && matches!(
+                self.mode,
+                Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
+            )
+    }
+
     pub fn handle_files_to_format(
         &mut self,
         files: Vec<PathBuf>,
         configuration: Configuration,
         definition_schemas: CommandSchemaMapping,
-    ) -> Vec<(PathBuf, usize, bool)> {
+        configuration_summary: &str,
+    ) -> Vec<usize> {
         let formatter = Formatter::new(configuration, definition_schemas);
         let formatter = Some(&formatter);
 
-        files
-            .into_iter()
-            .map(|f| {
-                let (code, has_warnings) = self.run_task(&f, formatter);
-                (f, code, has_warnings)
-            })
-            .collect()
+        let should_cache = self.should_cache();
+        let mut result = Vec::<usize>::new();
+        let mut files_to_cache = Vec::<PathBuf>::new();
+
+        for f in files {
+            let (code, has_warnings) = self.run_task(&f, formatter);
+            result.push(code);
+
+            if should_cache && (code == SUCCESS) && (!is_stdin(&f)) && (!has_warnings) {
+                files_to_cache.push(f);
+            }
+        }
+
+        if let Some(cache) = &self.cache {
+            cache.store_files(configuration_summary, files_to_cache);
+        }
+        result
     }
 
     pub fn find_all_custom_command_definitions(
