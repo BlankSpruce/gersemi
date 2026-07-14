@@ -66,7 +66,8 @@ def find_all_custom_command_definitions(
     )
 
 
-def summarize_configuration(configuration, extension_definitions):
+def summarize_configuration(configuration):
+    extension_definitions = load_definitions_from_extensions(configuration.extensions)
     hasher = sha1()
     hasher.update(repr(configuration).encode("utf-8"))
     hasher.update(repr(extension_definitions).encode("utf-8"))
@@ -78,22 +79,9 @@ def split_files_by_formatting_state(
     configuration: OutcomeConfiguration,
     files: Iterable[Path],
 ):
-    extension_definitions = load_definitions_from_extensions(configuration.extensions)
-    summary = summarize_configuration(configuration, extension_definitions)
-    known_files = cache.get_files(summary)
-    already_formatted_files = []
-    files_to_format = []
-    for f in files:
-        if f not in known_files:
-            files_to_format.append(f)
-        else:
-            s = f.stat()
-            if (s.st_size, s.st_mtime_ns) != known_files[f]:
-                files_to_format.append(f)
-            else:
-                already_formatted_files.append(f)
-
-    return already_formatted_files, files_to_format
+    return gersemi_rust_backend.split_files_by_formatting_state(
+        cache, list(files), summarize_configuration(configuration)
+    )
 
 
 def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -106,17 +94,13 @@ def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-posit
     custom_command_definitions = find_all_custom_command_definitions(
         configuration, warning_sink
     )
-    extension_definitions = load_definitions_from_extensions(
-        configuration.outcome.extensions
-    )
-
     return gersemi_rust_backend.handle_files_to_format(
         mode,
         configuration,
         warning_sink,
         files_to_format,
         custom_command_definitions,
-        summarize_configuration(configuration.outcome, extension_definitions),
+        summarize_configuration(configuration.outcome),
         cache,
     )
 

@@ -11,7 +11,7 @@ pub struct Cache {
     connection: Option<Mutex<Connection>>,
 }
 
-fn file_entry(file: &Path) -> PyResult<(&str, i64, i64)> {
+pub fn file_entry(file: &Path) -> PyResult<(&str, i64, i64)> {
     let metadata = std::fs::metadata(file)?;
     let name = file.to_str().unwrap_or("---");
     let size = i64::try_from(metadata.len())?;
@@ -49,10 +49,7 @@ fn store_configuration_summary(
     }
 }
 
-fn get_files(
-    connection: &Connection,
-    configuration_summary: &str,
-) -> HashMap<PathBuf, (usize, usize)> {
+fn get_files(connection: &Connection, configuration_summary: &str) -> HashMap<PathBuf, (i64, i64)> {
     let Ok(mut statement) = connection.prepare(
         "
         SELECT *
@@ -76,19 +73,13 @@ fn get_files(
         return HashMap::default();
     };
 
-    let mut result = HashMap::<PathBuf, (usize, usize)>::new();
+    let mut result = HashMap::<PathBuf, (i64, i64)>::new();
     for value in values {
         let Ok((path, size, modification_time)) = value else {
             continue;
         };
         let Ok(path) = PathBuf::from_str(&path);
-        result.insert(
-            path,
-            (
-                usize::try_from(size).unwrap(),
-                usize::try_from(modification_time).unwrap(),
-            ),
-        );
+        result.insert(path, (size, modification_time));
     }
     result
 }
@@ -153,7 +144,7 @@ impl Cache {
         store_configuration_summary(&connection, configuration_summary, &files);
     }
 
-    pub fn get_files(&self, configuration_summary: &str) -> HashMap<PathBuf, (usize, usize)> {
+    pub fn get_files(&self, configuration_summary: &str) -> HashMap<PathBuf, (i64, i64)> {
         let Some(ref connection) = self.connection else {
             return HashMap::default();
         };
