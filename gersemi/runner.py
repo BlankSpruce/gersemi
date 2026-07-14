@@ -53,33 +53,10 @@ def find_all_custom_command_definitions(
     warning_sink=None,
 ) -> Dict[str, Keywords]:
     return get_just_definitions(
-        dict(
-            gersemi_rust_backend.find_all_custom_command_definitions(
-                list(set(configuration.outcome.definitions)),
-                warning_sink,
-                configuration,
-            )
+        gersemi_rust_backend.find_all_custom_command_definitions(
+            configuration,
+            warning_sink,
         )
-    )
-
-
-def handle_files_to_format(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    mode: Mode,
-    configuration: Configuration,
-    cache,
-    warning_sink,
-    files_to_format: Iterable[Path],
-) -> Iterable[int]:
-    custom_command_definitions = find_all_custom_command_definitions(
-        configuration, warning_sink
-    )
-    return gersemi_rust_backend.handle_files_to_format(
-        mode,
-        configuration,
-        warning_sink,
-        files_to_format,
-        custom_command_definitions,
-        cache,
     )
 
 
@@ -198,8 +175,12 @@ def run(args: argparse.Namespace):
             status_code += gersemi_rust_backend.handle_already_formatted_files(
                 mode, config, warning_sink, already_formatted_files
             )
-            status_code += handle_files_to_format(
-                mode, config, cache, warning_sink, files_to_format
+            status_code += gersemi_rust_backend.handle_files_to_format(
+                mode,
+                config,
+                warning_sink,
+                files_to_format,
+                cache,
             )
 
         status_code += (

@@ -463,7 +463,7 @@ def normalize_definitions(definitions):
         return definitions
 
     try:
-        return tuple(normalize_path(d) for d in definitions)
+        return tuple(dict.fromkeys(normalize_path(d) for d in definitions))
     except FileNotFoundError as e:
         # pylint: disable=broad-exception-raised
         raise Exception(f"Definition path doesn't exist: {e.filename}") from e

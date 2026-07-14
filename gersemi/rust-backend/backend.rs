@@ -161,29 +161,21 @@ mod gersemi_rust_backend {
         configuration: Configuration,
         warning_sink: &mut WarningSink,
         files_to_format: Vec<PathBuf>,
-        definition_schemas: CommandSchemaMapping,
         cache: &mut Cache,
     ) -> PyResult<Vec<usize>> {
-        let configuration_summary = configuration.outcome.summarize()?;
         let mut runner = Runner {
             mode,
             configuration: configuration.clone(),
             warning_sink: Some(warning_sink),
             cache: Some(cache),
         };
-        runner.handle_files_to_format(
-            files_to_format,
-            configuration,
-            definition_schemas,
-            &configuration_summary,
-        )
+        runner.handle_files_to_format(files_to_format, configuration)
     }
 
     #[pyfunction]
     fn find_all_custom_command_definitions(
-        paths: Vec<PathBuf>,
-        warning_sink: Option<&mut WarningSink>,
         configuration: Configuration,
+        warning_sink: Option<&mut WarningSink>,
     ) -> PyResult<Vec<(String, Vec<CustomCommand>)>> {
         let mut runner = Runner {
             mode: Mode::PrintConfig, // TODO
@@ -191,7 +183,7 @@ mod gersemi_rust_backend {
             warning_sink,
             cache: None,
         };
-        runner.find_all_custom_command_definitions(paths)
+        runner.find_all_custom_command_definitions()
     }
 
     #[pyfunction]

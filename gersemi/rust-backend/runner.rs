@@ -1,11 +1,10 @@
-use crate::argument_schema::CommandSchemaMapping;
 use crate::cache::Cache;
 use crate::custom_command_definition_finder::CustomCommand;
 use crate::diff::print_diff;
 use crate::formatter::Formatter;
 use crate::gersemi_rust_backend::{find_custom_command_definitions, get_files};
 use crate::mode::Mode;
-use crate::python_side::read_code;
+use crate::python_side::{get_just_schemas, read_code};
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
 use pyo3::{pyclass, pymethods, PyResult, Python};
 use std::fmt::Write;
@@ -345,9 +344,10 @@ impl Runner<'_> {
         &mut self,
         files: Vec<PathBuf>,
         configuration: Configuration,
-        definition_schemas: CommandSchemaMapping,
-        configuration_summary: &str,
     ) -> PyResult<Vec<usize>> {
+        let definitions = self.find_all_custom_command_definitions()?;
+        let definition_schemas = get_just_schemas(definitions)?;
+        let configuration_summary = self.configuration.outcome.summarize()?;
         let formatter = Formatter::new(configuration, definition_schemas)?;
         let formatter = Some(&formatter);
 
@@ -365,18 +365,18 @@ impl Runner<'_> {
         }
 
         if let Some(cache) = &self.cache {
-            cache.store_files(configuration_summary, files_to_cache);
+            cache.store_files(&configuration_summary, files_to_cache);
         }
         Ok(result)
     }
 
-    pub fn find_all_custom_command_definitions(
-        &mut self,
-        paths: Vec<PathBuf>,
-    ) -> PyResult<Definitions> {
+    pub fn find_all_custom_command_definitions(&mut self) -> PyResult<Definitions> {
         let mut result = Definitions::new();
 
-        for f in get_files(paths, self.configuration.control.respect_ignore_files)? {
+        for f in get_files(
+            self.configuration.outcome.definitions.clone(),
+            self.configuration.control.respect_ignore_files,
+        )? {
             let code = read_code(&f)?;
             let path = f.to_str().unwrap_or("---");
             let defs = match find_custom_command_definitions(code, path.to_string()) {

@@ -44,7 +44,7 @@ def create_command(canonical_name, positional_arguments, keywords, block_end):
 
 def get_just_definitions(definitions):
     result = {}
-    for name, info in definitions.items():
+    for name, info in definitions:
         sorted_info = sorted(info, key=lambda item: item[1])
         content, _ = sorted_info[0]
         result[name] = create_command(**content)

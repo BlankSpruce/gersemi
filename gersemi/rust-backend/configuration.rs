@@ -5,6 +5,7 @@ use pyo3::types::{PyAnyMethods, PyString, PyType};
 use pyo3::{
     Borrowed, Bound, BoundObject, FromPyObject, IntoPyObject, Py, PyAny, PyErr, PyResult, Python,
 };
+use std::path::PathBuf;
 use xxhash_rust::xxh3::xxh3_128;
 
 fn string_enum_value(obj: Borrowed<'_, '_, PyAny>) -> Result<String, PyErr> {
@@ -159,6 +160,7 @@ pub struct OutcomeConfiguration {
     pub disable_sanity_checks: bool,
     pub warn_about_unknown_commands: bool,
     pub extensions: Vec<Extension>,
+    pub definitions: Vec<PathBuf>,
 }
 
 #[derive(Clone, FromPyObject)]
