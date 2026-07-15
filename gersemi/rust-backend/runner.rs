@@ -102,7 +102,7 @@ impl WarningSink {
         }
     }
 
-    fn flush(&self) {
+    pub fn flush(&self) {
         for record in &self.records {
             eprintln!("{record}");
         }
@@ -117,8 +117,8 @@ pub struct Runner<'a> {
 }
 
 type TaskResult = (usize, Vec<String>);
-const SUCCESS: usize = 0;
-const FAIL: usize = 1;
+pub const SUCCESS: usize = 0;
+pub const FAIL: usize = 1;
 const INTERNAL_ERROR: usize = 123;
 
 pub fn to_stdout(s: &str) -> PyResult<()> {
@@ -361,7 +361,7 @@ impl Runner<'_> {
         }
 
         if let Some(cache) = &self.cache {
-            cache.store_files(&configuration_summary, files_to_cache);
+            cache.store_files(&configuration_summary, &files_to_cache);
         }
         Ok(result)
     }

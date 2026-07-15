@@ -1,4 +1,4 @@
-use pyo3::{pyclass, pymethods, PyResult};
+use pyo3::PyResult;
 use rusqlite::{params, Connection};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -6,7 +6,6 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use std::time::UNIX_EPOCH;
 
-#[pyclass]
 pub struct Cache {
     connection: Option<Mutex<Connection>>,
 }
@@ -121,18 +120,14 @@ fn create_connection(enable_cache: bool, cache_path: PathBuf) -> Option<Connecti
     Some(connection)
 }
 
-#[pymethods]
 impl Cache {
-    #[new]
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn new(enable_cache: bool, cache_dir: PathBuf) -> Self {
+    pub fn new(enable_cache: bool, cache_dir: &Path) -> Self {
         Self {
             connection: create_connection(enable_cache, cache_dir.join("cache.db")).map(Mutex::new),
         }
     }
 
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn store_files(&self, configuration_summary: &str, files: Vec<PathBuf>) {
+    pub fn store_files(&self, configuration_summary: &str, files: &[PathBuf]) {
         let Some(ref connection) = self.connection else {
             return;
         };
@@ -141,8 +136,8 @@ impl Cache {
             return;
         };
 
-        store_file_entries(&connection, &files);
-        store_configuration_summary(&connection, configuration_summary, &files);
+        store_file_entries(&connection, files);
+        store_configuration_summary(&connection, configuration_summary, files);
     }
 
     pub fn get_files(&self, configuration_summary: &str) -> HashMap<PathBuf, (i64, i64)> {

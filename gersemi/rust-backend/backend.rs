@@ -87,9 +87,6 @@ mod gersemi_rust_backend {
     use crate::formatter::Formatter;
 
     #[pymodule_export]
-    use crate::cache::Cache;
-
-    #[pymodule_export]
     use crate::app::App;
 
     #[pyfunction]

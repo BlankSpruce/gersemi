@@ -1,14 +1,30 @@
 use crate::cache::file_entry;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
-use crate::runner::{Runner, WarningSink};
+use crate::runner::{Runner, WarningSink, FAIL, SUCCESS};
 use crate::{cache::Cache, mode::Mode};
 use pyo3::{pyclass, pymethods, PyResult};
 use std::path::PathBuf;
+
+pub struct StatusCode {
+    value: usize,
+}
+
+impl StatusCode {
+    pub fn new() -> Self {
+        Self { value: SUCCESS }
+    }
+
+    pub fn add(&mut self, value: usize) {
+        self.value = self.value.max(value);
+    }
+}
 
 #[pyclass]
 pub struct App {
     mode: Mode,
     cache: Cache,
+    configuration: ControlConfiguration,
+    status_code: StatusCode,
 }
 
 fn split_files_by_formatting_state(
@@ -44,12 +60,15 @@ fn split_files_by_formatting_state(
 impl App {
     #[new]
     fn new(mode: Mode, configuration: ControlConfiguration) -> Self {
+        let cache = Cache::new(
+            configuration.cache && configuration.line_ranges.is_empty(),
+            &configuration.cache_dir,
+        );
         Self {
             mode,
-            cache: Cache::new(
-                configuration.cache && configuration.line_ranges.is_empty(),
-                configuration.cache_dir,
-            ),
+            cache,
+            configuration,
+            status_code: StatusCode::new(),
         }
     }
 
@@ -58,7 +77,7 @@ impl App {
         warning_sink: &mut WarningSink,
         configuration: Configuration,
         files: Vec<PathBuf>,
-    ) -> PyResult<Vec<usize>> {
+    ) -> PyResult<()> {
         let (already_formatted_files, files_to_format) =
             split_files_by_formatting_state(&mut self.cache, files, &configuration.outcome)?;
         let mut runner = Runner {
@@ -67,8 +86,28 @@ impl App {
             warning_sink: Some(warning_sink),
             cache: Some(&mut self.cache),
         };
-        let mut result = runner.handle_already_formatted_files(&already_formatted_files);
-        result.extend(runner.handle_files_to_format(files_to_format)?);
-        Ok(result)
+        for code in runner.handle_already_formatted_files(&already_formatted_files) {
+            self.status_code.add(code);
+        }
+
+        for code in runner.handle_files_to_format(files_to_format)? {
+            self.status_code.add(code);
+        }
+        Ok(())
+    }
+
+    fn handle_warnings(&mut self, warning_sink: &mut WarningSink) {
+        self.status_code.add(
+            if self.configuration.warnings_as_errors && warning_sink.at_least_one_warning_issued {
+                FAIL
+            } else {
+                SUCCESS
+            },
+        );
+        warning_sink.flush();
+    }
+
+    fn status_code(&self) -> usize {
+        self.status_code.value
     }
 }

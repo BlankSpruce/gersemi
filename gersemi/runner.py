@@ -115,7 +115,6 @@ def run(args: argparse.Namespace):
         print_configuration_report(args, buckets, control, warning_sink)
         return SUCCESS
 
-    status_code = StatusCode()
     for config_file, files in buckets.items():
         config = Configuration(
             control=control,
@@ -124,12 +123,7 @@ def run(args: argparse.Namespace):
         if config.outcome.disable_formatting:
             continue
 
-        status_code += app.handle_files(warning_sink, config, list(files))
+        app.handle_files(warning_sink, config, list(files))
 
-    status_code += (
-        FAIL
-        if (control.warnings_as_errors and warning_sink.at_least_one_warning_issued)
-        else SUCCESS
-    )
-    warning_sink.flush()
-    return status_code.value
+    app.handle_warnings(warning_sink)
+    return app.status_code()
