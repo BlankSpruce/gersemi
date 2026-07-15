@@ -1280,11 +1280,10 @@ def test_utf_8_bom_stdin_is_properly_handled(app):
 
 
 def test_multiprocessing_works(app, testfiles):
-    from gersemi.runner import CHUNKSIZE
-
+    big_number_of_files = 1000
     base = testfiles / "test_multiprocessing_works"
     base.mkdir()
-    for i in range(3 * CHUNKSIZE):
+    for i in range(big_number_of_files):
         with open(base / f"testfile-{i}.cmake", "w", encoding="utf-8") as f:
             f.write("set( FOO BAR )\n")
 

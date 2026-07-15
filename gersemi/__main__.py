@@ -20,7 +20,7 @@ from gersemi.configuration import (
 from gersemi.configuration_reports import default_report
 from gersemi.print_config_kind import PrintConfigKind, print_config_kind
 from gersemi.return_codes import FAIL, SUCCESS
-from gersemi.runner import print_to_stderr, run
+from gersemi.runner import run
 
 FROZEN = getattr(sys, "frozen", False)
 
@@ -352,7 +352,7 @@ def postprocess_args(args):
 
 
 def error(text):
-    print_to_stderr(text)
+    print(text, file=sys.stderr)
     sys.exit(FAIL)
 
 

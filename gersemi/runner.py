@@ -1,7 +1,5 @@
 import argparse
 from collections import defaultdict
-import collections.abc
-from functools import partial
 from pathlib import Path
 import sys
 from typing import Dict, Iterable, Optional
@@ -17,31 +15,6 @@ from gersemi.configuration_reports import minimal_report, verbose_report
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.return_codes import SUCCESS
-
-CHUNKSIZE = 250
-FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
-
-
-print_to_stdout = partial(print, file=sys.stdout, end="")
-print_to_stderr = partial(print, file=sys.stderr)
-
-
-class StatusCode:
-    def __init__(self):
-        self.value = SUCCESS
-
-    def __iadd__(self, other):
-        if isinstance(other, int):
-            self.value = max(self.value, other)
-            return self
-
-        if isinstance(other, collections.abc.Iterable):
-            for item in other:
-                self += item
-
-            return self
-
-        raise RuntimeError(f"Invalid type: {type(other)}")
 
 
 def split_files_by_configuration_file(
@@ -76,7 +49,7 @@ def print_configuration_report(
         )
         result = report(config_file, config.outcome, target_files)
         if result is not None:
-            print_to_stdout(result)
+            print(result, file=sys.stdout, end="")
 
 
 # pylint: disable=too-many-locals
