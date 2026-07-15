@@ -23,6 +23,7 @@ impl StatusCode {
 pub struct App {
     mode: Mode,
     cache: Cache,
+    warning_sink: WarningSink,
     configuration: ControlConfiguration,
     status_code: StatusCode,
 }
@@ -64,26 +65,23 @@ impl App {
             configuration.cache && configuration.line_ranges.is_empty(),
             &configuration.cache_dir,
         );
+        let warning_sink = WarningSink::new(configuration.quiet);
         Self {
             mode,
             cache,
+            warning_sink,
             configuration,
             status_code: StatusCode::new(),
         }
     }
 
-    fn handle_files(
-        &mut self,
-        warning_sink: &mut WarningSink,
-        configuration: Configuration,
-        files: Vec<PathBuf>,
-    ) -> PyResult<()> {
+    fn handle_files(&mut self, configuration: Configuration, files: Vec<PathBuf>) -> PyResult<()> {
         let (already_formatted_files, files_to_format) =
             split_files_by_formatting_state(&mut self.cache, files, &configuration.outcome)?;
         let mut runner = Runner {
             mode: self.mode.clone(),
             configuration,
-            warning_sink: Some(warning_sink),
+            warning_sink: Some(&mut self.warning_sink),
             cache: Some(&mut self.cache),
         };
         for code in runner.handle_already_formatted_files(&already_formatted_files) {
@@ -96,18 +94,24 @@ impl App {
         Ok(())
     }
 
-    fn handle_warnings(&mut self, warning_sink: &mut WarningSink) {
+    fn handle_warnings(&mut self) {
         self.status_code.add(
-            if self.configuration.warnings_as_errors && warning_sink.at_least_one_warning_issued {
+            if self.configuration.warnings_as_errors
+                && self.warning_sink.at_least_one_warning_issued
+            {
                 FAIL
             } else {
                 SUCCESS
             },
         );
-        warning_sink.flush();
+        self.warning_sink.flush();
     }
 
     fn status_code(&self) -> usize {
         self.status_code.value
+    }
+
+    fn warn(&mut self, s: String) {
+        self.warning_sink.__call__(s);
     }
 }

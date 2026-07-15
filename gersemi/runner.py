@@ -18,7 +18,7 @@ from gersemi.custom_command_definition_finder import get_just_definitions
 from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
-from gersemi.return_codes import FAIL, SUCCESS
+from gersemi.return_codes import SUCCESS
 
 CHUNKSIZE = 250
 FILE_PATTERNS = ("CMakeLists.txt", "CMakeLists.txt.in", "*.cmake", "*.cmake.in")
@@ -75,7 +75,7 @@ def print_configuration_report(
     args: argparse.Namespace,
     buckets: Dict[Optional[Path], Iterable[Path]],
     control: ControlConfiguration,
-    warning_sink,
+    app,
 ):
     report = {
         PrintConfigKind.Minimal: lambda conf_file, conf, _: minimal_report(
@@ -87,7 +87,7 @@ def print_configuration_report(
     for config_file, target_files in buckets.items():
         config = Configuration(
             control=control,
-            outcome=make_outcome_configuration(config_file, args, warning_sink),
+            outcome=make_outcome_configuration(config_file, args, app),
         )
         result = report(config_file, config.outcome, target_files)
         if result is not None:
@@ -108,22 +108,20 @@ def run(args: argparse.Namespace):
 
     mode = get_mode(args)
     app = gersemi_rust_backend.App(mode, control)
-    warning_sink = gersemi_rust_backend.WarningSink(control.quiet)
-
     buckets = split_files_by_configuration_file(requested_files, control)
     if mode == Mode.PrintConfig:
-        print_configuration_report(args, buckets, control, warning_sink)
+        print_configuration_report(args, buckets, control, app)
         return SUCCESS
 
     for config_file, files in buckets.items():
         config = Configuration(
             control=control,
-            outcome=make_outcome_configuration(config_file, args, warning_sink),
+            outcome=make_outcome_configuration(config_file, args, app),
         )
         if config.outcome.disable_formatting:
             continue
 
-        app.handle_files(warning_sink, config, list(files))
+        app.handle_files(config, list(files))
 
-    app.handle_warnings(warning_sink)
+    app.handle_warnings()
     return app.status_code()
