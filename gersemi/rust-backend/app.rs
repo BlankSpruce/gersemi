@@ -1,6 +1,7 @@
 use crate::cache::file_entry;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
-use crate::runner::{Runner, WarningSink, FAIL, SUCCESS};
+use crate::runner::{Runner, FAIL, SUCCESS};
+use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use crate::{cache::Cache, mode::Mode};
 use pyo3::{pyclass, pymethods, PyResult};
 use std::path::PathBuf;
@@ -23,7 +24,6 @@ impl StatusCode {
 pub struct App {
     mode: Mode,
     cache: Cache,
-    warning_sink: WarningSink,
     configuration: ControlConfiguration,
     status_code: StatusCode,
 }
@@ -61,15 +61,14 @@ fn split_files_by_formatting_state(
 impl App {
     #[new]
     fn new(mode: Mode, configuration: ControlConfiguration) -> Self {
+        register_warning_sink(WarningSink::new(configuration.quiet));
         let cache = Cache::new(
             configuration.cache && configuration.line_ranges.is_empty(),
             &configuration.cache_dir,
         );
-        let warning_sink = WarningSink::new(configuration.quiet);
         Self {
             mode,
             cache,
-            warning_sink,
             configuration,
             status_code: StatusCode::new(),
         }
@@ -81,7 +80,6 @@ impl App {
         let mut runner = Runner {
             mode: self.mode.clone(),
             configuration,
-            warning_sink: Some(&mut self.warning_sink),
             cache: Some(&mut self.cache),
         };
         for code in runner.handle_already_formatted_files(&already_formatted_files) {
@@ -95,23 +93,16 @@ impl App {
     }
 
     fn handle_warnings(&mut self) {
-        self.status_code.add(
-            if self.configuration.warnings_as_errors
-                && self.warning_sink.at_least_one_warning_issued
-            {
+        let has_warnings = flush_warnings();
+        self.status_code
+            .add(if self.configuration.warnings_as_errors && has_warnings {
                 FAIL
             } else {
                 SUCCESS
-            },
-        );
-        self.warning_sink.flush();
+            });
     }
 
     fn status_code(&self) -> usize {
         self.status_code.value
-    }
-
-    fn warn(&mut self, s: String) {
-        self.warning_sink.__call__(s);
     }
 }

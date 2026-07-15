@@ -13,6 +13,7 @@ mod python_side;
 mod runner;
 mod sanity_checker;
 mod two_words_keyword_isolator;
+mod warning_sink;
 
 use pyo3::pymodule;
 
@@ -134,18 +135,18 @@ mod gersemi_rust_backend {
         Ok(result)
     }
 
-    #[pymodule_export]
-    use crate::runner::WarningSink;
+    #[pyfunction]
+    pub fn warn(s: String) {
+        crate::warning_sink::warn(s);
+    }
 
     #[pyfunction]
     fn find_all_custom_command_definitions(
         configuration: Configuration,
-        warning_sink: Option<&mut WarningSink>,
     ) -> PyResult<Vec<(String, Vec<CustomCommand>)>> {
         let mut runner = Runner {
             mode: Mode::PrintConfig, // TODO
             configuration,
-            warning_sink,
             cache: None,
         };
         runner.find_all_custom_command_definitions()

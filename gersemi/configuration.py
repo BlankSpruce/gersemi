@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sys
 from typing import Iterable, Optional, Union
+import gersemi_rust_backend
 import yaml
 from gersemi.__version__ import __version__
 from gersemi.cache import default_cache_dir
@@ -500,26 +501,25 @@ def sanitize_list_expansion(list_expansion):
     )
 
 
-def log_not_supported_keys(path, content, app):
+def log_not_supported_keys(path, content):
     path = path.resolve()
     unknown = [key for key in content if key not in CONFIGURATION_KEYS]
     command_line_only = [key for key in content if key in CONTROL_CONFIGURATION_KEYS]
 
     if command_line_only:
         keys = ", ".join(sorted(command_line_only))
-        app.warn(
+        gersemi_rust_backend.warn(
             f"{path}: these options are supported only through command line: {keys}"
         )
 
     if unknown:
         keys = ", ".join(sorted(unknown))
-        app.warn(f"{path}: these options are not supported: {keys}")
+        gersemi_rust_backend.warn(f"{path}: these options are not supported: {keys}")
 
 
 @lru_cache(maxsize=None)
 def load_configuration_from_file(
     configuration_file_path: Optional[Path],
-    app,
 ) -> OutcomeConfiguration:
     if configuration_file_path is None:
         return OutcomeConfiguration()
@@ -532,11 +532,7 @@ def load_configuration_from_file(
                 for key, value in configuration_file_content.items()
                 if key in OUTCOME_CONFIGURATION_KEYS
             }
-            log_not_supported_keys(
-                configuration_file_path,
-                configuration_file_content,
-                app,
-            )
+            log_not_supported_keys(configuration_file_path, configuration_file_content)
 
             if "definitions" in config:
                 config["definitions"] = normalize_definitions(config["definitions"])
@@ -562,8 +558,8 @@ def override_with_args(configuration, args):
     return configuration
 
 
-def make_outcome_configuration(configuration_file, args, app) -> OutcomeConfiguration:
-    outcome = load_configuration_from_file(configuration_file, app)
+def make_outcome_configuration(configuration_file, args) -> OutcomeConfiguration:
+    outcome = load_configuration_from_file(configuration_file)
     return override_with_args(outcome, args)
 
 

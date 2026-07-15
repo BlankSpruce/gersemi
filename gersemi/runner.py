@@ -48,12 +48,10 @@ class StatusCode:
 
 def find_all_custom_command_definitions(
     configuration: Configuration,
-    warning_sink=None,
 ) -> Dict[str, Keywords]:
     return get_just_definitions(
         gersemi_rust_backend.find_all_custom_command_definitions(
             configuration,
-            warning_sink,
         )
     )
 
@@ -75,7 +73,6 @@ def print_configuration_report(
     args: argparse.Namespace,
     buckets: Dict[Optional[Path], Iterable[Path]],
     control: ControlConfiguration,
-    app,
 ):
     report = {
         PrintConfigKind.Minimal: lambda conf_file, conf, _: minimal_report(
@@ -87,7 +84,7 @@ def print_configuration_report(
     for config_file, target_files in buckets.items():
         config = Configuration(
             control=control,
-            outcome=make_outcome_configuration(config_file, args, app),
+            outcome=make_outcome_configuration(config_file, args),
         )
         result = report(config_file, config.outcome, target_files)
         if result is not None:
@@ -110,13 +107,13 @@ def run(args: argparse.Namespace):
     app = gersemi_rust_backend.App(mode, control)
     buckets = split_files_by_configuration_file(requested_files, control)
     if mode == Mode.PrintConfig:
-        print_configuration_report(args, buckets, control, app)
+        print_configuration_report(args, buckets, control)
         return SUCCESS
 
     for config_file, files in buckets.items():
         config = Configuration(
             control=control,
-            outcome=make_outcome_configuration(config_file, args, app),
+            outcome=make_outcome_configuration(config_file, args),
         )
         if config.outcome.disable_formatting:
             continue

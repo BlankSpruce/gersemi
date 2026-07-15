@@ -5,8 +5,9 @@ use crate::formatter::Formatter;
 use crate::gersemi_rust_backend::{find_custom_command_definitions, get_files};
 use crate::mode::Mode;
 use crate::python_side::{get_just_schemas, read_code};
+use crate::warning_sink::warn;
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
-use pyo3::{pyclass, pymethods, PyResult, Python};
+use pyo3::{PyResult, Python};
 use std::fmt::Write;
 use std::io::Write as IoWrite;
 use std::path::{Path, PathBuf};
@@ -76,43 +77,9 @@ pub fn tofile(path: &Path) -> &str {
     }
 }
 
-#[pyclass]
-pub struct WarningSink {
-    quiet: bool,
-    #[pyo3(get)]
-    pub at_least_one_warning_issued: bool,
-    records: Vec<String>,
-}
-
-#[pymethods]
-impl WarningSink {
-    #[new]
-    pub fn new(quiet: bool) -> Self {
-        Self {
-            quiet,
-            at_least_one_warning_issued: false,
-            records: Vec::new(),
-        }
-    }
-
-    pub fn __call__(&mut self, s: String) {
-        self.at_least_one_warning_issued = true;
-        if !self.quiet {
-            self.records.push(s);
-        }
-    }
-
-    pub fn flush(&self) {
-        for record in &self.records {
-            eprintln!("{record}");
-        }
-    }
-}
-
 pub struct Runner<'a> {
     pub mode: Mode,
     pub configuration: Configuration,
-    pub warning_sink: Option<&'a mut WarningSink>,
     pub cache: Option<&'a mut Cache>,
 }
 
@@ -226,6 +193,24 @@ fn do_nothing() -> TaskResult {
 
 type Definitions = Vec<(String, Vec<CustomCommand>)>;
 
+fn check_conflicting_definitions(defs: &Definitions) {
+    for (name, info) in defs {
+        if info.len() <= 1 {
+            continue;
+        }
+
+        let mut warning = format!("Warning: conflicting definitions for '{name}':");
+        let mut locations: Vec<_> = info.iter().map(|(_, location)| location).collect();
+        locations.sort();
+
+        for (index, location) in (0..).zip(locations) {
+            let kind = if index == 0 { "(used)   " } else { "(ignored)" };
+            let _ = write!(warning, "\n{kind} {location}");
+        }
+        warn(warning);
+    }
+}
+
 impl Runner<'_> {
     fn run_task_impl(
         &mut self,
@@ -273,9 +258,7 @@ impl Runner<'_> {
         let has_warnings = if self.configuration.outcome.warn_about_unknown_commands {
             let result = !warnings.is_empty();
             for warning in warnings {
-                if let Some(sink) = &mut self.warning_sink {
-                    sink.__call__(warning);
-                }
+                warn(warning);
             }
             result
         } else {
@@ -288,13 +271,11 @@ impl Runner<'_> {
         match self.run_task_impl(path, formatter) {
             Ok(ok) => ok,
             Err(err) => {
-                if let Some(sink) = &mut self.warning_sink {
-                    sink.__call__(format!(
-                        "{}: {}",
-                        path.to_str().unwrap_or("---"),
-                        Python::attach(|py| err.value(py).to_string())
-                    ));
-                }
+                warn(format!(
+                    "{}: {}",
+                    path.to_str().unwrap_or("---"),
+                    Python::attach(|py| err.value(py).to_string())
+                ));
                 (INTERNAL_ERROR, false)
             }
         }
@@ -308,28 +289,6 @@ impl Runner<'_> {
                 code
             })
             .collect()
-    }
-
-    fn check_conflicting_definitions(&mut self, defs: &Definitions) {
-        let Some(sink) = &mut self.warning_sink else {
-            return;
-        };
-
-        for (name, info) in defs {
-            if info.len() <= 1 {
-                continue;
-            }
-
-            let mut warning = format!("Warning: conflicting definitions for '{name}':");
-            let mut locations: Vec<_> = info.iter().map(|(_, location)| location).collect();
-            locations.sort();
-
-            for (index, location) in (0..).zip(locations) {
-                let kind = if index == 0 { "(used)   " } else { "(ignored)" };
-                let _ = write!(warning, "\n{kind} {location}");
-            }
-            sink.__call__(warning);
-        }
     }
 
     fn should_cache(&self) -> bool {
@@ -377,12 +336,10 @@ impl Runner<'_> {
             let path = f.to_str().unwrap_or("---");
             let defs = match find_custom_command_definitions(code, path.to_string()) {
                 Err(err) => {
-                    if let Some(sink) = &mut self.warning_sink {
-                        sink.__call__(format!(
-                            "{path}:{}",
-                            Python::attach(|py| err.value(py).to_string())
-                        ));
-                    }
+                    warn(format!(
+                        "{path}:{}",
+                        Python::attach(|py| err.value(py).to_string())
+                    ));
                     continue;
                 }
                 Ok(defs) => defs,
@@ -403,7 +360,7 @@ impl Runner<'_> {
             }
         }
 
-        self.check_conflicting_definitions(&result);
+        check_conflicting_definitions(&result);
 
         Ok(result)
     }
