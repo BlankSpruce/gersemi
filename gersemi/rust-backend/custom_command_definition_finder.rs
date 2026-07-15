@@ -1,10 +1,15 @@
+use crate::argument_schema::CommandSchemas;
+use crate::configuration::Configuration;
+use crate::gersemi_rust_backend::{get_files, warn};
 use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, BracketArgument, Command, CommandInvocation,
     FileElement, Position, Start,
 };
 use crate::parser::Parser;
-use pyo3::{IntoPyObject, PyResult};
+use crate::python_side::read_code;
+use pyo3::{IntoPyObject, PyResult, Python};
 use std::collections::HashMap;
+use std::fmt::Write;
 
 #[derive(IntoPyObject)]
 pub struct Keywords {
@@ -277,10 +282,26 @@ impl CustomCommandInterpreter {
     }
 }
 
+fn has_custom_command_definition(code: &str) -> bool {
+    let code = code.to_lowercase();
+    (code.contains("function") && code.contains("endfunction"))
+        || (code.contains("macro") && code.contains("endmacro"))
+}
+
 pub fn find_custom_command_definitions(
-    parser: &Parser,
+    text: String,
     filepath: String,
 ) -> PyResult<HashMap<String, Vec<CustomCommand>>> {
+    if !has_custom_command_definition(&text) {
+        return Ok(HashMap::new());
+    }
+
+    let schemas = CommandSchemas {
+        definition_schemas: HashMap::new(),
+        extension_schemas: HashMap::new(),
+    };
+    let parser = Parser::new(text, &schemas);
+
     let mut interpreter = CustomCommandInterpreter {
         stack: HashMap::new(),
         found_commands: HashMap::new(),
@@ -289,4 +310,64 @@ pub fn find_custom_command_definitions(
     let node = parser.start()?;
     interpreter.start(node);
     Ok(interpreter.found_commands)
+}
+
+type Definitions = Vec<(String, Vec<CustomCommand>)>;
+
+fn check_conflicting_definitions(defs: &Definitions) {
+    for (name, info) in defs {
+        if info.len() <= 1 {
+            continue;
+        }
+
+        let mut warning = format!("Warning: conflicting definitions for '{name}':");
+        let mut locations: Vec<_> = info.iter().map(|(_, location)| location).collect();
+        locations.sort();
+
+        for (index, location) in (0..).zip(locations) {
+            let kind = if index == 0 { "(used)   " } else { "(ignored)" };
+            let _ = write!(warning, "\n{kind} {location}");
+        }
+        warn(warning);
+    }
+}
+
+pub fn find_all_custom_command_definitions(configuration: &Configuration) -> PyResult<Definitions> {
+    let mut result = Definitions::new();
+
+    for f in get_files(
+        configuration.outcome.definitions.clone(),
+        configuration.control.respect_ignore_files,
+    )? {
+        let code = read_code(&f)?;
+        let path = f.to_str().unwrap_or("---");
+        let defs = match find_custom_command_definitions(code, path.to_string()) {
+            Err(err) => {
+                warn(format!(
+                    "{path}:{}",
+                    Python::attach(|py| err.value(py).to_string())
+                ));
+                continue;
+            }
+            Ok(defs) => defs,
+        };
+
+        for (name, mut info) in defs {
+            match result
+                .iter_mut()
+                .find(|(command, _)| command.as_str() == name)
+            {
+                None => {
+                    result.push((name, info));
+                }
+                Some((_, values)) => {
+                    values.append(&mut info);
+                }
+            }
+        }
+    }
+
+    check_conflicting_definitions(&result);
+
+    Ok(result)
 }

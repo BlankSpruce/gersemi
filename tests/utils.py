@@ -1,7 +1,6 @@
 import gersemi_rust_backend
 from gersemi.configuration import Configuration, OutcomeConfiguration
 import gersemi.parser
-from gersemi.runner import find_all_custom_command_definitions
 
 
 def preprocess(text):
@@ -28,12 +27,7 @@ class Formatter:
                 line_length=80, indent=4, definitions=definitions
             )
         )
-        self.impl = gersemi_rust_backend.Formatter(
-            configuration=configuration,
-            definition_schemas=find_all_custom_command_definitions(
-                configuration=configuration,
-            ),
-        )
+        self.impl = gersemi_rust_backend.Formatter(configuration=configuration)
 
     def format(self, code):
         return self.impl.format(code)

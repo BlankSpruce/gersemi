@@ -14,8 +14,6 @@ from gersemi.configuration import (
     make_outcome_configuration,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
-from gersemi.custom_command_definition_finder import get_just_definitions
-from gersemi.keywords import Keywords
 from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.return_codes import SUCCESS
@@ -44,16 +42,6 @@ class StatusCode:
             return self
 
         raise RuntimeError(f"Invalid type: {type(other)}")
-
-
-def find_all_custom_command_definitions(
-    configuration: Configuration,
-) -> Dict[str, Keywords]:
-    return get_just_definitions(
-        gersemi_rust_backend.find_all_custom_command_definitions(
-            configuration,
-        )
-    )
 
 
 def split_files_by_configuration_file(

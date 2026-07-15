@@ -1,10 +1,8 @@
 use crate::cache::Cache;
-use crate::custom_command_definition_finder::CustomCommand;
 use crate::diff::print_diff;
 use crate::formatter::Formatter;
-use crate::gersemi_rust_backend::{find_custom_command_definitions, get_files};
 use crate::mode::Mode;
-use crate::python_side::{get_just_schemas, read_code};
+use crate::python_side::read_code;
 use crate::warning_sink::warn;
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
 use pyo3::{PyResult, Python};
@@ -191,26 +189,6 @@ fn do_nothing() -> TaskResult {
     (SUCCESS, Vec::new())
 }
 
-type Definitions = Vec<(String, Vec<CustomCommand>)>;
-
-fn check_conflicting_definitions(defs: &Definitions) {
-    for (name, info) in defs {
-        if info.len() <= 1 {
-            continue;
-        }
-
-        let mut warning = format!("Warning: conflicting definitions for '{name}':");
-        let mut locations: Vec<_> = info.iter().map(|(_, location)| location).collect();
-        locations.sort();
-
-        for (index, location) in (0..).zip(locations) {
-            let kind = if index == 0 { "(used)   " } else { "(ignored)" };
-            let _ = write!(warning, "\n{kind} {location}");
-        }
-        warn(warning);
-    }
-}
-
 impl Runner<'_> {
     fn run_task_impl(
         &mut self,
@@ -300,10 +278,8 @@ impl Runner<'_> {
     }
 
     pub fn handle_files_to_format(&mut self, files: Vec<PathBuf>) -> PyResult<Vec<usize>> {
-        let definitions = self.find_all_custom_command_definitions()?;
-        let definition_schemas = get_just_schemas(definitions)?;
         let configuration_summary = self.configuration.outcome.summarize()?;
-        let formatter = Formatter::new(self.configuration.clone(), definition_schemas)?;
+        let formatter = Formatter::new(self.configuration.clone())?;
         let formatter = Some(&formatter);
 
         let should_cache = self.should_cache();
@@ -322,46 +298,6 @@ impl Runner<'_> {
         if let Some(cache) = &self.cache {
             cache.store_files(&configuration_summary, &files_to_cache);
         }
-        Ok(result)
-    }
-
-    pub fn find_all_custom_command_definitions(&mut self) -> PyResult<Definitions> {
-        let mut result = Definitions::new();
-
-        for f in get_files(
-            self.configuration.outcome.definitions.clone(),
-            self.configuration.control.respect_ignore_files,
-        )? {
-            let code = read_code(&f)?;
-            let path = f.to_str().unwrap_or("---");
-            let defs = match find_custom_command_definitions(code, path.to_string()) {
-                Err(err) => {
-                    warn(format!(
-                        "{path}:{}",
-                        Python::attach(|py| err.value(py).to_string())
-                    ));
-                    continue;
-                }
-                Ok(defs) => defs,
-            };
-
-            for (name, mut info) in defs {
-                match result
-                    .iter_mut()
-                    .find(|(command, _)| command.as_str() == name)
-                {
-                    None => {
-                        result.push((name, info));
-                    }
-                    Some((_, values)) => {
-                        values.append(&mut info);
-                    }
-                }
-            }
-        }
-
-        check_conflicting_definitions(&result);
-
         Ok(result)
     }
 }

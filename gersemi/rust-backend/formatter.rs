@@ -1,11 +1,12 @@
 use crate::argument_schema::{
-    is_one_of_keywords, ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemaMapping,
-    CommandSchemas, KeywordMatcher, Signatures,
+    is_one_of_keywords, ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemas,
+    KeywordMatcher, Signatures,
 };
 use crate::configuration::{
     Configuration, IndentType, KeywordFormatter, KeywordPreprocessor, LineRange, ListExpansion,
     OutcomeConfiguration, SortOrder,
 };
+use crate::custom_command_definition_finder::find_all_custom_command_definitions;
 use crate::keyword_preprocessor::{
     keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
 };
@@ -15,7 +16,7 @@ use crate::node::{
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
 use crate::parser::{quoted_argument_pattern, regex, Parser};
-use crate::python_side::load_definitions_from_extensions;
+use crate::python_side::{get_just_schemas, load_definitions_from_extensions};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use pyo3::{pyclass, pymethods, PyErr, PyResult};
@@ -1496,10 +1497,9 @@ pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
 #[pymethods]
 impl Formatter {
     #[new]
-    pub fn new(
-        configuration: Configuration,
-        definition_schemas: CommandSchemaMapping,
-    ) -> PyResult<Self> {
+    pub fn new(configuration: Configuration) -> PyResult<Self> {
+        let definitions = find_all_custom_command_definitions(&configuration)?;
+        let definition_schemas = get_just_schemas(definitions)?;
         let extension_schemas =
             load_definitions_from_extensions(&configuration.outcome.extensions)?;
         Ok(Self {

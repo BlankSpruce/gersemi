@@ -20,11 +20,8 @@ use pyo3::pymodule;
 #[pymodule]
 mod gersemi_rust_backend {
     use crate::argument_schema::{CommandSchemaMapping, CommandSchemas};
-    use crate::configuration::Configuration;
-    use crate::custom_command_definition_finder::CustomCommand;
-    use crate::mode::Mode;
     use crate::parser::{Error, Parser};
-    use crate::runner::{is_stdin, Runner};
+    use crate::runner::is_stdin;
     use crate::sanity_checker::check_equivalence;
     use ignore::WalkBuilder;
     use pyo3::exceptions::PyRuntimeError;
@@ -41,30 +38,6 @@ mod gersemi_rust_backend {
         };
         let parser = Parser::new(text, &schemas);
         parser.start().and(Ok(()))
-    }
-
-    fn has_custom_command_definition(code: &str) -> bool {
-        let code = code.to_lowercase();
-        (code.contains("function") && code.contains("endfunction"))
-            || (code.contains("macro") && code.contains("endmacro"))
-    }
-
-    #[pyfunction]
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn find_custom_command_definitions(
-        text: String,
-        filepath: String,
-    ) -> PyResult<HashMap<String, Vec<CustomCommand>>> {
-        if !has_custom_command_definition(&text) {
-            return Ok(HashMap::new());
-        }
-
-        let schemas = CommandSchemas {
-            definition_schemas: HashMap::new(),
-            extension_schemas: HashMap::new(),
-        };
-        let parser = Parser::new(text, &schemas);
-        crate::custom_command_definition_finder::find_custom_command_definitions(&parser, filepath)
     }
 
     #[pyfunction]
@@ -138,18 +111,6 @@ mod gersemi_rust_backend {
     #[pyfunction]
     pub fn warn(s: String) {
         crate::warning_sink::warn(s);
-    }
-
-    #[pyfunction]
-    fn find_all_custom_command_definitions(
-        configuration: Configuration,
-    ) -> PyResult<Vec<(String, Vec<CustomCommand>)>> {
-        let mut runner = Runner {
-            mode: Mode::PrintConfig, // TODO
-            configuration,
-            cache: None,
-        };
-        runner.find_all_custom_command_definitions()
     }
 
     #[pyfunction]

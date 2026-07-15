@@ -10,7 +10,6 @@ from gersemi.configuration import (
     SortOrder,
     indent_type,
 )
-from gersemi.runner import find_all_custom_command_definitions
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
 from tests.utils import Parser
@@ -40,10 +39,7 @@ def formatter_creator():
                 extensions=["tests/custom_commands/extension.py"],
             ),
         )
-        return gersemi_rust_backend.Formatter(
-            configuration=configuration,
-            definition_schemas=find_all_custom_command_definitions(configuration),
-        )
+        return gersemi_rust_backend.Formatter(configuration=configuration)
 
     return creator
 
