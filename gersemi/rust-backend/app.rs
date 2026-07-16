@@ -1,12 +1,14 @@
+use crate::args::Args;
+use crate::args::Mode;
 use crate::cache::file_entry;
+use crate::cache::Cache;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
 use crate::gersemi_rust_backend::get_files;
 use crate::python_side::find_closest_dot_gersemirc;
 use crate::runner::{Runner, FAIL, SUCCESS};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
-use crate::{cache::Cache, mode::Mode};
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::{pyclass, pymethods, Py, PyAny, PyResult, Python};
+use pyo3::{pyclass, pymethods, Py, PyAny, PyResult};
 use std::path::PathBuf;
 
 pub struct StatusCode {
@@ -23,23 +25,8 @@ impl StatusCode {
     }
 }
 
-struct Args {
-    sources: Vec<PathBuf>,
-}
-
-impl Args {
-    fn new(value: &Py<PyAny>) -> PyResult<Self> {
-        Python::attach(|py| {
-            Ok(Self {
-                sources: value.getattr(py, "sources")?.extract(py)?,
-            })
-        })
-    }
-}
-
 #[pyclass]
 pub struct App {
-    mode: Mode,
     cache: Cache,
     configuration: ControlConfiguration,
     args: Args,
@@ -81,14 +68,13 @@ pub type Buckets = Vec<(Option<PathBuf>, Vec<PathBuf>)>;
 impl App {
     #[new]
     #[allow(clippy::needless_pass_by_value)]
-    fn new(mode: Mode, configuration: ControlConfiguration, args: Py<PyAny>) -> PyResult<Self> {
+    fn new(configuration: ControlConfiguration, args: Py<PyAny>) -> PyResult<Self> {
         register_warning_sink(WarningSink::new(configuration.quiet));
         let cache = Cache::new(
             configuration.cache && configuration.line_ranges.is_empty(),
             &configuration.cache_dir,
         );
         Ok(Self {
-            mode,
             cache,
             configuration,
             args: Args::new(&args)?,
@@ -100,7 +86,7 @@ impl App {
         let (already_formatted_files, files_to_format) =
             split_files_by_formatting_state(&mut self.cache, files, &configuration.outcome)?;
         let mut runner = Runner {
-            mode: self.mode.clone(),
+            mode: self.args.mode.clone(),
             configuration,
             cache: Some(&mut self.cache),
         };
@@ -152,5 +138,9 @@ impl App {
             }
         }
         Ok(result)
+    }
+
+    fn is_print_config_mode(&self) -> bool {
+        matches!(self.args.mode, Mode::PrintConfig)
     }
 }

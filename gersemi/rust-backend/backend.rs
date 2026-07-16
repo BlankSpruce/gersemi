@@ -1,4 +1,5 @@
 mod app;
+mod args;
 mod argument_schema;
 mod cache;
 mod configuration;
@@ -6,7 +7,6 @@ mod custom_command_definition_finder;
 mod diff;
 mod formatter;
 mod keyword_preprocessor;
-mod mode;
 mod node;
 mod parser;
 mod python_side;

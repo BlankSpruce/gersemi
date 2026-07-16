@@ -10,7 +10,6 @@ from gersemi.configuration import (
     make_outcome_configuration,
 )
 from gersemi.configuration_reports import minimal_report, verbose_report
-from gersemi.mode import Mode, get_mode
 from gersemi.print_config_kind import PrintConfigKind
 from gersemi.return_codes import SUCCESS
 
@@ -40,10 +39,9 @@ def print_configuration_report(
 # pylint: disable=too-many-locals
 def run(args: argparse.Namespace):
     control = make_control_configuration(args)
-    mode = get_mode(args)
-    app = gersemi_rust_backend.App(mode, control, args)
+    app = gersemi_rust_backend.App(control, args)
     buckets = app.get_source_file_buckets()
-    if mode == Mode.PrintConfig:
+    if app.is_print_config_mode():
         print_configuration_report(args, buckets, control)
         return SUCCESS
 
