@@ -7,12 +7,18 @@ from pathlib import Path
 import sys
 from typing import Iterable, Optional, Union
 import gersemi_rust_backend
+from platformdirs import user_cache_dir
 import yaml
-from gersemi.__version__ import __version__
-from gersemi.cache import default_cache_dir
+from gersemi.__version__ import __author__, __title__, __version__
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
 from gersemi.extension_type import FileExtension, ModuleExtension
 from gersemi.return_codes import FAIL
+
+
+def default_cache_dir() -> Path:
+    return Path(
+        user_cache_dir(appname=__title__, appauthor=__author__, version=__version__)
+    )
 
 
 def max_number_of_workers():

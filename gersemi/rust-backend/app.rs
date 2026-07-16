@@ -168,8 +168,7 @@ impl App {
             return Ok(self.status_code());
         }
 
-        if has_stdin_mixed_with_files(&self.args.sources)
-        {
+        if has_stdin_mixed_with_files(&self.args.sources) {
             return Err(PyRuntimeError::new_err("Don't mix stdin with file input"));
         }
 
