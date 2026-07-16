@@ -5,7 +5,9 @@ use crate::cache::Cache;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
 use crate::gersemi_rust_backend::get_files;
 use crate::python_side::find_closest_dot_gersemirc;
+use crate::python_side::print_configuration_report;
 use crate::python_side::{make_control_configuration, make_outcome_configuration};
+use crate::runner::is_stdin;
 use crate::runner::{Runner, FAIL, SUCCESS};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use pyo3::exceptions::PyRuntimeError;
@@ -64,6 +66,11 @@ fn split_files_by_formatting_state(
 }
 
 pub type Buckets = Vec<(Option<PathBuf>, Vec<PathBuf>)>;
+
+fn has_stdin_mixed_with_files(paths: &[PathBuf]) -> bool {
+    let number_of_stdin_paths = paths.iter().filter(|x| is_stdin(x)).count();
+    (number_of_stdin_paths > 0) && (number_of_stdin_paths != paths.len())
+}
 
 #[pymethods]
 impl App {
@@ -156,13 +163,30 @@ impl App {
         Ok(result)
     }
 
-    fn is_print_config_mode(&self) -> bool {
-        matches!(self.args.mode, Mode::PrintConfig)
-    }
+    fn run(&mut self) -> PyResult<usize> {
+        if self.args.sources.is_empty() {
+            return Ok(self.status_code());
+        }
 
-    fn run(&mut self, buckets: Buckets) -> PyResult<usize> {
+        if has_stdin_mixed_with_files(&self.args.sources)
+        {
+            return Err(PyRuntimeError::new_err("Don't mix stdin with file input"));
+        }
+
+        if let Some(defs) = &self.args.definitions {
+            if has_stdin_mixed_with_files(defs) {
+                return Err(PyRuntimeError::new_err("Don't mix stdin with file input"));
+            }
+        }
+
+        let buckets = self.get_source_file_buckets()?;
+        let is_print_config_mode = matches!(self.args.mode, Mode::PrintConfig);
         for (configuration_file, files) in buckets {
-            self.handle_files(configuration_file, files)?;
+            if is_print_config_mode {
+                print_configuration_report(configuration_file, files, &self.args.obj)?;
+            } else {
+                self.handle_files(configuration_file, files)?;
+            }
         }
 
         self.handle_warnings();

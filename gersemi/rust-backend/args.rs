@@ -16,6 +16,7 @@ pub enum Mode {
 pub struct Args {
     pub obj: Py<PyAny>,
     pub sources: Vec<PathBuf>,
+    pub definitions: Option<Vec<PathBuf>>,
     pub mode: Mode,
 }
 
@@ -76,7 +77,13 @@ impl Args {
             let print_config = args.value::<Option<PrintConfigKind>>("print_config")?;
             let mode = get_mode(&args, print_config.as_ref())?;
             let sources = args.value("sources")?;
-            Ok(Self { obj, sources, mode })
+            let definitions = args.value("definitions")?;
+            Ok(Self {
+                obj,
+                sources,
+                definitions,
+                mode,
+            })
         })
     }
 }

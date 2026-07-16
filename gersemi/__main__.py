@@ -20,7 +20,6 @@ from gersemi.configuration import (
 from gersemi.configuration_reports import default_report
 from gersemi.print_config_kind import PrintConfigKind, print_config_kind
 from gersemi.return_codes import FAIL, SUCCESS
-from gersemi.runner import run
 
 FROZEN = getattr(sys, "frozen", False)
 
@@ -372,13 +371,8 @@ def main():
 
         postprocess_args(args)
 
-        if any(map(is_stdin_mixed_with_file_input, [args.sources, args.definitions])):
-            error("Don't mix stdin with file input")
-
-        if len(args.sources) < 1:
-            sys.exit(SUCCESS)
-
-        sys.exit(run(args))
+        app = gersemi_rust_backend.App(args)
+        sys.exit(app.run())
     except Exception as exception:  # pylint: disable=broad-exception-caught
         error(exception)
 

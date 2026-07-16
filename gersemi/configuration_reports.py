@@ -1,12 +1,17 @@
 from dataclasses import asdict, fields
 import os
 from pathlib import Path
+import sys
 from typing import Iterable, Optional
 from gersemi.configuration import (
+    Configuration,
     OutcomeConfiguration,
     make_configuration_file,
+    make_control_configuration,
+    make_outcome_configuration,
 )
 from gersemi.extensions import load_definitions_from_extension
+from gersemi.print_config_kind import PrintConfigKind
 
 NL = "\n"
 
@@ -104,3 +109,19 @@ def default_report():
         asdict(OutcomeConfiguration()),
         add_schema_link=True,
     )
+
+
+def print_configuration_report(config_file, target_files, args):
+    config = Configuration(
+        control=make_control_configuration(args),
+        outcome=make_outcome_configuration(config_file, args),
+    )
+    if args.print_config == PrintConfigKind.Minimal:
+        result = minimal_report(config_file, config.outcome)
+    elif args.print_config == PrintConfigKind.Verbose:
+        result = verbose_report(config_file, config.outcome, target_files)
+    else:
+        result = ""
+
+    if result:
+        print(result, file=sys.stdout, end="")

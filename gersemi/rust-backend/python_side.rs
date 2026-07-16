@@ -84,3 +84,16 @@ pub fn make_outcome_configuration(
             .extract()
     })
 }
+
+pub fn print_configuration_report(
+    configuration_file: Option<PathBuf>,
+    files: Vec<PathBuf>,
+    args: &Py<PyAny>,
+) -> PyResult<()> {
+    Python::attach(|py| {
+        let _ = PyModule::import(py, "gersemi.configuration_reports")?
+            .getattr("print_configuration_report")?
+            .call1((configuration_file, files, args))?;
+        Ok(())
+    })
+}
