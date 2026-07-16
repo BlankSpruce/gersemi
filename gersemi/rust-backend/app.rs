@@ -5,6 +5,7 @@ use crate::cache::Cache;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
 use crate::gersemi_rust_backend::get_files;
 use crate::python_side::find_closest_dot_gersemirc;
+use crate::python_side::{make_control_configuration, make_outcome_configuration};
 use crate::runner::{Runner, FAIL, SUCCESS};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use pyo3::exceptions::PyRuntimeError;
@@ -68,7 +69,8 @@ pub type Buckets = Vec<(Option<PathBuf>, Vec<PathBuf>)>;
 impl App {
     #[new]
     #[allow(clippy::needless_pass_by_value)]
-    fn new(configuration: ControlConfiguration, args: Py<PyAny>) -> PyResult<Self> {
+    fn new(args: Py<PyAny>) -> PyResult<Self> {
+        let configuration = make_control_configuration(&args)?;
         register_warning_sink(WarningSink::new(configuration.quiet));
         let cache = Cache::new(
             configuration.cache && configuration.line_ranges.is_empty(),
@@ -77,12 +79,26 @@ impl App {
         Ok(Self {
             cache,
             configuration,
-            args: Args::new(&args)?,
+            args: Args::new(args)?,
             status_code: StatusCode::new(),
         })
     }
 
-    fn handle_files(&mut self, configuration: Configuration, files: Vec<PathBuf>) -> PyResult<()> {
+    #[allow(clippy::needless_pass_by_value)]
+    fn handle_files(
+        &mut self,
+        configuration_file: Option<PathBuf>,
+        files: Vec<PathBuf>,
+    ) -> PyResult<()> {
+        let outcome = make_outcome_configuration(configuration_file.as_ref(), &self.args.obj)?;
+        if outcome.disable_formatting {
+            return Ok(());
+        }
+
+        let configuration = Configuration {
+            control: self.configuration.clone(),
+            outcome,
+        };
         let (already_formatted_files, files_to_format) =
             split_files_by_formatting_state(&mut self.cache, files, &configuration.outcome)?;
         let mut runner = Runner {
@@ -142,5 +158,14 @@ impl App {
 
     fn is_print_config_mode(&self) -> bool {
         matches!(self.args.mode, Mode::PrintConfig)
+    }
+
+    fn run(&mut self, buckets: Buckets) -> PyResult<usize> {
+        for (configuration_file, files) in buckets {
+            self.handle_files(configuration_file, files)?;
+        }
+
+        self.handle_warnings();
+        Ok(self.status_code())
     }
 }

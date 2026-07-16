@@ -5,7 +5,6 @@ from typing import Iterable, Optional, Tuple
 import gersemi_rust_backend
 from gersemi.configuration import (
     Configuration,
-    ControlConfiguration,
     make_control_configuration,
     make_outcome_configuration,
 )
@@ -17,8 +16,8 @@ from gersemi.return_codes import SUCCESS
 def print_configuration_report(
     args: argparse.Namespace,
     buckets: Iterable[Tuple[Optional[Path], Iterable[Path]]],
-    control: ControlConfiguration,
 ):
+    control = make_control_configuration(args)
     report = {
         PrintConfigKind.Minimal: lambda conf_file, conf, _: minimal_report(
             conf_file, conf
@@ -38,22 +37,10 @@ def print_configuration_report(
 
 # pylint: disable=too-many-locals
 def run(args: argparse.Namespace):
-    control = make_control_configuration(args)
-    app = gersemi_rust_backend.App(control, args)
+    app = gersemi_rust_backend.App(args)
     buckets = app.get_source_file_buckets()
     if app.is_print_config_mode():
-        print_configuration_report(args, buckets, control)
+        print_configuration_report(args, buckets)
         return SUCCESS
 
-    for config_file, files in buckets:
-        config = Configuration(
-            control=control,
-            outcome=make_outcome_configuration(config_file, args),
-        )
-        if config.outcome.disable_formatting:
-            continue
-
-        app.handle_files(config, list(files))
-
-    app.handle_warnings()
-    return app.status_code()
+    return app.run(buckets)

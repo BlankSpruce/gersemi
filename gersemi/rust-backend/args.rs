@@ -14,6 +14,7 @@ pub enum Mode {
 }
 
 pub struct Args {
+    pub obj: Py<PyAny>,
     pub sources: Vec<PathBuf>,
     pub mode: Mode,
 }
@@ -69,15 +70,13 @@ fn get_mode(args: &ArgsExtractor, print_config: Option<&PrintConfigKind>) -> PyR
 }
 
 impl Args {
-    pub fn new(obj: &Py<PyAny>) -> PyResult<Self> {
+    pub fn new(obj: Py<PyAny>) -> PyResult<Self> {
         Python::attach(|py| {
-            let args = ArgsExtractor { py, obj };
+            let args = ArgsExtractor { py, obj: &obj };
             let print_config = args.value::<Option<PrintConfigKind>>("print_config")?;
             let mode = get_mode(&args, print_config.as_ref())?;
-            Ok(Self {
-                sources: args.value("sources")?,
-                mode,
-            })
+            let sources = args.value("sources")?;
+            Ok(Self { obj, sources, mode })
         })
     }
 }

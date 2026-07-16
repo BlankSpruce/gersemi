@@ -1,9 +1,9 @@
 use crate::argument_schema::CommandSchemaMapping;
-use crate::configuration::Extension;
+use crate::configuration::{ControlConfiguration, Extension, OutcomeConfiguration};
 use crate::custom_command_definition_finder::CustomCommand;
 use crate::runner::is_stdin;
 use pyo3::types::{PyAnyMethods, PyModule};
-use pyo3::{PyResult, Python};
+use pyo3::{Py, PyAny, PyResult, Python};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -60,6 +60,27 @@ pub fn find_closest_dot_gersemirc(path: &Path) -> PyResult<Option<PathBuf>> {
         PyModule::import(py, "gersemi.configuration")?
             .getattr("find_closest_dot_gersemirc")?
             .call1((path,))?
+            .extract()
+    })
+}
+
+pub fn make_control_configuration(args: &Py<PyAny>) -> PyResult<ControlConfiguration> {
+    Python::attach(|py| {
+        PyModule::import(py, "gersemi.configuration")?
+            .getattr("make_control_configuration")?
+            .call1((args,))?
+            .extract()
+    })
+}
+
+pub fn make_outcome_configuration(
+    configuration_file: Option<&PathBuf>,
+    args: &Py<PyAny>,
+) -> PyResult<OutcomeConfiguration> {
+    Python::attach(|py| {
+        PyModule::import(py, "gersemi.configuration")?
+            .getattr("make_outcome_configuration")?
+            .call1((configuration_file, args))?
             .extract()
     })
 }

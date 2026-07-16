@@ -161,6 +161,7 @@ pub struct OutcomeConfiguration {
     pub warn_about_unknown_commands: bool,
     pub extensions: Vec<Extension>,
     pub definitions: Vec<PathBuf>,
+    pub disable_formatting: bool,
 }
 
 #[derive(Clone, FromPyObject)]
