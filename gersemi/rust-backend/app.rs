@@ -1,8 +1,11 @@
 use crate::cache::file_entry;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
+use crate::gersemi_rust_backend::get_files;
+use crate::python_side::find_closest_dot_gersemirc;
 use crate::runner::{Runner, FAIL, SUCCESS};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use crate::{cache::Cache, mode::Mode};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, PyResult};
 use std::path::PathBuf;
 
@@ -57,6 +60,8 @@ fn split_files_by_formatting_state(
     Ok((already_formatted_files, files_to_format))
 }
 
+pub type Buckets = Vec<(Option<PathBuf>, Vec<PathBuf>)>;
+
 #[pymethods]
 impl App {
     #[new]
@@ -104,5 +109,28 @@ impl App {
 
     fn status_code(&self) -> usize {
         self.status_code.value
+    }
+
+    fn get_source_file_buckets(&self, paths: Vec<PathBuf>) -> PyResult<Buckets> {
+        let sources = get_files(paths, self.configuration.respect_ignore_files)?;
+        if (!self.configuration.line_ranges.is_empty()) && (sources.len() > 1) {
+            return Err(PyRuntimeError::new_err(
+                "Line range formatting available only with one source file",
+            ));
+        }
+
+        if let Some(config_file) = &self.configuration.configuration_file {
+            return Ok(vec![(Some(config_file.clone()), sources)]);
+        }
+
+        let mut result = Vec::new();
+        for source in sources {
+            let config_file = find_closest_dot_gersemirc(&source)?;
+            match result.iter_mut().find(|(key, _)| *key == config_file) {
+                None => result.push((config_file, vec![source])),
+                Some((_, values)) => values.push(source),
+            }
+        }
+        Ok(result)
     }
 }

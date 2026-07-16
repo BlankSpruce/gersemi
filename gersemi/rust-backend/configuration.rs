@@ -179,6 +179,7 @@ pub struct ControlConfiguration {
     pub cache_dir: PathBuf,
     pub quiet: bool,
     pub warnings_as_errors: bool,
+    pub configuration_file: Option<PathBuf>,
 }
 
 #[derive(Clone, FromPyObject)]
