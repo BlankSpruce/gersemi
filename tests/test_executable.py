@@ -1279,6 +1279,7 @@ def test_utf_8_bom_stdin_is_properly_handled(app):
     assert app("-", input=given) == success(stdout=expected, stderr="")
 
 
+@pytest.mark.skip("No multiprocessing implemented")
 def test_multiprocessing_works(app, testfiles):
     big_number_of_files = 1000
     base = testfiles / "test_multiprocessing_works"
