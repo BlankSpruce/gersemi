@@ -41,8 +41,8 @@ def print_configuration_report(
 def run(args: argparse.Namespace):
     control = make_control_configuration(args)
     mode = get_mode(args)
-    app = gersemi_rust_backend.App(mode, control)
-    buckets = app.get_source_file_buckets(list(args.sources))
+    app = gersemi_rust_backend.App(mode, control, args)
+    buckets = app.get_source_file_buckets()
     if mode == Mode.PrintConfig:
         print_configuration_report(args, buckets, control)
         return SUCCESS

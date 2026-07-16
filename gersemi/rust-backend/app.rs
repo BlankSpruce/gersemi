@@ -6,7 +6,7 @@ use crate::runner::{Runner, FAIL, SUCCESS};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use crate::{cache::Cache, mode::Mode};
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::{pyclass, pymethods, PyResult};
+use pyo3::{pyclass, pymethods, Py, PyAny, PyResult, Python};
 use std::path::PathBuf;
 
 pub struct StatusCode {
@@ -23,11 +23,26 @@ impl StatusCode {
     }
 }
 
+struct Args {
+    sources: Vec<PathBuf>,
+}
+
+impl Args {
+    fn new(value: &Py<PyAny>) -> PyResult<Self> {
+        Python::attach(|py| {
+            Ok(Self {
+                sources: value.getattr(py, "sources")?.extract(py)?,
+            })
+        })
+    }
+}
+
 #[pyclass]
 pub struct App {
     mode: Mode,
     cache: Cache,
     configuration: ControlConfiguration,
+    args: Args,
     status_code: StatusCode,
 }
 
@@ -65,18 +80,20 @@ pub type Buckets = Vec<(Option<PathBuf>, Vec<PathBuf>)>;
 #[pymethods]
 impl App {
     #[new]
-    fn new(mode: Mode, configuration: ControlConfiguration) -> Self {
+    #[allow(clippy::needless_pass_by_value)]
+    fn new(mode: Mode, configuration: ControlConfiguration, args: Py<PyAny>) -> PyResult<Self> {
         register_warning_sink(WarningSink::new(configuration.quiet));
         let cache = Cache::new(
             configuration.cache && configuration.line_ranges.is_empty(),
             &configuration.cache_dir,
         );
-        Self {
+        Ok(Self {
             mode,
             cache,
             configuration,
+            args: Args::new(&args)?,
             status_code: StatusCode::new(),
-        }
+        })
     }
 
     fn handle_files(&mut self, configuration: Configuration, files: Vec<PathBuf>) -> PyResult<()> {
@@ -111,8 +128,11 @@ impl App {
         self.status_code.value
     }
 
-    fn get_source_file_buckets(&self, paths: Vec<PathBuf>) -> PyResult<Buckets> {
-        let sources = get_files(paths, self.configuration.respect_ignore_files)?;
+    fn get_source_file_buckets(&self) -> PyResult<Buckets> {
+        let sources = get_files(
+            self.args.sources.clone(),
+            self.configuration.respect_ignore_files,
+        )?;
         if (!self.configuration.line_ranges.is_empty()) && (sources.len() > 1) {
             return Err(PyRuntimeError::new_err(
                 "Line range formatting available only with one source file",
