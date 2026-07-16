@@ -2,7 +2,7 @@ use crate::args::Mode;
 use crate::cache::Cache;
 use crate::diff::print_diff;
 use crate::formatter::Formatter;
-use crate::python_side::read_code;
+use crate::python_side::{normalize_newlines, read_code};
 use crate::warning_sink::warn;
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
 use pyo3::{PyResult, Python};
@@ -103,7 +103,7 @@ fn format_file(
         Some(code) => (true, code),
     };
     let newlines_style = if code.contains("\r\n") { "\r\n" } else { "\n" };
-    let code = code.replace("\r\n", "\n").replace('\r', "\n");
+    let code = normalize_newlines(code);
     let (formatted_code, unknown_commands_used) = match formatter {
         None => (code.clone(), vec![]),
         Some(formatter) => formatter.format(code.clone())?,

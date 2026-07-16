@@ -6,7 +6,7 @@ use crate::node::{
     FileElement, Position, Start,
 };
 use crate::parser::Parser;
-use crate::python_side::read_code;
+use crate::python_side::{normalize_newlines, read_code};
 use pyo3::{IntoPyObject, PyResult, Python};
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -339,7 +339,7 @@ pub fn find_all_custom_command_definitions(configuration: &Configuration) -> PyR
         configuration.outcome.definitions.clone(),
         configuration.control.respect_ignore_files,
     )? {
-        let code = read_code(&f)?;
+        let code = normalize_newlines(&read_code(&f)?);
         let path = f.to_str().unwrap_or("---");
         let defs = match find_custom_command_definitions(code, path.to_string()) {
             Err(err) => {

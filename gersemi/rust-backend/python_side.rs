@@ -33,6 +33,10 @@ pub fn read_code(path: &Path) -> PyResult<String> {
     }
 }
 
+pub fn normalize_newlines(code: &str) -> String {
+    code.replace("\r\n", "\n").replace('\r', "\n")
+}
+
 pub fn load_definitions_from_extensions(
     extensions: &Vec<Extension>,
 ) -> PyResult<CommandSchemaMapping> {
