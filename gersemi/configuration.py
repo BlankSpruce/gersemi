@@ -433,24 +433,6 @@ def make_configuration_file(configuration_dict, add_schema_link=False):
     return result
 
 
-@lru_cache(maxsize=None)
-def find_closest_dot_gersemirc_impl(parent: Path) -> Optional[Path]:
-    maybe_found = list(parent.glob(".gersemirc"))
-    if maybe_found:
-        return maybe_found[0]
-
-    return None
-
-
-def find_closest_dot_gersemirc(path: Path) -> Optional[Path]:
-    for parent in path.parents:
-        maybe_found = find_closest_dot_gersemirc_impl(parent)
-        if maybe_found:
-            return maybe_found
-
-    return None
-
-
 @contextmanager
 def enter_directory(target_directory):
     original = Path.cwd()

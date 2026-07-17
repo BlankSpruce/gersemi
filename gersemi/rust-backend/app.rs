@@ -6,13 +6,12 @@ use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfigura
 use crate::gersemi_rust_backend::get_files;
 use crate::runner::is_stdin;
 use crate::runner::{Runner, FAIL, SUCCESS};
-use crate::utils::find_closest_dot_gersemirc;
 use crate::utils::print_configuration_report;
 use crate::utils::{make_control_configuration, make_outcome_configuration};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, Py, PyAny, PyResult};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct StatusCode {
     value: usize,
@@ -70,6 +69,16 @@ pub type Buckets = Vec<(Option<PathBuf>, Vec<PathBuf>)>;
 fn has_stdin_mixed_with_files(paths: &[PathBuf]) -> bool {
     let number_of_stdin_paths = paths.iter().filter(|x| is_stdin(x)).count();
     (number_of_stdin_paths > 0) && (number_of_stdin_paths != paths.len())
+}
+
+fn find_closest_dot_gersemirc(path: &Path) -> Option<PathBuf> {
+    for parent in path.ancestors() {
+        let result = parent.join(".gersemirc");
+        if result.exists() {
+            return Some(result);
+        }
+    }
+    None
 }
 
 #[pymethods]
@@ -154,7 +163,7 @@ impl App {
 
         let mut result = Vec::new();
         for source in sources {
-            let config_file = find_closest_dot_gersemirc(&source)?;
+            let config_file = find_closest_dot_gersemirc(&source);
             match result.iter_mut().find(|(key, _)| *key == config_file) {
                 None => result.push((config_file, vec![source])),
                 Some((_, values)) => values.push(source),

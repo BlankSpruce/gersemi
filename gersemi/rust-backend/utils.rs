@@ -56,15 +56,6 @@ pub fn get_just_schemas(
     })
 }
 
-pub fn find_closest_dot_gersemirc(path: &Path) -> PyResult<Option<PathBuf>> {
-    Python::attach(|py| {
-        PyModule::import(py, "gersemi.configuration")?
-            .getattr("find_closest_dot_gersemirc")?
-            .call1((path,))?
-            .extract()
-    })
-}
-
 pub fn make_control_configuration(args: &Py<PyAny>) -> PyResult<ControlConfiguration> {
     Python::attach(|py| {
         PyModule::import(py, "gersemi.configuration")?
