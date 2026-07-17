@@ -4,6 +4,7 @@ use crate::custom_command_definition_finder::CustomCommand;
 use crate::runner::is_stdin;
 use pyo3::types::{PyAnyMethods, PyModule};
 use pyo3::{Py, PyAny, PyResult, Python};
+use std::io::{stdin, Read};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -21,13 +22,9 @@ pub fn builtin_schemas() -> &'static CommandSchemaMapping {
 
 pub fn read_code(path: &Path) -> PyResult<String> {
     if is_stdin(path) {
-        Python::attach(|py| {
-            PyModule::import(py, "gersemi.utils")?
-                .getattr("StdinWrapper")?
-                .getattr("read")?
-                .call0()?
-                .extract()
-        })
+        let mut buf = String::new();
+        stdin().read_to_string(&mut buf)?;
+        Ok(buf)
     } else {
         Ok(std::fs::read_to_string(path)?)
     }

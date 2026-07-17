@@ -5,7 +5,7 @@ use crate::node::{
     CommandInvocation, CommentedArgumentComment, FileElement, LineComment, PhantomKind, Position,
     Start,
 };
-use crate::python_side::builtin_schemas;
+use crate::utils::builtin_schemas;
 use pyo3::PyErr;
 use regex::Regex;
 use std::collections::HashMap;

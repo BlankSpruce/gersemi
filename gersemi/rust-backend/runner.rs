@@ -2,7 +2,7 @@ use crate::args::Mode;
 use crate::cache::Cache;
 use crate::diff::print_diff;
 use crate::formatter::Formatter;
-use crate::python_side::{normalize_newlines, read_code};
+use crate::utils::{normalize_newlines, read_code};
 use crate::warning_sink::warn;
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
 use pyo3::{PyResult, Python};

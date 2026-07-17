@@ -16,9 +16,9 @@ use crate::node::{
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
 use crate::parser::{quoted_argument_pattern, regex, Parser};
-use crate::python_side::{get_just_schemas, load_definitions_from_extensions};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
+use crate::utils::{get_just_schemas, load_definitions_from_extensions};
 use pyo3::{pyclass, pymethods, PyErr, PyResult};
 use regex::Regex;
 use std::cell::RefCell;

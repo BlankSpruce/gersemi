@@ -1,4 +1,4 @@
-use crate::python_side::load_definitions_from_extensions;
+use crate::utils::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyAnyMethods, PyString, PyType};

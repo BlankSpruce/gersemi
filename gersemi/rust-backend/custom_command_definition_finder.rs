@@ -6,7 +6,7 @@ use crate::node::{
     FileElement, Position, Start,
 };
 use crate::parser::Parser;
-use crate::python_side::{normalize_newlines, read_code};
+use crate::utils::{normalize_newlines, read_code};
 use pyo3::{IntoPyObject, PyResult, Python};
 use std::collections::HashMap;
 use std::fmt::Write;
