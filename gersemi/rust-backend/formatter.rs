@@ -1,12 +1,14 @@
 use crate::argument_schema::{
-    is_one_of_keywords, ArgumentSchema, CommandSchema, CommandSchemaDetails, CommandSchemas,
-    KeywordMatcher, Signatures,
+    is_one_of_keywords, single_word_matchers, ArgumentSchema, CommandSchema, CommandSchemaDetails,
+    CommandSchemaMapping, CommandSchemas, KeywordMatcher, Signatures,
 };
 use crate::configuration::{
     Configuration, IndentType, KeywordFormatter, KeywordPreprocessor, LineRange, ListExpansion,
     OutcomeConfiguration, SortOrder,
 };
-use crate::custom_command_definition_finder::find_all_custom_command_definitions;
+use crate::custom_command_definition_finder::{
+    find_all_custom_command_definitions, CustomCommand, CustomCommandContent, Keywords,
+};
 use crate::keyword_preprocessor::{
     keep_unique_arguments, sort_and_keep_unique_arguments, sort_arguments,
 };
@@ -18,7 +20,7 @@ use crate::node::{
 use crate::parser::{quoted_argument_pattern, regex, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
-use crate::utils::{get_just_schemas, load_definitions_from_extensions};
+use crate::utils::{get_keyword_transformers, load_definitions_from_extensions};
 use pyo3::{pyclass, pymethods, PyErr, PyResult};
 use regex::Regex;
 use std::cell::RefCell;
@@ -1493,6 +1495,50 @@ fn remove_line_range_fences(formatted_code: &str) -> String {
 }
 
 pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
+
+fn create_standard_command_schema(
+    positional_arguments: Vec<String>,
+    keywords: Keywords,
+) -> PyResult<ArgumentSchema> {
+    let (keyword_formatters, keyword_preprocessors) = get_keyword_transformers(keywords.hints)?;
+
+    Ok(ArgumentSchema {
+        options: single_word_matchers(keywords.options),
+        one_value_keywords: single_word_matchers(keywords.one_value_keywords),
+        multi_value_keywords: single_word_matchers(keywords.multi_value_keywords),
+        front_positional_arguments: positional_arguments,
+        back_positional_arguments: Vec::new(),
+        sections: HashMap::new(),
+        keyword_preprocessors,
+        keyword_formatters,
+    })
+}
+
+fn create_command_schema(content: CustomCommandContent) -> PyResult<CommandSchema> {
+    Ok(CommandSchema {
+        block_end: content.block_end,
+        canonical_name: Some(content.canonical_name),
+        inhibit_favour_expansion: false,
+        details: CommandSchemaDetails::StandardCommand {
+            schema: create_standard_command_schema(content.positional_arguments, content.keywords)?,
+            signatures: Signatures::new(),
+            two_words_keywords: Vec::new(),
+        },
+    })
+}
+
+fn get_just_schemas(
+    definitions: Vec<(String, Vec<CustomCommand>)>,
+) -> PyResult<CommandSchemaMapping> {
+    let mut result = CommandSchemaMapping::new();
+    for (name, mut info) in definitions {
+        info.sort_by(|a, b| a.1.cmp(&b.1));
+        if let Some((content, _)) = info.into_iter().next() {
+            result.insert(name, create_command_schema(content)?);
+        }
+    }
+    Ok(result)
+}
 
 #[pymethods]
 impl Formatter {

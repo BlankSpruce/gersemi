@@ -29,16 +29,20 @@ fn single_word_matcher(s: &str) -> KeywordMatcher {
     }
 }
 
+pub fn single_word_matchers(s: Vec<String>) -> Vec<KeywordMatcher> {
+    s.into_iter().map(|x| single_word_matcher(&x)).collect()
+}
+
 #[derive(Clone, Debug, FromPyObject)]
 pub struct ArgumentSchema {
-    options: Vec<KeywordMatcher>,
-    one_value_keywords: Vec<KeywordMatcher>,
-    multi_value_keywords: Vec<KeywordMatcher>,
-    front_positional_arguments: Vec<String>,
-    back_positional_arguments: Vec<String>,
+    pub options: Vec<KeywordMatcher>,
+    pub one_value_keywords: Vec<KeywordMatcher>,
+    pub multi_value_keywords: Vec<KeywordMatcher>,
+    pub front_positional_arguments: Vec<String>,
+    pub back_positional_arguments: Vec<String>,
 
     #[pyo3(default)]
-    sections: HashMap<KeywordMatcher, ArgumentSchema>,
+    pub sections: HashMap<KeywordMatcher, ArgumentSchema>,
 
     pub keyword_preprocessors: HashMap<String, KeywordPreprocessor>,
     pub keyword_formatters: HashMap<String, KeywordFormatter>,

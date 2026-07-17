@@ -7,11 +7,10 @@ use crate::node::{
 };
 use crate::parser::Parser;
 use crate::utils::{normalize_newlines, read_code};
-use pyo3::{IntoPyObject, PyResult, Python};
+use pyo3::{PyResult, Python};
 use std::collections::HashMap;
 use std::fmt::Write;
 
-#[derive(IntoPyObject)]
 pub struct Keywords {
     pub options: Vec<String>,
     pub one_value_keywords: Vec<String>,
@@ -19,7 +18,6 @@ pub struct Keywords {
     pub hints: Vec<String>,
 }
 
-#[derive(IntoPyObject)]
 pub struct CustomCommandContent {
     pub canonical_name: String,
     pub positional_arguments: Vec<String>,
