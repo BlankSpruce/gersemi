@@ -189,81 +189,78 @@ fn do_nothing() -> TaskResult {
     (SUCCESS, Vec::new())
 }
 
-impl Runner<'_> {
-    fn run_task_impl(
-        &mut self,
-        path: &Path,
-        formatter: Option<&Formatter>,
-    ) -> PyResult<(usize, bool)> {
-        let (before, after, newlines_style, unknown_command_warnings) =
-            format_file(path, formatter)?;
-        let warnings = if self.configuration.outcome.warn_about_unknown_commands {
-            unknown_command_warnings
-        } else {
-            Vec::new()
-        };
+fn run_task_impl(
+    configuration: &Configuration,
+    mode: &Mode,
+    path: &Path,
+    formatter: Option<&Formatter>,
+) -> PyResult<(usize, bool)> {
+    let (before, after, newlines_style, unknown_command_warnings) = format_file(path, formatter)?;
+    let warnings = if configuration.outcome.warn_about_unknown_commands {
+        unknown_command_warnings
+    } else {
+        Vec::new()
+    };
 
-        let (code, warnings) = if formatter.is_none() {
-            match self.mode {
-                Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
-                _ => do_nothing(),
+    let (code, warnings) = if formatter.is_none() {
+        match mode {
+            Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
+            _ => do_nothing(),
+        }
+    } else {
+        match mode {
+            Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
+            Mode::RewriteInPlace => {
+                rewrite_in_place(path, &before, &after, &newlines_style, warnings)?
             }
-        } else {
-            match self.mode {
-                Mode::ForwardToStdout => forward_to_stdout(&after, warnings)?,
-                Mode::RewriteInPlace => {
-                    rewrite_in_place(path, &before, &after, &newlines_style, warnings)?
-                }
-                Mode::CheckFormatting => check_formatting(path, &before, &after, warnings),
-                Mode::ShowDiff => show_diff(
-                    path,
-                    self.configuration.control.color,
-                    &before,
-                    &after,
-                    warnings,
-                )?,
-                Mode::CheckFormattingAndShowDiff => check_and_show_diff(
-                    path,
-                    self.configuration.control.color,
-                    &before,
-                    &after,
-                    warnings,
-                )?,
-                _ => do_nothing(),
+            Mode::CheckFormatting => check_formatting(path, &before, &after, warnings),
+            Mode::ShowDiff => {
+                show_diff(path, configuration.control.color, &before, &after, warnings)?
             }
-        };
+            Mode::CheckFormattingAndShowDiff => {
+                check_and_show_diff(path, configuration.control.color, &before, &after, warnings)?
+            }
+            _ => do_nothing(),
+        }
+    };
 
-        let has_warnings = if self.configuration.outcome.warn_about_unknown_commands {
-            let result = !warnings.is_empty();
-            for warning in warnings {
-                warn(warning);
-            }
-            result
-        } else {
-            false
-        };
-        Ok((code, has_warnings))
-    }
+    let has_warnings = if configuration.outcome.warn_about_unknown_commands {
+        let result = !warnings.is_empty();
+        for warning in warnings {
+            warn(warning);
+        }
+        result
+    } else {
+        false
+    };
+    Ok((code, has_warnings))
+}
 
-    pub fn run_task(&mut self, path: &Path, formatter: Option<&Formatter>) -> (usize, bool) {
-        match self.run_task_impl(path, formatter) {
-            Ok(ok) => ok,
-            Err(err) => {
-                warn(format!(
-                    "{}: {}",
-                    path.to_str().unwrap_or("---"),
-                    Python::attach(|py| err.value(py).to_string())
-                ));
-                (INTERNAL_ERROR, false)
-            }
+fn run_task(
+    configuration: &Configuration,
+    mode: &Mode,
+    path: &Path,
+    formatter: Option<&Formatter>,
+) -> (usize, bool) {
+    match run_task_impl(configuration, mode, path, formatter) {
+        Ok(ok) => ok,
+        Err(err) => {
+            warn(format!(
+                "{}: {}",
+                path.to_str().unwrap_or("---"),
+                Python::attach(|py| err.value(py).to_string())
+            ));
+            (INTERNAL_ERROR, false)
         }
     }
+}
 
+impl Runner<'_> {
     pub fn handle_already_formatted_files(&mut self, files: &[PathBuf]) -> Vec<usize> {
         files
             .iter()
             .map(|f| {
-                let (code, _) = self.run_task(f, None);
+                let (code, _) = run_task(&self.configuration, &self.mode, f, None);
                 code
             })
             .collect()
@@ -287,7 +284,7 @@ impl Runner<'_> {
         let mut files_to_cache = Vec::<PathBuf>::new();
 
         for f in files {
-            let (code, has_warnings) = self.run_task(&f, formatter);
+            let (code, has_warnings) = run_task(&self.configuration, &self.mode, &f, formatter);
             result.push(code);
 
             if should_cache && (code == SUCCESS) && (!is_stdin(&f)) && (!has_warnings) {
