@@ -22,7 +22,7 @@ use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use crate::utils::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::{pyclass, pymethods, PyErr, PyResult};
+use pyo3::{pyclass, pymethods, PyErr, PyResult, Python};
 use regex::Regex;
 use rust_yaml::{Value, Yaml};
 use std::cell::RefCell;
@@ -1572,8 +1572,8 @@ fn get_just_schemas(definitions: Vec<(String, Vec<CustomCommand>)>) -> CommandSc
 #[pymethods]
 impl Formatter {
     #[new]
-    pub fn new(configuration: Configuration) -> PyResult<Self> {
-        let definitions = find_all_custom_command_definitions(&configuration)?;
+    pub fn new(py: Python, configuration: Configuration) -> PyResult<Self> {
+        let definitions = find_all_custom_command_definitions(py, &configuration)?;
         let definition_schemas = get_just_schemas(definitions);
         let extension_schemas =
             load_definitions_from_extensions(&configuration.outcome.extensions)?;

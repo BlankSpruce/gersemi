@@ -8,6 +8,7 @@ use crate::node::{
 use crate::parser::Parser;
 use crate::utils::{get_files, normalize_newlines, read_code};
 use pyo3::{PyResult, Python};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fmt::Write;
 
@@ -330,17 +331,41 @@ fn check_conflicting_definitions(defs: &Definitions) {
     }
 }
 
-pub fn find_all_custom_command_definitions(configuration: &Configuration) -> PyResult<Definitions> {
+pub fn find_all_custom_command_definitions(
+    py: Python,
+    configuration: &Configuration,
+) -> PyResult<Definitions> {
     let mut result = Definitions::new();
 
-    for f in get_files(
+    let files = get_files(
         configuration.outcome.definitions.clone(),
         configuration.control.respect_ignore_files,
-    )? {
-        let code = normalize_newlines(&read_code(&f)?);
-        let path = f.to_str().unwrap_or("---");
-        let defs = match find_custom_command_definitions(code, path.to_string()) {
-            Err(err) => {
+    )?;
+    let all_defs = py.detach(|| {
+        files
+            .into_par_iter()
+            .panic_fuse()
+            .map(|f| {
+                Python::attach(|py| py.check_signals().unwrap());
+
+                let path = f.to_str().unwrap_or("---").to_string();
+                match read_code(&f) {
+                    Ok(code) => {
+                        let code = normalize_newlines(&code);
+                        match find_custom_command_definitions(code, path.clone()) {
+                            Ok(def) => Ok(def),
+                            Err(err) => Err((path, err)),
+                        }
+                    }
+                    Err(err) => Err((path, err)),
+                }
+            })
+            .collect::<Vec<_>>()
+    });
+
+    for defs in all_defs {
+        let defs = match defs {
+            Err((path, err)) => {
                 warn(format!(
                     "{path}:{}",
                     Python::attach(|py| err.value(py).to_string())
@@ -349,7 +374,6 @@ pub fn find_all_custom_command_definitions(configuration: &Configuration) -> PyR
             }
             Ok(defs) => defs,
         };
-
         for (name, mut info) in defs {
             match result
                 .iter_mut()

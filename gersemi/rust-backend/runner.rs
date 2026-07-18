@@ -289,7 +289,7 @@ pub fn handle_files_to_format(
     files: Vec<PathBuf>,
 ) -> PyResult<Vec<usize>> {
     let configuration_summary = configuration.outcome.summarize()?;
-    let formatter = Formatter::new(configuration.clone())?;
+    let formatter = Formatter::new(py, configuration.clone())?;
     let formatter = Some(&formatter);
 
     let mut files_to_cache = Vec::<PathBuf>::new();
