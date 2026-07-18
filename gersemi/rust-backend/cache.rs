@@ -83,10 +83,12 @@ fn get_files(connection: &Connection, configuration_summary: &str) -> HashMap<Pa
     result
 }
 
-fn create_connection(enable_cache: bool, cache_path: PathBuf) -> Option<Connection> {
+fn create_connection(enable_cache: bool, cache_dir: Option<&PathBuf>) -> Option<Connection> {
     if !enable_cache {
         return None;
     }
+
+    let cache_path = cache_dir?.join("cache.db");
 
     let Ok(connection) = Connection::open(cache_path) else {
         return None;
@@ -121,9 +123,9 @@ fn create_connection(enable_cache: bool, cache_path: PathBuf) -> Option<Connecti
 }
 
 impl Cache {
-    pub fn new(enable_cache: bool, cache_dir: &Path) -> Self {
+    pub fn new(enable_cache: bool, cache_dir: Option<&PathBuf>) -> Self {
         Self {
-            connection: create_connection(enable_cache, cache_dir.join("cache.db")).map(Mutex::new),
+            connection: create_connection(enable_cache, cache_dir).map(Mutex::new),
         }
     }
 

@@ -12,8 +12,6 @@ description = "A formatter to make your CMake code the real treasure"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "ignore-python>=0.3,<0.4",
-    "platformdirs",
     "pyyaml>=5,<7",
 ]
 license = { text = "MPL-2.0" }

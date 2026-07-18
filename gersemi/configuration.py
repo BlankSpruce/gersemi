@@ -6,18 +6,15 @@ import os
 from pathlib import Path
 from typing import Iterable, Optional, Union
 import gersemi_rust_backend
-from platformdirs import user_cache_dir
 import yaml
-from gersemi.__version__ import __author__, __title__, __version__
+from gersemi.__version__ import __title__, __version__
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
 from gersemi.extension_type import FileExtension, ModuleExtension
 from gersemi.return_codes import FAIL
 
 
 def default_cache_dir() -> Path:
-    return Path(
-        user_cache_dir(appname=__title__, appauthor=__author__, version=__version__)
-    )
+    return gersemi_rust_backend.user_cache_dir(appname=__title__, version=__version__)
 
 
 class Tabs(EnumWithMetadata):
@@ -296,7 +293,7 @@ class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
-    cache_dir: Path = field(
+    cache_dir: Optional[Path] = field(
         default=default_cache_dir(),
         metadata=dict(
             title="Cache directory",

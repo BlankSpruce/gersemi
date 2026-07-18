@@ -226,7 +226,7 @@ pub struct ControlConfiguration {
     pub respect_ignore_files: bool,
     pub line_ranges: Vec<LineRange>,
     pub cache: bool,
-    pub cache_dir: PathBuf,
+    pub cache_dir: Option<PathBuf>,
     pub quiet: bool,
     pub warnings_as_errors: bool,
     pub configuration_file: Option<PathBuf>,

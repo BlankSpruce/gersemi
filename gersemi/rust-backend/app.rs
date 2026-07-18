@@ -103,7 +103,7 @@ impl App {
         );
         let cache = Cache::new(
             should_cache && configuration.cache && configuration.line_ranges.is_empty(),
-            &configuration.cache_dir,
+            configuration.cache_dir.as_ref(),
         );
         Ok(Self {
             cache,

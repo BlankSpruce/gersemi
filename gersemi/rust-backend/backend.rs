@@ -24,6 +24,7 @@ mod gersemi_rust_backend {
     use crate::sanity_checker::check_equivalence;
     use pyo3::pyfunction;
     use std::collections::HashMap;
+    use std::path::PathBuf;
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
@@ -72,5 +73,18 @@ mod gersemi_rust_backend {
             Err(_) => 1,
             Ok(n) => n.get(),
         }
+    }
+
+    #[pyfunction]
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn user_cache_dir(appname: String, version: String) -> Option<PathBuf> {
+        dirs::cache_dir().and_then(|p| {
+            let p = p.join(appname).join(version);
+            if std::fs::create_dir_all(&p).is_ok() {
+                Some(p)
+            } else {
+                None
+            }
+        })
     }
 }
