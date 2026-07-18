@@ -134,12 +134,17 @@ impl Cache {
             return;
         };
 
-        let Ok(connection) = connection.lock() else {
+        let Ok(mut connection) = connection.lock() else {
             return;
         };
 
-        store_file_entries(&connection, files);
-        store_configuration_summary(&connection, configuration_summary, files);
+        let Ok(tx) = connection.transaction() else {
+            return;
+        };
+
+        store_file_entries(&tx, files);
+        store_configuration_summary(&tx, configuration_summary, files);
+        let _ = tx.commit();
     }
 
     pub fn get_files(&self, configuration_summary: &str) -> HashMap<PathBuf, (i64, i64)> {
