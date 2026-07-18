@@ -61,3 +61,29 @@ class Command:
     block_end: Optional[str] = None
     canonical_name: Optional[str] = None
     inhibit_favour_expansion: bool = False
+
+
+def preprocess_definitions(definitions):
+    return make_immutable(
+        {
+            key.strip().lower(): (
+                Command(
+                    block_end=value.get("block_end", None),
+                    canonical_name=key,
+                    inhibit_favour_expansion=value.get(
+                        "_inhibit_favour_expansion", False
+                    ),
+                    details=StandardCommand(
+                        two_words_keywords=tuple(value.get("_two_words_keywords", ())),
+                        schema=argument_schema_from_dict(value),
+                        signatures=argument_schemas_from_dict(
+                            value.get("signatures", ImmutableDict())
+                        ),
+                    )
+                    if "__impl" not in value
+                    else SpecializedCommand(impl=value.get("__impl")),
+                )
+            )
+            for key, value in definitions.items()
+        }
+    )

@@ -17,6 +17,7 @@ pub struct Args {
     pub obj: Py<PyAny>,
     pub sources: Vec<PathBuf>,
     pub definitions: Option<Vec<PathBuf>>,
+    pub print_config: Option<PrintConfigKind>,
     pub mode: Mode,
 }
 
@@ -25,7 +26,7 @@ struct ArgsExtractor<'a> {
     obj: &'a Py<PyAny>,
 }
 
-enum PrintConfigKind {
+pub enum PrintConfigKind {
     Minimal,
     Verbose,
     Default,
@@ -82,6 +83,7 @@ impl Args {
                 obj,
                 sources,
                 definitions,
+                print_config,
                 mode,
             })
         })

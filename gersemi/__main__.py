@@ -3,7 +3,6 @@ from dataclasses import fields
 import pathlib
 import sys
 import gersemi_rust_backend
-from gersemi.__version__ import __title__, __version__
 from gersemi.configuration import (
     ControlConfiguration,
     ListExpansion,
@@ -17,7 +16,6 @@ from gersemi.configuration import (
     sanitize_list_expansion,
     workers_type,
 )
-from gersemi.configuration_reports import default_report
 from gersemi.print_config_kind import PrintConfigKind, print_config_kind
 from gersemi.return_codes import FAIL, SUCCESS
 
@@ -26,6 +24,8 @@ FROZEN = getattr(sys, "frozen", False)
 
 class ShowVersion(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
+        from gersemi.__version__ import __title__, __version__
+
         frozen_suffix = " (frozen)" if FROZEN else ""
         print(f"{__title__} {__version__}{frozen_suffix}")
         print(f"Python {sys.version}")
@@ -359,11 +359,6 @@ def main():
     try:
         argparser = create_argparser()
         args = argparser.parse_args()
-
-        if args.print_config == PrintConfigKind.Default.value:
-            print(default_report())
-            sys.exit(SUCCESS)
-
         postprocess_args(args)
 
         app = gersemi_rust_backend.App(args)

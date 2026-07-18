@@ -68,6 +68,15 @@ pub fn make_outcome_configuration(
     })
 }
 
+pub fn default_report() -> PyResult<()> {
+    Python::attach(|py| {
+        let _ = PyModule::import(py, "gersemi.configuration_reports")?
+            .getattr("default_report")?
+            .call0()?;
+        Ok(())
+    })
+}
+
 pub fn print_configuration_report(
     configuration_file: Option<PathBuf>,
     files: Vec<PathBuf>,

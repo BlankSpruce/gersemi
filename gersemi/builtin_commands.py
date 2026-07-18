@@ -1,14 +1,7 @@
 # pylint: disable=too-many-lines
 # ruff: noqa: C420
 from typing import Iterable, List, Mapping
-from gersemi.argument_schema import (
-    Command,
-    SpecializedCommand,
-    StandardCommand,
-    argument_schema_from_dict,
-    argument_schemas_from_dict,
-)
-from gersemi.immutable import ImmutableDict, make_immutable
+from gersemi.argument_schema import preprocess_definitions
 from gersemi.keyword_kind import KeywordFormatter
 from gersemi.keywords import AnyMatcher, KeywordMatcher
 
@@ -3675,32 +3668,6 @@ builtin_commands = {
     #
     ### FindZLIB
 }
-
-
-def preprocess_definitions(definitions):
-    return make_immutable(
-        {
-            key.strip().lower(): (
-                Command(
-                    block_end=value.get("block_end", None),
-                    canonical_name=key,
-                    inhibit_favour_expansion=value.get(
-                        "_inhibit_favour_expansion", False
-                    ),
-                    details=StandardCommand(
-                        two_words_keywords=tuple(value.get("_two_words_keywords", ())),
-                        schema=argument_schema_from_dict(value),
-                        signatures=argument_schemas_from_dict(
-                            value.get("signatures", ImmutableDict())
-                        ),
-                    )
-                    if "__impl" not in value
-                    else SpecializedCommand(impl=value.get("__impl")),
-                )
-            )
-            for key, value in definitions.items()
-        }
-    )
 
 
 _builtin_commands = preprocess_definitions(builtin_commands)

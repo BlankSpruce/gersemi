@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 import importlib
 import string
-from gersemi.builtin_commands import preprocess_definitions
+from gersemi.argument_schema import preprocess_definitions
 from gersemi.extension_type import FileExtension
 from gersemi.keywords import AnyMatcher
 

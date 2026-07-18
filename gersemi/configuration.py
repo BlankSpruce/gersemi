@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from typing import Iterable, Optional, Union
 import gersemi_rust_backend
-import yaml
 from gersemi.__version__ import __title__, __version__
 from gersemi.enum_with_metadata import EnumWithMetadata, doc
 from gersemi.extension_type import FileExtension, ModuleExtension
@@ -386,23 +385,6 @@ CONTROL_CONFIGURATION_KEYS = [f.name for f in fields(ControlConfiguration)]
 CONFIGURATION_KEYS = OUTCOME_CONFIGURATION_KEYS + CONTROL_CONFIGURATION_KEYS
 
 
-class CustomizedSafeDumper(yaml.SafeDumper):
-    def represent_data(self, data):
-        if isinstance(data, Path):
-            return self.represent_data(str(data))
-
-        if isinstance(data, EnumWithMetadata):
-            return self.represent_data(data.value)
-
-        if isinstance(data, ModuleExtension):
-            return self.represent_data(str(data))
-
-        if isinstance(data, FileExtension):
-            return self.represent_data(str(data))
-
-        return super().represent_data(data)
-
-
 # pylint: disable=line-too-long
 SCHEMA = f"# yaml-language-server: $schema=https://raw.githubusercontent.com/BlankSpruce/gersemi/{__version__}/gersemi/configuration.schema.json"
 
@@ -410,6 +392,24 @@ SCHEMA = f"# yaml-language-server: $schema=https://raw.githubusercontent.com/Bla
 def make_configuration_file(configuration_dict, add_schema_link=False):
     if configuration_dict == {}:
         return ""
+
+    import yaml
+
+    class CustomizedSafeDumper(yaml.SafeDumper):
+        def represent_data(self, data):
+            if isinstance(data, Path):
+                return self.represent_data(str(data))
+
+            if isinstance(data, EnumWithMetadata):
+                return self.represent_data(data.value)
+
+            if isinstance(data, ModuleExtension):
+                return self.represent_data(str(data))
+
+            if isinstance(data, FileExtension):
+                return self.represent_data(str(data))
+
+            return super().represent_data(data)
 
     result = yaml.dump(configuration_dict, Dumper=CustomizedSafeDumper)
     if add_schema_link:
@@ -499,6 +499,8 @@ def load_configuration_from_file(
 
     with enter_directory(configuration_file_path.parent):
         with open(configuration_file_path, "r", encoding="utf-8") as f:
+            import yaml
+
             configuration_file_content = yaml.safe_load(f.read()) or {}
             config = {
                 key: value

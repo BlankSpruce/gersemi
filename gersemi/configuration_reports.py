@@ -105,9 +105,11 @@ def verbose_report(
 
 
 def default_report():
-    return make_configuration_file(
-        asdict(OutcomeConfiguration()),
-        add_schema_link=True,
+    print(
+        make_configuration_file(
+            asdict(OutcomeConfiguration()),
+            add_schema_link=True,
+        )
     )
 
 

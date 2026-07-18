@@ -1,5 +1,6 @@
 use crate::args::Args;
 use crate::args::Mode;
+use crate::args::PrintConfigKind;
 use crate::cache::file_entry;
 use crate::cache::Cache;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
@@ -7,6 +8,7 @@ use crate::runner::handle_already_formatted_files;
 use crate::runner::handle_files_to_format;
 use crate::runner::is_stdin;
 use crate::runner::{FAIL, SUCCESS};
+use crate::utils::default_report;
 use crate::utils::{
     get_files, make_control_configuration, make_outcome_configuration, print_configuration_report,
 };
@@ -193,6 +195,11 @@ impl App {
     }
 
     fn run(&mut self, py: Python) -> PyResult<usize> {
+        if matches!(self.args.print_config, Some(PrintConfigKind::Default)) {
+            default_report()?;
+            return Ok(self.status_code());
+        }
+
         if self.args.sources.is_empty() {
             return Ok(self.status_code());
         }
