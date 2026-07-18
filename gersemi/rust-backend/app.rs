@@ -3,8 +3,10 @@ use crate::args::Mode;
 use crate::cache::file_entry;
 use crate::cache::Cache;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
+use crate::runner::handle_already_formatted_files;
+use crate::runner::handle_files_to_format;
 use crate::runner::is_stdin;
-use crate::runner::{Runner, FAIL, SUCCESS};
+use crate::runner::{FAIL, SUCCESS};
 use crate::utils::{
     get_files, make_control_configuration, make_outcome_configuration, print_configuration_report,
 };
@@ -124,16 +126,22 @@ impl App {
         };
         let (already_formatted_files, files_to_format) =
             split_files_by_formatting_state(&mut self.cache, files, &configuration.outcome)?;
-        let mut runner = Runner {
-            mode: self.args.mode.clone(),
-            configuration,
-            cache: &mut self.cache,
-        };
-        for code in runner.handle_already_formatted_files(&already_formatted_files) {
+
+        for code in handle_already_formatted_files(
+            &configuration,
+            &self.args.mode,
+            &already_formatted_files,
+        ) {
             self.status_code.add(code);
         }
 
-        for code in runner.handle_files_to_format(py, files_to_format)? {
+        for code in handle_files_to_format(
+            py,
+            &configuration,
+            &self.args.mode,
+            &mut self.cache,
+            files_to_format,
+        )? {
             self.status_code.add(code);
         }
         Ok(())

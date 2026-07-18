@@ -76,12 +76,6 @@ pub fn tofile(path: &Path) -> &str {
     }
 }
 
-pub struct Runner<'a> {
-    pub mode: Mode,
-    pub configuration: Configuration,
-    pub cache: &'a mut Cache,
-}
-
 type TaskResult = (usize, Vec<String>);
 pub const SUCCESS: usize = 0;
 pub const FAIL: usize = 1;
@@ -272,72 +266,65 @@ fn handle_file_to_format(
     (code, file_to_cache, warnings)
 }
 
-impl Runner<'_> {
-    pub fn handle_already_formatted_files(&mut self, files: &[PathBuf]) -> Vec<usize> {
-        files
-            .iter()
-            .map(|f| {
-                let (code, warnings) = run_task(&self.configuration, &self.mode, f, None);
-                for warning in warnings {
-                    warn(warning);
-                }
-                code
-            })
-            .collect()
-    }
+pub fn handle_already_formatted_files(
+    configuration: &Configuration,
+    mode: &Mode,
+    files: &[PathBuf],
+) -> Vec<usize> {
+    files
+        .iter()
+        .map(|f| {
+            let (code, warnings) = run_task(configuration, mode, f, None);
+            for warning in warnings {
+                warn(warning);
+            }
+            code
+        })
+        .collect()
+}
 
-    fn should_cache(&self) -> bool {
-        matches!(
-            self.mode,
-            Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
-        )
-    }
+pub fn handle_files_to_format(
+    py: Python,
+    configuration: &Configuration,
+    mode: &Mode,
+    cache: &mut Cache,
+    files: Vec<PathBuf>,
+) -> PyResult<Vec<usize>> {
+    let configuration_summary = configuration.outcome.summarize()?;
+    let formatter = Formatter::new(configuration.clone())?;
+    let formatter = Some(&formatter);
+    let should_cache = matches!(
+        mode,
+        Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
+    );
 
-    pub fn handle_files_to_format(
-        &mut self,
-        py: Python,
-        files: Vec<PathBuf>,
-    ) -> PyResult<Vec<usize>> {
-        let configuration_summary = self.configuration.outcome.summarize()?;
-        let formatter = Formatter::new(self.configuration.clone())?;
-        let formatter = Some(&formatter);
-        let should_cache = self.should_cache();
+    let mut files_to_cache = Vec::<PathBuf>::new();
+    let result: Vec<usize> = py
+        .detach(|| {
+            files
+                .into_par_iter()
+                .panic_fuse()
+                .map(|f| {
+                    Python::attach(|py| py.check_signals().unwrap());
 
-        let mut files_to_cache = Vec::<PathBuf>::new();
-        let result: Vec<usize> = py
-            .detach(|| {
-                files
-                    .into_par_iter()
-                    .panic_fuse()
-                    .map(|f| {
-                        Python::attach(|py| py.check_signals().unwrap());
+                    handle_file_to_format(configuration, mode, f, formatter, should_cache)
+                })
+                .collect::<Vec<_>>()
+        })
+        .into_iter()
+        .map(|(code, file_to_cache, warnings)| {
+            if let Some(f) = file_to_cache {
+                files_to_cache.push(f);
+            }
 
-                        handle_file_to_format(
-                            &self.configuration,
-                            &self.mode,
-                            f,
-                            formatter,
-                            should_cache,
-                        )
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .into_iter()
-            .map(|(code, file_to_cache, warnings)| {
-                if let Some(f) = file_to_cache {
-                    files_to_cache.push(f);
-                }
+            for warning in warnings {
+                warn(warning);
+            }
 
-                for warning in warnings {
-                    warn(warning);
-                }
+            code
+        })
+        .collect();
 
-                code
-            })
-            .collect();
-
-        self.cache
-            .store_files(&configuration_summary, &files_to_cache);
-        Ok(result)
-    }
+    cache.store_files(&configuration_summary, &files_to_cache);
+    Ok(result)
 }
