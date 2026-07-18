@@ -96,14 +96,19 @@ impl App {
             .build_global()
             .unwrap();
 
+        let args = Args::new(args)?;
+        let should_cache = matches!(
+            args.mode,
+            Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
+        );
         let cache = Cache::new(
-            configuration.cache && configuration.line_ranges.is_empty(),
+            should_cache && configuration.cache && configuration.line_ranges.is_empty(),
             &configuration.cache_dir,
         );
         Ok(Self {
             cache,
             configuration,
-            args: Args::new(args)?,
+            args,
             status_code: StatusCode::new(),
         })
     }

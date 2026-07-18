@@ -662,9 +662,7 @@ def test_no_files_are_stored_in_cache_on_diff(app, cache, testfiles):
 
     cache.assert_that_has_no_tables()
     assert app("--diff", d, "--definitions", d) == success(stdout=match_not(""))
-    cache.assert_that_has_initialized_tables()
-    assert len(cache.get_files()) == 0
-    assert len(cache.get_formatted()) == 0
+    cache.assert_that_has_no_tables()
 
 
 def test_when_cache_cant_be_modified_it_is_ignored(app, cache, testfiles):

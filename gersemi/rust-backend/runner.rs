@@ -246,7 +246,6 @@ fn handle_file_to_format(
     mode: &Mode,
     path: PathBuf,
     formatter: Option<&Formatter>,
-    should_cache: bool,
 ) -> (usize, Option<PathBuf>, Vec<String>) {
     let (code, warnings) = run_task(configuration, mode, &path, formatter);
 
@@ -256,12 +255,11 @@ fn handle_file_to_format(
         false
     };
 
-    let file_to_cache =
-        if should_cache && (code == SUCCESS) && (!is_stdin(&path)) && (!has_warnings) {
-            Some(path)
-        } else {
-            None
-        };
+    let file_to_cache = if (code == SUCCESS) && (!is_stdin(&path)) && (!has_warnings) {
+        Some(path)
+    } else {
+        None
+    };
 
     (code, file_to_cache, warnings)
 }
@@ -293,10 +291,6 @@ pub fn handle_files_to_format(
     let configuration_summary = configuration.outcome.summarize()?;
     let formatter = Formatter::new(configuration.clone())?;
     let formatter = Some(&formatter);
-    let should_cache = matches!(
-        mode,
-        Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
-    );
 
     let mut files_to_cache = Vec::<PathBuf>::new();
     let result: Vec<usize> = py
@@ -307,7 +301,7 @@ pub fn handle_files_to_format(
                 .map(|f| {
                     Python::attach(|py| py.check_signals().unwrap());
 
-                    handle_file_to_format(configuration, mode, f, formatter, should_cache)
+                    handle_file_to_format(configuration, mode, f, formatter)
                 })
                 .collect::<Vec<_>>()
         })
