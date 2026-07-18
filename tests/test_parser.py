@@ -1,21 +1,20 @@
 import gersemi_rust_backend
 import pytest
-from gersemi.exceptions import (
-    GenericParsingError,
-    ParsingError,
-    UnbalancedBlock,
-    UnbalancedBrackets,
-    UnbalancedParentheses,
-)
 from .tests_generator import generate_input_only_tests
 
 
 def test_parser(case):
     try:
         gersemi_rust_backend.validate(case.content)
-    except ParsingError:
+    except BaseException:
         pytest.fail("invalid input to parse")
         raise
+
+
+GenericParsingError = "unspecified parsing error"
+UnbalancedParentheses = "unbalanced parentheses"
+UnbalancedBrackets = "unbalanced brackets"
+UnbalancedBlock = "unbalanced block"
 
 
 @pytest.mark.parametrize(
@@ -83,10 +82,10 @@ endfunction()
     ],
 )
 def test_invalid_code_parsing_error(invalid_code, expected_exception):
-    with pytest.raises(ParsingError) as rust_exc_info:
+    with pytest.raises(RuntimeError) as rust_exc_info:
         gersemi_rust_backend.validate(invalid_code)
 
-    assert rust_exc_info.type is expected_exception
+    assert expected_exception in str(rust_exc_info.value)
 
 
 pytest_generate_tests = generate_input_only_tests(

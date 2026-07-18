@@ -6,6 +6,7 @@ use crate::node::{
     Start,
 };
 use crate::utils::builtin_schemas;
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::PyErr;
 use regex::Regex;
 use std::collections::HashMap;
@@ -889,19 +890,17 @@ impl CommandSchemas {
     }
 }
 
-pyo3::import_exception!(gersemi.exceptions, GenericParsingError);
-pyo3::import_exception!(gersemi.exceptions, UnbalancedBlock);
-pyo3::import_exception!(gersemi.exceptions, UnbalancedBrackets);
-pyo3::import_exception!(gersemi.exceptions, UnbalancedParentheses);
-
 impl From<Error> for PyErr {
     fn from(error: Error) -> Self {
-        let exception = match error.error_type {
-            ErrorType::GenericParsingError => GenericParsingError::new_err,
-            ErrorType::UnbalancedBlock => UnbalancedBlock::new_err,
-            ErrorType::UnbalancedBrackets => UnbalancedBrackets::new_err,
-            ErrorType::UnbalancedParentheses => UnbalancedParentheses::new_err,
+        let description = match error.error_type {
+            ErrorType::GenericParsingError => "unspecified parsing error",
+            ErrorType::UnbalancedBlock => "unbalanced block",
+            ErrorType::UnbalancedBrackets => "unbalanced brackets",
+            ErrorType::UnbalancedParentheses => "unbalanced parentheses",
         };
-        exception((error.explanation, error.line, error.column))
+        PyRuntimeError::new_err(format!(
+            "{}:{}: {description}\n{}",
+            error.line, error.column, error.explanation
+        ))
     }
 }
