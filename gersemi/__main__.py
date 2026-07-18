@@ -356,11 +356,6 @@ def error(text):
 
 
 def main():
-    if FROZEN:
-        from multiprocessing import freeze_support
-
-        freeze_support()
-
     try:
         argparser = create_argparser()
         args = argparser.parse_args()

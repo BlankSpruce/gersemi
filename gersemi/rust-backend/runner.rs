@@ -6,6 +6,7 @@ use crate::utils::{normalize_newlines, read_code};
 use crate::warning_sink::warn;
 use crate::{configuration::Configuration, formatter::UnknownCommandsUsed};
 use pyo3::{PyResult, Python};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::fmt::Write;
 use std::io::Write as IoWrite;
 use std::path::{Path, PathBuf};
@@ -293,28 +294,48 @@ impl Runner<'_> {
             )
     }
 
-    pub fn handle_files_to_format(&mut self, files: Vec<PathBuf>) -> PyResult<Vec<usize>> {
+    pub fn handle_files_to_format(
+        &mut self,
+        py: Python,
+        files: Vec<PathBuf>,
+    ) -> PyResult<Vec<usize>> {
         let configuration_summary = self.configuration.outcome.summarize()?;
         let formatter = Formatter::new(self.configuration.clone())?;
         let formatter = Some(&formatter);
-
         let should_cache = self.should_cache();
-        let mut result = Vec::<usize>::new();
+
         let mut files_to_cache = Vec::<PathBuf>::new();
+        let result: Vec<usize> = py
+            .detach(|| {
+                files
+                    .into_par_iter()
+                    .panic_fuse()
+                    .map(|f| {
+                        Python::attach(|py| py.check_signals().unwrap());
 
-        for f in files {
-            let (code, f, warnings) =
-                handle_file_to_format(&self.configuration, &self.mode, f, formatter, should_cache);
-            result.push(code);
+                        handle_file_to_format(
+                            &self.configuration,
+                            &self.mode,
+                            f,
+                            formatter,
+                            should_cache,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .into_iter()
+            .map(|(code, file_to_cache, warnings)| {
+                if let Some(f) = file_to_cache {
+                    files_to_cache.push(f);
+                }
 
-            if let Some(f) = f {
-                files_to_cache.push(f);
-            }
+                for warning in warnings {
+                    warn(warning);
+                }
 
-            for warning in warnings {
-                warn(warning);
-            }
-        }
+                code
+            })
+            .collect();
 
         if let Some(cache) = &self.cache {
             cache.store_files(&configuration_summary, &files_to_cache);

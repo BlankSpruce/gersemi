@@ -4,7 +4,6 @@ from dataclasses import astuple, dataclass, field, fields
 from functools import lru_cache
 import os
 from pathlib import Path
-import sys
 from typing import Iterable, Optional, Union
 import gersemi_rust_backend
 from platformdirs import user_cache_dir
@@ -19,17 +18,6 @@ def default_cache_dir() -> Path:
     return Path(
         user_cache_dir(appname=__title__, appauthor=__author__, version=__version__)
     )
-
-
-def max_number_of_workers():
-    import multiprocessing
-
-    result = multiprocessing.cpu_count()
-    if sys.platform == "win32":
-        # https://bugs.python.org/issue26903
-        # https://github.com/python/cpython/issues/89240
-        return min(result, 60)
-    return result
 
 
 class Tabs(EnumWithMetadata):
@@ -67,7 +55,7 @@ def workers_type(thing) -> Workers:
     if thing == MaxWorkers.MaxWorkers.value:
         return MaxWorkers.MaxWorkers
 
-    return min(max(1, int(thing)), max_number_of_workers())
+    return min(max(1, int(thing)), gersemi_rust_backend.max_number_of_workers())
 
 
 class ListExpansion(EnumWithMetadata):

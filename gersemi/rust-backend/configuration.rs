@@ -1,3 +1,4 @@
+use crate::gersemi_rust_backend::max_number_of_workers;
 use crate::utils::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::sync::PyOnceLock;
@@ -170,6 +171,36 @@ pub struct LineRange {
     pub end: usize,
 }
 
+#[derive(Clone)]
+pub struct MaxWorkers;
+
+#[derive(Clone, FromPyObject)]
+pub enum Workers {
+    NumberOfWorkers(usize),
+    MaxWorkers(MaxWorkers),
+}
+
+impl Workers {
+    pub fn value(&self) -> usize {
+        match self {
+            Self::NumberOfWorkers(v) => *v,
+            Self::MaxWorkers(_) => max_number_of_workers(),
+        }
+    }
+}
+
+impl FromPyObject<'_, '_> for MaxWorkers {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        if string_enum_value(obj)? == "max" {
+            Ok(MaxWorkers)
+        } else {
+            Err(PyRuntimeError::new_err("Invalid MaxWorkers"))
+        }
+    }
+}
+
 #[derive(Clone, FromPyObject)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct ControlConfiguration {
@@ -181,6 +212,7 @@ pub struct ControlConfiguration {
     pub quiet: bool,
     pub warnings_as_errors: bool,
     pub configuration_file: Option<PathBuf>,
+    pub workers: Workers,
 }
 
 #[derive(Clone, FromPyObject)]

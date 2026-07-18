@@ -10,7 +10,8 @@ use crate::utils::print_configuration_report;
 use crate::utils::{make_control_configuration, make_outcome_configuration};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::{pyclass, pymethods, Py, PyAny, PyResult};
+use pyo3::{pyclass, pymethods, Py, PyAny, PyResult, Python};
+use rayon::ThreadPoolBuilder;
 use std::path::{Path, PathBuf};
 
 pub struct StatusCode {
@@ -88,6 +89,11 @@ impl App {
     fn new(args: Py<PyAny>) -> PyResult<Self> {
         let configuration = make_control_configuration(&args)?;
         register_warning_sink(WarningSink::new(configuration.quiet));
+        ThreadPoolBuilder::new()
+            .num_threads(configuration.workers.value())
+            .build_global()
+            .unwrap();
+
         let cache = Cache::new(
             configuration.cache && configuration.line_ranges.is_empty(),
             &configuration.cache_dir,
@@ -103,6 +109,7 @@ impl App {
     #[allow(clippy::needless_pass_by_value)]
     fn handle_files(
         &mut self,
+        py: Python,
         configuration_file: Option<PathBuf>,
         files: Vec<PathBuf>,
     ) -> PyResult<()> {
@@ -126,7 +133,7 @@ impl App {
             self.status_code.add(code);
         }
 
-        for code in runner.handle_files_to_format(files_to_format)? {
+        for code in runner.handle_files_to_format(py, files_to_format)? {
             self.status_code.add(code);
         }
         Ok(())
@@ -172,7 +179,7 @@ impl App {
         Ok(result)
     }
 
-    fn run(&mut self) -> PyResult<usize> {
+    fn run(&mut self, py: Python) -> PyResult<usize> {
         if self.args.sources.is_empty() {
             return Ok(self.status_code());
         }
@@ -193,7 +200,7 @@ impl App {
             if is_print_config_mode {
                 print_configuration_report(configuration_file, files, &self.args.obj)?;
             } else {
-                self.handle_files(configuration_file, files)?;
+                self.handle_files(py, configuration_file, files)?;
             }
         }
 

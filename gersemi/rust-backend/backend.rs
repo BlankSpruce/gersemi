@@ -118,4 +118,12 @@ mod gersemi_rust_backend {
         static RESULT: &str = env!("CARGO_VERSION");
         RESULT
     }
+
+    #[pyfunction]
+    pub fn max_number_of_workers() -> usize {
+        match std::thread::available_parallelism() {
+            Err(_) => 1,
+            Ok(n) => n.get(),
+        }
+    }
 }
