@@ -23,6 +23,7 @@ mod gersemi_rust_backend {
     use crate::parser::{Error, Parser};
     use crate::runner::is_stdin;
     use crate::sanity_checker::check_equivalence;
+    use ignore::types::{Types, TypesBuilder};
     use ignore::WalkBuilder;
     use pyo3::exceptions::PyRuntimeError;
     use pyo3::{pyfunction, PyResult};
@@ -59,6 +60,22 @@ mod gersemi_rust_backend {
     #[pymodule_export]
     use crate::app::App;
 
+    fn cmake_types() -> Result<Types, ignore::Error> {
+        let mut result = TypesBuilder::new();
+        result.add("cmake", "CMakeLists.txt")?;
+        result.add("cmake", "*.cmake")?;
+        result.add("cmake", "CMakeLists.txt.in")?;
+        result.add("cmake", "*.cmake.in")?;
+        result.select("cmake");
+        let result = result.build();
+
+        if let Err(ref err) = result {
+            println!("dbg: {err:?}");
+        }
+
+        result
+    }
+
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     pub fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
@@ -77,26 +94,27 @@ mod gersemi_rust_backend {
 
         let fail = Err(PyRuntimeError::new_err("Failed to find files"));
         let mut result = Vec::<PathBuf>::new();
+
+        let Ok(type_matcher) = cmake_types() else {
+            return fail;
+        };
+
         for entry in builder
             .require_git(false)
             .standard_filters(respect_ignore_files)
+            .types(type_matcher)
             .build()
         {
             let Ok(entry) = entry else {
                 return fail;
             };
 
-            let name = entry.file_name();
-            let Some(name) = name.to_str() else {
-                return fail;
-            };
-            if (name == "CMakeLists.txt")
-                || (name == "CMakeLists.txt.in")
-                || (name.ends_with(".cmake"))
-                || (name.ends_with(".cmake.in"))
-            {
-                result.push(std::path::absolute(entry.into_path())?);
+            let p = entry.into_path();
+            if p.is_dir() {
+                continue;
             }
+
+            result.push(std::path::absolute(p)?);
         }
 
         result.sort();
