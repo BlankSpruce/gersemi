@@ -1,3 +1,4 @@
+import gersemi_rust_backend
 import pytest
 from gersemi.exceptions import (
     GenericParsingError,
@@ -9,9 +10,9 @@ from gersemi.exceptions import (
 from .tests_generator import generate_input_only_tests
 
 
-def test_parser(rust_parser, case):
+def test_parser(case):
     try:
-        rust_parser.validate(case.content)
+        gersemi_rust_backend.validate(case.content)
     except ParsingError:
         pytest.fail("invalid input to parse")
         raise
@@ -81,9 +82,9 @@ endfunction()
         ),
     ],
 )
-def test_invalid_code_parsing_error(rust_parser, invalid_code, expected_exception):
+def test_invalid_code_parsing_error(invalid_code, expected_exception):
     with pytest.raises(ParsingError) as rust_exc_info:
-        rust_parser.validate(invalid_code)
+        gersemi_rust_backend.validate(invalid_code)
 
     assert rust_exc_info.type is expected_exception
 

@@ -79,7 +79,7 @@ pub fn tofile(path: &Path) -> &str {
 pub struct Runner<'a> {
     pub mode: Mode,
     pub configuration: Configuration,
-    pub cache: Option<&'a mut Cache>,
+    pub cache: &'a mut Cache,
 }
 
 type TaskResult = (usize, Vec<String>);
@@ -287,11 +287,10 @@ impl Runner<'_> {
     }
 
     fn should_cache(&self) -> bool {
-        self.cache.is_some()
-            && matches!(
-                self.mode,
-                Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
-            )
+        matches!(
+            self.mode,
+            Mode::CheckFormatting | Mode::CheckFormattingAndShowDiff | Mode::RewriteInPlace
+        )
     }
 
     pub fn handle_files_to_format(
@@ -337,9 +336,8 @@ impl Runner<'_> {
             })
             .collect();
 
-        if let Some(cache) = &self.cache {
-            cache.store_files(&configuration_summary, &files_to_cache);
-        }
+        self.cache
+            .store_files(&configuration_summary, &files_to_cache);
         Ok(result)
     }
 }

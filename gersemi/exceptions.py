@@ -1,7 +1,3 @@
-class ASTMismatch(Exception):
-    pass
-
-
 class ParsingError(SyntaxError):
     description: str = ""
 

@@ -12,12 +12,6 @@ from gersemi.configuration import (
 )
 from tests.fixtures.app import App
 from tests.fixtures.cache import Cache
-from tests.utils import Parser
-
-
-@pytest.fixture(scope="module")
-def rust_parser():
-    return Parser()
 
 
 @pytest.fixture(scope="module")

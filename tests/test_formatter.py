@@ -1,5 +1,4 @@
-import pytest
-from gersemi.exceptions import ASTMismatch
+import gersemi_rust_backend
 from tests.tests_generator import generate_input_output_tests
 from tests.utils import preprocess
 
@@ -19,12 +18,8 @@ def test_formatter_idempotence(formatter_creator, case):
     assert p(formatted_once) == p(formatted_twice)
 
 
-def test_abstract_syntax_tree_equivalence(rust_parser, case):
-    try:
-        rust_parser.check_code_equivalence(case.given, case.expected)
-    except ASTMismatch:
-        pytest.fail("ASTs mismatch")
-        raise
+def test_abstract_syntax_tree_equivalence(case):
+    assert gersemi_rust_backend.check_code_equivalence(case.given, case.expected)
 
 
 pytest_generate_tests = generate_input_output_tests(

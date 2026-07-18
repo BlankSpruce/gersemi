@@ -19,7 +19,7 @@ use pyo3::pymodule;
 
 #[pymodule]
 mod gersemi_rust_backend {
-    use crate::argument_schema::{CommandSchemaMapping, CommandSchemas};
+    use crate::argument_schema::CommandSchemas;
     use crate::parser::{Error, Parser};
     use crate::runner::is_stdin;
     use crate::sanity_checker::check_equivalence;
@@ -31,9 +31,9 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn validate(text: String, schemas: CommandSchemaMapping) -> Result<(), Error> {
+    fn validate(text: String) -> Result<(), Error> {
         let schemas = CommandSchemas {
-            definition_schemas: schemas,
+            definition_schemas: HashMap::new(),
             extension_schemas: HashMap::new(),
         };
         let parser = Parser::new(text, &schemas);
@@ -42,13 +42,9 @@ mod gersemi_rust_backend {
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
-    fn check_code_equivalence(
-        schemas: CommandSchemaMapping,
-        before: String,
-        after: String,
-    ) -> Result<bool, Error> {
+    fn check_code_equivalence(before: String, after: String) -> Result<bool, Error> {
         let schemas = CommandSchemas {
-            definition_schemas: schemas,
+            definition_schemas: HashMap::new(),
             extension_schemas: HashMap::new(),
         };
         let before = Parser::new(before, &schemas).start()?;

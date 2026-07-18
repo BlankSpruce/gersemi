@@ -127,7 +127,7 @@ impl App {
         let mut runner = Runner {
             mode: self.args.mode.clone(),
             configuration,
-            cache: Some(&mut self.cache),
+            cache: &mut self.cache,
         };
         for code in runner.handle_already_formatted_files(&already_formatted_files) {
             self.status_code.add(code);

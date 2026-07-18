@@ -21,6 +21,7 @@ use crate::parser::{quoted_argument_pattern, regex, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use crate::utils::{get_keyword_transformers, load_definitions_from_extensions};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, PyErr, PyResult};
 use regex::Regex;
 use std::cell::RefCell;
@@ -1494,8 +1495,6 @@ fn remove_line_range_fences(formatted_code: &str) -> String {
     pattern.replace_all(formatted_code, "").to_string()
 }
 
-pyo3::import_exception!(gersemi.exceptions, ASTMismatch);
-
 fn create_standard_command_schema(
     positional_arguments: Vec<String>,
     keywords: Keywords,
@@ -1571,7 +1570,7 @@ impl Formatter {
         if let Some(before) = before {
             let after = Parser::new(result.clone(), &self.schemas).start()?;
             if !check_equivalence(before, after) {
-                return Err(ASTMismatch::new_err(
+                return Err(PyRuntimeError::new_err(
                     "Reformatting doesn't produce equivalent code.",
                 ));
             }
