@@ -221,7 +221,7 @@ fn run_task_impl(
             Mode::CheckFormattingAndShowDiff => {
                 check_and_show_diff(path, configuration.control.color, &before, &after, warnings)?
             }
-            _ => do_nothing(),
+            Mode::PrintConfig => do_nothing(),
         }
     };
 
