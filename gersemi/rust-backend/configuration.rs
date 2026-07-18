@@ -24,15 +24,24 @@ pub enum KeywordFormatter {
     Pairs,
 }
 
+impl KeywordFormatter {
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "command_line" => Some(Self::CommandLine),
+            "pairs" => Some(Self::Pairs),
+            _ => None,
+        }
+    }
+}
+
 impl FromPyObject<'_, '_> for KeywordFormatter {
     type Error = PyErr;
 
     fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
-        let value = string_enum_value(obj)?;
-        match value.as_str() {
-            "command_line" => Ok(KeywordFormatter::CommandLine),
-            "pairs" => Ok(KeywordFormatter::Pairs),
-            _ => Err(PyRuntimeError::new_err("Invalid KeywordFormatter")),
+        if let Some(v) = Self::from_str(&string_enum_value(obj)?) {
+            Ok(v)
+        } else {
+            Err(PyRuntimeError::new_err("Invalid KeywordFormatter"))
         }
     }
 }
@@ -44,16 +53,25 @@ pub enum KeywordPreprocessor {
     SortAndUnique,
 }
 
+impl KeywordPreprocessor {
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "sort" => Some(Self::Sort),
+            "unique" => Some(Self::Unique),
+            "sort+unique" => Some(Self::SortAndUnique),
+            _ => None,
+        }
+    }
+}
+
 impl FromPyObject<'_, '_> for KeywordPreprocessor {
     type Error = PyErr;
 
     fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
-        let value = string_enum_value(obj)?;
-        match value.as_str() {
-            "sort" => Ok(KeywordPreprocessor::Sort),
-            "unique" => Ok(KeywordPreprocessor::Unique),
-            "sort+unique" => Ok(KeywordPreprocessor::SortAndUnique),
-            _ => Err(PyRuntimeError::new_err("Invalid KeywordPreprocessor")),
+        if let Some(v) = Self::from_str(&string_enum_value(obj)?) {
+            Ok(v)
+        } else {
+            Err(PyRuntimeError::new_err("Invalid KeywordPreprocessor"))
         }
     }
 }

@@ -1,11 +1,8 @@
 use crate::argument_schema::CommandSchemaMapping;
-use crate::configuration::{
-    ControlConfiguration, Extension, KeywordFormatter, KeywordPreprocessor, OutcomeConfiguration,
-};
+use crate::configuration::{ControlConfiguration, Extension, OutcomeConfiguration};
 use crate::runner::is_stdin;
 use pyo3::types::{PyAnyMethods, PyModule};
 use pyo3::{Py, PyAny, PyResult, Python};
-use std::collections::HashMap;
 use std::io::{stdin, Read};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -43,20 +40,6 @@ pub fn load_definitions_from_extensions(
         PyModule::import(py, "gersemi.extensions")?
             .getattr("load_definitions_from_extensions")?
             .call1((extensions,))?
-            .extract()
-    })
-}
-
-pub fn get_keyword_transformers(
-    hints: Vec<String>,
-) -> PyResult<(
-    HashMap<String, KeywordFormatter>,
-    HashMap<String, KeywordPreprocessor>,
-)> {
-    Python::attach(|py| {
-        PyModule::import(py, "gersemi.custom_command_definition_finder")?
-            .getattr("get_keyword_transformers")?
-            .call1((hints,))?
             .extract()
     })
 }

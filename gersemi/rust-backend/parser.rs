@@ -464,22 +464,20 @@ impl Parser<'_> {
             return Ok(None);
         };
 
-        let kind = match hint {
-            "sort+unique" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::SortAndUnique),
-            "sort" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::Sort),
-            "unique" => PhantomKind::KeywordPreprocessor(KeywordPreprocessor::Unique),
-            "command_line" => PhantomKind::KeywordFormatter(KeywordFormatter::CommandLine),
-            "pairs" => PhantomKind::KeywordFormatter(KeywordFormatter::Pairs),
-            "raw" => PhantomKind::Raw,
-            _ => match hint.strip_prefix("as_command=") {
-                None => {
-                    return Ok(None);
-                }
-                Some(hint) => PhantomKind::AsCommand {
-                    command: hint.to_lowercase(),
-                },
-            },
+        let kind = if let Some(hint) = KeywordPreprocessor::from_str(hint) {
+            PhantomKind::KeywordPreprocessor(hint)
+        } else if let Some(hint) = KeywordFormatter::from_str(hint) {
+            PhantomKind::KeywordFormatter(hint)
+        } else if hint == "raw" {
+            PhantomKind::Raw
+        } else if let Some(hint) = hint.strip_prefix("as_command=") {
+            PhantomKind::AsCommand {
+                command: hint.to_lowercase(),
+            }
+        } else {
+            return Ok(None);
         };
+
         Ok(Some((Argument::Phantom { value, kind }, offset)))
     }
 

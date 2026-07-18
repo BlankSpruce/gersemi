@@ -20,10 +20,11 @@ use crate::node::{
 use crate::parser::{quoted_argument_pattern, regex, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
-use crate::utils::{get_keyword_transformers, load_definitions_from_extensions};
+use crate::utils::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, PyErr, PyResult};
 use regex::Regex;
+use rust_yaml::{Value, Yaml};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::iter::zip;
@@ -1495,13 +1496,44 @@ fn remove_line_range_fences(formatted_code: &str) -> String {
     pattern.replace_all(formatted_code, "").to_string()
 }
 
+fn get_keyword_transformers(
+    hints: Vec<String>,
+) -> (
+    HashMap<String, KeywordFormatter>,
+    HashMap<String, KeywordPreprocessor>,
+) {
+    let mut formatters = HashMap::<String, KeywordFormatter>::new();
+    let mut preprocessors = HashMap::<String, KeywordPreprocessor>::new();
+
+    let yaml = Yaml::new();
+    for hint in hints {
+        let Ok(Value::Mapping(m)) = yaml.load_str(&hint) else {
+            continue;
+        };
+
+        for (keyword, hint) in m {
+            let (Value::String(keyword), Value::String(hint)) = (keyword, hint) else {
+                continue;
+            };
+
+            if let Some(hint) = KeywordFormatter::from_str(&hint) {
+                formatters.insert(keyword, hint);
+            } else if let Some(hint) = KeywordPreprocessor::from_str(&hint) {
+                preprocessors.insert(keyword, hint);
+            }
+        }
+    }
+
+    (formatters, preprocessors)
+}
+
 fn create_standard_command_schema(
     positional_arguments: Vec<String>,
     keywords: Keywords,
-) -> PyResult<ArgumentSchema> {
-    let (keyword_formatters, keyword_preprocessors) = get_keyword_transformers(keywords.hints)?;
+) -> ArgumentSchema {
+    let (keyword_formatters, keyword_preprocessors) = get_keyword_transformers(keywords.hints);
 
-    Ok(ArgumentSchema {
+    ArgumentSchema {
         options: single_word_matchers(keywords.options),
         one_value_keywords: single_word_matchers(keywords.one_value_keywords),
         multi_value_keywords: single_word_matchers(keywords.multi_value_keywords),
@@ -1510,33 +1542,31 @@ fn create_standard_command_schema(
         sections: HashMap::new(),
         keyword_preprocessors,
         keyword_formatters,
-    })
+    }
 }
 
-fn create_command_schema(content: CustomCommandContent) -> PyResult<CommandSchema> {
-    Ok(CommandSchema {
+fn create_command_schema(content: CustomCommandContent) -> CommandSchema {
+    CommandSchema {
         block_end: content.block_end,
         canonical_name: Some(content.canonical_name),
         inhibit_favour_expansion: false,
         details: CommandSchemaDetails::StandardCommand {
-            schema: create_standard_command_schema(content.positional_arguments, content.keywords)?,
+            schema: create_standard_command_schema(content.positional_arguments, content.keywords),
             signatures: Signatures::new(),
             two_words_keywords: Vec::new(),
         },
-    })
+    }
 }
 
-fn get_just_schemas(
-    definitions: Vec<(String, Vec<CustomCommand>)>,
-) -> PyResult<CommandSchemaMapping> {
+fn get_just_schemas(definitions: Vec<(String, Vec<CustomCommand>)>) -> CommandSchemaMapping {
     let mut result = CommandSchemaMapping::new();
     for (name, mut info) in definitions {
         info.sort_by(|a, b| a.1.cmp(&b.1));
         if let Some((content, _)) = info.into_iter().next() {
-            result.insert(name, create_command_schema(content)?);
+            result.insert(name, create_command_schema(content));
         }
     }
-    Ok(result)
+    result
 }
 
 #[pymethods]
@@ -1544,7 +1574,7 @@ impl Formatter {
     #[new]
     pub fn new(configuration: Configuration) -> PyResult<Self> {
         let definitions = find_all_custom_command_definitions(&configuration)?;
-        let definition_schemas = get_just_schemas(definitions)?;
+        let definition_schemas = get_just_schemas(definitions);
         let extension_schemas =
             load_definitions_from_extensions(&configuration.outcome.extensions)?;
         Ok(Self {
