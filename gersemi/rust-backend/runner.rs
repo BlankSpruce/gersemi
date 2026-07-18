@@ -246,6 +246,31 @@ fn run_task(
     }
 }
 
+fn handle_file_to_format(
+    configuration: &Configuration,
+    mode: &Mode,
+    path: PathBuf,
+    formatter: Option<&Formatter>,
+    should_cache: bool,
+) -> (usize, Option<PathBuf>, Vec<String>) {
+    let (code, warnings) = run_task(configuration, mode, &path, formatter);
+
+    let has_warnings = if configuration.outcome.warn_about_unknown_commands {
+        !warnings.is_empty()
+    } else {
+        false
+    };
+
+    let file_to_cache =
+        if should_cache && (code == SUCCESS) && (!is_stdin(&path)) && (!has_warnings) {
+            Some(path)
+        } else {
+            None
+        };
+
+    (code, file_to_cache, warnings)
+}
+
 impl Runner<'_> {
     pub fn handle_already_formatted_files(&mut self, files: &[PathBuf]) -> Vec<usize> {
         files
@@ -278,16 +303,11 @@ impl Runner<'_> {
         let mut files_to_cache = Vec::<PathBuf>::new();
 
         for f in files {
-            let (code, warnings) = run_task(&self.configuration, &self.mode, &f, formatter);
+            let (code, f, warnings) =
+                handle_file_to_format(&self.configuration, &self.mode, f, formatter, should_cache);
             result.push(code);
 
-            let has_warnings = if self.configuration.outcome.warn_about_unknown_commands {
-                !warnings.is_empty()
-            } else {
-                false
-            };
-
-            if should_cache && (code == SUCCESS) && (!is_stdin(&f)) && (!has_warnings) {
+            if let Some(f) = f {
                 files_to_cache.push(f);
             }
 
