@@ -194,7 +194,7 @@ fn run_task_impl(
     mode: &Mode,
     path: &Path,
     formatter: Option<&Formatter>,
-) -> PyResult<(usize, bool)> {
+) -> PyResult<(usize, Vec<String>)> {
     let (before, after, newlines_style, unknown_command_warnings) = format_file(path, formatter)?;
     let warnings = if configuration.outcome.warn_about_unknown_commands {
         unknown_command_warnings
@@ -224,16 +224,7 @@ fn run_task_impl(
         }
     };
 
-    let has_warnings = if configuration.outcome.warn_about_unknown_commands {
-        let result = !warnings.is_empty();
-        for warning in warnings {
-            warn(warning);
-        }
-        result
-    } else {
-        false
-    };
-    Ok((code, has_warnings))
+    Ok((code, warnings))
 }
 
 fn run_task(
@@ -241,16 +232,16 @@ fn run_task(
     mode: &Mode,
     path: &Path,
     formatter: Option<&Formatter>,
-) -> (usize, bool) {
+) -> (usize, Vec<String>) {
     match run_task_impl(configuration, mode, path, formatter) {
         Ok(ok) => ok,
         Err(err) => {
-            warn(format!(
+            let warning = format!(
                 "{}: {}",
                 path.to_str().unwrap_or("---"),
                 Python::attach(|py| err.value(py).to_string())
-            ));
-            (INTERNAL_ERROR, false)
+            );
+            (INTERNAL_ERROR, vec![warning])
         }
     }
 }
@@ -260,7 +251,10 @@ impl Runner<'_> {
         files
             .iter()
             .map(|f| {
-                let (code, _) = run_task(&self.configuration, &self.mode, f, None);
+                let (code, warnings) = run_task(&self.configuration, &self.mode, f, None);
+                for warning in warnings {
+                    warn(warning);
+                }
                 code
             })
             .collect()
@@ -284,11 +278,21 @@ impl Runner<'_> {
         let mut files_to_cache = Vec::<PathBuf>::new();
 
         for f in files {
-            let (code, has_warnings) = run_task(&self.configuration, &self.mode, &f, formatter);
+            let (code, warnings) = run_task(&self.configuration, &self.mode, &f, formatter);
             result.push(code);
+
+            let has_warnings = if self.configuration.outcome.warn_about_unknown_commands {
+                !warnings.is_empty()
+            } else {
+                false
+            };
 
             if should_cache && (code == SUCCESS) && (!is_stdin(&f)) && (!has_warnings) {
                 files_to_cache.push(f);
+            }
+
+            for warning in warnings {
+                warn(warning);
             }
         }
 
