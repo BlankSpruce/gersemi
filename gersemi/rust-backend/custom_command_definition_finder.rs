@@ -200,10 +200,10 @@ impl CustomCommandInterpreter {
 
     fn cmake_parse_arguments(&self, children: &Arguments) -> Option<Keywords> {
         let first_child = children.first()?.get_value();
-        let part = if "PARSE_ARGV" == first_child {
-            [children.get(3), children.get(4), children.get(5)]
-        } else {
-            [children.get(1), children.get(2), children.get(3)]
+        let part = match first_child.as_str() {
+            "PARSE_ARGV" => [children.get(3), children.get(4), children.get(5)],
+            "PARSE_ARGN" => [children.get(2), children.get(3), children.get(4)],
+            _ => [children.get(1), children.get(2), children.get(3)],
         };
 
         let [Some(options), Some(one_value_arguments), Some(multi_value_arguments)] = part else {

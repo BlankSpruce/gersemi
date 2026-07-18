@@ -537,7 +537,7 @@ fn isolate_binary_tests(
 }
 
 pub fn isolate_conditions(arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
-    static UNARY_OPERATORS: LazyLock<[KeywordMatcher; 12]> = LazyLock::new(|| {
+    static UNARY_OPERATORS: LazyLock<[KeywordMatcher; 13]> = LazyLock::new(|| {
         [
             "COMMAND",
             "POLICY",
@@ -551,6 +551,7 @@ pub fn isolate_conditions(arguments: RefinedArgumentsNode) -> RefinedArgumentsNo
             "IS_READABLE",
             "IS_WRITABLE",
             "IS_EXECUTABLE",
+            "DIAGNOSTIC",
         ]
         .map(single_word_matcher)
     });

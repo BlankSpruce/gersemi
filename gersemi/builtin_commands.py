@@ -202,6 +202,10 @@ builtin_commands = {
         "one_value_keywords": ["API_VERSION", "DATA_VERSION", "CALLBACK"],
         "multi_value_keywords": ["HOOKS", "OPTIONS", _CUSTOM_CONTENT_Any],
     },
+    "cmake_diagnostic": {
+        "options": ["RECURSE", "NO_RECURSE", "PUSH", "POP"],
+        "one_value_keywords": ["SET", "PROMOTE", "DEMOTE", "GET"],
+    },
     "cmake_language": {
         "_two_words_keywords": [_EVAL_CODE],
         "signatures": {
@@ -240,6 +244,15 @@ builtin_commands = {
             "PARSE_ARGV": {
                 "one_value_keywords": ["PARSE_ARGV"],
                 "back_positional_arguments": [
+                    "<prefix>",
+                    "<options>",
+                    "<one_value_keywords>",
+                    "<multi_value_keywords>",
+                ],
+            },
+            "PARSE_ARGN": {
+                "options": ["PARSE_ARGN"],
+                "front_positional_arguments": [
                     "<prefix>",
                     "<options>",
                     "<one_value_keywords>",
@@ -491,6 +504,28 @@ builtin_commands = {
         "multi_value_keywords": ["FILE_PERMISSIONS"],
     },
     "continue": {},
+    "discover_tests": {
+        "options": ["COMMAND_EXPAND_LISTS"],
+        "one_value_keywords": [
+            "DISCOVERY_MATCH",
+            "TEST_NAME",
+        ],
+        "multi_value_keywords": [
+            "COMMAND",
+            "CONFIGURATIONS",
+            "DISCOVERY_ARGS",
+            "DISCOVERY_PROPERTIES",
+            "TEST_ARGS",
+            "TEST_PROPERTIES",
+        ],
+        "keyword_formatters": {
+            "COMMAND": KeywordFormatter.CommandLine,
+            "DISCOVERY_ARGS": KeywordFormatter.CommandLine,
+            "TEST_ARGS": KeywordFormatter.CommandLine,
+            "DISCOVERY_PROPERTIES": KeywordFormatter.Pairs,
+            "TEST_PROPERTIES": KeywordFormatter.Pairs,
+        },
+    },
     "if": {
         "__impl": "condition_syntax",
         "_inhibit_favour_expansion": True,
@@ -541,7 +576,7 @@ builtin_commands = {
             "ENCODING",
             "COMMAND_ERROR_IS_FATAL",
         ],
-        "multi_value_keywords": ["COMMAND"],
+        "multi_value_keywords": ["COMMAND", "ENVIRONMENT", "ENVIRONMENT_MODIFICATION"],
         "keyword_formatters": {"COMMAND": KeywordFormatter.CommandLine},
     },
     "file": {
@@ -758,6 +793,7 @@ builtin_commands = {
             "READ_SYMLINK": {
                 "one_value_keywords": [
                     "READ_SYMLINK",  # <filename>
+                    "RESULT",
                 ],
             },
             "CREATE_LINK": {
@@ -859,12 +895,17 @@ builtin_commands = {
                     "MTIME",
                     "THREADS",
                     "WORKING_DIRECTORY",
+                    "ENCODING",
                 ],
                 "multi_value_keywords": ["PATHS"],
             },
             "ARCHIVE_EXTRACT": {
                 "options": ["ARCHIVE_EXTRACT", "LIST_ONLY", "VERBOSE"],
-                "one_value_keywords": ["INPUT", "DESTINATION"],
+                "one_value_keywords": [
+                    "INPUT",
+                    "DESTINATION",
+                    "ENCODING",
+                ],
                 "multi_value_keywords": ["PATTERNS"],
             },
             "REMOVE": {"options": ["REMOVE"]},
@@ -1005,7 +1046,7 @@ builtin_commands = {
     },
     "include": {
         "front_positional_arguments": ["<file|module>"],
-        "options": ["OPTIONAL", "NO_POLICY_SCOPE"],
+        "options": ["OPTIONAL", "NO_POLICY_SCOPE", "NO_DIAGNOSTIC_SCOPE"],
         "one_value_keywords": ["RESULT_VARIABLE"],
     },
     "include_guard": {},
@@ -1058,6 +1099,7 @@ builtin_commands = {
                 "one_value_keywords": [
                     "FILTER",  # <list>
                     "REGEX",
+                    "PREDICATE",
                 ],
             },
             "INSERT": {
@@ -1103,6 +1145,8 @@ builtin_commands = {
                     "OUTPUT_VARIABLE",
                     "TRANSFORM",  # <list>
                     "REGEX",
+                    "APPLY",
+                    "PREDICATE",
                 ],
                 "multi_value_keywords": ["REPLACE", "AT", "FOR"],
             },
@@ -1118,6 +1162,7 @@ builtin_commands = {
                     "COMPARE",
                     "CASE",
                     "ORDER",
+                    "COMPARATOR",
                 ]
             },
         },
@@ -1421,7 +1466,7 @@ builtin_commands = {
                     "SET",
                     "STRING_ENCODE",
                 ],
-                "multi_value_keywords": ["EQUAL"],
+                "multi_value_keywords": ["EQUAL", "PARTIAL_EQUAL"],
             },
         },
     },
@@ -2099,6 +2144,8 @@ builtin_commands = {
             "RETURN_VALUE",
             "CAPTURE_CMAKE_ERROR",
             "PARALLEL_LEVEL",
+            "PRESET",
+            "PRESETS_FILE",
         ],
     },
     "ctest_configure": {
@@ -2109,6 +2156,8 @@ builtin_commands = {
             "OPTIONS",
             "RETURN_VALUE",
             "CAPTURE_CMAKE_ERROR",
+            "PRESET",
+            "PRESETS_FILE",
         ],
     },
     "ctest_coverage": {
@@ -2137,6 +2186,8 @@ builtin_commands = {
             "STOP_TIME",
             "RETURN_VALUE",
             "DEFECT_COUNT",
+            "PRESET",
+            "PRESETS_FILE",
         ],
     },
     "ctest_read_custom_files": {},
@@ -2187,11 +2238,18 @@ builtin_commands = {
             "CAPTURE_CMAKE_ERROR",
             "INCLUDE_FROM_FILE",
             "EXCLUDE_FROM_FILE",
+            "PRESET",
+            "PRESETS_FILE",
         ],
     },
     "ctest_update": {
-        "options": ["QUIET"],
-        "one_value_keywords": ["SOURCE", "RETURN_VALUE", "CAPTURE_CMAKE_ERROR"],
+        "options": ["QUIET", "VERSION_ONLY"],
+        "one_value_keywords": [
+            "SOURCE",
+            "RETURN_VALUE",
+            "CAPTURE_CMAKE_ERROR",
+            "VERSION_OVERRIDE",
+        ],
     },
     "ctest_upload": {
         "options": ["QUIET"],
