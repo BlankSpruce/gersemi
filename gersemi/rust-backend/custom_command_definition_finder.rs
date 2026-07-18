@@ -1,12 +1,12 @@
 use crate::argument_schema::CommandSchemas;
 use crate::configuration::Configuration;
-use crate::gersemi_rust_backend::{get_files, warn};
+use crate::gersemi_rust_backend::warn;
 use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, BracketArgument, Command, CommandInvocation,
     FileElement, Position, Start,
 };
 use crate::parser::Parser;
-use crate::utils::{normalize_newlines, read_code};
+use crate::utils::{get_files, normalize_newlines, read_code};
 use pyo3::{PyResult, Python};
 use std::collections::HashMap;
 use std::fmt::Write;

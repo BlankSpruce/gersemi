@@ -3,11 +3,11 @@ use crate::args::Mode;
 use crate::cache::file_entry;
 use crate::cache::Cache;
 use crate::configuration::{Configuration, ControlConfiguration, OutcomeConfiguration};
-use crate::gersemi_rust_backend::get_files;
 use crate::runner::is_stdin;
 use crate::runner::{Runner, FAIL, SUCCESS};
-use crate::utils::print_configuration_report;
-use crate::utils::{make_control_configuration, make_outcome_configuration};
+use crate::utils::{
+    get_files, make_control_configuration, make_outcome_configuration, print_configuration_report,
+};
 use crate::warning_sink::{flush_warnings, register_warning_sink, WarningSink};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, Py, PyAny, PyResult, Python};
