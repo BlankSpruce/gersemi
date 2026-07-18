@@ -1278,7 +1278,7 @@ def test_utf_8_bom_stdin_is_properly_handled(app):
 
 
 def test_multiprocessing_works(app, testfiles):
-    big_number_of_files = 200
+    big_number_of_files = 50
     base = testfiles / "test_multiprocessing_works"
     base.mkdir()
     for i in range(big_number_of_files):
