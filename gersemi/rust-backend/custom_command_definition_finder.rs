@@ -93,7 +93,7 @@ fn get_command_start(node: &Argument) -> Option<Position> {
                 ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
             },
         },
-        Argument::Phantom { .. } => None,
+        Argument::InlineHint { .. } => None,
     }
 }
 

@@ -15,7 +15,7 @@ fn get_argument_value(argument: &Argument) -> String {
             )
         }
         Argument::Quoted { value, .. } => format!("\"{value}\""),
-        Argument::Unquoted { value, .. } | Argument::Phantom { value, .. } => value.clone(),
+        Argument::Unquoted { value, .. } | Argument::InlineHint { value, .. } => value.clone(),
     }
 }
 

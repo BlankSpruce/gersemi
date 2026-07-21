@@ -2,8 +2,8 @@ use crate::argument_schema::{CommandSchema, CommandSchemas};
 use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, BracketComment, Command,
-    CommandInvocation, CommentedArgumentComment, FileElement, LineComment, PhantomKind, Position,
-    Start,
+    CommandInvocation, CommentedArgumentComment, FileElement, InlineHintKind, LineComment,
+    Position, Start,
 };
 use crate::utils::builtin_schemas;
 use pyo3::exceptions::PyRuntimeError;
@@ -347,7 +347,7 @@ impl Parser<'_> {
         &self,
         offset: usize,
     ) -> Result<Option<(CommentedArgumentComment, usize)>, Error> {
-        if self.phantom(offset)?.is_some() {
+        if self.inline_hint(offset)?.is_some() {
             return Ok(None);
         }
 
@@ -451,7 +451,7 @@ impl Parser<'_> {
         })
     }
 
-    fn phantom(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
+    fn inline_hint(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
         let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? else {
             return Ok(None);
         };
@@ -465,20 +465,18 @@ impl Parser<'_> {
         };
 
         let kind = if let Some(hint) = KeywordPreprocessor::from_str(hint) {
-            PhantomKind::KeywordPreprocessor(hint)
+            InlineHintKind::KeywordPreprocessor(hint)
         } else if let Some(hint) = KeywordFormatter::from_str(hint) {
-            PhantomKind::KeywordFormatter(hint)
-        } else if hint == "raw" {
-            PhantomKind::Raw
+            InlineHintKind::KeywordFormatter(hint)
         } else if let Some(hint) = hint.strip_prefix("as_command=") {
-            PhantomKind::AsCommand {
+            InlineHintKind::AsCommand {
                 command: hint.to_lowercase(),
             }
         } else {
             return Ok(None);
         };
 
-        Ok(Some((Argument::Phantom { value, kind }, offset)))
+        Ok(Some((Argument::InlineHint { value, kind }, offset)))
     }
 
     fn argument(
@@ -486,7 +484,7 @@ impl Parser<'_> {
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument, usize)>, Error> {
-        if let Some(matched) = self.phantom(offset)? {
+        if let Some(matched) = self.inline_hint(offset)? {
             return Ok(Some(matched));
         }
 

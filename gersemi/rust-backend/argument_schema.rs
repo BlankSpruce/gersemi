@@ -137,7 +137,7 @@ impl KeywordSplitter {
                         keyword: Box::new(argument),
                         arguments,
                     });
-                } else if argument.is_phantom()
+                } else if argument.is_inline_hint()
                     || is_one_of_keywords(value, &schema.multi_value_keywords)
                 {
                     self.flush_accumulators();
@@ -162,7 +162,7 @@ impl KeywordSplitter {
 
 impl ArgumentSchema {
     fn is_one_of_keywords(&self, node: &RefinedArgumentsAtom) -> bool {
-        if node.is_phantom() {
+        if node.is_inline_hint() {
             return true;
         }
         let value = node.get_keyword_value();

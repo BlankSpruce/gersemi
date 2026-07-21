@@ -14,7 +14,7 @@ use crate::keyword_preprocessor::{
 };
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketComment, Command, CommandInvocation,
-    CommentedArgumentComment, FileElement, LineComment, PhantomKind, Position,
+    CommentedArgumentComment, FileElement, InlineHintKind, LineComment, Position,
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
 use crate::parser::{quoted_argument_pattern, regex, Parser};
@@ -577,7 +577,7 @@ impl FormatterImpl<'_> {
             Argument::Complex { arguments } => self.complex_argument(arguments),
             Argument::Quoted { value, .. } => format!("{}\"{value}\"", self.indent_symbol),
             Argument::Unquoted { value, .. } => format!("{}{value}", self.indent_symbol),
-            Argument::Phantom { value, .. } => format!("{}#{value}", self.indent_symbol),
+            Argument::InlineHint { value, .. } => format!("{}#{value}", self.indent_symbol),
         }
     }
 
@@ -788,12 +788,16 @@ impl FormatterImpl<'_> {
             }
         }
 
-        let mut indented = self.indented();
+        let mut f = if first.is_inline_hint() {
+            self.clone()
+        } else {
+            self.indented()
+        };
         let formatted_values = match self.get_formatter(first) {
-            None => indented.format_specialized(first, rest),
+            None => f.format_specialized(first, rest),
             Some(formatter_kind) => match formatter_kind {
-                KeywordFormatter::CommandLine => indented.format_command_line(rest.clone()),
-                KeywordFormatter::Pairs => indented.format_keyword_with_pairs(rest),
+                KeywordFormatter::CommandLine => f.format_command_line(rest.clone()),
+                KeywordFormatter::Pairs => f.format_keyword_with_pairs(rest),
             },
         };
 
@@ -838,7 +842,7 @@ impl FormatterImpl<'_> {
     }
 
     fn get_preprocessor(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordPreprocessor> {
-        if let Some(PhantomKind::KeywordPreprocessor(p)) = atom.get_phantom_kind() {
+        if let Some(InlineHintKind::KeywordPreprocessor(p)) = atom.get_inline_hint_kind() {
             return Some(p);
         }
 
@@ -851,7 +855,7 @@ impl FormatterImpl<'_> {
     }
 
     fn get_formatter(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordFormatter> {
-        if let Some(PhantomKind::KeywordFormatter(f)) = atom.get_phantom_kind() {
+        if let Some(InlineHintKind::KeywordFormatter(f)) = atom.get_inline_hint_kind() {
             return Some(f);
         }
 
@@ -992,11 +996,11 @@ impl FormatterImpl<'_> {
         group_sizes.all(|x| x <= threshold)
     }
 
-    fn split_phantom_argument(&self, argument: RefinedArgumentsAtom) -> RefinedArgumentsAtom {
+    fn split_inline_hint_argument(&self, argument: RefinedArgumentsAtom) -> RefinedArgumentsAtom {
         match argument {
             RefinedArgumentsAtom::MultiValueArgument { keyword, arguments } => {
-                let arguments = match keyword.get_phantom_kind() {
-                    Some(PhantomKind::AsCommand { command }) => {
+                let arguments = match keyword.get_inline_hint_kind() {
+                    Some(InlineHintKind::AsCommand { command }) => {
                         let f = self.patch_active_command(self.get_patch(&command));
                         let arguments = f.preprocess_refined_arguments(arguments);
                         let f = f.patch_active_schema(f.get_signature(&arguments));
@@ -1016,7 +1020,7 @@ impl FormatterImpl<'_> {
             _ => arguments,
         }
         .into_iter()
-        .map(|arg| self.split_phantom_argument(arg))
+        .map(|arg| self.split_inline_hint_argument(arg))
         .collect()
     }
 

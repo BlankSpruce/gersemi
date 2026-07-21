@@ -21,8 +21,7 @@ impl BracketArgument {
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub enum PhantomKind {
-    Raw,
+pub enum InlineHintKind {
     KeywordPreprocessor(KeywordPreprocessor),
     KeywordFormatter(KeywordFormatter),
     AsCommand { command: String },
@@ -42,8 +41,8 @@ pub enum Argument {
         value: String,
         position: Option<Position>,
     },
-    Phantom {
-        kind: PhantomKind,
+    InlineHint {
+        kind: InlineHintKind,
         value: String,
     },
 }
@@ -67,7 +66,7 @@ impl Argument {
             Self::Bracket(BracketArgument { value, .. })
             | Self::Quoted { value, .. }
             | Self::Unquoted { value, .. }
-            | Self::Phantom { value, .. } => value.clone(),
+            | Self::InlineHint { value, .. } => value.clone(),
         }
     }
 }
@@ -275,24 +274,24 @@ impl RefinedArgumentsAtom {
         }
     }
 
-    pub fn is_phantom(&self) -> bool {
+    pub fn is_inline_hint(&self) -> bool {
         match self {
             RefinedArgumentsAtom::Atom(
                 ArgumentsAtom::CommentedArgument { argument, .. }
                 | ArgumentsAtom::Argument(argument),
-            ) => matches!(argument, Argument::Phantom { .. }),
+            ) => matches!(argument, Argument::InlineHint { .. }),
             _ => false,
         }
     }
 
-    pub fn get_phantom_kind(&self) -> Option<PhantomKind> {
+    pub fn get_inline_hint_kind(&self) -> Option<InlineHintKind> {
         match self {
             RefinedArgumentsAtom::Atom(
                 ArgumentsAtom::CommentedArgument {
-                    argument: Argument::Phantom { kind, .. },
+                    argument: Argument::InlineHint { kind, .. },
                     ..
                 }
-                | ArgumentsAtom::Argument(Argument::Phantom { kind, .. }),
+                | ArgumentsAtom::Argument(Argument::InlineHint { kind, .. }),
             ) => Some(kind.clone()),
             _ => None,
         }
