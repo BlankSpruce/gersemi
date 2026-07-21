@@ -14,17 +14,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, ubuntu-24.04-arm, windows-11-arm, macos-latest]
+        os: [ubuntu-22.04, windows-2022, ubuntu-22.04-arm, windows-11-arm, macos-15, macos-15-intel]
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             executable-name: gersemi-linux
-          - os: windows-2025
+          - os: windows-2022
             executable-name: gersemi-windows.exe
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-22.04-arm
             executable-name: gersemi-linux-arm
           - os: windows-11-arm
             executable-name: gersemi-windows-arm.exe
-          - os: macos-latest
+          - os: macos-15
+            executable-name: gersemi-macos-arm
+          - os: macos-15-intel
             executable-name: gersemi-macos
 
     steps:
