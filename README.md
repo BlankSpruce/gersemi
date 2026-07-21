@@ -34,6 +34,9 @@ positional arguments:
                         CMakeLists.txt, CMakeLists.txt.in and files with
                         .cmake/.cmake.in extension are automatically discovered. If only
                         `-` is provided, input is taken from stdin instead.
+                        If --definitions is used it has to be separated with another
+                        option or `--`, for example:
+                        gersemi --definitions def1.cmake def2.cmake -- src1.cmake
 
 modes:
   -c, --check           Check if files require reformatting. Return 0 when there's
@@ -808,6 +811,57 @@ endfunction()
 movie_prologue()
     set(MOVIE_SETTING "Jury room on a hot summer day")
 movie_epilogue()
+```
+
+</details>
+
+#### Inline argument hints
+
+In case you want format group of arguments in particular way you can introduce bracket comment with hint how to format that group. It will affect arguments from that bracket argument until next keyword or end of command invocation. The following hints are supported:
+- Same as hints used in custom command definitions:
+  - `[[gersemi: pairs]]`
+  - `[[gersemi: command_line]]`
+  - `[[gersemi: sort]]`
+  - `[[gersemi: unique]]`
+  - `[[gersemi: sort+unique]]`
+- `[[gersemi: as_command=<name_of_command>]]` to format list of arguments in the same way as another command.
+
+<details>
+<summary>Example:</summary>
+
+```cmake
+set(MY_SOURCES
+    #[[gersemi: sort+unique]]
+    a.h
+    b.h
+    c.h
+    d_____________________________________________.h
+    CACHE INTERNAL # CACHE is the next keyword after inline hint
+    "Short docstring"
+    FORCE
+)
+
+set(install_args
+    #[[gersemi: as_command=install]]
+    TARGETS
+        long_arg______________________________________________________________
+    EXPORT
+        long_arg______________________________________________________________
+    PUBLIC_HEADER
+        DESTINATION
+            long_arg____________________________________________________________
+        PERMISSIONS OWNER_READ
+        CONFIGURATIONS Debug
+        COMPONENT
+            long_arg____________________________________________________________
+        NAMELINK_COMPONENT
+            long_arg____________________________________________________________
+        OPTIONAL
+        EXCLUDE_FROM_ALL
+        NAMELINK_ONLY
+    INCLUDES DESTINATION
+        long_arg____________________________________________________________
+)
 ```
 
 </details>

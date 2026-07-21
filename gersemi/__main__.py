@@ -313,6 +313,8 @@ def create_argparser():
     File or directory to format. When directory is provided then CMakeLists.txt,
     CMakeLists.txt.in and files with .cmake/.cmake.in extension are automatically discovered.
     If only `-` is provided, input is taken from stdin instead.
+    If --definitions is used it has to be separated with another option or `--`, for example:
+    gersemi --definitions def1.cmake def2.cmake -- src1.cmake
             """,
     )
 
