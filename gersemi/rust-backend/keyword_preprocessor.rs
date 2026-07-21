@@ -15,7 +15,8 @@ fn get_argument_value(argument: &Argument) -> String {
             )
         }
         Argument::Quoted { value, .. } => format!("\"{value}\""),
-        Argument::Unquoted { value, .. } | Argument::InlineHint { value, .. } => value.clone(),
+        Argument::Unquoted { value, .. } => value.to_string(),
+        Argument::InlineHint { value, .. } => value.clone(),
     }
 }
 
@@ -23,17 +24,17 @@ fn get_atom_value(atom: &ArgumentsAtom) -> String {
     match atom {
         ArgumentsAtom::CommentedArgument { argument, comment } => {
             let comment_value = match comment {
-                CommentedArgumentComment::BracketComment(BracketComment { value })
-                | CommentedArgumentComment::LineComment {
+                CommentedArgumentComment::BracketComment(BracketComment { value }) => value.clone(),
+                CommentedArgumentComment::LineComment {
                     comment: LineComment { value },
                     ..
-                } => value,
+                } => value.to_string(),
             };
             format!("{}{}", get_argument_value(argument), comment_value)
         }
         ArgumentsAtom::Argument(argument) => get_argument_value(argument),
-        ArgumentsAtom::BracketComment(BracketComment { value })
-        | ArgumentsAtom::LineComment(LineComment { value }) => value.clone(),
+        ArgumentsAtom::BracketComment(BracketComment { value }) => value.clone(),
+        ArgumentsAtom::LineComment(LineComment { value }) => value.to_string(),
     }
 }
 
@@ -99,7 +100,7 @@ fn get_node_value(atom: &RefinedArgumentsAtom) -> String {
     result
 }
 
-type Bucket = Vec<RefinedArgumentsAtom>;
+type Bucket<'a> = Vec<RefinedArgumentsAtom<'a>>;
 
 fn get_node_value_impl(atom: &RefinedArgumentsAtom, case_insensitive: bool) -> String {
     let value = get_node_value(atom);

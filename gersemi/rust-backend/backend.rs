@@ -33,7 +33,7 @@ mod gersemi_rust_backend {
             definition_schemas: HashMap::new(),
             extension_schemas: HashMap::new(),
         };
-        let parser = Parser::new(text, &schemas);
+        let parser = Parser::new(&text, &schemas);
         parser.start().and(Ok(()))
     }
 
@@ -44,10 +44,10 @@ mod gersemi_rust_backend {
             definition_schemas: HashMap::new(),
             extension_schemas: HashMap::new(),
         };
-        let before = Parser::new(before, &schemas).start()?;
-        let after = Parser::new(after, &schemas).start()?;
+        let before_parser = Parser::new(&before, &schemas);
+        let after_parser = Parser::new(&after, &schemas);
 
-        Ok(check_equivalence(before, after))
+        Ok(check_equivalence(before_parser.start()?, after_parser.start()?))
     }
 
     #[pymodule_export]

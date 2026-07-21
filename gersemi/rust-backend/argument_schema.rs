@@ -78,18 +78,18 @@ enum AccumulatorKind {
     PositionalArguments,
 }
 
-struct Accumulator {
+struct Accumulator<'a> {
     kind: AccumulatorKind,
-    nodes: RefinedArgumentsNode,
+    nodes: RefinedArgumentsNode<'a>,
 }
 
-struct KeywordSplitter {
-    groups: RefinedArgumentsNode,
-    accumulator: Accumulator,
-    comment_accumulator: RefinedArgumentsNode,
+struct KeywordSplitter<'a> {
+    groups: RefinedArgumentsNode<'a>,
+    accumulator: Accumulator<'a>,
+    comment_accumulator: RefinedArgumentsNode<'a>,
 }
 
-impl KeywordSplitter {
+impl<'a> KeywordSplitter<'a> {
     fn flush_accumulators(&mut self) {
         let mut nodes = std::mem::take(&mut self.accumulator.nodes);
         if !nodes.is_empty() {
@@ -109,7 +109,7 @@ impl KeywordSplitter {
         self.groups.append(&mut self.comment_accumulator);
     }
 
-    fn split(&mut self, schema: &ArgumentSchema, arguments: RefinedArgumentsNode) {
+    fn split(&mut self, schema: &ArgumentSchema, arguments: RefinedArgumentsNode<'a>) {
         let mut iterator = arguments.into_iter();
 
         while let Some(argument) = iterator.next() {
@@ -181,10 +181,10 @@ impl ArgumentSchema {
         None
     }
 
-    fn separate_front(
+    fn separate_front<'a>(
         &self,
-        mut arguments: RefinedArgumentsNode,
-    ) -> (RefinedArgumentsNode, RefinedArgumentsNode) {
+        mut arguments: RefinedArgumentsNode<'a>,
+    ) -> (RefinedArgumentsNode<'a>, RefinedArgumentsNode<'a>) {
         match self.find_pivot(&arguments) {
             None => (arguments, vec![]),
             Some(pivot) => {
@@ -194,10 +194,10 @@ impl ArgumentSchema {
         }
     }
 
-    fn split_positional_arguments(
+    fn split_positional_arguments<'a>(
         &self,
-        mut arguments: RefinedArgumentsNode,
-    ) -> RefinedArgumentsNode {
+        mut arguments: RefinedArgumentsNode<'a>,
+    ) -> RefinedArgumentsNode<'a> {
         let last_index = min(arguments.len(), self.front_positional_arguments.len());
         let rest = arguments.split_off(last_index);
         let mut arguments = arguments
@@ -212,7 +212,10 @@ impl ArgumentSchema {
         arguments
     }
 
-    fn split_by_keywords(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
+    fn split_by_keywords<'a>(
+        &self,
+        arguments: RefinedArgumentsNode<'a>,
+    ) -> RefinedArgumentsNode<'a> {
         let mut keyword_splitter = KeywordSplitter {
             groups: vec![],
             accumulator: Accumulator {
@@ -225,7 +228,10 @@ impl ArgumentSchema {
         keyword_splitter.groups
     }
 
-    fn split_arguments(&self, mut arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
+    fn split_arguments<'a>(
+        &self,
+        mut arguments: RefinedArgumentsNode<'a>,
+    ) -> RefinedArgumentsNode<'a> {
         let back = if self.back_positional_arguments.len() > arguments.len() {
             vec![]
         } else {
@@ -254,11 +260,11 @@ impl ArgumentSchema {
         None
     }
 
-    fn split_multi_value_argument(
+    fn split_multi_value_argument<'a>(
         &self,
-        keyword: RefinedArgumentsAtom,
-        arguments: Vec<RefinedArgumentsAtom>,
-    ) -> RefinedArgumentsAtom {
+        keyword: RefinedArgumentsAtom<'a>,
+        arguments: Vec<RefinedArgumentsAtom<'a>>,
+    ) -> RefinedArgumentsAtom<'a> {
         let Some(section_schema) = self.get_section_schema(&keyword) else {
             return RefinedArgumentsAtom::MultiValueArgument {
                 keyword: Box::new(keyword),
@@ -312,7 +318,7 @@ impl ArgumentSchema {
         }
     }
 
-    fn form_sections(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
+    fn form_sections<'a>(&self, arguments: RefinedArgumentsNode<'a>) -> RefinedArgumentsNode<'a> {
         let mut result = RefinedArgumentsNode::new();
         let mut section_schema: Option<&ArgumentSchema> = None;
 
@@ -339,10 +345,10 @@ impl ArgumentSchema {
         result
     }
 
-    pub fn split_arguments_with_sections(
+    pub fn split_arguments_with_sections<'a>(
         &self,
-        arguments: RefinedArgumentsNode,
-    ) -> RefinedArgumentsNode {
+        arguments: RefinedArgumentsNode<'a>,
+    ) -> RefinedArgumentsNode<'a> {
         let arguments = self.split_arguments(arguments);
         let preprocessed = arguments
             .into_iter()
@@ -407,7 +413,7 @@ pub fn is_one_of_keywords(
     }
 }
 
-impl RefinedArgumentsAtom {
+impl RefinedArgumentsAtom<'_> {
     pub fn is_comment(&self) -> bool {
         match self {
             Self::Atom(atom) => atom.is_comment(),
@@ -447,10 +453,10 @@ impl RefinedArgumentsAtom {
     }
 }
 
-fn isolate_unary_operators(
+fn isolate_unary_operators<'a>(
     operators: &[KeywordMatcher],
-    arguments: RefinedArgumentsNode,
-) -> RefinedArgumentsNode {
+    arguments: RefinedArgumentsNode<'a>,
+) -> RefinedArgumentsNode<'a> {
     let mut one_behind: Option<RefinedArgumentsAtom> = None;
     let mut result = RefinedArgumentsNode::new();
     for current in arguments {
@@ -488,10 +494,10 @@ fn isolate_unary_operators(
     result
 }
 
-fn isolate_binary_tests(
+fn isolate_binary_tests<'a>(
     operators: &[KeywordMatcher],
-    arguments: RefinedArgumentsNode,
-) -> RefinedArgumentsNode {
+    arguments: RefinedArgumentsNode<'a>,
+) -> RefinedArgumentsNode<'a> {
     let mut two_behind: Option<RefinedArgumentsAtom> = None;
     let mut one_behind: Option<RefinedArgumentsAtom> = None;
     let mut result = RefinedArgumentsNode::new();

@@ -44,7 +44,7 @@ fn into_arguments(node: ArgumentsNode) -> Arguments {
         .collect()
 }
 
-fn new_command(identifier: &str, node: ArgumentsNode) -> Option<(Argument, Vec<String>)> {
+fn new_command<'a>(identifier: &str, node: ArgumentsNode<'a>) -> Option<(Argument<'a>, Vec<String>)> {
     let is_function_or_macro = (identifier == "function") || (identifier == "macro");
     if !is_function_or_macro {
         return None;
@@ -288,10 +288,10 @@ fn has_custom_command_definition(code: &str) -> bool {
 }
 
 pub fn find_custom_command_definitions(
-    text: String,
+    text: &str,
     filepath: String,
 ) -> PyResult<HashMap<String, Vec<CustomCommand>>> {
-    if !has_custom_command_definition(&text) {
+    if !has_custom_command_definition(text) {
         return Ok(HashMap::new());
     }
 
@@ -352,7 +352,7 @@ pub fn find_all_custom_command_definitions(
                 match read_code(&f) {
                     Ok(code) => {
                         let code = normalize_newlines(&code);
-                        match find_custom_command_definitions(code, path.clone()) {
+                        match find_custom_command_definitions(&code, path.clone()) {
                             Ok(def) => Ok(def),
                             Err(err) => Err((path, err)),
                         }

@@ -35,7 +35,7 @@ fn simplify_commented_argument_comment(node: CommentedArgumentComment) -> Commen
         CommentedArgumentComment::BracketComment(_) => node,
         CommentedArgumentComment::LineComment { comment, .. } => {
             CommentedArgumentComment::LineComment {
-                comment: simplify_line_comment(comment),
+                comment: simplify_line_comment(&comment),
                 newline: String::new(),
             }
         }
@@ -52,7 +52,7 @@ fn simplify_arguments_atom(node: ArgumentsAtom) -> ArgumentsAtom {
         }
         ArgumentsAtom::Argument(node) => ArgumentsAtom::Argument(simplify_argument(node)),
         ArgumentsAtom::BracketComment(_) => node,
-        ArgumentsAtom::LineComment(node) => ArgumentsAtom::LineComment(simplify_line_comment(node)),
+        ArgumentsAtom::LineComment(node) => ArgumentsAtom::LineComment(simplify_line_comment(&node)),
     }
 }
 
@@ -90,17 +90,17 @@ fn simplify_command(node: Command) -> Command {
             None => Command::Invocation(simplify_command_invocation(node)),
             Some(line_comment) => Command::Element {
                 command_invocation: simplify_command_invocation(node),
-                line_comment: Some(simplify_line_comment(line_comment)),
+                line_comment: Some(simplify_line_comment(&line_comment)),
             },
         },
         Command::Invocation(node) => Command::Invocation(simplify_command_invocation(node)),
     }
 }
 
-fn simplify_line_comment(node: LineComment) -> LineComment {
+fn simplify_line_comment<'a>(node: &LineComment<'a>) -> LineComment<'a> {
     let LineComment { value } = node;
     LineComment {
-        value: value.trim_end().to_string(),
+        value: value.trim_end(),
     }
 }
 
@@ -125,7 +125,7 @@ pub fn simplify_file_elements(nodes: Vec<FileElement>) -> Vec<FileElement> {
             } => {
                 result.push(FileElement::NonCommandElement {
                     bracket_comments,
-                    line_comment: line_comment.map(simplify_line_comment),
+                    line_comment: line_comment.map(|x| simplify_line_comment(&x)),
                 });
             }
             FileElement::NewlineOrGap { .. } => (),

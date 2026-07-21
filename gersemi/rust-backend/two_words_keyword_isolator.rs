@@ -34,10 +34,10 @@ impl FromPyObject<'_, '_> for TwoWordKeywordMatcher {
     }
 }
 
-fn isolate_two_words_keyword(
+fn isolate_two_words_keyword<'a>(
     matcher: &TwoWordKeywordMatcher,
-    arguments: RefinedArgumentsNode,
-) -> RefinedArgumentsNode {
+    arguments: RefinedArgumentsNode<'a>,
+) -> RefinedArgumentsNode<'a> {
     let mut result = RefinedArgumentsNode::new();
     let mut accumulator = ArgumentsNode::new();
     for argument in arguments {
@@ -87,10 +87,10 @@ fn isolate_two_words_keyword(
     result
 }
 
-pub fn preprocess_arguments(
+pub fn preprocess_arguments<'a>(
     two_words_keywords: &Vec<TwoWordKeywordMatcher>,
-    mut arguments: RefinedArgumentsNode,
-) -> RefinedArgumentsNode {
+    mut arguments: RefinedArgumentsNode<'a>,
+) -> RefinedArgumentsNode<'a> {
     for matcher in two_words_keywords {
         arguments = isolate_two_words_keyword(matcher, arguments);
     }

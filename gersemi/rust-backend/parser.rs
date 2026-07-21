@@ -17,7 +17,7 @@ pub struct BlockCommand {
 }
 
 pub struct Parser<'a> {
-    text: String,
+    text: &'a str,
     line_offsets: Vec<usize>,
     blocks: Vec<(String, BlockCommand)>,
     schemas: &'a CommandSchemas,
@@ -85,7 +85,7 @@ pub fn regex(pattern: &str) -> Regex {
 }
 
 impl Parser<'_> {
-    pub fn new(text: String, schemas: &CommandSchemas) -> Parser<'_> {
+    pub fn new<'a>(text: &'a str, schemas: &'a CommandSchemas) -> Parser<'a> {
         let line_offsets = text
             .chars()
             .enumerate()
@@ -158,7 +158,7 @@ impl Parser<'_> {
         &self,
         offset: usize,
         compute_position: bool,
-    ) -> Result<Option<(Argument, usize)>, Error> {
+    ) -> Result<Option<(Argument<'_>, usize)>, Error> {
         static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[=*\["));
         match RE_START.find(&self.text[offset..]) {
             None => Ok(None),
@@ -188,15 +188,12 @@ impl Parser<'_> {
         }
     }
 
-    fn raw_terminal(&self, re: &regex::Regex, offset: usize) -> Option<(String, usize)> {
+    fn raw_terminal(&self, re: &regex::Regex, offset: usize) -> Option<(&str, usize)> {
         match re.captures(&self.text[offset..]) {
             None => None,
-            Some(captures) => captures.get(1).map(|matched| {
-                (
-                    matched.as_str().to_string(),
-                    offset + captures.get_match().len(),
-                )
-            }),
+            Some(captures) => captures
+                .get(1)
+                .map(|matched| (matched.as_str(), offset + captures.get_match().len())),
         }
     }
 
@@ -249,7 +246,7 @@ impl Parser<'_> {
         &self,
         command: &BlockCommand,
         offset: usize,
-    ) -> Result<Option<(Command, usize)>, Error> {
+    ) -> Result<Option<(Command<'_>, usize)>, Error> {
         self.command_element_t(&command.re, offset)
     }
 
@@ -257,7 +254,7 @@ impl Parser<'_> {
         &self,
         end_command: &BlockCommand,
         mut offset: usize,
-    ) -> Result<(Vec<FileElement>, Option<Command>, usize), Error> {
+    ) -> Result<(Vec<FileElement<'_>>, Option<Command<'_>>, usize), Error> {
         if let Some((_, new_offset)) = self.newline_or_gap(offset) {
             offset = new_offset;
         }
@@ -302,18 +299,18 @@ impl Parser<'_> {
         Ok((result, None, offset))
     }
 
-    fn block_t(
-        &self,
-        start_node: &Command,
+    fn block_t<'a>(
+        &'a self,
+        start_node: Command<'a>,
         end_command: &BlockCommand,
         offset: usize,
-    ) -> Result<(FileElement, usize), Error> {
+    ) -> Result<(FileElement<'a>, usize), Error> {
         let (body, end_command, offset) = self.block_body(end_command, offset)?;
         match end_command {
             None => Err(self.unbalanced_block(offset)),
             Some(end) => Ok((
                 FileElement::Block {
-                    start: start_node.clone(),
+                    start: start_node,
                     body,
                     end,
                 },
@@ -322,14 +319,18 @@ impl Parser<'_> {
         }
     }
 
-    fn block(&self, start_node: Command, offset: usize) -> Result<(FileElement, usize), Error> {
+    fn block<'a>(
+        &'a self,
+        start_node: Command<'a>,
+        offset: usize,
+    ) -> Result<(FileElement<'a>, usize), Error> {
         let start_node_name = start_node.command_name().to_lowercase();
         if let Some((_, block_end)) = self
             .blocks
             .iter()
             .find(|(block_start, _)| block_start.as_str() == start_node_name)
         {
-            return self.block_t(&start_node, block_end, offset);
+            return self.block_t(start_node, block_end, offset);
         }
 
         let start_node = match start_node {
@@ -346,7 +347,7 @@ impl Parser<'_> {
     fn commented_argument_atom(
         &self,
         offset: usize,
-    ) -> Result<Option<(CommentedArgumentComment, usize)>, Error> {
+    ) -> Result<Option<(CommentedArgumentComment<'_>, usize)>, Error> {
         if self.inline_hint(offset)?.is_some() {
             return Ok(None);
         }
@@ -382,7 +383,7 @@ impl Parser<'_> {
         &self,
         offset: usize,
         compute_position: bool,
-    ) -> Result<Option<(Argument, usize)>, Error> {
+    ) -> Result<Option<(Argument<'_>, usize)>, Error> {
         static PATTERN: LazyLock<String> =
             LazyLock::new(|| format!("^{}", quoted_argument_pattern()));
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
@@ -395,7 +396,7 @@ impl Parser<'_> {
                 Argument::Quoted {
                     value: {
                         let result = matched.as_str();
-                        result[1..result.len() - 1].to_string()
+                        &result[1..result.len() - 1]
                     },
                     position: {
                         if compute_position {
@@ -414,12 +415,12 @@ impl Parser<'_> {
         &self,
         offset: usize,
         compute_position: bool,
-    ) -> Option<(Argument, usize)> {
+    ) -> Option<(Argument<'_>, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
         RE.find(&self.text[offset..]).map(|matched| {
             (
                 Argument::Unquoted {
-                    value: matched.as_str().to_string(),
+                    value: matched.as_str(),
                     position: {
                         if compute_position {
                             Some(self.position(offset))
@@ -433,7 +434,7 @@ impl Parser<'_> {
         })
     }
 
-    fn complex_argument(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
+    fn complex_argument(&self, offset: usize) -> Result<Option<(Argument<'_>, usize)>, Error> {
         Ok(match self.left_paren(offset) {
             None => None,
             Some(offset) => match self.arguments(offset, false)? {
@@ -451,7 +452,7 @@ impl Parser<'_> {
         })
     }
 
-    fn inline_hint(&self, offset: usize) -> Result<Option<(Argument, usize)>, Error> {
+    fn inline_hint(&self, offset: usize) -> Result<Option<(Argument<'_>, usize)>, Error> {
         let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? else {
             return Ok(None);
         };
@@ -483,7 +484,7 @@ impl Parser<'_> {
         &self,
         offset: usize,
         compute_position: bool,
-    ) -> Result<Option<(Argument, usize)>, Error> {
+    ) -> Result<Option<(Argument<'_>, usize)>, Error> {
         if let Some(matched) = self.inline_hint(offset)? {
             return Ok(Some(matched));
         }
@@ -507,7 +508,7 @@ impl Parser<'_> {
         &self,
         offset: usize,
         compute_position: bool,
-    ) -> Result<Option<(ArgumentsAtom, usize)>, Error> {
+    ) -> Result<Option<(ArgumentsAtom<'_>, usize)>, Error> {
         Ok(match self.argument(offset, compute_position)? {
             None => None,
             Some((matched_argument, offset)) => match self.commented_argument_atom(offset)? {
@@ -523,7 +524,10 @@ impl Parser<'_> {
         })
     }
 
-    fn separation(&self, offset: usize) -> Result<Option<(Option<ArgumentsAtom>, usize)>, Error> {
+    fn separation(
+        &self,
+        offset: usize,
+    ) -> Result<Option<(Option<ArgumentsAtom<'_>>, usize)>, Error> {
         if let Some((node, offset)) = self.bracket_comment(offset)? {
             return Ok(Some((Some(ArgumentsAtom::BracketComment(node)), offset)));
         }
@@ -543,7 +547,7 @@ impl Parser<'_> {
         &self,
         offset: usize,
         compute_position: bool,
-    ) -> Result<Option<(Option<ArgumentsAtom>, usize)>, Error> {
+    ) -> Result<Option<(Option<ArgumentsAtom<'_>>, usize)>, Error> {
         if let Some((node, offset)) = self.commented_argument(offset, compute_position)? {
             return Ok(Some((Some(node), offset)));
         }
@@ -559,7 +563,7 @@ impl Parser<'_> {
         &self,
         mut offset: usize,
         compute_position: bool,
-    ) -> Result<Option<(ArgumentsNode, usize)>, Error> {
+    ) -> Result<Option<(ArgumentsNode<'_>, usize)>, Error> {
         let mut result = ArgumentsNode::new();
         while let Some((matched, new_offset)) = self.arguments_atom(offset, compute_position)? {
             if let Some(matched) = matched {
@@ -578,23 +582,22 @@ impl Parser<'_> {
         self.text[start..offset].to_string()
     }
 
-    fn formatted_node(&self, start: usize, end: usize) -> String {
-        let value = if start >= end {
+    fn formatted_node(&self, start: usize, end: usize) -> &str {
+        if start >= end {
             ""
         } else {
             &self.text[start + 1..end]
-        };
-        value.to_string()
+        }
     }
 
-    fn create_command_invocation_node(
-        &self,
+    fn create_command_invocation_node<'a>(
+        &'a self,
         identifier: String,
-        arguments: ArgumentsNode,
+        arguments: ArgumentsNode<'a>,
         initial_offset: usize,
         custom_formatting_start: usize,
         custom_formatting_end: usize,
-    ) -> CommandInvocation {
+    ) -> CommandInvocation<'a> {
         {
             {
                 if self.is_known_command(identifier.as_str()) {
@@ -622,7 +625,7 @@ impl Parser<'_> {
         &self,
         re: &regex::Regex,
         offset: usize,
-    ) -> Result<Option<(CommandInvocation, usize)>, Error> {
+    ) -> Result<Option<(CommandInvocation<'_>, usize)>, Error> {
         let initial_offset = offset;
         Ok(match self.raw_terminal(re, offset) {
             None => None,
@@ -641,7 +644,7 @@ impl Parser<'_> {
                             let offset = self.right_paren(arguments_offset)?;
                             Some((
                                 self.create_command_invocation_node(
-                                    matched_identifier,
+                                    matched_identifier.to_string(),
                                     matched_arguments,
                                     initial_offset,
                                     identifier_offset,
@@ -660,7 +663,7 @@ impl Parser<'_> {
         &self,
         re: &regex::Regex,
         offset: usize,
-    ) -> Result<Option<(Command, usize)>, Error> {
+    ) -> Result<Option<(Command<'_>, usize)>, Error> {
         Ok(self
             .command_invocation_t(re, offset)?
             .map(|(command_invocation, offset)| {
@@ -678,12 +681,12 @@ impl Parser<'_> {
             }))
     }
 
-    fn command_element(&self, offset: usize) -> Result<Option<(Command, usize)>, Error> {
+    fn command_element(&self, offset: usize) -> Result<Option<(Command<'_>, usize)>, Error> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
         self.command_element_t(&RE, offset)
     }
 
-    fn standalone_identifier(&self, offset: usize) -> Option<(FileElement, usize)> {
+    fn standalone_identifier(&self, offset: usize) -> Option<(FileElement<'_>, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
         self.raw_terminal(&RE, offset).map(|(matched, new_offset)| {
             (
@@ -713,19 +716,14 @@ impl Parser<'_> {
         Ok(None)
     }
 
-    fn line_comment(&self, offset: usize) -> Option<(LineComment, usize)> {
+    fn line_comment(&self, offset: usize) -> Option<(LineComment<'_>, usize)> {
         self.pound_sign(offset).map(|offset| {
             static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^[^\n]+"));
             match RE.find(&self.text[offset..]) {
-                None => (
-                    LineComment {
-                        value: String::new(),
-                    },
-                    offset,
-                ),
+                None => (LineComment { value: "" }, offset),
                 Some(content) => (
                     LineComment {
-                        value: content.as_str().to_string(),
+                        value: content.as_str(),
                     },
                     offset + content.len(),
                 ),
@@ -736,7 +734,7 @@ impl Parser<'_> {
     fn non_command_element(
         &self,
         mut offset: usize,
-    ) -> Result<Option<(FileElement, usize)>, Error> {
+    ) -> Result<Option<(FileElement<'_>, usize)>, Error> {
         let mut bracket_comments = Vec::<BracketComment>::new();
         while let Some((matched, new_offset)) = self.bracket_comment(offset)? {
             bracket_comments.push(matched);
@@ -767,7 +765,7 @@ impl Parser<'_> {
         }
     }
 
-    fn file_element(&self, offset: usize) -> Result<Option<(FileElement, usize)>, Error> {
+    fn file_element(&self, offset: usize) -> Result<Option<(FileElement<'_>, usize)>, Error> {
         if let Some((result, offset)) = self.command_element(offset)? {
             return Ok(Some(self.block(result, offset)?));
         }
@@ -783,28 +781,24 @@ impl Parser<'_> {
         Ok(None)
     }
 
-    fn newline_or_gap(&self, offset: usize) -> Option<(FileElement, usize)> {
+    fn newline_or_gap(&self, offset: usize) -> Option<(FileElement<'_>, usize)> {
         static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n[ \t]*)(\n[ \t]*)*"));
         match RE.captures(&self.text[offset..]) {
             None => None,
             Some(captures) => match captures.get(2) {
                 None => Some((
-                    FileElement::NewlineOrGap {
-                        value: "\n".to_string(),
-                    },
+                    FileElement::NewlineOrGap { value: "\n" },
                     offset + captures.get_match().len(),
                 )),
                 Some(_) => Some((
-                    FileElement::NewlineOrGap {
-                        value: "\n\n".to_string(),
-                    },
+                    FileElement::NewlineOrGap { value: "\n\n" },
                     offset + captures.get_match().len(),
                 )),
             },
         }
     }
 
-    pub fn start(&self) -> Result<Start, Error> {
+    pub fn start(&self) -> Result<Start<'_>, Error> {
         let offset = match self.newline_or_gap(0) {
             Some((_, new_offset)) => new_offset,
             None => 0usize,

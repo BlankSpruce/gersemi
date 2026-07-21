@@ -206,7 +206,7 @@ trait HasLineComment {
     fn has_line_comment(&self) -> bool;
 }
 
-impl HasLineComment for ArgumentsAtom {
+impl HasLineComment for ArgumentsAtom<'_> {
     fn has_line_comment(&self) -> bool {
         match self {
             Self::Argument(_) | Self::BracketComment(_) => false,
@@ -225,13 +225,13 @@ impl<T: HasLineComment> HasLineComment for Vec<T> {
     }
 }
 
-impl HasLineComment for RefinedArgumentsAtom {
+impl HasLineComment for RefinedArgumentsAtom<'_> {
     fn has_line_comment(&self) -> bool {
         (&self).has_line_comment()
     }
 }
 
-impl HasLineComment for &RefinedArgumentsAtom {
+impl HasLineComment for &RefinedArgumentsAtom<'_> {
     fn has_line_comment(&self) -> bool {
         match self {
             RefinedArgumentsAtom::Atom(atom) => atom.has_line_comment(),
@@ -443,17 +443,17 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn standard_preprocess_arguments(
+    fn standard_preprocess_arguments<'a>(
         &self,
-        arguments: RefinedArgumentsNode,
-    ) -> RefinedArgumentsNode {
+        arguments: RefinedArgumentsNode<'a>,
+    ) -> RefinedArgumentsNode<'a> {
         crate::two_words_keyword_isolator::preprocess_arguments(
             self.two_words_keywords(),
             arguments,
         )
     }
 
-    fn preprocess_arguments(&self, arguments: ArgumentsNode) -> RefinedArgumentsNode {
+    fn preprocess_arguments<'a>(&self, arguments: ArgumentsNode<'a>) -> RefinedArgumentsNode<'a> {
         self.preprocess_refined_arguments(
             arguments
                 .into_iter()
@@ -462,10 +462,10 @@ impl FormatterImpl<'_> {
         )
     }
 
-    fn preprocess_refined_arguments(
+    fn preprocess_refined_arguments<'a>(
         &self,
-        arguments: RefinedArgumentsNode,
-    ) -> RefinedArgumentsNode {
+        arguments: RefinedArgumentsNode<'a>,
+    ) -> RefinedArgumentsNode<'a> {
         if self.shall_use_condition_syntax() {
             crate::argument_schema::isolate_conditions(arguments)
         } else {
@@ -867,11 +867,11 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn preprocess_keyword_values(
+    fn preprocess_keyword_values<'a>(
         &self,
-        nodes: RefinedArgumentsNode,
+        nodes: RefinedArgumentsNode<'a>,
         preprocessor: &KeywordPreprocessor,
-    ) -> RefinedArgumentsNode {
+    ) -> RefinedArgumentsNode<'a> {
         let case_insensitive = matches!(self.configuration.sort_order, SortOrder::CaseInsensitive);
 
         match preprocessor {
@@ -996,7 +996,10 @@ impl FormatterImpl<'_> {
         group_sizes.all(|x| x <= threshold)
     }
 
-    fn split_inline_hint_argument(&self, argument: RefinedArgumentsAtom) -> RefinedArgumentsAtom {
+    fn split_inline_hint_argument<'a>(
+        &self,
+        argument: RefinedArgumentsAtom<'a>,
+    ) -> RefinedArgumentsAtom<'a> {
         match argument {
             RefinedArgumentsAtom::MultiValueArgument { keyword, arguments } => {
                 let arguments = match keyword.get_inline_hint_kind() {
@@ -1014,7 +1017,7 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn split_arguments(&self, arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
+    fn split_arguments<'a>(&self, arguments: RefinedArgumentsNode<'a>) -> RefinedArgumentsNode<'a> {
         match &self.active_schema {
             Some(schema) => schema.split_arguments_with_sections(arguments),
             _ => arguments,
@@ -1056,7 +1059,11 @@ impl FormatterImpl<'_> {
         )
     }
 
-    fn format_signature(&self, identifier: &str, mut arguments: RefinedArgumentsNode) -> String {
+    fn format_signature(
+        &self,
+        identifier: &str,
+        mut arguments: RefinedArgumentsNode<'_>,
+    ) -> String {
         let begin = format!("{}(", self.format_command_name(identifier));
         let end = ")";
 
@@ -1248,7 +1255,7 @@ impl FormatterImpl<'_> {
             CommandInvocation::CustomCommand {
                 ref indentation,
                 identifier,
-                ref formatted_node,
+                formatted_node,
                 ref position,
                 ..
             } => self.custom_command(indentation, identifier, formatted_node, position),
@@ -1299,7 +1306,7 @@ impl FormatterImpl<'_> {
                     .join("\n")
             }
             FileElement::Command(node) => self.command(node),
-            FileElement::StandaloneIdentifier { value } => self.standalone_identifier(&value),
+            FileElement::StandaloneIdentifier { value } => self.standalone_identifier(value),
             FileElement::NonCommandElement {
                 bracket_comments,
                 line_comment,
@@ -1320,7 +1327,7 @@ impl FormatterImpl<'_> {
                 }
                 result
             }
-            FileElement::NewlineOrGap { value } => value,
+            FileElement::NewlineOrGap { value } => value.to_string(),
         }
     }
 
@@ -1596,7 +1603,8 @@ impl Formatter {
 
     pub fn format(&self, text: String) -> Result<(String, UnknownCommandsUsed), PyErr> {
         let text = add_line_range_fences(text, &self.lines_to_format);
-        let node = Parser::new(text.clone(), &self.schemas).start()?;
+        let parser = Parser::new(&text, &self.schemas);
+        let node = parser.start()?;
         let before = if self.configuration.disable_sanity_checks {
             None
         } else {
@@ -1605,7 +1613,8 @@ impl Formatter {
 
         let (result, warnings) = format(node, &self.configuration, &self.schemas);
         if let Some(before) = before {
-            let after = Parser::new(result.clone(), &self.schemas).start()?;
+            let parser = Parser::new(&result, &self.schemas);
+            let after = parser.start()?;
             if !check_equivalence(before, after) {
                 return Err(PyRuntimeError::new_err(
                     "Reformatting doesn't produce equivalent code.",
