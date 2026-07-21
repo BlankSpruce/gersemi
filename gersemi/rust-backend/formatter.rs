@@ -638,7 +638,9 @@ impl FormatterImpl<'_> {
         let formatted_operation = self.arguments_atom(operation);
         if !operation.has_line_comment() {
             match self.configuration.indent_type {
-                IndentType::Spaces(spaces) if formatted_operation.trim().len() < spaces => {
+                IndentType::Spaces(spaces)
+                    if formatted_operation.trim().chars().count() < spaces =>
+                {
                     return format!(
                         "{formatted_operation} {}",
                         self.arguments_atom(operand).trim_start()
@@ -678,7 +680,7 @@ impl FormatterImpl<'_> {
                 let formatted_arg = self.not_indented().arguments_atom(&arg);
                 let updated_line = format!("{current_line} {formatted_arg}");
                 if force_next_line
-                    || (updated_line.len() > self.configuration.line_length)
+                    || (updated_line.chars().count() > self.configuration.line_length)
                     || updated_line.contains('\n')
                     || current_line.trim().starts_with('#')
                 {
@@ -1069,7 +1071,7 @@ impl FormatterImpl<'_> {
 
         let f = self.select_expansion_strategy();
         match f.configuration.indent_type {
-            IndentType::Spaces(spaces) if begin.len() == spaces => {
+            IndentType::Spaces(spaces) if begin.chars().count() == spaces => {
                 f.format_command_with_short_name(&begin, &arguments, end)
             }
             _ => format!(
@@ -1150,7 +1152,8 @@ impl FormatterImpl<'_> {
             return None;
         }
 
-        let reserved_space = prefix.len() + postfix.len() + self.indent_symbol.len();
+        let reserved_space =
+            prefix.chars().count() + postfix.chars().count() + self.indent_symbol.chars().count();
         {
             let mut f = self.not_indented();
             let mut result = self.indent_symbol.clone();
@@ -1165,7 +1168,7 @@ impl FormatterImpl<'_> {
                     return None;
                 }
 
-                line_length += part.len();
+                line_length += part.chars().count();
                 if line_length > limit {
                     return None;
                 }

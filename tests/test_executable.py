@@ -1292,3 +1292,14 @@ def test_multiprocessing_works(app, testfiles):
     assert app("--workers", 2, "--check", base) == success(stdout="")
 
     assert app("--workers", 1, "--check", base) == success(stdout="")
+
+
+def test_multibyte_utf8_symbols_in_stdin(app):
+    given = """set(80_example "Tři sta třicet tři stříbrných stříkaček stříkalo přes tři sta ")
+set(81_example "Tři sta třicet tři stříbrných stříkaček stříkalo přes tři sta t")"""
+    expected = """set(80_example "Tři sta třicet tři stříbrných stříkaček stříkalo přes tři sta ")
+set(81_example
+    "Tři sta třicet tři stříbrných stříkaček stříkalo přes tři sta t"
+)
+"""
+    assert app("-", input=given) == success(stdout=expected)
