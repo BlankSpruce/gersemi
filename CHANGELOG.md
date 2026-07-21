@@ -1,4 +1,17 @@
 # Changelog
+## [0.28.0] 2026-07-21
+### Added
+- Inline hints introduced by bracket comments: `#[[gersemi: ...]`. (#119, #120)
+
+### Fixed
+- Added missing Cargo.lock for reproducible builds. (#118)
+- Handling of multibyte UTF-8 symbols. (#126)
+
+### Changed
+- Binaries are produced using older OS versions.
+- More implementation ported to Rust.
+- Drop some Python dependencies.
+
 ## [0.27.7] 2026-05-27
 ### Fixed
 - `WHAT` in `feature_summary` is now treated as multi-value argument. (#115)
