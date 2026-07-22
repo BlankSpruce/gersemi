@@ -44,7 +44,10 @@ fn into_arguments(node: ArgumentsNode) -> Arguments {
         .collect()
 }
 
-fn new_command<'a>(identifier: &str, node: ArgumentsNode<'a>) -> Option<(Argument<'a>, Vec<String>)> {
+fn new_command<'a>(
+    identifier: &str,
+    node: ArgumentsNode<'a>,
+) -> Option<(Argument<'a>, Vec<String>)> {
     let is_function_or_macro = (identifier == "function") || (identifier == "macro");
     if !is_function_or_macro {
         return None;

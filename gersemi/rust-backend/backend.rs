@@ -47,7 +47,10 @@ mod gersemi_rust_backend {
         let before_parser = Parser::new(&before, &schemas);
         let after_parser = Parser::new(&after, &schemas);
 
-        Ok(check_equivalence(before_parser.start()?, after_parser.start()?))
+        Ok(check_equivalence(
+            before_parser.start()?,
+            after_parser.start()?,
+        ))
     }
 
     #[pymodule_export]

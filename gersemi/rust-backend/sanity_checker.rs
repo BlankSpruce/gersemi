@@ -52,7 +52,9 @@ fn simplify_arguments_atom(node: ArgumentsAtom) -> ArgumentsAtom {
         }
         ArgumentsAtom::Argument(node) => ArgumentsAtom::Argument(simplify_argument(node)),
         ArgumentsAtom::BracketComment(_) => node,
-        ArgumentsAtom::LineComment(node) => ArgumentsAtom::LineComment(simplify_line_comment(&node)),
+        ArgumentsAtom::LineComment(node) => {
+            ArgumentsAtom::LineComment(simplify_line_comment(&node))
+        }
     }
 }
 
