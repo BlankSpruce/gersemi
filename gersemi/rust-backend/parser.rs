@@ -38,7 +38,7 @@ pub struct Error {
 }
 
 const ESCAPE_SEQUENCE_R: &str = r"\\([^A-Za-z0-9]|[nrt])";
-const IDENTIFIER_R: &str = r"^([A-Za-z_@][A-Za-z0-9_@]*)[ \t]*";
+const IDENTIFIER_R: &str = r"^([A-Za-z_@][A-Za-z0-9_@]*)";
 const MAKE_STYLE_REFERENCE_R: &str = r##"\$\([^\)\n\"#]+?\)"##;
 const QUOTED_CONTINUATION_R: &str = r"\\\n";
 const QUOTED_ELEMENT_R: &str = r#"[^\\\"]|\n"#;
@@ -630,6 +630,7 @@ impl Parser<'_> {
         Ok(match self.raw_terminal(re, offset) {
             None => None,
             Some((matched_identifier, identifier_offset)) => {
+                let identifier_offset = self.skip_space(identifier_offset);
                 match self.left_paren(identifier_offset) {
                     None => None,
                     Some(offset) => match self.arguments(
@@ -691,7 +692,7 @@ impl Parser<'_> {
         self.raw_terminal(&RE, offset).map(|(matched, new_offset)| {
             (
                 FileElement::StandaloneIdentifier { value: matched },
-                new_offset,
+                self.skip_space(new_offset),
             )
         })
     }
@@ -854,7 +855,7 @@ impl Parser<'_> {
 }
 
 fn block_command(name: &str) -> BlockCommand {
-    let pattern = format!("(?i)^({name})[ \t]*");
+    let pattern = format!("(?i)^({name})");
     let re = regex(pattern.as_str());
     BlockCommand { re }
 }
