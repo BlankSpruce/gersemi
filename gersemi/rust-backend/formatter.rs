@@ -91,8 +91,7 @@ fn ends_with_line_comment(s: &str) -> bool {
     }
 }
 
-fn flat_split(pattern: &str, s: &str) -> (String, Option<[String; 2]>) {
-    let re = regex(pattern);
+fn flat_split(re: &Regex, s: &str) -> (String, Option<[String; 2]>) {
     match re.find(s) {
         None => (s.to_string(), None),
         Some(m) => (
@@ -103,16 +102,17 @@ fn flat_split(pattern: &str, s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_line_comment(s: &str) -> (String, Option<[String; 2]>) {
-    flat_split(r"\s*#", s)
+    static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"\s*#"));
+    flat_split(&RE, s)
 }
 
 fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
-    let regex_start = regex(r"\[(=*)\[");
-    if let Some(captures) = regex_start.captures(s) {
+    static REGEX_START: LazyLock<Regex> = LazyLock::new(|| regex(r"\[(=*)\["));
+    if let Some(captures) = REGEX_START.captures(s) {
         if let Some(matched_left_bracket) = captures.get(1) {
             let equal_signs = "=".repeat(matched_left_bracket.len());
-            let pattern = format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]");
-            return flat_split(&pattern, s);
+            let re = regex(&format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]"));
+            return flat_split(&re, s);
         }
     }
 
@@ -120,10 +120,10 @@ fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_quoted_arguments(s: &String) -> Vec<String> {
-    let re = regex(quoted_argument_pattern());
+    static RE: LazyLock<Regex> = LazyLock::new(|| regex(quoted_argument_pattern()));
     let mut s: &str = s;
     let mut result = Vec::<String>::new();
-    while let Some(matched) = re.find(s) {
+    while let Some(matched) = RE.find(s) {
         result.push(s[..matched.start()].to_string());
         result.push(s[matched.range()].to_string());
         s = &s[matched.end()..];
@@ -1506,8 +1506,8 @@ fn line_range_fence_regex() -> Regex {
 }
 
 fn remove_line_range_fences(formatted_code: &str) -> String {
-    let pattern = line_range_fence_regex();
-    pattern.replace_all(formatted_code, "").to_string()
+    static PATTERN: LazyLock<Regex> = LazyLock::new(line_range_fence_regex);
+    PATTERN.replace_all(formatted_code, "").to_string()
 }
 
 fn get_keyword_transformers(
