@@ -579,7 +579,7 @@ impl FormatterImpl<'_> {
 
     fn argument(&self, argument: &Argument) -> String {
         match argument {
-            Argument::Bracket(arg) => format!("{}{}", self.indent_symbol, arg.flatten()),
+            Argument::Bracket(arg) => format!("{}{}", self.indent_symbol, arg.whole),
             Argument::Complex { arguments } => self.complex_argument(arguments),
             Argument::Quoted { value, .. } => format!("{}\"{value}\"", self.indent_symbol),
             Argument::Unquoted { value, .. } => format!("{}{value}", self.indent_symbol),
@@ -600,7 +600,7 @@ impl FormatterImpl<'_> {
             CommentedArgumentComment::BracketComment(comment) => {
                 f.bracket_comment(comment, &mut buffer);
             }
-            CommentedArgumentComment::LineComment { comment, .. } => {
+            CommentedArgumentComment::LineComment(comment) => {
                 f.line_comment(comment, &mut buffer);
             }
         }

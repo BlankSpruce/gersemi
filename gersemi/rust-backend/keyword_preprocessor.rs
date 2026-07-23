@@ -7,7 +7,7 @@ use crate::node::{
 
 fn get_argument_value(argument: &Argument) -> String {
     match argument {
-        Argument::Bracket(arg) => arg.flatten(),
+        Argument::Bracket(arg) => arg.whole.to_string(),
         Argument::Complex { arguments } => {
             format!(
                 "({})",
@@ -15,8 +15,7 @@ fn get_argument_value(argument: &Argument) -> String {
             )
         }
         Argument::Quoted { value, .. } => format!("\"{value}\""),
-        Argument::Unquoted { value, .. } => value.to_string(),
-        Argument::InlineHint { value, .. } => value.clone(),
+        Argument::Unquoted { value, .. } | Argument::InlineHint { value, .. } => value.to_string(),
     }
 }
 
@@ -24,17 +23,16 @@ fn get_atom_value(atom: &ArgumentsAtom) -> String {
     match atom {
         ArgumentsAtom::CommentedArgument { argument, comment } => {
             let comment_value = match comment {
-                CommentedArgumentComment::BracketComment(BracketComment { value }) => value.clone(),
-                CommentedArgumentComment::LineComment {
-                    comment: LineComment { value },
-                    ..
-                } => value.to_string(),
+                CommentedArgumentComment::BracketComment(BracketComment { value }) => {
+                    value.to_string()
+                }
+                CommentedArgumentComment::LineComment(LineComment { value }) => value.to_string(),
             };
             format!("{}{}", get_argument_value(argument), comment_value)
         }
         ArgumentsAtom::Argument(argument) => get_argument_value(argument),
-        ArgumentsAtom::BracketComment(BracketComment { value }) => value.clone(),
-        ArgumentsAtom::LineComment(LineComment { value }) => value.to_string(),
+        ArgumentsAtom::BracketComment(BracketComment { value })
+        | ArgumentsAtom::LineComment(LineComment { value }) => value.to_string(),
     }
 }
 

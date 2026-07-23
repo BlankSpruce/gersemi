@@ -7,17 +7,13 @@ pub struct Position {
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct BracketArgument {
+pub struct BracketArgument<'a> {
     pub bracket_width: usize,
-    pub value: String,
+    pub bracket_start: &'a str,
+    pub value: &'a str,
+    pub bracket_end: &'a str,
+    pub whole: &'a str,
     pub position: Option<Position>,
-}
-
-impl BracketArgument {
-    pub fn flatten(&self) -> String {
-        let equal_signs = "=".repeat(self.bracket_width);
-        format!("[{equal_signs}[{}]{equal_signs}]", self.value)
-    }
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -29,7 +25,7 @@ pub enum InlineHintKind {
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Argument<'a> {
-    Bracket(BracketArgument),
+    Bracket(BracketArgument<'a>),
     Complex {
         arguments: ArgumentsNode<'a>,
     },
@@ -43,7 +39,7 @@ pub enum Argument<'a> {
     },
     InlineHint {
         kind: InlineHintKind,
-        value: String,
+        value: &'a str,
     },
 }
 
@@ -63,21 +59,18 @@ impl Argument<'_> {
                 })
                 .collect::<Vec<_>>()
                 .join(" "),
-            Self::Bracket(BracketArgument { value, .. }) | Self::InlineHint { value, .. } => {
-                value.clone()
-            }
-            Self::Quoted { value, .. } | Self::Unquoted { value, .. } => value.to_string(),
+            Self::InlineHint { value, .. }
+            | Self::Bracket(BracketArgument { value, .. })
+            | Self::Quoted { value, .. }
+            | Self::Unquoted { value, .. } => value.to_string(),
         }
     }
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum CommentedArgumentComment<'a> {
-    BracketComment(BracketComment),
-    LineComment {
-        comment: LineComment<'a>,
-        newline: String,
-    },
+    BracketComment(BracketComment<'a>),
+    LineComment(LineComment<'a>),
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -87,7 +80,7 @@ pub enum ArgumentsAtom<'a> {
         comment: CommentedArgumentComment<'a>,
     },
     Argument(Argument<'a>),
-    BracketComment(BracketComment),
+    BracketComment(BracketComment<'a>),
     LineComment(LineComment<'a>),
 }
 
@@ -149,8 +142,8 @@ impl Command<'_> {
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct BracketComment {
-    pub value: String,
+pub struct BracketComment<'a> {
+    pub value: &'a str,
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -170,7 +163,7 @@ pub enum FileElement<'a> {
         value: &'a str,
     },
     NonCommandElement {
-        bracket_comments: Vec<BracketComment>,
+        bracket_comments: Vec<BracketComment<'a>>,
         line_comment: Option<LineComment<'a>>,
     },
     NewlineOrGap {

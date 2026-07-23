@@ -8,11 +8,17 @@ fn simplify_argument(node: Argument) -> Argument {
     match node {
         Argument::Bracket(BracketArgument {
             bracket_width,
+            bracket_start,
             value,
+            bracket_end,
+            whole,
             ..
         }) => Argument::Bracket(BracketArgument {
             bracket_width,
+            bracket_start,
             value,
+            bracket_end,
+            whole,
             position: None,
         }),
         Argument::Complex { arguments } => Argument::Complex {
@@ -33,11 +39,8 @@ fn simplify_argument(node: Argument) -> Argument {
 fn simplify_commented_argument_comment(node: CommentedArgumentComment) -> CommentedArgumentComment {
     match node {
         CommentedArgumentComment::BracketComment(_) => node,
-        CommentedArgumentComment::LineComment { comment, .. } => {
-            CommentedArgumentComment::LineComment {
-                comment: simplify_line_comment(&comment),
-                newline: String::new(),
-            }
+        CommentedArgumentComment::LineComment(comment) => {
+            CommentedArgumentComment::LineComment(simplify_line_comment(&comment))
         }
     }
 }

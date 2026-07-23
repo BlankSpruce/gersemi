@@ -156,23 +156,27 @@ impl Parser<'_> {
 
     fn bracket_argument(
         &self,
-        offset: usize,
+        start_offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument<'_>, usize)>, Error> {
         static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[=*\["));
-        match RE_START.find(&self.text[offset..]) {
+        match RE_START.find(&self.text[start_offset..]) {
             None => Ok(None),
             Some(matched_left_bracket) => {
-                let bracket_width = matched_left_bracket.len() - 2;
+                let edge = matched_left_bracket.len();
+                let bracket_width = edge - 2;
                 let re_pattern = bracket_argument_pattern(bracket_width);
                 let re = regex(re_pattern.as_str());
-                let offset = offset + bracket_width + 2;
+                let offset = start_offset + edge;
                 match re.find(&self.text[offset..]) {
                     None => Err(self.unbalanced_brackets(offset)),
                     Some(value) => Ok(Some((
                         Argument::Bracket(BracketArgument {
                             bracket_width,
-                            value: value.as_str()[..value.len() - bracket_width - 2].to_string(),
+                            bracket_start: matched_left_bracket.as_str(),
+                            value: &value.as_str()[..value.len() - edge],
+                            bracket_end: &value.as_str()[value.len() - edge..],
+                            whole: &self.text[start_offset..][..value.len() + edge],
                             position: {
                                 if compute_position {
                                     Some(self.position(offset))
@@ -228,7 +232,7 @@ impl Parser<'_> {
         }
     }
 
-    fn newline(&self, offset: usize) -> Option<(String, usize)> {
+    fn newline(&self, offset: usize) -> Option<usize> {
         let mut result = offset;
         while self.text[result..].starts_with('\n') {
             result += 1;
@@ -238,8 +242,7 @@ impl Parser<'_> {
             return None;
         }
 
-        let s = self.text[offset..result].to_string();
-        Some((s, self.skip_space(result)))
+        Some(self.skip_space(result))
     }
 
     fn element_t(
@@ -360,9 +363,9 @@ impl Parser<'_> {
         }
 
         if let Some((comment, offset)) = self.line_comment(offset) {
-            if let Some((newline, offset)) = self.newline(offset) {
+            if let Some(offset) = self.newline(offset) {
                 return Ok(Some((
-                    CommentedArgumentComment::LineComment { comment, newline },
+                    CommentedArgumentComment::LineComment(comment),
                     offset,
                 )));
             }
@@ -536,7 +539,7 @@ impl Parser<'_> {
             return Ok(Some((Some(ArgumentsAtom::LineComment(node)), offset)));
         }
 
-        if let Some((_, offset)) = self.newline(offset) {
+        if let Some(offset) = self.newline(offset) {
             return Ok(Some((None, offset)));
         }
 
@@ -697,7 +700,7 @@ impl Parser<'_> {
         })
     }
 
-    fn bracket_comment(&self, mut offset: usize) -> Result<Option<(BracketComment, usize)>, Error> {
+    fn bracket_comment(&self, mut offset: usize) -> Result<Option<(BracketComment<'_>, usize)>, Error> {
         if let Some(new_offset) = self.pound_sign(offset) {
             offset = new_offset;
         } else {
@@ -708,7 +711,7 @@ impl Parser<'_> {
             offset = new_offset;
             return Ok(Some((
                 BracketComment {
-                    value: arg.flatten(),
+                    value: arg.whole,
                 },
                 offset,
             )));
