@@ -6,6 +6,7 @@ use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
 use pyo3::{FromPyObject, PyAny};
+use std::borrow::Cow;
 use std::cmp::min;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -363,9 +364,9 @@ impl ArgumentSchema {
     }
 }
 
-pub struct KeywordValue {
-    first: String,
-    second: Option<String>,
+pub struct KeywordValue<'a> {
+    first: Cow<'a, str>,
+    second: Option<Cow<'a, str>>,
 }
 
 pub fn is_one_of_keywords(
@@ -429,7 +430,7 @@ impl RefinedArgumentsAtom<'_> {
         }
     }
 
-    pub fn get_keyword_value(&self) -> Option<KeywordValue> {
+    pub fn get_keyword_value(&self) -> Option<KeywordValue<'_>> {
         match self {
             Self::Atom(atom) => atom.get_value().map(|value| KeywordValue {
                 first: value,

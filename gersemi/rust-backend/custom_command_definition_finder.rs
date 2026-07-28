@@ -58,7 +58,7 @@ fn new_command<'a>(
 
     let positional_arguments = positional_arguments
         .iter()
-        .map(Argument::get_value)
+        .map(|x| Argument::get_value(x).into_owned())
         .collect();
     Some((name?, positional_arguments))
 }
@@ -145,7 +145,7 @@ impl CustomCommandInterpreter {
             .or_insert(vec![])
             .push((
                 CustomCommandContent {
-                    canonical_name,
+                    canonical_name: canonical_name.into_owned(),
                     positional_arguments,
                     keywords,
                     block_end,
@@ -202,7 +202,7 @@ impl CustomCommandInterpreter {
 
     fn cmake_parse_arguments(&self, children: &Arguments) -> Option<Keywords> {
         let first_child = children.first()?.get_value();
-        let part = match first_child.as_str() {
+        let part = match first_child.as_ref() {
             "PARSE_ARGV" => [children.get(3), children.get(4), children.get(5)],
             "PARSE_ARGN" => [children.get(2), children.get(3), children.get(4)],
             _ => [children.get(1), children.get(2), children.get(3)],
@@ -213,9 +213,10 @@ impl CustomCommandInterpreter {
         };
 
         Some(Keywords {
-            options: self.eval_variables(options.get_value()),
-            one_value_keywords: self.eval_variables(one_value_arguments.get_value()),
-            multi_value_keywords: self.eval_variables(multi_value_arguments.get_value()),
+            options: self.eval_variables(options.get_value().into_owned()),
+            one_value_keywords: self.eval_variables(one_value_arguments.get_value().into_owned()),
+            multi_value_keywords: self
+                .eval_variables(multi_value_arguments.get_value().into_owned()),
             hints: vec![],
         })
     }
@@ -224,19 +225,19 @@ impl CustomCommandInterpreter {
         let arguments = arguments
             .iter()
             .map(Argument::get_value)
-            .collect::<Vec<String>>();
+            .collect::<Vec<_>>();
         let Some(name) = arguments.first() else {
             return;
         };
         let arguments = &arguments[1..];
 
         let mut result = Vec::<String>::new();
-        for value in arguments.iter().map(|a| self.eval_variables(a.clone())) {
+        for value in arguments.iter().map(|a| self.eval_variables(a.to_string())) {
             for item in value {
                 result.push(item);
             }
         }
-        self.stack.insert(name.clone(), result);
+        self.stack.insert(name.to_string(), result);
     }
 
     fn command_invocation(&mut self, identifier: &str, arguments: &Arguments) -> Option<Keywords> {

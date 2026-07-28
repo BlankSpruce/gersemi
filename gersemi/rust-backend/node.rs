@@ -1,4 +1,5 @@
 use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
+use std::borrow::Cow;
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Position {
@@ -46,23 +47,25 @@ pub enum Argument<'a> {
 pub type Arguments<'a> = Vec<Argument<'a>>;
 
 impl Argument<'_> {
-    pub fn get_value(&self) -> String {
+    pub fn get_value(&self) -> Cow<'_, str> {
         match self {
-            Self::Complex { arguments } => arguments
-                .iter()
-                .filter_map(|x| match x {
-                    ArgumentsAtom::Argument(node)
-                    | ArgumentsAtom::CommentedArgument { argument: node, .. } => {
-                        Some(node.get_value())
-                    }
-                    ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
-                })
-                .collect::<Vec<_>>()
-                .join(" "),
+            Self::Complex { arguments } => Cow::Owned(
+                arguments
+                    .iter()
+                    .filter_map(|x| match x {
+                        ArgumentsAtom::Argument(node)
+                        | ArgumentsAtom::CommentedArgument { argument: node, .. } => {
+                            Some(node.get_value())
+                        }
+                        ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => None,
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            ),
             Self::InlineHint { value, .. }
             | Self::Bracket(BracketArgument { value, .. })
             | Self::Quoted { value, .. }
-            | Self::Unquoted { value, .. } => value.to_string(),
+            | Self::Unquoted { value, .. } => Cow::Borrowed(value),
         }
     }
 }
@@ -92,7 +95,7 @@ impl ArgumentsAtom<'_> {
         }
     }
 
-    pub fn get_value(&self) -> Option<String> {
+    pub fn get_value(&self) -> Option<Cow<'_, str>> {
         match self {
             ArgumentsAtom::CommentedArgument { argument, .. }
             | ArgumentsAtom::Argument(argument) => Some(argument.get_value()),
@@ -260,7 +263,7 @@ impl RefinedArgumentsAtom<'_> {
         )
     }
 
-    pub fn get_value(&self) -> Option<String> {
+    pub fn get_value(&self) -> Option<Cow<'_, str>> {
         match self {
             Self::Atom(atom) => atom.get_value(),
             _ => None,

@@ -855,7 +855,7 @@ impl FormatterImpl<'_> {
         match &self.active_schema {
             Some(schema) => atom
                 .get_value()
-                .and_then(|key| schema.keyword_preprocessors.get(&key).cloned()),
+                .and_then(|key| schema.keyword_preprocessors.get(key.as_ref()).cloned()),
             _ => None,
         }
     }
@@ -868,7 +868,7 @@ impl FormatterImpl<'_> {
         match &self.active_schema {
             Some(schema) => atom
                 .get_value()
-                .and_then(|key| schema.keyword_formatters.get(&key).cloned()),
+                .and_then(|key| schema.keyword_formatters.get(key.as_ref()).cloned()),
             _ => None,
         }
     }
