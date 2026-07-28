@@ -288,8 +288,8 @@ fn is_line_comment_in_any_of(arguments: &RefinedArgumentsNode) -> bool {
 }
 
 fn pair_arguments(arguments: RefinedArgumentsNode) -> RefinedArgumentsNode {
-    let mut result = RefinedArgumentsNode::new();
-    let mut accumulator = RefinedArgumentsNode::new();
+    let mut result = RefinedArgumentsNode::with_capacity(arguments.len() / 2 + 1);
+    let mut accumulator = RefinedArgumentsNode::with_capacity(2);
     for argument in arguments {
         if accumulator.is_empty() {
             if argument.is_comment() {
@@ -427,11 +427,6 @@ impl FormatterImpl<'_> {
         if has_nodes {
             buffer.push('\n');
         }
-    }
-
-    fn get_patch(&self, identifier: &str) -> Option<&CommandSchema> {
-        let identifier = identifier.to_lowercase();
-        self.schemas.get(&identifier)
     }
 
     fn two_words_keywords(&self) -> &Vec<TwoWordKeywordMatcher> {
@@ -1019,7 +1014,7 @@ impl FormatterImpl<'_> {
             RefinedArgumentsAtom::MultiValueArgument { keyword, arguments } => {
                 let arguments = match keyword.get_inline_hint_kind() {
                     Some(InlineHintKind::AsCommand { command }) => {
-                        let f = self.patch_active_command(self.get_patch(&command));
+                        let f = self.patch_active_command(self.schemas.get(&command));
                         let arguments = f.preprocess_refined_arguments(arguments);
                         let f = f.patch_active_schema(f.get_signature(&arguments));
                         f.split_arguments(arguments)
@@ -1085,7 +1080,7 @@ impl FormatterImpl<'_> {
         mut arguments: RefinedArgumentsNode<'_>,
         buffer: &mut String,
     ) {
-        let begin = format!("{}(", self.format_command_name(identifier));
+        let begin = self.format_command_name(identifier);
         let end = ")";
 
         if let Some(result) =
@@ -1143,7 +1138,7 @@ impl FormatterImpl<'_> {
     }
 
     fn known_command(&self, identifier: &str, arguments: ArgumentsNode, buffer: &mut String) {
-        self.patch_active_command(self.get_patch(identifier))
+        self.patch_active_command(self.schemas.get(identifier))
             .format_command(identifier, arguments, buffer);
     }
 
@@ -1152,12 +1147,12 @@ impl FormatterImpl<'_> {
             Some(CommandSchema {
                 canonical_name: Some(value),
                 ..
-            }) => value.clone(),
+            }) => format!("{value}("),
             _ => {
                 if name.contains('@') {
-                    name.to_string()
+                    format!("{name}(")
                 } else {
-                    name.to_lowercase()
+                    format!("{}(", name.to_lowercase())
                 }
             }
         }
@@ -1230,7 +1225,7 @@ impl FormatterImpl<'_> {
         buffer: &mut String,
     ) {
         let begin = {
-            let s = format!("{}(", self.format_command_name(&name));
+            let s = self.format_command_name(&name);
             self.indent(&s)
         };
         self.unknown_commands_used

@@ -38,8 +38,8 @@ fn isolate_two_words_keyword<'a>(
     matcher: &TwoWordKeywordMatcher,
     arguments: RefinedArgumentsNode<'a>,
 ) -> RefinedArgumentsNode<'a> {
-    let mut result = RefinedArgumentsNode::new();
-    let mut accumulator = ArgumentsNode::new();
+    let mut result = RefinedArgumentsNode::with_capacity(arguments.len());
+    let mut accumulator = ArgumentsNode::with_capacity(2);
     for argument in arguments {
         let RefinedArgumentsAtom::Atom(argument) = argument else {
             result.push(argument);

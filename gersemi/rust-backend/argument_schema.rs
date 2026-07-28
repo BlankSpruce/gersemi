@@ -273,7 +273,7 @@ impl ArgumentSchema {
         };
 
         let rest = section_schema.split_arguments_with_sections(arguments);
-        let mut values = Vec::<RefinedArgumentsAtom>::new();
+        let mut values = Vec::<RefinedArgumentsAtom>::with_capacity(rest.len());
         for argument in rest {
             match argument {
                 RefinedArgumentsAtom::PositionalArguments(mut arguments) => {
@@ -319,7 +319,7 @@ impl ArgumentSchema {
     }
 
     fn form_sections<'a>(&self, arguments: RefinedArgumentsNode<'a>) -> RefinedArgumentsNode<'a> {
-        let mut result = RefinedArgumentsNode::new();
+        let mut result = RefinedArgumentsNode::with_capacity(arguments.len());
         let mut section_schema: Option<&ArgumentSchema> = None;
 
         for argument in arguments {
@@ -458,7 +458,7 @@ fn isolate_unary_operators<'a>(
     arguments: RefinedArgumentsNode<'a>,
 ) -> RefinedArgumentsNode<'a> {
     let mut one_behind: Option<RefinedArgumentsAtom> = None;
-    let mut result = RefinedArgumentsNode::new();
+    let mut result = RefinedArgumentsNode::with_capacity(arguments.len());
     for current in arguments {
         match one_behind {
             None => {
@@ -500,7 +500,7 @@ fn isolate_binary_tests<'a>(
 ) -> RefinedArgumentsNode<'a> {
     let mut two_behind: Option<RefinedArgumentsAtom> = None;
     let mut one_behind: Option<RefinedArgumentsAtom> = None;
-    let mut result = RefinedArgumentsNode::new();
+    let mut result = RefinedArgumentsNode::with_capacity(arguments.len());
 
     for current in arguments {
         match (two_behind, one_behind) {
@@ -639,7 +639,7 @@ pub struct CommandSchemas {
 }
 
 impl CommandSchemas {
-    pub fn get(&self, key: &str) -> Option<&CommandSchema> {
+    pub fn get_impl(&self, key: &str) -> Option<&CommandSchema> {
         self.definition_schemas.get(key).or_else(|| {
             self.extension_schemas
                 .get(key)
@@ -647,9 +647,12 @@ impl CommandSchemas {
         })
     }
 
+    pub fn get(&self, key: &str) -> Option<&CommandSchema> {
+        self.get_impl(key)
+            .or_else(|| self.get_impl(&key.to_lowercase()))
+    }
+
     pub fn contains_key(&self, key: &str) -> bool {
-        self.definition_schemas.contains_key(key)
-            || self.extension_schemas.contains_key(key)
-            || builtin_schemas().contains_key(key)
+        self.get(key).is_some()
     }
 }

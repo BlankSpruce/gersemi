@@ -84,6 +84,11 @@ pub fn regex(pattern: &str) -> Regex {
         .clone()
 }
 
+pub fn is_function_or_macro(s: &str) -> bool {
+    static RE: LazyLock<Regex> = LazyLock::new(|| regex("(?i:(function|macro))"));
+    RE.is_match(s)
+}
+
 impl Parser<'_> {
     pub fn new<'a>(text: &'a str, schemas: &'a CommandSchemas) -> Parser<'a> {
         let line_offsets = text
@@ -603,7 +608,7 @@ impl Parser<'_> {
     ) -> CommandInvocation<'a> {
         {
             {
-                if self.is_known_command(identifier.as_str()) {
+                if self.schemas.contains_key(&identifier) {
                     CommandInvocation::KnownCommand {
                         identifier,
                         arguments,
@@ -636,28 +641,24 @@ impl Parser<'_> {
                 let identifier_offset = self.skip_space(identifier_offset);
                 match self.left_paren(identifier_offset) {
                     None => None,
-                    Some(offset) => match self.arguments(
-                        offset,
-                        matches!(
-                            matched_identifier.to_lowercase().as_str(),
-                            "function" | "macro"
-                        ),
-                    )? {
-                        None => None,
-                        Some((matched_arguments, arguments_offset)) => {
-                            let offset = self.right_paren(arguments_offset)?;
-                            Some((
-                                self.create_command_invocation_node(
-                                    matched_identifier.to_string(),
-                                    matched_arguments,
-                                    initial_offset,
-                                    identifier_offset,
-                                    arguments_offset,
-                                ),
-                                offset,
-                            ))
+                    Some(offset) => {
+                        match self.arguments(offset, is_function_or_macro(matched_identifier))? {
+                            None => None,
+                            Some((matched_arguments, arguments_offset)) => {
+                                let offset = self.right_paren(arguments_offset)?;
+                                Some((
+                                    self.create_command_invocation_node(
+                                        matched_identifier.to_string(),
+                                        matched_arguments,
+                                        initial_offset,
+                                        identifier_offset,
+                                        arguments_offset,
+                                    ),
+                                    offset,
+                                ))
+                            }
                         }
-                    },
+                    }
                 }
             }
         })
@@ -700,7 +701,10 @@ impl Parser<'_> {
         })
     }
 
-    fn bracket_comment(&self, mut offset: usize) -> Result<Option<(BracketComment<'_>, usize)>, Error> {
+    fn bracket_comment(
+        &self,
+        mut offset: usize,
+    ) -> Result<Option<(BracketComment<'_>, usize)>, Error> {
         if let Some(new_offset) = self.pound_sign(offset) {
             offset = new_offset;
         } else {
@@ -709,12 +713,7 @@ impl Parser<'_> {
 
         if let Some((Argument::Bracket(arg), new_offset)) = self.bracket_argument(offset, false)? {
             offset = new_offset;
-            return Ok(Some((
-                BracketComment {
-                    value: arg.whole,
-                },
-                offset,
-            )));
+            return Ok(Some((BracketComment { value: arg.whole }, offset)));
         }
 
         Ok(None)
@@ -849,11 +848,6 @@ impl Parser<'_> {
         }
 
         Ok(Start { children: result })
-    }
-
-    fn is_known_command(&self, command_name: &str) -> bool {
-        let command_name = command_name.to_lowercase();
-        self.schemas.contains_key(&command_name)
     }
 }
 

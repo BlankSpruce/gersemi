@@ -5,7 +5,7 @@ use crate::node::{
     Argument, Arguments, ArgumentsAtom, ArgumentsNode, BracketArgument, Command, CommandInvocation,
     FileElement, Position, Start,
 };
-use crate::parser::Parser;
+use crate::parser::{is_function_or_macro, Parser};
 use crate::utils::{get_files, normalize_newlines, read_code};
 use pyo3::{PyResult, Python};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -48,8 +48,7 @@ fn new_command<'a>(
     identifier: &str,
     node: ArgumentsNode<'a>,
 ) -> Option<(Argument<'a>, Vec<String>)> {
-    let is_function_or_macro = (identifier == "function") || (identifier == "macro");
-    if !is_function_or_macro {
+    if !is_function_or_macro(identifier) {
         return None;
     }
 
