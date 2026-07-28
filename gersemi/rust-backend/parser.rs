@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 pub struct BlockCommand {
-    re: regex::Regex,
+    pattern: String,
 }
 
 pub struct Parser<'a> {
@@ -71,6 +71,30 @@ fn unquoted_argument_pattern() -> &'static str {
 fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
     let equal_signs = "=".repeat(number_of_equal_signs);
     format!(r"^([\s\S]+?)\]{equal_signs}\]")
+}
+
+pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
+    static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
+        LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
+
+    let mut regexes = REGEXES.lock().unwrap();
+    let re = regexes
+        .entry(pattern.to_string())
+        .or_insert_with(|| Regex::new(pattern).unwrap());
+
+    re.find(s)
+}
+
+pub fn re_captures<'a>(pattern: &str, s: &'a str) -> Option<regex::Captures<'a>> {
+    static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
+        LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
+
+    let mut regexes = REGEXES.lock().unwrap();
+    let re = regexes
+        .entry(pattern.to_string())
+        .or_insert_with(|| Regex::new(pattern).unwrap());
+
+    re.captures(s)
 }
 
 pub fn regex(pattern: &str) -> Regex {
@@ -171,9 +195,8 @@ impl Parser<'_> {
                 let edge = matched_left_bracket.len();
                 let bracket_width = edge - 2;
                 let re_pattern = bracket_argument_pattern(bracket_width);
-                let re = regex(re_pattern.as_str());
                 let offset = start_offset + edge;
-                match re.find(&self.text[offset..]) {
+                match re_find(&re_pattern, &self.text[offset..]) {
                     None => Err(self.unbalanced_brackets(offset)),
                     Some(value) => Ok(Some((
                         Argument::Bracket(BracketArgument {
@@ -197,8 +220,8 @@ impl Parser<'_> {
         }
     }
 
-    fn raw_terminal(&self, re: &regex::Regex, offset: usize) -> Option<(&str, usize)> {
-        match re.captures(&self.text[offset..]) {
+    fn raw_terminal(&self, pattern: &str, offset: usize) -> Option<(&str, usize)> {
+        match re_captures(pattern, &self.text[offset..]) {
             None => None,
             Some(captures) => captures
                 .get(1)
@@ -255,7 +278,7 @@ impl Parser<'_> {
         command: &BlockCommand,
         offset: usize,
     ) -> Result<Option<(Command<'_>, usize)>, Error> {
-        self.command_element_t(&command.re, offset)
+        self.command_element_t(&command.pattern, offset)
     }
 
     fn block_body(
@@ -631,11 +654,11 @@ impl Parser<'_> {
 
     fn command_invocation_t(
         &self,
-        re: &regex::Regex,
+        pattern: &str,
         offset: usize,
     ) -> Result<Option<(CommandInvocation<'_>, usize)>, Error> {
         let initial_offset = offset;
-        Ok(match self.raw_terminal(re, offset) {
+        Ok(match self.raw_terminal(pattern, offset) {
             None => None,
             Some((matched_identifier, identifier_offset)) => {
                 let identifier_offset = self.skip_space(identifier_offset);
@@ -666,11 +689,11 @@ impl Parser<'_> {
 
     fn command_element_t(
         &self,
-        re: &regex::Regex,
+        pattern: &str,
         offset: usize,
     ) -> Result<Option<(Command<'_>, usize)>, Error> {
         Ok(self
-            .command_invocation_t(re, offset)?
+            .command_invocation_t(pattern, offset)?
             .map(|(command_invocation, offset)| {
                 let (line_comment, offset) = match self.line_comment(offset) {
                     None => (None, offset),
@@ -687,18 +710,17 @@ impl Parser<'_> {
     }
 
     fn command_element(&self, offset: usize) -> Result<Option<(Command<'_>, usize)>, Error> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-        self.command_element_t(&RE, offset)
+        self.command_element_t(IDENTIFIER_R, offset)
     }
 
     fn standalone_identifier(&self, offset: usize) -> Option<(FileElement<'_>, usize)> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(IDENTIFIER_R));
-        self.raw_terminal(&RE, offset).map(|(matched, new_offset)| {
-            (
-                FileElement::StandaloneIdentifier { value: matched },
-                self.skip_space(new_offset),
-            )
-        })
+        self.raw_terminal(IDENTIFIER_R, offset)
+            .map(|(matched, new_offset)| {
+                (
+                    FileElement::StandaloneIdentifier { value: matched },
+                    self.skip_space(new_offset),
+                )
+            })
     }
 
     fn bracket_comment(
@@ -853,8 +875,7 @@ impl Parser<'_> {
 
 fn block_command(name: &str) -> BlockCommand {
     let pattern = format!("(?i)^({name})");
-    let re = regex(pattern.as_str());
-    BlockCommand { re }
+    BlockCommand { pattern }
 }
 
 impl CommandSchemas {

@@ -17,7 +17,7 @@ use crate::node::{
     CommentedArgumentComment, FileElement, InlineHintKind, LineComment, Position,
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
-use crate::parser::{quoted_argument_pattern, regex, Parser};
+use crate::parser::{quoted_argument_pattern, re_find, regex, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use crate::utils::load_definitions_from_extensions;
@@ -92,8 +92,8 @@ fn ends_with_line_comment(s: &str) -> bool {
     }
 }
 
-fn flat_split(re: &Regex, s: &str) -> (String, Option<[String; 2]>) {
-    match re.find(s) {
+fn flat_split(pattern: &str, s: &str) -> (String, Option<[String; 2]>) {
+    match re_find(pattern, s) {
         None => (s.to_string(), None),
         Some(m) => (
             s[..m.start()].to_string(),
@@ -103,8 +103,7 @@ fn flat_split(re: &Regex, s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_line_comment(s: &str) -> (String, Option<[String; 2]>) {
-    static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"\s*#"));
-    flat_split(&RE, s)
+    flat_split(r"\s*#", s)
 }
 
 fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
@@ -112,8 +111,8 @@ fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
     if let Some(captures) = REGEX_START.captures(s) {
         if let Some(matched_left_bracket) = captures.get(1) {
             let equal_signs = "=".repeat(matched_left_bracket.len());
-            let re = regex(&format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]"));
-            return flat_split(&re, s);
+            let pattern = format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]");
+            return flat_split(&pattern, s);
         }
     }
 
