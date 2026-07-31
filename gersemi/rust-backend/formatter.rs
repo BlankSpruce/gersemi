@@ -108,12 +108,10 @@ fn split_by_line_comment(s: &str) -> (String, Option<[String; 2]>) {
 
 fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
     static REGEX_START: LazyLock<Regex> = LazyLock::new(|| regex(r"\[(=*)\["));
-    if let Some(captures) = REGEX_START.captures(s) {
-        if let Some(matched_left_bracket) = captures.get(1) {
-            let equal_signs = "=".repeat(matched_left_bracket.len());
-            let pattern = format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]");
-            return flat_split(&pattern, s);
-        }
+    if let Some(left_bracket) = REGEX_START.find(s) {
+        let equal_signs = "=".repeat(left_bracket.len() - 2);
+        let pattern = format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]");
+        return flat_split(&pattern, s);
     }
 
     (s.to_string(), None)

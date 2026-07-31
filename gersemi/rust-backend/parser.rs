@@ -38,7 +38,7 @@ pub struct Error {
 }
 
 const ESCAPE_SEQUENCE_R: &str = r"\\([^A-Za-z0-9]|[nrt])";
-const IDENTIFIER_R: &str = r"^([A-Za-z_@][A-Za-z0-9_@]*)";
+const IDENTIFIER_R: &str = r"^[A-Za-z_@][A-Za-z0-9_@]*";
 const MAKE_STYLE_REFERENCE_R: &str = r##"\$\([^\)\n\"#]+?\)"##;
 const QUOTED_CONTINUATION_R: &str = r"\\\n";
 const QUOTED_ELEMENT_R: &str = r#"[^\\\"]|\n"#;
@@ -83,18 +83,6 @@ pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
         .or_insert_with(|| Regex::new(pattern).unwrap());
 
     re.find(s)
-}
-
-pub fn re_captures<'a>(pattern: &str, s: &'a str) -> Option<regex::Captures<'a>> {
-    static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
-        LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
-
-    let mut regexes = REGEXES.lock().unwrap();
-    let re = regexes
-        .entry(pattern.to_string())
-        .or_insert_with(|| Regex::new(pattern).unwrap());
-
-    re.captures(s)
 }
 
 pub fn regex(pattern: &str) -> Regex {
@@ -200,7 +188,6 @@ impl Parser<'_> {
                     None => Err(self.unbalanced_brackets(offset)),
                     Some(value) => Ok(Some((
                         Argument::Bracket(BracketArgument {
-                            bracket_width,
                             bracket_start: matched_left_bracket.as_str(),
                             value: &value.as_str()[..value.len() - edge],
                             bracket_end: &value.as_str()[value.len() - edge..],
@@ -221,12 +208,8 @@ impl Parser<'_> {
     }
 
     fn raw_terminal(&self, pattern: &str, offset: usize) -> Option<(&str, usize)> {
-        match re_captures(pattern, &self.text[offset..]) {
-            None => None,
-            Some(captures) => captures
-                .get(1)
-                .map(|matched| (matched.as_str(), offset + captures.get_match().len())),
-        }
+        re_find(pattern, &self.text[offset..])
+            .map(|matched| (matched.as_str(), offset + matched.len()))
     }
 
     fn pound_sign(&self, offset: usize) -> Option<usize> {
@@ -807,20 +790,19 @@ impl Parser<'_> {
     }
 
     fn newline_or_gap(&self, offset: usize) -> Option<(FileElement<'_>, usize)> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n[ \t]*)(\n[ \t]*)*"));
-        match RE.captures(&self.text[offset..]) {
-            None => None,
-            Some(captures) => match captures.get(2) {
-                None => Some((
-                    FileElement::NewlineOrGap { value: "\n" },
-                    offset + captures.get_match().len(),
-                )),
-                Some(_) => Some((
-                    FileElement::NewlineOrGap { value: "\n\n" },
-                    offset + captures.get_match().len(),
-                )),
-            },
-        }
+        static RE_FIRST_NL: LazyLock<Regex> = LazyLock::new(|| regex(r"^\n[ \t]*"));
+        static RE_CONSECUTIVE_NL: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n[ \t]*)+"));
+
+        let matched = RE_FIRST_NL.find(&self.text[offset..])?;
+        let offset = offset + matched.len();
+
+        Some(match RE_CONSECUTIVE_NL.find(&self.text[offset..]) {
+            None => (FileElement::NewlineOrGap { value: "\n" }, offset),
+            Some(matched) => (
+                FileElement::NewlineOrGap { value: "\n\n" },
+                offset + matched.len(),
+            ),
+        })
     }
 
     pub fn start(&self) -> Result<Start<'_>, Error> {
@@ -874,7 +856,7 @@ impl Parser<'_> {
 }
 
 fn block_command(name: &str) -> BlockCommand {
-    let pattern = format!("(?i)^({name})");
+    let pattern = format!("(?i)^{name}");
     BlockCommand { pattern }
 }
 
