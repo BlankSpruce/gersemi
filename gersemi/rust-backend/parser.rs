@@ -68,11 +68,6 @@ fn unquoted_argument_pattern() -> &'static str {
     RE.as_str()
 }
 
-fn bracket_argument_end_pattern(number_of_equal_signs: usize) -> String {
-    let equal_signs = "=".repeat(number_of_equal_signs);
-    format!(r"\]{equal_signs}\]")
-}
-
 pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
     static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
         LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
@@ -201,14 +196,14 @@ impl Parser<'_> {
             Some(matched_left_bracket) => {
                 let edge = matched_left_bracket.len();
                 let bracket_width = edge - 2;
-                let re_pattern = bracket_argument_end_pattern(bracket_width);
+                let re_pattern = format!(r"]{}]", "=".repeat(bracket_width));
                 let offset = start_offset + edge;
-                match re_find(&re_pattern, &self.text[offset..]) {
+                match self.text[offset..].find(&re_pattern) {
                     None => Err(self.unbalanced_brackets(offset)),
                     Some(value) => Ok(Some((
                         Argument::Bracket(BracketArgument {
-                            value: &self.text[offset..][..value.start()],
-                            whole: &self.text[start_offset..][..value.end() + edge],
+                            value: &self.text[offset..][..value],
+                            whole: &self.text[start_offset..][..value + 2 * edge],
                             position: {
                                 if compute_position {
                                     Some(self.position(offset))
@@ -217,7 +212,7 @@ impl Parser<'_> {
                                 }
                             },
                         }),
-                        self.skip_space(offset + value.end()),
+                        self.skip_space(offset + value + edge),
                     ))),
                 }
             }
