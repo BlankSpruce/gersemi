@@ -9,9 +9,7 @@ pub struct Position {
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct BracketArgument<'a> {
-    pub bracket_start: &'a str,
     pub value: &'a str,
-    pub bracket_end: &'a str,
     pub whole: &'a str,
     pub position: Option<Position>,
 }

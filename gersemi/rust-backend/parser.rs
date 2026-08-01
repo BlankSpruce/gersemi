@@ -207,9 +207,7 @@ impl Parser<'_> {
                     None => Err(self.unbalanced_brackets(offset)),
                     Some(value) => Ok(Some((
                         Argument::Bracket(BracketArgument {
-                            bracket_start: matched_left_bracket.as_str(),
                             value: &value.as_str()[..value.len() - edge],
-                            bracket_end: &value.as_str()[value.len() - edge..],
                             whole: &self.text[start_offset..][..value.len() + edge],
                             position: {
                                 if compute_position {

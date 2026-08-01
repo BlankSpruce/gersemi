@@ -7,15 +7,11 @@ use std::collections::BTreeSet;
 fn simplify_argument(node: Argument) -> Argument {
     match node {
         Argument::Bracket(BracketArgument {
-            bracket_start,
             value,
-            bracket_end,
             whole,
             ..
         }) => Argument::Bracket(BracketArgument {
-            bracket_start,
             value,
-            bracket_end,
             whole,
             position: None,
         }),
