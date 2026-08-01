@@ -764,19 +764,26 @@ impl Parser<'_> {
     }
 
     fn newline_or_gap(&self, offset: usize) -> Option<(FileElement<'_>, usize)> {
-        static RE_FIRST_NL: LazyLock<Regex> = LazyLock::new(|| regex(r"^\n[ \t]*"));
-        static RE_CONSECUTIVE_NL: LazyLock<Regex> = LazyLock::new(|| regex(r"^(\n[ \t]*)+"));
+        if !self.text[offset..].starts_with('\n') {
+            return None;
+        }
+        let offset_after_first_nl = self.skip_space(offset + 1);
 
-        let matched = RE_FIRST_NL.find(&self.text[offset..])?;
-        let offset = offset + matched.len();
+        let mut offset = offset_after_first_nl;
+        while self.text[offset..].starts_with('\n') {
+            offset = self.skip_space(offset + 1);
+        }
 
-        Some(match RE_CONSECUTIVE_NL.find(&self.text[offset..]) {
-            None => (FileElement::NewlineOrGap { value: "\n" }, offset),
-            Some(matched) => (
-                FileElement::NewlineOrGap { value: "\n\n" },
-                offset + matched.len(),
-            ),
-        })
+        Some((
+            FileElement::NewlineOrGap {
+                value: if offset == offset_after_first_nl {
+                    "\n"
+                } else {
+                    "\n\n"
+                },
+            },
+            offset,
+        ))
     }
 
     pub fn start(&self) -> Result<Start<'_>, Error> {
