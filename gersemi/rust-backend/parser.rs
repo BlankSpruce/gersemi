@@ -68,9 +68,9 @@ fn unquoted_argument_pattern() -> &'static str {
     RE.as_str()
 }
 
-fn bracket_argument_pattern(number_of_equal_signs: usize) -> String {
+fn bracket_argument_end_pattern(number_of_equal_signs: usize) -> String {
     let equal_signs = "=".repeat(number_of_equal_signs);
-    format!(r"^([\s\S]+?)\]{equal_signs}\]")
+    format!(r"\]{equal_signs}\]")
 }
 
 pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
@@ -201,14 +201,14 @@ impl Parser<'_> {
             Some(matched_left_bracket) => {
                 let edge = matched_left_bracket.len();
                 let bracket_width = edge - 2;
-                let re_pattern = bracket_argument_pattern(bracket_width);
+                let re_pattern = bracket_argument_end_pattern(bracket_width);
                 let offset = start_offset + edge;
                 match re_find(&re_pattern, &self.text[offset..]) {
                     None => Err(self.unbalanced_brackets(offset)),
                     Some(value) => Ok(Some((
                         Argument::Bracket(BracketArgument {
-                            value: &value.as_str()[..value.len() - edge],
-                            whole: &self.text[start_offset..][..value.len() + edge],
+                            value: &self.text[offset..][..value.start()],
+                            whole: &self.text[start_offset..][..value.end() + edge],
                             position: {
                                 if compute_position {
                                     Some(self.position(offset))
@@ -217,7 +217,7 @@ impl Parser<'_> {
                                 }
                             },
                         }),
-                        self.skip_space(offset + value.len()),
+                        self.skip_space(offset + value.end()),
                     ))),
                 }
             }
