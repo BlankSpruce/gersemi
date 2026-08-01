@@ -273,14 +273,6 @@ impl Parser<'_> {
         Some(self.skip_space(result))
     }
 
-    fn element_t(
-        &self,
-        command: &BlockCommand,
-        offset: usize,
-    ) -> Result<Option<(Command<'_>, usize)>, Error> {
-        self.command_element_t(&command.pattern, offset)
-    }
-
     fn block_body(
         &self,
         end_command: &BlockCommand,
@@ -293,7 +285,9 @@ impl Parser<'_> {
         let mut result: Vec<FileElement> = vec![];
         let mut last_newline_or_gap: Option<FileElement> = None;
         loop {
-            if let Some((end_command, offset)) = self.element_t(end_command, offset)? {
+            if let Some((end_command, offset)) =
+                self.command_element_t(&end_command.pattern, offset)?
+            {
                 return Ok((result, Some(end_command), offset));
             }
 
