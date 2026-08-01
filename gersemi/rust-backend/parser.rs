@@ -101,6 +101,25 @@ pub fn is_function_or_macro(s: &str) -> bool {
     RE.is_match(s)
 }
 
+fn inline_hint(value: &str, offset: usize) -> Option<(Argument<'_>, usize)> {
+    let hint = value.strip_prefix("[[gersemi: ")?;
+    let hint = hint.strip_suffix("]]")?;
+
+    let kind = if let Some(hint) = KeywordPreprocessor::from_str(hint) {
+        InlineHintKind::KeywordPreprocessor(hint)
+    } else if let Some(hint) = KeywordFormatter::from_str(hint) {
+        InlineHintKind::KeywordFormatter(hint)
+    } else if let Some(hint) = hint.strip_prefix("as_command=") {
+        InlineHintKind::AsCommand {
+            command: hint.to_lowercase(),
+        }
+    } else {
+        return None;
+    };
+
+    Some((Argument::InlineHint { value, kind }, offset))
+}
+
 impl Parser<'_> {
     pub fn new<'a>(text: &'a str, schemas: &'a CommandSchemas) -> Parser<'a> {
         let line_offsets = text
@@ -362,11 +381,11 @@ impl Parser<'_> {
         &self,
         offset: usize,
     ) -> Result<Option<(CommentedArgumentComment<'_>, usize)>, Error> {
-        if self.inline_hint(offset)?.is_some() {
-            return Ok(None);
-        }
-
         if let Some((matched, offset)) = self.bracket_comment(offset)? {
+            if inline_hint(matched.value, offset).is_some() {
+                return Ok(None);
+            }
+
             return Ok(Some((
                 CommentedArgumentComment::BracketComment(matched),
                 offset,
@@ -466,41 +485,13 @@ impl Parser<'_> {
         })
     }
 
-    fn inline_hint(&self, offset: usize) -> Result<Option<(Argument<'_>, usize)>, Error> {
-        let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? else {
-            return Ok(None);
-        };
-
-        let Some(hint) = value.strip_prefix("[[gersemi: ") else {
-            return Ok(None);
-        };
-
-        let Some(hint) = hint.strip_suffix("]]") else {
-            return Ok(None);
-        };
-
-        let kind = if let Some(hint) = KeywordPreprocessor::from_str(hint) {
-            InlineHintKind::KeywordPreprocessor(hint)
-        } else if let Some(hint) = KeywordFormatter::from_str(hint) {
-            InlineHintKind::KeywordFormatter(hint)
-        } else if let Some(hint) = hint.strip_prefix("as_command=") {
-            InlineHintKind::AsCommand {
-                command: hint.to_lowercase(),
-            }
-        } else {
-            return Ok(None);
-        };
-
-        Ok(Some((Argument::InlineHint { value, kind }, offset)))
-    }
-
     fn argument(
         &self,
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument<'_>, usize)>, Error> {
-        if let Some(matched) = self.inline_hint(offset)? {
-            return Ok(Some(matched));
+        if let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? {
+            return Ok(inline_hint(value, offset));
         }
 
         if let Some(matched) = self.bracket_argument(offset, compute_position)? {
