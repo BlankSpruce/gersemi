@@ -709,16 +709,12 @@ impl Parser<'_> {
 
     fn line_comment(&self, offset: usize) -> Option<(LineComment<'_>, usize)> {
         self.pound_sign(offset).map(|offset| {
-            static RE: LazyLock<Regex> = LazyLock::new(|| regex(r"^[^\n]+"));
-            match RE.find(&self.text[offset..]) {
-                None => (LineComment { value: "" }, offset),
-                Some(content) => (
-                    LineComment {
-                        value: content.as_str(),
-                    },
-                    offset + content.len(),
-                ),
-            }
+            let value = match self.text[offset..].find('\n') {
+                None => &self.text[offset..],
+                Some(end) => &self.text[offset..][..end],
+            };
+
+            (LineComment { value }, offset + value.len())
         })
     }
 
