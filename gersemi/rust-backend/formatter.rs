@@ -536,35 +536,32 @@ impl FormatterImpl<'_> {
         None
     }
 
-    fn standard_complex_argument(&self, arguments: &ArgumentsNode) -> String {
-        if arguments.len() <= 4 {
-            let mut result = String::new();
-            if self.try_to_format_into_single_line("(", arguments, ")", &mut result) {
-                return result;
-            }
+    fn standard_complex_argument(&self, arguments: &ArgumentsNode, buffer: &mut String) {
+        if arguments.len() <= 4 && self.try_to_format_into_single_line("(", arguments, ")", buffer)
+        {
+            return;
         }
 
-        let mut result = self.indent("(\n");
+        buffer.push_str(&self.indent_symbol);
+        buffer.push_str("(\n");
         let arguments = arguments
             .iter()
             .map(|x| RefinedArgumentsAtom::Atom(x.clone()))
             .collect();
-        self.indented().arguments(&arguments, &mut result);
-        let _ = write!(result, "\n{}", self.indent(")"));
-        result
+        self.indented().arguments(&arguments, buffer);
+        let _ = write!(buffer, "\n{})", self.indent_symbol);
     }
 
-    fn condition_syntax_complex_argument(&self, arguments: &ArgumentsNode) -> String {
+    fn condition_syntax_complex_argument(&self, arguments: &ArgumentsNode, buffer: &mut String) {
         let arguments = self.preprocess_arguments(arguments.clone());
-        let mut result = String::new();
-        if self.try_to_format_into_single_line("(", &arguments, ")", &mut result) {
-            return result;
+        if self.try_to_format_into_single_line("(", &arguments, ")", buffer) {
+            return;
         }
 
-        let mut result = self.indent("(\n");
-        self.indented().arguments(&arguments, &mut result);
-        let _ = write!(result, "\n{}", self.indent(")"));
-        result
+        buffer.push_str(&self.indent_symbol);
+        buffer.push_str("(\n");
+        self.indented().arguments(&arguments, buffer);
+        let _ = write!(buffer, "\n{})", self.indent_symbol);
     }
 
     fn shall_use_condition_syntax(&self) -> bool {
@@ -583,11 +580,11 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn complex_argument(&self, arguments: &ArgumentsNode) -> String {
+    fn complex_argument(&self, arguments: &ArgumentsNode, buffer: &mut String) {
         if self.shall_use_condition_syntax() {
-            self.condition_syntax_complex_argument(arguments)
+            self.condition_syntax_complex_argument(arguments, buffer);
         } else {
-            self.standard_complex_argument(arguments)
+            self.standard_complex_argument(arguments, buffer);
         }
     }
 
@@ -595,7 +592,7 @@ impl FormatterImpl<'_> {
         let _ = match argument {
             Argument::Bracket(arg) => write!(buffer, "{}{}", self.indent_symbol, arg.whole),
             Argument::Complex { arguments } => {
-                write!(buffer, "{}", self.complex_argument(arguments))
+                return self.complex_argument(arguments, buffer);
             }
             Argument::Quoted { value, .. } => write!(buffer, "{}\"{value}\"", self.indent_symbol),
             Argument::Unquoted { value, .. } => write!(buffer, "{}{value}", self.indent_symbol),
@@ -1103,7 +1100,8 @@ impl FormatterImpl<'_> {
         buffer: &mut String,
     ) {
         let have_no_line_comments = !is_line_comment_in_any_of(arguments);
-        buffer.push_str(&self.indent(begin));
+        buffer.push_str(&self.indent_symbol);
+        buffer.push_str(begin);
         let formatted_arguments_has_newline = {
             let mut inner_buffer = String::new();
             self.indented().arguments(arguments, &mut inner_buffer);
@@ -1115,7 +1113,7 @@ impl FormatterImpl<'_> {
         if have_no_line_comments && (!formatted_arguments_has_newline) {
             buffer.push_str(end);
         } else {
-            let _ = write!(buffer, "\n{}", self.indent(end));
+            let _ = write!(buffer, "\n{}{end}", self.indent_symbol);
         }
     }
 
@@ -1128,13 +1126,13 @@ impl FormatterImpl<'_> {
         let begin = self.format_command_name(identifier);
         let end = ")";
 
-        let mut result = String::new();
-        if self.try_to_format_into_single_line(&begin, &arguments, end, &mut result) {
+        let initial_buffer_end = buffer.len();
+        if self.try_to_format_into_single_line(&begin, &arguments, end, buffer) {
             arguments = self.split_arguments(arguments);
             if self.inlining_condition(&arguments) {
-                buffer.push_str(&result);
                 return;
             }
+            buffer.truncate(initial_buffer_end);
         } else {
             arguments = self.split_arguments(arguments);
         }
@@ -1145,10 +1143,11 @@ impl FormatterImpl<'_> {
                 f.format_command_with_short_name(&begin, &arguments, end, buffer);
             }
             _ => {
-                let _ = writeln!(buffer, "{}", f.indent(&begin));
+                let _ = writeln!(buffer, "{}{begin}", f.indent_symbol);
                 f.indented().arguments(&arguments, buffer);
                 buffer.push('\n');
-                buffer.push_str(&f.indent(end));
+                buffer.push_str(&f.indent_symbol);
+                buffer.push_str(end);
             }
         }
     }
@@ -1306,9 +1305,12 @@ impl FormatterImpl<'_> {
         if !body.contains('\n') {
             buffer.push(')');
         } else if body.ends_with('\n') {
-            buffer.push_str(&self.indent(")"));
+            buffer.push_str(&self.indent_symbol);
+            buffer.push(')');
         } else {
-            let _ = write!(buffer, "\n{}", self.indent(")"));
+            buffer.push('\n');
+            buffer.push_str(&self.indent_symbol);
+            buffer.push(')');
         }
     }
 
