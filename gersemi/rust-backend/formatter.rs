@@ -538,7 +538,8 @@ impl FormatterImpl<'_> {
 
     fn standard_complex_argument(&self, arguments: &ArgumentsNode) -> String {
         if arguments.len() <= 4 {
-            if let Some(result) = self.try_to_format_into_single_line("(", arguments, ")") {
+            let mut result = String::new();
+            if self.try_to_format_into_single_line("(", arguments, ")", &mut result) {
                 return result;
             }
         }
@@ -555,7 +556,8 @@ impl FormatterImpl<'_> {
 
     fn condition_syntax_complex_argument(&self, arguments: &ArgumentsNode) -> String {
         let arguments = self.preprocess_arguments(arguments.clone());
-        if let Some(result) = self.try_to_format_into_single_line("(", &arguments, ")") {
+        let mut result = String::new();
+        if self.try_to_format_into_single_line("(", &arguments, ")", &mut result) {
             return result;
         }
 
@@ -629,8 +631,7 @@ impl FormatterImpl<'_> {
         buffer: &mut String,
     ) {
         let arguments = [lhs, operation, rhs];
-        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
-            buffer.push_str(&result);
+        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
             return;
         }
 
@@ -650,8 +651,7 @@ impl FormatterImpl<'_> {
     ) {
         let arguments = [operation, operand];
 
-        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
-            buffer.push_str(&result);
+        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
             return;
         }
 
@@ -741,7 +741,8 @@ impl FormatterImpl<'_> {
     }
 
     fn format_property(&mut self, args: &RefinedArgumentsNode) -> String {
-        if let Some(result) = self.try_to_format_into_single_line("", args, "") {
+        let mut result = String::new();
+        if self.try_to_format_into_single_line("", args, "", &mut result) {
             return result;
         }
 
@@ -800,16 +801,14 @@ impl FormatterImpl<'_> {
             result
         };
 
-        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
-            buffer.push_str(&result);
+        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
             return;
         }
 
         let can_be_inlined = (!self.favour_expansion) || ((!is_pair) && (!is_multi_value_argument));
         if can_be_inlined {
             let f = self.select_inlining_strategy();
-            if let Some(result) = f.try_to_format_into_single_line("", &arguments, "") {
-                buffer.push_str(&result);
+            if f.try_to_format_into_single_line("", &arguments, "", buffer) {
                 return;
             }
         }
@@ -859,8 +858,7 @@ impl FormatterImpl<'_> {
             result
         };
 
-        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
-            buffer.push_str(&result);
+        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
             return;
         }
 
@@ -1130,7 +1128,8 @@ impl FormatterImpl<'_> {
         let begin = self.format_command_name(identifier);
         let end = ")";
 
-        if let Some(result) = self.try_to_format_into_single_line(&begin, &arguments, end) {
+        let mut result = String::new();
+        if self.try_to_format_into_single_line(&begin, &arguments, end, &mut result) {
             arguments = self.split_arguments(arguments);
             if self.inlining_condition(&arguments) {
                 buffer.push_str(&result);
@@ -1210,24 +1209,26 @@ impl FormatterImpl<'_> {
         prefix: &str,
         parts: &[Part],
         postfix: &str,
-    ) -> Option<String> {
+        buffer: &mut String,
+    ) -> bool {
         if self.favour_expansion {
-            return None;
+            return false;
         }
 
         if !line_comment_is_only_at_rightmost_edge(parts, postfix) {
-            return None;
+            return false;
         }
 
         let reserved_space =
             prefix.chars().count() + postfix.chars().count() + self.indent_symbol.chars().count();
         {
+            let initial_buffer_end = buffer.len();
+
             let mut f = self.not_indented();
             let limit = f.configuration.line_length;
-            let mut result = String::with_capacity(limit * 2);
 
-            result.push_str(&self.indent_symbol);
-            result.push_str(prefix);
+            buffer.push_str(&self.indent_symbol);
+            buffer.push_str(prefix);
             let mut line_length = reserved_space;
 
             let mut add_space = false;
@@ -1235,27 +1236,29 @@ impl FormatterImpl<'_> {
             for part in parts {
                 let part = {
                     if add_space {
-                        result.push(' ');
+                        buffer.push(' ');
                     }
-                    let start = result.len();
-                    part.format_into_buffer(&mut f, &mut result);
-                    let end = result.len();
-                    &result[start..end]
+                    let start = buffer.len();
+                    part.format_into_buffer(&mut f, buffer);
+                    let end = buffer.len();
+                    &buffer[start..end]
                 };
                 if part.contains('\n') {
-                    return None;
+                    buffer.truncate(initial_buffer_end);
+                    return false;
                 }
 
                 line_length += part.chars().count();
                 if line_length > limit {
-                    return None;
+                    buffer.truncate(initial_buffer_end);
+                    return false;
                 }
 
                 line_length += 1;
                 add_space = true;
             }
-            result.push_str(postfix);
-            Some(result)
+            buffer.push_str(postfix);
+            true
         }
     }
 
@@ -1280,11 +1283,12 @@ impl FormatterImpl<'_> {
             return;
         }
 
-        let result =
-            self.not_indented()
-                .try_to_format_into_single_line(&begin, &[&formatted_node], ")");
-        if let Some(result) = result {
-            buffer.push_str(&result);
+        if self.not_indented().try_to_format_into_single_line(
+            &begin,
+            &[&formatted_node],
+            ")",
+            buffer,
+        ) {
             return;
         }
 
