@@ -6,15 +6,13 @@ use std::collections::BTreeSet;
 
 fn simplify_argument(node: Argument) -> Argument {
     match node {
-        Argument::Bracket(BracketArgument {
-            value,
-            whole,
-            ..
-        }) => Argument::Bracket(BracketArgument {
-            value,
-            whole,
-            position: None,
-        }),
+        Argument::Bracket(BracketArgument { value, whole, .. }) => {
+            Argument::Bracket(BracketArgument {
+                value,
+                whole,
+                position: None,
+            })
+        }
         Argument::Complex { arguments } => Argument::Complex {
             arguments: simplify_arguments(arguments),
         },
