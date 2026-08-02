@@ -512,7 +512,7 @@ impl FormatterImpl<'_> {
             if let Some(result) =
                 self.try_to_format_into_single_line("(", arguments, ")", |formatter, x| {
                     let x = RefinedArgumentsAtom::Atom(x.clone());
-                    formatter.arguments_atom(&x)
+                    formatter.arguments_atom_to_str(&x)
                 })
             {
                 return result;
@@ -533,7 +533,7 @@ impl FormatterImpl<'_> {
         let arguments = self.preprocess_arguments(arguments.clone());
         if let Some(result) =
             self.try_to_format_into_single_line("(", &arguments, ")", |formatter, x| {
-                formatter.arguments_atom(x)
+                formatter.arguments_atom_to_str(x)
             })
         {
             return result;
@@ -569,34 +569,36 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn argument(&self, argument: &Argument) -> String {
-        match argument {
-            Argument::Bracket(arg) => format!("{}{}", self.indent_symbol, arg.whole),
-            Argument::Complex { arguments } => self.complex_argument(arguments),
-            Argument::Quoted { value, .. } => format!("{}\"{value}\"", self.indent_symbol),
-            Argument::Unquoted { value, .. } => format!("{}{value}", self.indent_symbol),
-            Argument::InlineHint { value, .. } => format!("{}#{value}", self.indent_symbol),
-        }
+    fn argument(&self, argument: &Argument, buffer: &mut String) {
+        let _ = match argument {
+            Argument::Bracket(arg) => write!(buffer, "{}{}", self.indent_symbol, arg.whole),
+            Argument::Complex { arguments } => {
+                write!(buffer, "{}", self.complex_argument(arguments))
+            }
+            Argument::Quoted { value, .. } => write!(buffer, "{}\"{value}\"", self.indent_symbol),
+            Argument::Unquoted { value, .. } => write!(buffer, "{}{value}", self.indent_symbol),
+            Argument::InlineHint { value, .. } => write!(buffer, "{}#{value}", self.indent_symbol),
+        };
     }
 
     fn commented_argument(
         &self,
         argument: &Argument,
         comment: &CommentedArgumentComment,
-    ) -> String {
-        let mut buffer = self.argument(argument);
+        buffer: &mut String,
+    ) {
+        self.argument(argument, buffer);
         buffer.push(' ');
 
         let f = self.not_indented();
         match comment {
             CommentedArgumentComment::BracketComment(comment) => {
-                f.bracket_comment(comment, &mut buffer);
+                f.bracket_comment(comment, buffer);
             }
             CommentedArgumentComment::LineComment(comment) => {
-                f.line_comment(comment, &mut buffer);
+                f.line_comment(comment, buffer);
             }
         }
-        buffer
     }
 
     fn binary_operation(
@@ -604,66 +606,79 @@ impl FormatterImpl<'_> {
         lhs: &RefinedArgumentsAtom,
         operation: &RefinedArgumentsAtom,
         rhs: &RefinedArgumentsAtom,
-    ) -> String {
+        buffer: &mut String,
+    ) {
         let arguments = [lhs, operation, rhs];
         if let Some(result) =
             self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom(x)
+                formatter.arguments_atom_to_str(x)
             })
         {
-            return result;
+            buffer.push_str(&result);
+            return;
         }
 
         let mut indented = self.indented();
-        format!(
-            "{}\n{}\n{}",
-            self.arguments_atom(lhs),
-            indented.arguments_atom(operation),
-            indented.arguments_atom(rhs)
-        )
+        self.arguments_atom(lhs, buffer);
+        buffer.push('\n');
+        indented.arguments_atom(operation, buffer);
+        buffer.push('\n');
+        indented.arguments_atom(rhs, buffer);
     }
 
     fn unary_operation(
         &mut self,
         operation: &RefinedArgumentsAtom,
         operand: &RefinedArgumentsAtom,
-    ) -> String {
+        buffer: &mut String,
+    ) {
         let arguments = [operation, operand];
 
         if let Some(result) =
             self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom(x)
+                formatter.arguments_atom_to_str(x)
             })
         {
-            return result;
+            buffer.push_str(&result);
+            return;
         }
 
-        let formatted_operation = self.arguments_atom(operation);
+        let formatted_operation = {
+            let start = buffer.len();
+            self.arguments_atom(operation, buffer);
+            let end = buffer.len();
+            &buffer[start..end]
+        };
         if !operation.has_line_comment() {
             match self.configuration.indent_type {
                 IndentType::Spaces(spaces)
                     if formatted_operation.trim().chars().count() < spaces =>
                 {
-                    return format!(
-                        "{formatted_operation} {}",
-                        self.arguments_atom(operand).trim_start()
+                    let _ = write!(
+                        buffer,
+                        " {}",
+                        self.arguments_atom_to_str(operand).trim_start()
                     );
+                    return;
                 }
                 _ => (),
             }
         }
 
-        format!(
-            "{formatted_operation}\n{}",
-            self.indented().arguments_atom(operand)
-        )
+        buffer.push('\n');
+        self.indented().arguments_atom(operand, buffer);
     }
 
-    fn default_format_values(&mut self, rest: &RefinedArgumentsNode) -> String {
-        rest.iter()
-            .map(|x| self.arguments_atom(x))
-            .collect::<Vec<String>>()
-            .join("\n")
+    fn default_format_values(&mut self, rest: &RefinedArgumentsNode, buffer: &mut String) {
+        let mut add_newline = false;
+        for x in rest {
+            if add_newline {
+                buffer.push('\n');
+            }
+
+            self.arguments_atom(x, buffer);
+            add_newline = true;
+        }
     }
 
     fn format_command_line(&mut self, mut rest: RefinedArgumentsNode) -> String {
@@ -672,7 +687,7 @@ impl FormatterImpl<'_> {
             return String::new();
         };
         let mut lines = vec![];
-        let mut current_line = self.arguments_atom(head);
+        let mut current_line = self.arguments_atom_to_str(head);
         let mut force_next_line = head.is_commented_argument();
 
         for arg in tail {
@@ -680,8 +695,8 @@ impl FormatterImpl<'_> {
                 lines.push(current_line);
                 current_line = self.line_comment_to_str(&arg);
             } else {
-                let formatted_arg = self.not_indented().arguments_atom(&arg);
-                let updated_line = format!("{current_line} {formatted_arg}");
+                let mut updated_line = format!("{current_line} ");
+                self.not_indented().arguments_atom(&arg, &mut updated_line);
                 if force_next_line
                     || (updated_line.chars().count() > self.configuration.line_length)
                     || updated_line.contains('\n')
@@ -689,7 +704,7 @@ impl FormatterImpl<'_> {
                 {
                     force_next_line = arg.is_commented_argument();
                     lines.push(current_line);
-                    current_line = self.arguments_atom(&arg);
+                    current_line = self.arguments_atom_to_str(&arg);
                 } else {
                     current_line = updated_line;
                     if arg.is_commented_argument() {
@@ -708,12 +723,14 @@ impl FormatterImpl<'_> {
 
     fn format_keyword_with_pairs(&mut self, rest: &RefinedArgumentsNode) -> String {
         let rest = pair_arguments(rest.clone());
-        self.default_format_values(&rest)
+        let mut buffer = String::new();
+        self.default_format_values(&rest, &mut buffer);
+        buffer
     }
 
     fn format_property(&mut self, args: &RefinedArgumentsNode) -> String {
         if let Some(result) = self.try_to_format_into_single_line("", args, "", |formatter, x| {
-            formatter.arguments_atom(x)
+            formatter.arguments_atom_to_str(x)
         }) {
             return result;
         }
@@ -724,11 +741,10 @@ impl FormatterImpl<'_> {
             return String::new();
         };
 
-        format!(
-            "{}\n{}",
-            self.arguments_atom(name),
-            self.indented().default_format_values(&rest)
-        )
+        let mut result = self.arguments_atom_to_str(name);
+        result.push('\n');
+        self.indented().default_format_values(&rest, &mut result);
+        result
     }
 
     fn format_specialized(
@@ -749,7 +765,9 @@ impl FormatterImpl<'_> {
             }
             _ => (),
         }
-        self.default_format_values(rest)
+        let mut buffer = String::new();
+        self.default_format_values(rest, &mut buffer);
+        buffer
     }
 
     fn format_non_option(
@@ -758,9 +776,10 @@ impl FormatterImpl<'_> {
         rest: &RefinedArgumentsNode,
         is_pair: bool,
         is_multi_value_argument: bool,
-    ) -> String {
+        buffer: &mut String,
+    ) {
         if rest.is_empty() {
-            return self.arguments_atom(first);
+            return self.arguments_atom(first, buffer);
         }
 
         let arguments: Vec<&RefinedArgumentsAtom> = {
@@ -773,10 +792,11 @@ impl FormatterImpl<'_> {
 
         if let Some(result) =
             self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom(x)
+                formatter.arguments_atom_to_str(x)
             })
         {
-            return result;
+            buffer.push_str(&result);
+            return;
         }
 
         let can_be_inlined = (!self.favour_expansion) || ((!is_pair) && (!is_multi_value_argument));
@@ -784,10 +804,11 @@ impl FormatterImpl<'_> {
             let f = self.select_inlining_strategy();
             if let Some(result) =
                 f.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                    formatter.arguments_atom(x)
+                    formatter.arguments_atom_to_str(x)
                 })
             {
-                return result;
+                buffer.push_str(&result);
+                return;
             }
         }
 
@@ -804,16 +825,23 @@ impl FormatterImpl<'_> {
             },
         };
 
+        self.arguments_atom(first, buffer);
         if formatted_values.is_empty() {
-            return self.arguments_atom(first);
+            return;
         }
 
-        format!("{}\n{formatted_values}", self.arguments_atom(first))
+        buffer.push('\n');
+        buffer.push_str(&formatted_values);
     }
 
-    fn section(&mut self, header: &RefinedArgumentsAtom, rest: &RefinedArgumentsNode) -> String {
+    fn section(
+        &mut self,
+        header: &RefinedArgumentsAtom,
+        rest: &RefinedArgumentsNode,
+        buffer: &mut String,
+    ) {
         if rest.is_empty() {
-            return self.arguments_atom(header);
+            return self.arguments_atom(header, buffer);
         }
 
         let preprocessor = self.get_preprocessor(header);
@@ -831,17 +859,16 @@ impl FormatterImpl<'_> {
 
         if let Some(result) =
             self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom(x)
+                formatter.arguments_atom_to_str(x)
             })
         {
-            return result;
+            buffer.push_str(&result);
+            return;
         }
 
-        format!(
-            "{}\n{}",
-            self.arguments_atom(header),
-            self.indented().default_format_values(&rest)
-        )
+        self.arguments_atom(header, buffer);
+        buffer.push('\n');
+        self.indented().default_format_values(&rest, buffer);
     }
 
     fn get_preprocessor(&self, atom: &RefinedArgumentsAtom) -> Option<KeywordPreprocessor> {
@@ -886,47 +913,69 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn positional_arguments(&mut self, arguments: &RefinedArgumentsNode) -> String {
+    fn positional_arguments(&mut self, arguments: &RefinedArgumentsNode, buffer: &mut String) {
         match &self.active_command {
             Some(CommandSchema {
                 canonical_name: Some(name),
                 ..
-            }) if name == "add_custom_target" => self.format_command_line(arguments.clone()),
-            _ => self.default_format_values(arguments),
+            }) if name == "add_custom_target" => {
+                buffer.push_str(&self.format_command_line(arguments.clone()));
+            }
+            _ => {
+                self.default_format_values(arguments, buffer);
+            }
         }
     }
 
-    fn arguments_atom(&mut self, atom: &RefinedArgumentsAtom) -> String {
+    fn arguments_atom_to_str(&mut self, atom: &RefinedArgumentsAtom) -> String {
+        let mut buffer = String::new();
+        self.arguments_atom(atom, &mut buffer);
+        buffer
+    }
+
+    fn arguments_atom(&mut self, atom: &RefinedArgumentsAtom, buffer: &mut String) {
         match atom {
             RefinedArgumentsAtom::Atom(atom) => match atom {
-                ArgumentsAtom::Argument(argument) => self.argument(argument),
+                ArgumentsAtom::Argument(argument) => {
+                    self.argument(argument, buffer);
+                }
                 ArgumentsAtom::BracketComment(comment) => {
-                    let mut buffer = String::new();
-                    self.bracket_comment(comment, &mut buffer);
-                    buffer
+                    self.bracket_comment(comment, buffer);
                 }
                 ArgumentsAtom::CommentedArgument { argument, comment } => {
-                    self.commented_argument(argument, comment)
+                    self.commented_argument(argument, comment, buffer);
                 }
-                ArgumentsAtom::LineComment(comment) => self.line_comment_to_str(comment),
+                ArgumentsAtom::LineComment(comment) => {
+                    self.line_comment(comment, buffer);
+                }
             },
             RefinedArgumentsAtom::BinaryOperation {
                 lhs,
                 operation,
                 rhs,
-            } => self.binary_operation(lhs, operation, rhs),
+            } => {
+                self.binary_operation(lhs, operation, rhs, buffer);
+            }
             RefinedArgumentsAtom::UnaryOperation { operation, operand } => match operand {
-                None => self.arguments_atom(operation),
-                Some(operand) => self.unary_operation(operation, operand),
+                None => {
+                    self.arguments_atom(operation, buffer);
+                }
+                Some(operand) => {
+                    self.unary_operation(operation, operand, buffer);
+                }
             },
             RefinedArgumentsAtom::PositionalArguments(arguments) => {
-                self.positional_arguments(arguments)
+                self.positional_arguments(arguments, buffer);
             }
-            RefinedArgumentsAtom::OptionArgument { keyword } => self.arguments_atom(keyword),
+            RefinedArgumentsAtom::OptionArgument { keyword } => {
+                self.arguments_atom(keyword, buffer);
+            }
             RefinedArgumentsAtom::OneValueArgument {
                 keyword: first,
                 arguments: rest,
-            } => self.format_non_option(first, rest, false, false),
+            } => {
+                self.format_non_option(first, rest, false, false, buffer);
+            }
             RefinedArgumentsAtom::MultiValueArgument {
                 keyword: first,
                 arguments: rest,
@@ -938,10 +987,10 @@ impl FormatterImpl<'_> {
                         self.preprocess_keyword_values(rest.clone(), &preprocessor)
                     }
                 };
-                self.format_non_option(first, &rest, false, true)
+                self.format_non_option(first, &rest, false, true, buffer);
             }
             RefinedArgumentsAtom::Pair { first, rest } => {
-                self.format_non_option(first, rest, true, false)
+                self.format_non_option(first, rest, true, false, buffer);
             }
             RefinedArgumentsAtom::KeywordArgument {
                 first,
@@ -959,9 +1008,12 @@ impl FormatterImpl<'_> {
                     &rest,
                     false,
                     false,
-                )
+                    buffer,
+                );
             }
-            RefinedArgumentsAtom::Section { header, values } => self.section(header, values),
+            RefinedArgumentsAtom::Section { header, values } => {
+                self.section(header, values, buffer);
+            }
         }
     }
 
@@ -1040,7 +1092,7 @@ impl FormatterImpl<'_> {
             if add_newline {
                 buffer.push('\n');
             }
-            buffer.push_str(&self.arguments_atom(x));
+            self.arguments_atom(x, buffer);
             if !add_newline {
                 add_newline = true;
             }
@@ -1082,7 +1134,7 @@ impl FormatterImpl<'_> {
 
         if let Some(result) =
             self.try_to_format_into_single_line(&begin, &arguments, end, |formatter, x| {
-                formatter.arguments_atom(x)
+                formatter.arguments_atom_to_str(x)
             })
         {
             arguments = self.split_arguments(arguments);
