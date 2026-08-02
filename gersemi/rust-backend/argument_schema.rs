@@ -232,7 +232,11 @@ impl ArgumentSchema {
     fn split_arguments<'a>(
         &self,
         mut arguments: RefinedArgumentsNode<'a>,
-    ) -> RefinedArgumentsNode<'a> {
+    ) -> (
+        RefinedArgumentsNode<'a>,
+        RefinedArgumentsNode<'a>,
+        RefinedArgumentsNode<'a>,
+    ) {
         let back = if self.back_positional_arguments.len() > arguments.len() {
             vec![]
         } else {
@@ -243,11 +247,7 @@ impl ArgumentSchema {
         let front = self.split_positional_arguments(front);
         let keyworded_arguments = self.split_by_keywords(tail);
 
-        front
-            .into_iter()
-            .chain(keyworded_arguments)
-            .chain(back)
-            .collect()
+        (front, keyworded_arguments, back)
     }
 
     fn get_section_schema(&self, argument: &RefinedArgumentsAtom) -> Option<&ArgumentSchema> {
@@ -319,8 +319,15 @@ impl ArgumentSchema {
         }
     }
 
-    fn form_sections<'a>(&self, arguments: RefinedArgumentsNode<'a>) -> RefinedArgumentsNode<'a> {
-        let mut result = RefinedArgumentsNode::with_capacity(arguments.len());
+    fn form_sections<'a, Arguments>(
+        &self,
+        arguments: Arguments,
+        size_hint: usize,
+    ) -> RefinedArgumentsNode<'a>
+    where
+        Arguments: IntoIterator<Item = RefinedArgumentsAtom<'a>>,
+    {
+        let mut result = RefinedArgumentsNode::with_capacity(size_hint);
         let mut section_schema: Option<&ArgumentSchema> = None;
 
         for argument in arguments {
@@ -350,17 +357,19 @@ impl ArgumentSchema {
         &self,
         arguments: RefinedArgumentsNode<'a>,
     ) -> RefinedArgumentsNode<'a> {
-        let arguments = self.split_arguments(arguments);
-        let preprocessed = arguments
+        let size_hint = arguments.len();
+        let (front, keyworded_arguments, back) = self.split_arguments(arguments);
+        let preprocessed = front
             .into_iter()
+            .chain(keyworded_arguments)
+            .chain(back)
             .map(|argument| match argument {
                 RefinedArgumentsAtom::MultiValueArgument { keyword, arguments } => {
                     self.split_multi_value_argument(*keyword, arguments)
                 }
                 _ => argument,
-            })
-            .collect();
-        self.form_sections(preprocessed)
+            });
+        self.form_sections(preprocessed, size_hint)
     }
 }
 
