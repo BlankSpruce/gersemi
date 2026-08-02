@@ -510,9 +510,9 @@ impl FormatterImpl<'_> {
     fn standard_complex_argument(&self, arguments: &ArgumentsNode) -> String {
         if arguments.len() <= 4 {
             if let Some(result) =
-                self.try_to_format_into_single_line("(", arguments, ")", |formatter, x| {
+                self.try_to_format_into_single_line("(", arguments, ")", |formatter, x, buffer| {
                     let x = RefinedArgumentsAtom::Atom(x.clone());
-                    formatter.arguments_atom_to_str(&x)
+                    formatter.arguments_atom(&x, buffer);
                 })
             {
                 return result;
@@ -532,8 +532,8 @@ impl FormatterImpl<'_> {
     fn condition_syntax_complex_argument(&self, arguments: &ArgumentsNode) -> String {
         let arguments = self.preprocess_arguments(arguments.clone());
         if let Some(result) =
-            self.try_to_format_into_single_line("(", &arguments, ")", |formatter, x| {
-                formatter.arguments_atom_to_str(x)
+            self.try_to_format_into_single_line("(", &arguments, ")", |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
             })
         {
             return result;
@@ -610,8 +610,8 @@ impl FormatterImpl<'_> {
     ) {
         let arguments = [lhs, operation, rhs];
         if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom_to_str(x)
+            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
             })
         {
             buffer.push_str(&result);
@@ -635,8 +635,8 @@ impl FormatterImpl<'_> {
         let arguments = [operation, operand];
 
         if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom_to_str(x)
+            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
             })
         {
             buffer.push_str(&result);
@@ -729,9 +729,11 @@ impl FormatterImpl<'_> {
     }
 
     fn format_property(&mut self, args: &RefinedArgumentsNode) -> String {
-        if let Some(result) = self.try_to_format_into_single_line("", args, "", |formatter, x| {
-            formatter.arguments_atom_to_str(x)
-        }) {
+        if let Some(result) =
+            self.try_to_format_into_single_line("", args, "", |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
+            })
+        {
             return result;
         }
 
@@ -791,8 +793,8 @@ impl FormatterImpl<'_> {
         };
 
         if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom_to_str(x)
+            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
             })
         {
             buffer.push_str(&result);
@@ -803,8 +805,8 @@ impl FormatterImpl<'_> {
         if can_be_inlined {
             let f = self.select_inlining_strategy();
             if let Some(result) =
-                f.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                    formatter.arguments_atom_to_str(x)
+                f.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
+                    formatter.arguments_atom(x, buffer);
                 })
             {
                 buffer.push_str(&result);
@@ -858,8 +860,8 @@ impl FormatterImpl<'_> {
         };
 
         if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x| {
-                formatter.arguments_atom_to_str(x)
+            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
             })
         {
             buffer.push_str(&result);
@@ -1133,8 +1135,8 @@ impl FormatterImpl<'_> {
         let end = ")";
 
         if let Some(result) =
-            self.try_to_format_into_single_line(&begin, &arguments, end, |formatter, x| {
-                formatter.arguments_atom_to_str(x)
+            self.try_to_format_into_single_line(&begin, &arguments, end, |formatter, x, buffer| {
+                formatter.arguments_atom(x, buffer);
             })
         {
             arguments = self.split_arguments(arguments);
@@ -1213,7 +1215,7 @@ impl FormatterImpl<'_> {
 
     fn try_to_format_into_single_line<
         Part: HasLineComment,
-        Visitor: Fn(&mut FormatterImpl, &Part) -> String,
+        Visitor: Fn(&mut FormatterImpl, &Part, &mut String),
     >(
         &self,
         prefix: &str,
@@ -1242,7 +1244,16 @@ impl FormatterImpl<'_> {
 
             let mut add_space = false;
 
-            for part in parts.iter().map(|p| (visitor)(&mut f, p)) {
+            for part in parts {
+                let part = {
+                    if add_space {
+                        result.push(' ');
+                    }
+                    let start = result.len();
+                    visitor(&mut f, part, &mut result);
+                    let end = result.len();
+                    &result[start..end]
+                };
                 if part.contains('\n') {
                     return None;
                 }
@@ -1252,12 +1263,7 @@ impl FormatterImpl<'_> {
                     return None;
                 }
 
-                if add_space {
-                    result.push(' ');
-                }
-                result.push_str(&part);
                 line_length += 1;
-
                 add_space = true;
             }
             result.push_str(postfix);
@@ -1290,7 +1296,7 @@ impl FormatterImpl<'_> {
             &begin,
             &[&formatted_node],
             ")",
-            |_, x| (*x).to_string(),
+            |_, x, buffer| buffer.push_str(x),
         );
         if let Some(result) = result {
             buffer.push_str(&result);
