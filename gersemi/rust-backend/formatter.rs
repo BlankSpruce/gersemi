@@ -280,6 +280,35 @@ impl HasLineComment for &&str {
     }
 }
 
+trait TryToFormatIntoSingleLinePart {
+    fn format_into_buffer(&self, formatter: &mut FormatterImpl, buffer: &mut String);
+}
+
+impl TryToFormatIntoSingleLinePart for ArgumentsAtom<'_> {
+    fn format_into_buffer(&self, formatter: &mut FormatterImpl, buffer: &mut String) {
+        let x = RefinedArgumentsAtom::Atom(self.clone());
+        formatter.arguments_atom(&x, buffer);
+    }
+}
+
+impl TryToFormatIntoSingleLinePart for RefinedArgumentsAtom<'_> {
+    fn format_into_buffer(&self, formatter: &mut FormatterImpl, buffer: &mut String) {
+        formatter.arguments_atom(self, buffer);
+    }
+}
+
+impl TryToFormatIntoSingleLinePart for &RefinedArgumentsAtom<'_> {
+    fn format_into_buffer(&self, formatter: &mut FormatterImpl, buffer: &mut String) {
+        formatter.arguments_atom(self, buffer);
+    }
+}
+
+impl TryToFormatIntoSingleLinePart for &&str {
+    fn format_into_buffer(&self, _formatter: &mut FormatterImpl, buffer: &mut String) {
+        buffer.push_str(self);
+    }
+}
+
 fn is_line_comment_in_any_of(arguments: &RefinedArgumentsNode) -> bool {
     arguments.iter().any(HasLineComment::has_line_comment)
 }
@@ -509,12 +538,7 @@ impl FormatterImpl<'_> {
 
     fn standard_complex_argument(&self, arguments: &ArgumentsNode) -> String {
         if arguments.len() <= 4 {
-            if let Some(result) =
-                self.try_to_format_into_single_line("(", arguments, ")", |formatter, x, buffer| {
-                    let x = RefinedArgumentsAtom::Atom(x.clone());
-                    formatter.arguments_atom(&x, buffer);
-                })
-            {
+            if let Some(result) = self.try_to_format_into_single_line("(", arguments, ")") {
                 return result;
             }
         }
@@ -531,11 +555,7 @@ impl FormatterImpl<'_> {
 
     fn condition_syntax_complex_argument(&self, arguments: &ArgumentsNode) -> String {
         let arguments = self.preprocess_arguments(arguments.clone());
-        if let Some(result) =
-            self.try_to_format_into_single_line("(", &arguments, ")", |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line("(", &arguments, ")") {
             return result;
         }
 
@@ -609,11 +629,7 @@ impl FormatterImpl<'_> {
         buffer: &mut String,
     ) {
         let arguments = [lhs, operation, rhs];
-        if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
             buffer.push_str(&result);
             return;
         }
@@ -634,11 +650,7 @@ impl FormatterImpl<'_> {
     ) {
         let arguments = [operation, operand];
 
-        if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
             buffer.push_str(&result);
             return;
         }
@@ -729,11 +741,7 @@ impl FormatterImpl<'_> {
     }
 
     fn format_property(&mut self, args: &RefinedArgumentsNode) -> String {
-        if let Some(result) =
-            self.try_to_format_into_single_line("", args, "", |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line("", args, "") {
             return result;
         }
 
@@ -792,11 +800,7 @@ impl FormatterImpl<'_> {
             result
         };
 
-        if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
             buffer.push_str(&result);
             return;
         }
@@ -804,11 +808,7 @@ impl FormatterImpl<'_> {
         let can_be_inlined = (!self.favour_expansion) || ((!is_pair) && (!is_multi_value_argument));
         if can_be_inlined {
             let f = self.select_inlining_strategy();
-            if let Some(result) =
-                f.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
-                    formatter.arguments_atom(x, buffer);
-                })
-            {
+            if let Some(result) = f.try_to_format_into_single_line("", &arguments, "") {
                 buffer.push_str(&result);
                 return;
             }
@@ -859,11 +859,7 @@ impl FormatterImpl<'_> {
             result
         };
 
-        if let Some(result) =
-            self.try_to_format_into_single_line("", &arguments, "", |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line("", &arguments, "") {
             buffer.push_str(&result);
             return;
         }
@@ -1134,11 +1130,7 @@ impl FormatterImpl<'_> {
         let begin = self.format_command_name(identifier);
         let end = ")";
 
-        if let Some(result) =
-            self.try_to_format_into_single_line(&begin, &arguments, end, |formatter, x, buffer| {
-                formatter.arguments_atom(x, buffer);
-            })
-        {
+        if let Some(result) = self.try_to_format_into_single_line(&begin, &arguments, end) {
             arguments = self.split_arguments(arguments);
             if self.inlining_condition(&arguments) {
                 buffer.push_str(&result);
@@ -1213,15 +1205,11 @@ impl FormatterImpl<'_> {
         indent(value, &self.indent_symbol, |x| !x.trim().is_empty())
     }
 
-    fn try_to_format_into_single_line<
-        Part: HasLineComment,
-        Visitor: Fn(&mut FormatterImpl, &Part, &mut String),
-    >(
+    fn try_to_format_into_single_line<Part: HasLineComment + TryToFormatIntoSingleLinePart>(
         &self,
         prefix: &str,
         parts: &[Part],
         postfix: &str,
-        visitor: Visitor,
     ) -> Option<String> {
         if self.favour_expansion {
             return None;
@@ -1250,7 +1238,7 @@ impl FormatterImpl<'_> {
                         result.push(' ');
                     }
                     let start = result.len();
-                    visitor(&mut f, part, &mut result);
+                    part.format_into_buffer(&mut f, &mut result);
                     let end = result.len();
                     &result[start..end]
                 };
@@ -1292,12 +1280,9 @@ impl FormatterImpl<'_> {
             return;
         }
 
-        let result = self.not_indented().try_to_format_into_single_line(
-            &begin,
-            &[&formatted_node],
-            ")",
-            |_, x, buffer| buffer.push_str(x),
-        );
+        let result =
+            self.not_indented()
+                .try_to_format_into_single_line(&begin, &[&formatted_node], ")");
         if let Some(result) = result {
             buffer.push_str(&result);
             return;
