@@ -1674,10 +1674,7 @@ impl Formatter {
             load_definitions_from_extensions(&configuration.outcome.extensions)?;
         Ok(Self {
             configuration: configuration.outcome,
-            schemas: CommandSchemas {
-                definition_schemas,
-                extension_schemas,
-            },
+            schemas: CommandSchemas::new(definition_schemas, extension_schemas),
             lines_to_format: configuration.control.line_ranges,
         })
     }

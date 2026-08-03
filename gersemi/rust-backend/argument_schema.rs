@@ -646,9 +646,63 @@ pub type CommandSchemaMapping = HashMap<String, CommandSchema>;
 pub struct CommandSchemas {
     pub definition_schemas: CommandSchemaMapping,
     pub extension_schemas: CommandSchemaMapping,
+    pub blocks: Vec<(String, BlockCommand)>,
+}
+
+pub struct BlockCommand {
+    pub pattern: String,
+}
+
+fn block_command(name: &str) -> BlockCommand {
+    let pattern = format!("(?i)^{name}");
+    BlockCommand { pattern }
+}
+
+fn prepare_blocks<'a, Schemas>(schemas: Schemas) -> Vec<(String, BlockCommand)>
+where
+    Schemas: Iterator<Item = &'a CommandSchema>,
+{
+    schemas
+        .filter_map(|schema| match schema {
+            CommandSchema {
+                canonical_name: Some(canonical_name),
+                block_end: Some(block_end),
+                ..
+            } => Some((
+                canonical_name.trim().to_lowercase(),
+                block_command(block_end),
+            )),
+            _ => None,
+        })
+        .collect()
 }
 
 impl CommandSchemas {
+    pub fn new(
+        definition_schemas: CommandSchemaMapping,
+        extension_schemas: CommandSchemaMapping,
+    ) -> Self {
+        let blocks = prepare_blocks(
+            definition_schemas
+                .values()
+                .chain(extension_schemas.values())
+                .chain(builtin_schemas().values()),
+        );
+        Self {
+            definition_schemas,
+            extension_schemas,
+            blocks,
+        }
+    }
+
+    pub fn default() -> Self {
+        Self {
+            definition_schemas: HashMap::new(),
+            extension_schemas: HashMap::new(),
+            blocks: prepare_blocks(builtin_schemas().values()),
+        }
+    }
+
     pub fn get_impl(&self, key: &str) -> Option<&CommandSchema> {
         self.definition_schemas.get(key).or_else(|| {
             self.extension_schemas

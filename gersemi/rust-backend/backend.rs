@@ -23,16 +23,12 @@ mod gersemi_rust_backend {
     use crate::parser::{Error, Parser};
     use crate::sanity_checker::check_equivalence;
     use pyo3::pyfunction;
-    use std::collections::HashMap;
     use std::path::PathBuf;
 
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn validate(text: String) -> Result<(), Error> {
-        let schemas = CommandSchemas {
-            definition_schemas: HashMap::new(),
-            extension_schemas: HashMap::new(),
-        };
+        let schemas = CommandSchemas::default();
         let parser = Parser::new(&text, &schemas);
         parser.start().and(Ok(()))
     }
@@ -40,10 +36,7 @@ mod gersemi_rust_backend {
     #[pyfunction]
     #[allow(clippy::needless_pass_by_value)]
     fn check_code_equivalence(before: String, after: String) -> Result<bool, Error> {
-        let schemas = CommandSchemas {
-            definition_schemas: HashMap::new(),
-            extension_schemas: HashMap::new(),
-        };
+        let schemas = CommandSchemas::default();
         let before_parser = Parser::new(&before, &schemas);
         let after_parser = Parser::new(&after, &schemas);
 

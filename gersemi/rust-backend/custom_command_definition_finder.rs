@@ -298,10 +298,7 @@ pub fn find_custom_command_definitions(
         return Ok(HashMap::new());
     }
 
-    let schemas = CommandSchemas {
-        definition_schemas: HashMap::new(),
-        extension_schemas: HashMap::new(),
-    };
+    let schemas = CommandSchemas::default();
     let parser = Parser::new(text, &schemas);
 
     let mut interpreter = CustomCommandInterpreter {

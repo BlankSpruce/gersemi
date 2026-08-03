@@ -1,25 +1,20 @@
-use crate::argument_schema::{CommandSchema, CommandSchemas};
+use crate::argument_schema::{BlockCommand, CommandSchemas};
 use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
 use crate::node::{
     Argument, ArgumentsAtom, ArgumentsNode, BracketArgument, BracketComment, Command,
     CommandInvocation, CommentedArgumentComment, FileElement, InlineHintKind, LineComment,
     Position, Start,
 };
-use crate::utils::builtin_schemas;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::PyErr;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
-pub struct BlockCommand {
-    pattern: String,
-}
-
 pub struct Parser<'a> {
     text: &'a str,
     line_offsets: Vec<usize>,
-    blocks: Vec<(String, BlockCommand)>,
+    blocks: &'a Vec<(String, BlockCommand)>,
     schemas: &'a CommandSchemas,
 }
 
@@ -126,7 +121,7 @@ impl Parser<'_> {
         Parser {
             text,
             line_offsets,
-            blocks: schemas.prepare_blocks(),
+            blocks: &schemas.blocks,
             schemas,
         }
     }
@@ -833,32 +828,6 @@ impl Parser<'_> {
         }
 
         Ok(Start { children: result })
-    }
-}
-
-fn block_command(name: &str) -> BlockCommand {
-    let pattern = format!("(?i)^{name}");
-    BlockCommand { pattern }
-}
-
-impl CommandSchemas {
-    pub fn prepare_blocks(&self) -> Vec<(String, BlockCommand)> {
-        self.definition_schemas
-            .values()
-            .chain(self.extension_schemas.values())
-            .chain(builtin_schemas().values())
-            .filter_map(|schema| match schema {
-                CommandSchema {
-                    canonical_name: Some(canonical_name),
-                    block_end: Some(block_end),
-                    ..
-                } => Some((
-                    canonical_name.trim().to_lowercase(),
-                    block_command(block_end),
-                )),
-                _ => None,
-            })
-            .collect()
     }
 }
 
