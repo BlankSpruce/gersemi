@@ -68,26 +68,19 @@ pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
         LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
 
     let mut regexes = REGEXES.lock().unwrap();
-    let re = regexes
-        .entry(pattern.to_string())
-        .or_insert_with(|| Regex::new(pattern).unwrap());
-
-    re.find(s)
-}
-
-pub fn regex(pattern: &str) -> Regex {
-    static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
-        LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
-
-    let mut regexes = REGEXES.lock().unwrap();
-    regexes
-        .entry(pattern.to_string())
-        .or_insert_with(|| Regex::new(pattern).unwrap())
-        .clone()
+    match regexes.get(pattern) {
+        None => {
+            let re = Regex::new(pattern).unwrap();
+            let result = re.find(s);
+            regexes.insert(pattern.to_string(), re);
+            result
+        }
+        Some(re) => re.find(s),
+    }
 }
 
 pub fn is_function_or_macro(s: &str) -> bool {
-    static RE: LazyLock<Regex> = LazyLock::new(|| regex("(?i:(function|macro))"));
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("(?i:(function|macro))").unwrap());
     RE.is_match(s)
 }
 
@@ -185,7 +178,7 @@ impl Parser<'_> {
         start_offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument<'_>, usize)>, Error> {
-        static RE_START: LazyLock<Regex> = LazyLock::new(|| regex(r"^\[=*\["));
+        static RE_START: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\[=*\[").unwrap());
         match RE_START.find(&self.text[start_offset..]) {
             None => Ok(None),
             Some(matched_left_bracket) => {
@@ -401,7 +394,7 @@ impl Parser<'_> {
     ) -> Result<Option<(Argument<'_>, usize)>, Error> {
         static PATTERN: LazyLock<String> =
             LazyLock::new(|| format!("^{}", quoted_argument_pattern()));
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(PATTERN.as_str()));
+        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(PATTERN.as_str()).unwrap());
         match RE.find(&self.text[offset..]) {
             None => match self.quotation_mark(offset) {
                 None => Ok(None),
@@ -431,7 +424,8 @@ impl Parser<'_> {
         offset: usize,
         compute_position: bool,
     ) -> Option<(Argument<'_>, usize)> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| regex(unquoted_argument_pattern()));
+        static RE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(unquoted_argument_pattern()).unwrap());
         RE.find(&self.text[offset..]).map(|matched| {
             (
                 Argument::Unquoted {

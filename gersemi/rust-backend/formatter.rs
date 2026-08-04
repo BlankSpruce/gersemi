@@ -17,7 +17,7 @@ use crate::node::{
     CommentedArgumentComment, FileElement, InlineHintKind, LineComment, Position,
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
-use crate::parser::{quoted_argument_pattern, re_find, regex, Parser};
+use crate::parser::{quoted_argument_pattern, re_find, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use crate::utils::load_definitions_from_extensions;
@@ -108,7 +108,7 @@ fn split_by_line_comment(s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
-    static REGEX_START: LazyLock<Regex> = LazyLock::new(|| regex(r"\[(=*)\["));
+    static REGEX_START: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[(=*)\[").unwrap());
     if let Some(left_bracket) = REGEX_START.find(s) {
         let equal_signs = "=".repeat(left_bracket.len() - 2);
         let pattern = format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]");
@@ -119,7 +119,7 @@ fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
 }
 
 fn split_by_quoted_arguments(s: &String) -> Vec<String> {
-    static RE: LazyLock<Regex> = LazyLock::new(|| regex(quoted_argument_pattern()));
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(quoted_argument_pattern()).unwrap());
     let mut s: &str = s;
     let mut result = Vec::<String>::new();
     while let Some(matched) = RE.find(s) {
@@ -1583,7 +1583,7 @@ fn line_range_fence_regex() -> Regex {
     let off_pattern = format!("[ \t]*{GERSEMI_OFF}\\n{BUG}\\n");
     let on_pattern = format!("{BUG}\\n[ \t]*{GERSEMI_ON}\\n");
     let pattern = format!("{off_pattern}|{on_pattern}");
-    regex(&pattern)
+    Regex::new(&pattern).unwrap()
 }
 
 fn remove_line_range_fences(formatted_code: &str) -> String {
