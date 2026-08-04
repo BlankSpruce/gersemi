@@ -101,9 +101,15 @@ ignore = [
     "E203",
     "E501",
     # project specific
+    "BLE001",
     "E266",
     "E731",
+    "FA100",
+    "PLR2044",
     "PTH123",
+    "RUF010",
+    "RUF012",
+    "TRY002",
 ]
 
 [tool.ruff.lint.isort]
