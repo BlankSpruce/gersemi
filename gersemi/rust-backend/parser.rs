@@ -92,12 +92,11 @@ fn inline_hint(value: &str, offset: usize) -> Option<(Argument<'_>, usize)> {
         InlineHintKind::KeywordPreprocessor(hint)
     } else if let Some(hint) = KeywordFormatter::from_str(hint) {
         InlineHintKind::KeywordFormatter(hint)
-    } else if let Some(hint) = hint.strip_prefix("as_command=") {
+    } else {
+        let hint = hint.strip_prefix("as_command=")?;
         InlineHintKind::AsCommand {
             command: hint.to_lowercase(),
         }
-    } else {
-        return None;
     };
 
     Some((Argument::InlineHint { value, kind }, offset))

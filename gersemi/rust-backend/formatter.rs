@@ -1303,15 +1303,13 @@ impl FormatterImpl<'_> {
         let _ = write!(buffer, "{begin}{body}");
 
         if !body.contains('\n') {
-            buffer.push(')');
         } else if body.ends_with('\n') {
             buffer.push_str(&self.indent_symbol);
-            buffer.push(')');
         } else {
             buffer.push('\n');
             buffer.push_str(&self.indent_symbol);
-            buffer.push(')');
         }
+        buffer.push(')');
     }
 
     fn command_invocation(&self, node: CommandInvocation, buffer: &mut String) {

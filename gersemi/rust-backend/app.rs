@@ -41,7 +41,7 @@ pub struct App {
 }
 
 fn split_files_by_formatting_state(
-    cache: &mut Cache,
+    cache: &Cache,
     files: Vec<PathBuf>,
     configuration: &OutcomeConfiguration,
 ) -> PyResult<(Vec<PathBuf>, Vec<PathBuf>)> {
@@ -132,7 +132,7 @@ impl App {
             outcome,
         };
         let (already_formatted_files, files_to_format) =
-            split_files_by_formatting_state(&mut self.cache, files, &configuration.outcome)?;
+            split_files_by_formatting_state(&self.cache, files, &configuration.outcome)?;
 
         for code in handle_already_formatted_files(
             &configuration,
@@ -146,7 +146,7 @@ impl App {
             py,
             &configuration,
             &self.args.mode,
-            &mut self.cache,
+            &self.cache,
             files_to_format,
         )? {
             self.status_code.add(code);

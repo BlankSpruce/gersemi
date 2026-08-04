@@ -107,7 +107,7 @@ fn cmake_types() -> Result<Types, ignore::Error> {
 }
 
 pub fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
-    if paths.iter().find(|path| is_stdin(path)).is_some() {
+    if paths.iter().any(|path| is_stdin(path)) {
         return Ok(paths);
     }
 

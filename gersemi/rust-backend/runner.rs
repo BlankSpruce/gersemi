@@ -285,7 +285,7 @@ pub fn handle_files_to_format(
     py: Python,
     configuration: &Configuration,
     mode: &Mode,
-    cache: &mut Cache,
+    cache: &Cache,
     files: Vec<PathBuf>,
 ) -> PyResult<Vec<usize>> {
     let configuration_summary = configuration.outcome.summarize()?;
