@@ -25,6 +25,7 @@ use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, PyErr, PyResult, Python};
 use regex::Regex;
 use rust_yaml::{Value, Yaml};
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -39,7 +40,7 @@ struct FormatterImpl<'a> {
     active_schema: Option<&'a ArgumentSchema>,
     active_command: Option<&'a CommandSchema>,
     favour_expansion: bool,
-    indent_symbol: String,
+    indent_symbol: Cow<'a, str>,
 
     unknown_commands_used: &'a RefCell<UnknownCommandsUsed>,
 
@@ -388,17 +389,17 @@ fn preprocess_content(content: &str) -> String {
 impl FormatterImpl<'_> {
     fn not_indented(&self) -> Self {
         let mut result = self.clone();
-        result.indent_symbol = String::new();
+        result.indent_symbol = Cow::from("");
         result
     }
 
     fn indented(&self) -> Self {
         let mut result = self.clone();
-        result.indent_symbol = format!(
+        result.indent_symbol = Cow::from(format!(
             "{}{}",
             self.configuration.indent_type.as_string(),
             self.indent_symbol
-        );
+        ));
         result
     }
 
@@ -408,8 +409,7 @@ impl FormatterImpl<'_> {
         result.indent_symbol = self
             .indent_symbol
             .strip_prefix(&indent_type)
-            .get_or_insert("")
-            .to_string();
+            .map_or_else(|| Cow::from(""), |x| Cow::from(x.to_string()));
         result
     }
 
@@ -1435,7 +1435,7 @@ fn format(
         active_schema: None,
         active_command: None,
         favour_expansion: false,
-        indent_symbol: String::new(),
+        indent_symbol: Cow::from(""),
 
         unknown_commands_used: &unknown_commands_used,
         configuration,
