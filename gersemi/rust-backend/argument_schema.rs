@@ -370,6 +370,19 @@ pub struct KeywordValue<'a> {
     second: Option<&'a str>,
 }
 
+impl KeywordMatcher {
+    fn match_value(&self, value: &KeywordValue<'_>) -> bool {
+        let KeywordValue { first, second } = value;
+
+        self.first == *first
+            && match (&self.second, &second) {
+                (Some(matcher), Some(value)) => matcher == *value,
+                (Some(_), _) => false,
+                (None, _) => true,
+            }
+    }
+}
+
 pub fn is_one_of_keywords(
     keyword_value: Option<&KeywordValue>,
     matchers: &[KeywordMatcher],
@@ -378,41 +391,7 @@ pub fn is_one_of_keywords(
         return false;
     };
 
-    match keyword_value {
-        KeywordValue {
-            first,
-            second: None,
-        } => {
-            for matcher in matchers {
-                if (matcher.first == *first) && matcher.second.is_none() {
-                    return true;
-                }
-            }
-            false
-        }
-        KeywordValue {
-            first,
-            second: Some(second),
-        } => {
-            for matcher in matchers {
-                if matcher.first != *first {
-                    continue;
-                }
-
-                match &matcher.second {
-                    None => {
-                        return true;
-                    }
-                    Some(matcher_second) => {
-                        if matcher_second == *second {
-                            return true;
-                        }
-                    }
-                }
-            }
-            false
-        }
-    }
+    matchers.iter().any(|m| m.match_value(keyword_value))
 }
 
 impl RefinedArgumentsAtom<'_> {
