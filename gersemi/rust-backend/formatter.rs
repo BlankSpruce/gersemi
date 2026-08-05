@@ -19,7 +19,6 @@ use crate::node::{
 };
 use crate::parser::{quoted_argument_pattern, re_find, Parser};
 use crate::sanity_checker::check_equivalence;
-use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use crate::utils::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::{pyclass, pymethods, PyErr, PyResult, Python};
@@ -455,8 +454,8 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn two_words_keywords(&self) -> &Vec<TwoWordKeywordMatcher> {
-        static EMPTY: Vec<TwoWordKeywordMatcher> = vec![];
+    fn two_words_keywords(&self) -> &Vec<KeywordMatcher> {
+        static EMPTY: Vec<KeywordMatcher> = vec![];
         match self.active_command {
             Some(CommandSchema {
                 details:

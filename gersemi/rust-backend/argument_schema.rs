@@ -1,6 +1,5 @@
 use crate::configuration::{KeywordFormatter, KeywordPreprocessor};
 use crate::node::{RefinedArgumentsAtom, RefinedArgumentsNode};
-use crate::two_words_keyword_isolator::TwoWordKeywordMatcher;
 use crate::utils::builtin_schemas;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
@@ -11,15 +10,9 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum SecondKeyword {
-    String(String),
-    Any,
-}
-
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct KeywordMatcher {
-    first: String,
-    second: Option<SecondKeyword>,
+    pub first: String,
+    pub second: Option<String>,
 }
 
 fn single_word_matcher(s: &str) -> KeywordMatcher {
@@ -58,11 +51,11 @@ impl FromPyObject<'_, '_> for KeywordMatcher {
             let (left, right) = (obj.get_item(0)?, obj.get_item(1)?);
 
             let left = left.cast::<PyString>()?.str()?.to_string();
-            let right = Some(if right.is_instance_of::<PyString>() {
-                SecondKeyword::String(right.cast::<PyString>()?.str()?.to_string())
+            let right = if right.is_instance_of::<PyString>() {
+                Some(right.cast::<PyString>()?.str()?.to_string())
             } else {
-                SecondKeyword::Any
-            });
+                None
+            };
 
             (left, right)
         } else {
@@ -407,10 +400,10 @@ pub fn is_one_of_keywords(
                 }
 
                 match &matcher.second {
-                    None | Some(SecondKeyword::Any) => {
+                    None => {
                         return true;
                     }
-                    Some(SecondKeyword::String(matcher_second)) => {
+                    Some(matcher_second) => {
                         if matcher_second == *second {
                             return true;
                         }
@@ -624,7 +617,7 @@ pub enum CommandSchemaDetails {
     StandardCommand {
         schema: ArgumentSchema,
         signatures: Signatures,
-        two_words_keywords: Vec<TwoWordKeywordMatcher>,
+        two_words_keywords: Vec<KeywordMatcher>,
     },
     SpecializedCommand {
         #[pyo3(attribute("impl"))]
