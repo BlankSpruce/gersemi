@@ -6,7 +6,6 @@ use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyString, PyTuple};
 use pyo3::{FromPyObject, PyAny};
-use std::borrow::Cow;
 use std::cmp::min;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -374,8 +373,8 @@ impl ArgumentSchema {
 }
 
 pub struct KeywordValue<'a> {
-    first: Cow<'a, str>,
-    second: Option<Cow<'a, str>>,
+    first: &'a str,
+    second: Option<&'a str>,
 }
 
 pub fn is_one_of_keywords(
@@ -392,7 +391,7 @@ pub fn is_one_of_keywords(
             second: None,
         } => {
             for matcher in matchers {
-                if (matcher.first.as_str() == first) && matcher.second.is_none() {
+                if (matcher.first == *first) && matcher.second.is_none() {
                     return true;
                 }
             }
@@ -403,7 +402,7 @@ pub fn is_one_of_keywords(
             second: Some(second),
         } => {
             for matcher in matchers {
-                if matcher.first.as_str() != first {
+                if matcher.first != *first {
                     continue;
                 }
 
@@ -412,7 +411,7 @@ pub fn is_one_of_keywords(
                         return true;
                     }
                     Some(SecondKeyword::String(matcher_second)) => {
-                        if matcher_second.as_str() == second {
+                        if matcher_second == *second {
                             return true;
                         }
                     }

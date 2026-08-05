@@ -58,7 +58,7 @@ fn new_command<'a>(
 
     let positional_arguments = positional_arguments
         .iter()
-        .map(|x| Argument::get_value(x).into_owned())
+        .map(|x| Argument::get_value(x).to_string())
         .collect();
     Some((name?, positional_arguments))
 }
@@ -87,7 +87,7 @@ fn get_command_start(node: &Argument) -> Option<Position> {
         Argument::Bracket(BracketArgument { position, .. })
         | Argument::Quoted { position, .. }
         | Argument::Unquoted { position, .. } => position.clone(),
-        Argument::Complex { arguments } => match arguments.first() {
+        Argument::Complex { arguments, .. } => match arguments.first() {
             None => None,
             Some(node) => match node {
                 ArgumentsAtom::Argument(argument)
@@ -145,7 +145,7 @@ impl CustomCommandInterpreter {
             .or_insert(vec![])
             .push((
                 CustomCommandContent {
-                    canonical_name: canonical_name.into_owned(),
+                    canonical_name: canonical_name.to_string(),
                     positional_arguments,
                     keywords,
                     block_end,
@@ -202,7 +202,7 @@ impl CustomCommandInterpreter {
 
     fn cmake_parse_arguments(&self, children: &Arguments) -> Option<Keywords> {
         let first_child = children.first()?.get_value();
-        let part = match first_child.as_ref() {
+        let part = match first_child {
             "PARSE_ARGV" => [children.get(3), children.get(4), children.get(5)],
             "PARSE_ARGN" => [children.get(2), children.get(3), children.get(4)],
             _ => [children.get(1), children.get(2), children.get(3)],
@@ -213,10 +213,10 @@ impl CustomCommandInterpreter {
         };
 
         Some(Keywords {
-            options: self.eval_variables(options.get_value().into_owned()),
-            one_value_keywords: self.eval_variables(one_value_arguments.get_value().into_owned()),
+            options: self.eval_variables(options.get_value().to_string()),
+            one_value_keywords: self.eval_variables(one_value_arguments.get_value().to_string()),
             multi_value_keywords: self
-                .eval_variables(multi_value_arguments.get_value().into_owned()),
+                .eval_variables(multi_value_arguments.get_value().to_string()),
             hints: vec![],
         })
     }

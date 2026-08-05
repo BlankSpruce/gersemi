@@ -591,7 +591,7 @@ impl FormatterImpl<'_> {
     fn argument(&self, argument: &Argument, buffer: &mut String) {
         let _ = match argument {
             Argument::Bracket(arg) => write!(buffer, "{}{}", self.indent_symbol, arg.whole),
-            Argument::Complex { arguments } => {
+            Argument::Complex { arguments, .. } => {
                 return self.complex_argument(arguments, buffer);
             }
             Argument::Quoted { value, .. } => write!(buffer, "{}\"{value}\"", self.indent_symbol),
@@ -872,7 +872,7 @@ impl FormatterImpl<'_> {
         match &self.active_schema {
             Some(schema) => atom
                 .get_value()
-                .and_then(|key| schema.keyword_preprocessors.get(key.as_ref()).cloned()),
+                .and_then(|key| schema.keyword_preprocessors.get(key).cloned()),
             _ => None,
         }
     }
@@ -885,7 +885,7 @@ impl FormatterImpl<'_> {
         match &self.active_schema {
             Some(schema) => atom
                 .get_value()
-                .and_then(|key| schema.keyword_formatters.get(key.as_ref()).cloned()),
+                .and_then(|key| schema.keyword_formatters.get(key).cloned()),
             _ => None,
         }
     }

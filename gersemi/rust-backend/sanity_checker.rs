@@ -13,8 +13,9 @@ fn simplify_argument(node: Argument) -> Argument {
                 position: None,
             })
         }
-        Argument::Complex { arguments } => Argument::Complex {
+        Argument::Complex { arguments, .. } => Argument::Complex {
             arguments: simplify_arguments(arguments),
+            as_value: String::new(),
         },
         Argument::Quoted { value, .. } => Argument::Quoted {
             value,

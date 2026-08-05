@@ -8,7 +8,7 @@ use crate::node::{
 fn get_argument_value(argument: &Argument) -> String {
     match argument {
         Argument::Bracket(arg) => arg.whole.to_string(),
-        Argument::Complex { arguments } => {
+        Argument::Complex { arguments, .. } => {
             format!(
                 "({})",
                 arguments.iter().map(get_atom_value).collect::<String>()

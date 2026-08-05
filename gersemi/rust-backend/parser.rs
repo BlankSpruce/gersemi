@@ -449,9 +449,24 @@ impl Parser<'_> {
                 None => None,
                 Some((matched_arguments, offset)) => {
                     let offset = self.right_paren(offset)?;
+                    let as_value = matched_arguments
+                        .iter()
+                        .filter_map(|x| match x {
+                            ArgumentsAtom::Argument(node)
+                            | ArgumentsAtom::CommentedArgument { argument: node, .. } => {
+                                Some(node.get_value())
+                            }
+                            ArgumentsAtom::BracketComment(_) | ArgumentsAtom::LineComment(_) => {
+                                None
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" ");
+
                     Some((
                         Argument::Complex {
                             arguments: matched_arguments,
+                            as_value,
                         },
                         offset,
                     ))
