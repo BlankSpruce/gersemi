@@ -355,6 +355,10 @@ impl Parser<'_> {
         &self,
         offset: usize,
     ) -> Result<Option<(CommentedArgumentComment<'_>, usize)>, Error> {
+        if !self.text[offset..].starts_with('#') {
+            return Ok(None);
+        }
+
         if let Some((matched, offset)) = self.bracket_comment(offset)? {
             if inline_hint(matched.value, offset).is_some() {
                 return Ok(None);
@@ -517,12 +521,14 @@ impl Parser<'_> {
         &self,
         offset: usize,
     ) -> Result<Option<(Option<ArgumentsAtom<'_>>, usize)>, Error> {
-        if let Some((node, offset)) = self.bracket_comment(offset)? {
-            return Ok(Some((Some(ArgumentsAtom::BracketComment(node)), offset)));
-        }
+        if self.text[offset..].starts_with('#') {
+            if let Some((node, offset)) = self.bracket_comment(offset)? {
+                return Ok(Some((Some(ArgumentsAtom::BracketComment(node)), offset)));
+            }
 
-        if let Some((node, offset)) = self.line_comment(offset) {
-            return Ok(Some((Some(ArgumentsAtom::LineComment(node)), offset)));
+            if let Some((node, offset)) = self.line_comment(offset) {
+                return Ok(Some((Some(ArgumentsAtom::LineComment(node)), offset)));
+            }
         }
 
         if let Some(offset) = self.newline(offset) {
