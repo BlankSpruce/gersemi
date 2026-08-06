@@ -378,14 +378,6 @@ impl Parser<'_> {
         Ok(None)
     }
 
-    fn quotation_mark(&self, offset: usize) -> Option<usize> {
-        if self.text[offset..].starts_with('"') {
-            Some(offset + 1)
-        } else {
-            None
-        }
-    }
-
     fn quoted_argument(
         &self,
         offset: usize,
@@ -395,10 +387,7 @@ impl Parser<'_> {
             LazyLock::new(|| format!("^{}", quoted_argument_pattern()));
         static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(PATTERN.as_str()).unwrap());
         match RE.find(&self.text[offset..]) {
-            None => match self.quotation_mark(offset) {
-                None => Ok(None),
-                Some(_) => Err(self.generic_parsing_error(offset)),
-            },
+            None => Err(self.generic_parsing_error(offset)),
             Some(matched) => Ok(Some((
                 Argument::Quoted {
                     value: {
@@ -480,23 +469,28 @@ impl Parser<'_> {
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument<'_>, usize)>, Error> {
-        if let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? {
-            return Ok(inline_hint(value, offset));
+        if self.text[offset..].is_empty() {
+            return Ok(None);
         }
 
-        if let Some(matched) = self.bracket_argument(offset, compute_position)? {
-            return Ok(Some(matched));
-        }
-
-        if let Some(matched) = self.quoted_argument(offset, compute_position)? {
-            return Ok(Some(matched));
-        }
-
-        if let Some(matched) = self.unquoted_argument(offset, compute_position) {
-            return Ok(Some(matched));
-        }
-
-        self.complex_argument(offset)
+        Ok(match &self.text[offset..][..1] {
+            "#" => {
+                if let Some((BracketComment { value }, offset)) = self.bracket_comment(offset)? {
+                    inline_hint(value, offset)
+                } else {
+                    None
+                }
+            }
+            "\"" => self.quoted_argument(offset, compute_position)?,
+            "(" => self.complex_argument(offset)?,
+            _ => {
+                if self.text[offset..].starts_with("[[") || self.text[offset..].starts_with("[=") {
+                    self.bracket_argument(offset, compute_position)?
+                } else {
+                    self.unquoted_argument(offset, compute_position)
+                }
+            }
+        })
     }
 
     fn commented_argument(
