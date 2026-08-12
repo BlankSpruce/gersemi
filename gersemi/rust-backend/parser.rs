@@ -84,8 +84,8 @@ pub fn is_case_insensitive_match(pattern: &str, s: &str) -> bool {
 }
 
 pub fn is_function_or_macro(s: &str) -> bool {
-    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("(?i:(function|macro))").unwrap());
-    RE.is_match(s)
+    matches!(s, "function" | "macro")
+        || (s.starts_with(['F', 'M']) && matches!(s.to_lowercase().as_str(), "function" | "macro"))
 }
 
 fn inline_hint(value: &str, offset: usize) -> Option<(Argument<'_>, usize)> {
