@@ -79,6 +79,10 @@ pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
     }
 }
 
+pub fn is_case_insensitive_match(pattern: &str, s: &str) -> bool {
+    (pattern == s) || (pattern == s.to_lowercase())
+}
+
 pub fn is_function_or_macro(s: &str) -> bool {
     static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("(?i:(function|macro))").unwrap());
     RE.is_match(s)
@@ -100,6 +104,36 @@ fn inline_hint(value: &str, offset: usize) -> Option<(Argument<'_>, usize)> {
     };
 
     Some((Argument::InlineHint { value, kind }, offset))
+}
+
+enum BlockEndNode<'a> {
+    Yes(Command<'a>),
+    No(FileElement<'a>),
+}
+
+fn get_block_end<'a>(pattern: &str, element: FileElement<'a>) -> BlockEndNode<'a> {
+    match element {
+        FileElement::Command(command) => match command {
+            Command::Element {
+                ref command_invocation,
+                ..
+            }
+            | Command::Invocation(ref command_invocation) => match command_invocation {
+                CommandInvocation::KnownCommand { identifier, .. }
+                    if is_case_insensitive_match(pattern, identifier) =>
+                {
+                    BlockEndNode::Yes(command)
+                }
+                CommandInvocation::CustomCommand { identifier, .. }
+                    if is_case_insensitive_match(pattern, identifier) =>
+                {
+                    BlockEndNode::Yes(command)
+                }
+                _ => BlockEndNode::No(FileElement::Command(command)),
+            },
+        },
+        _ => BlockEndNode::No(element),
+    }
 }
 
 impl Parser<'_> {
@@ -266,15 +300,17 @@ impl Parser<'_> {
 
         let mut result: Vec<FileElement> = vec![];
         let mut last_newline_or_gap: Option<FileElement> = None;
-        loop {
-            if let Some((end_command, offset)) =
-                self.command_element_t(&end_command.pattern, offset)?
-            {
-                return Ok((result, Some(end_command), offset));
-            }
 
+        #[allow(clippy::while_let_loop)]
+        loop {
             match self.file_element(offset)? {
                 Some((matched, new_offset)) => {
+                    let matched = match get_block_end(&end_command.pattern, matched) {
+                        BlockEndNode::No(matched) => matched,
+                        BlockEndNode::Yes(end_command) => {
+                            return Ok((result, Some(end_command), new_offset));
+                        }
+                    };
                     if let Some(node) = last_newline_or_gap {
                         result.push(node);
                     }

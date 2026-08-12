@@ -624,11 +624,6 @@ pub struct BlockCommand {
     pub pattern: String,
 }
 
-fn block_command(name: &str) -> BlockCommand {
-    let pattern = format!("(?i)^{name}");
-    BlockCommand { pattern }
-}
-
 fn prepare_blocks<'a, Schemas>(schemas: Schemas) -> Vec<(String, BlockCommand)>
 where
     Schemas: Iterator<Item = &'a CommandSchema>,
@@ -641,7 +636,9 @@ where
                 ..
             } => Some((
                 canonical_name.trim().to_lowercase(),
-                block_command(block_end),
+                BlockCommand {
+                    pattern: block_end.clone(),
+                },
             )),
             _ => None,
         })
