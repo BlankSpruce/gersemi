@@ -97,13 +97,7 @@ fn cmake_types() -> Result<Types, ignore::Error> {
     result.add("cmake", "CMakeLists.txt.in")?;
     result.add("cmake", "*.cmake.in")?;
     result.select("cmake");
-    let result = result.build();
-
-    if let Err(ref err) = result {
-        println!("dbg: {err:?}");
-    }
-
-    result
+    result.build()
 }
 
 pub fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Vec<PathBuf>> {
