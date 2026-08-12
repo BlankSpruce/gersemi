@@ -240,8 +240,9 @@ impl Parser<'_> {
         }
     }
 
-    fn raw_terminal(&self, pattern: &str, offset: usize) -> Option<(&str, usize)> {
-        re_find(pattern, &self.text[offset..])
+    fn raw_identifier(&self, offset: usize) -> Option<(&str, usize)> {
+        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(IDENTIFIER_R).unwrap());
+        RE.find(&self.text[offset..])
             .map(|matched| (matched.as_str(), offset + matched.len()))
     }
 
@@ -652,13 +653,12 @@ impl Parser<'_> {
         }
     }
 
-    fn command_invocation_t(
+    fn command_invocation(
         &self,
-        pattern: &str,
         offset: usize,
     ) -> Result<Option<(CommandInvocation<'_>, usize)>, Error> {
         let initial_offset = offset;
-        Ok(match self.raw_terminal(pattern, offset) {
+        Ok(match self.raw_identifier(offset) {
             None => None,
             Some((matched_identifier, identifier_offset)) => {
                 let identifier_offset = self.skip_space(identifier_offset);
@@ -687,13 +687,9 @@ impl Parser<'_> {
         })
     }
 
-    fn command_element_t(
-        &self,
-        pattern: &str,
-        offset: usize,
-    ) -> Result<Option<(Command<'_>, usize)>, Error> {
+    fn command_element(&self, offset: usize) -> Result<Option<(Command<'_>, usize)>, Error> {
         Ok(self
-            .command_invocation_t(pattern, offset)?
+            .command_invocation(offset)?
             .map(|(command_invocation, offset)| {
                 let (line_comment, offset) = match self.line_comment(offset) {
                     None => (None, offset),
@@ -709,18 +705,13 @@ impl Parser<'_> {
             }))
     }
 
-    fn command_element(&self, offset: usize) -> Result<Option<(Command<'_>, usize)>, Error> {
-        self.command_element_t(IDENTIFIER_R, offset)
-    }
-
     fn standalone_identifier(&self, offset: usize) -> Option<(FileElement<'_>, usize)> {
-        self.raw_terminal(IDENTIFIER_R, offset)
-            .map(|(matched, new_offset)| {
-                (
-                    FileElement::StandaloneIdentifier { value: matched },
-                    self.skip_space(new_offset),
-                )
-            })
+        self.raw_identifier(offset).map(|(matched, new_offset)| {
+            (
+                FileElement::StandaloneIdentifier { value: matched },
+                self.skip_space(new_offset),
+            )
+        })
     }
 
     fn bracket_comment(
