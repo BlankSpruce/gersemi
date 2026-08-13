@@ -27,7 +27,6 @@ use rust_yaml::{Value, Yaml};
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::Write;
 use std::iter::zip;
 use std::str::SplitInclusive;
 use std::sync::LazyLock;
@@ -173,10 +172,9 @@ fn indent<Predicate: Fn(&str) -> bool>(
     let mut buffer = String::new();
     for line in s.split_inclusive('\n') {
         if predicate(line) {
-            let _ = write!(buffer, "{indent_symbol}{line}");
-        } else {
-            buffer.push_str(line);
+            buffer.push_str(indent_symbol);
         }
+        buffer.push_str(line);
     }
     buffer
 }
@@ -536,7 +534,8 @@ impl FormatterImpl<'_> {
     }
 
     fn standard_complex_argument(&self, arguments: &ArgumentsNode, buffer: &mut String) {
-        if arguments.len() <= 4 && self.try_to_format_into_single_line("(", arguments, ")", buffer)
+        if arguments.len() <= 4
+            && self.try_to_format_into_single_line(&["("], arguments, ")", buffer)
         {
             return;
         }
@@ -548,19 +547,23 @@ impl FormatterImpl<'_> {
             .map(|x| RefinedArgumentsAtom::Atom(x.clone()))
             .collect();
         self.indented().arguments(&arguments, buffer);
-        let _ = write!(buffer, "\n{})", self.indent_symbol);
+        buffer.push('\n');
+        buffer.push_str(&self.indent_symbol);
+        buffer.push(')');
     }
 
     fn condition_syntax_complex_argument(&self, arguments: &ArgumentsNode, buffer: &mut String) {
         let arguments = self.preprocess_arguments(arguments.clone());
-        if self.try_to_format_into_single_line("(", &arguments, ")", buffer) {
+        if self.try_to_format_into_single_line(&["("], &arguments, ")", buffer) {
             return;
         }
 
         buffer.push_str(&self.indent_symbol);
         buffer.push_str("(\n");
         self.indented().arguments(&arguments, buffer);
-        let _ = write!(buffer, "\n{})", self.indent_symbol);
+        buffer.push('\n');
+        buffer.push_str(&self.indent_symbol);
+        buffer.push(')');
     }
 
     fn shall_use_condition_syntax(&self) -> bool {
@@ -588,15 +591,30 @@ impl FormatterImpl<'_> {
     }
 
     fn argument(&self, argument: &Argument, buffer: &mut String) {
-        let _ = match argument {
-            Argument::Bracket(arg) => write!(buffer, "{}{}", self.indent_symbol, arg.whole),
-            Argument::Complex { arguments, .. } => {
-                return self.complex_argument(arguments, buffer);
+        match argument {
+            Argument::Bracket(arg) => {
+                buffer.push_str(&self.indent_symbol);
+                buffer.push_str(arg.whole);
             }
-            Argument::Quoted { value, .. } => write!(buffer, "{}\"{value}\"", self.indent_symbol),
-            Argument::Unquoted { value, .. } => write!(buffer, "{}{value}", self.indent_symbol),
-            Argument::InlineHint { value, .. } => write!(buffer, "{}#{value}", self.indent_symbol),
-        };
+            Argument::Complex { arguments, .. } => {
+                self.complex_argument(arguments, buffer);
+            }
+            Argument::Quoted { value, .. } => {
+                buffer.push_str(&self.indent_symbol);
+                buffer.push('"');
+                buffer.push_str(value);
+                buffer.push('"');
+            }
+            Argument::Unquoted { value, .. } => {
+                buffer.push_str(&self.indent_symbol);
+                buffer.push_str(value);
+            }
+            Argument::InlineHint { value, .. } => {
+                buffer.push_str(&self.indent_symbol);
+                buffer.push('#');
+                buffer.push_str(value);
+            }
+        }
     }
 
     fn commented_argument(
@@ -627,7 +645,7 @@ impl FormatterImpl<'_> {
         buffer: &mut String,
     ) {
         let arguments = [lhs, operation, rhs];
-        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
+        if self.try_to_format_into_single_line(&[""], &arguments, "", buffer) {
             return;
         }
 
@@ -647,7 +665,7 @@ impl FormatterImpl<'_> {
     ) {
         let arguments = [operation, operand];
 
-        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
+        if self.try_to_format_into_single_line(&[""], &arguments, "", buffer) {
             return;
         }
 
@@ -662,11 +680,8 @@ impl FormatterImpl<'_> {
                 IndentType::Spaces(spaces)
                     if formatted_operation.trim().chars().count() < spaces =>
                 {
-                    let _ = write!(
-                        buffer,
-                        " {}",
-                        self.arguments_atom_to_str(operand).trim_start()
-                    );
+                    buffer.push(' ');
+                    buffer.push_str(self.arguments_atom_to_str(operand).trim_start());
                     return;
                 }
                 _ => (),
@@ -738,7 +753,7 @@ impl FormatterImpl<'_> {
 
     fn format_property(&mut self, args: &RefinedArgumentsNode) -> String {
         let mut result = String::new();
-        if self.try_to_format_into_single_line("", args, "", &mut result) {
+        if self.try_to_format_into_single_line(&[""], args, "", &mut result) {
             return result;
         }
 
@@ -797,14 +812,14 @@ impl FormatterImpl<'_> {
             result
         };
 
-        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
+        if self.try_to_format_into_single_line(&[""], &arguments, "", buffer) {
             return;
         }
 
         let can_be_inlined = (!self.favour_expansion) || ((!is_pair) && (!is_multi_value_argument));
         if can_be_inlined {
             let f = self.select_inlining_strategy();
-            if f.try_to_format_into_single_line("", &arguments, "", buffer) {
+            if f.try_to_format_into_single_line(&[""], &arguments, "", buffer) {
                 return;
             }
         }
@@ -854,7 +869,7 @@ impl FormatterImpl<'_> {
             result
         };
 
-        if self.try_to_format_into_single_line("", &arguments, "", buffer) {
+        if self.try_to_format_into_single_line(&[""], &arguments, "", buffer) {
             return;
         }
 
@@ -1093,14 +1108,16 @@ impl FormatterImpl<'_> {
 
     fn format_command_with_short_name(
         &self,
-        begin: &str,
+        begin: &[&str],
         arguments: &RefinedArgumentsNode,
         end: &str,
         buffer: &mut String,
     ) {
         let have_no_line_comments = !is_line_comment_in_any_of(arguments);
         buffer.push_str(&self.indent_symbol);
-        buffer.push_str(begin);
+        for part in begin {
+            buffer.push_str(part);
+        }
         let formatted_arguments_has_newline = {
             let mut inner_buffer = String::new();
             self.indented().arguments(arguments, &mut inner_buffer);
@@ -1112,7 +1129,9 @@ impl FormatterImpl<'_> {
         if have_no_line_comments && (!formatted_arguments_has_newline) {
             buffer.push_str(end);
         } else {
-            let _ = write!(buffer, "\n{}{end}", self.indent_symbol);
+            buffer.push('\n');
+            buffer.push_str(&self.indent_symbol);
+            buffer.push_str(end);
         }
     }
 
@@ -1122,7 +1141,8 @@ impl FormatterImpl<'_> {
         mut arguments: RefinedArgumentsNode<'_>,
         buffer: &mut String,
     ) {
-        let begin = self.format_command_name(identifier);
+        let (name, paren) = self.format_command_name(identifier);
+        let begin = [&name, paren];
         let end = ")";
 
         let initial_buffer_end = buffer.len();
@@ -1138,11 +1158,17 @@ impl FormatterImpl<'_> {
 
         let f = self.select_expansion_strategy();
         match f.configuration.indent_type {
-            IndentType::Spaces(spaces) if begin.chars().count() == spaces => {
+            IndentType::Spaces(spaces)
+                if begin.iter().map(|part| part.chars().count()).sum::<usize>() == spaces =>
+            {
                 f.format_command_with_short_name(&begin, &arguments, end, buffer);
             }
             _ => {
-                let _ = writeln!(buffer, "{}{begin}", f.indent_symbol);
+                buffer.push_str(&f.indent_symbol);
+                for part in begin {
+                    buffer.push_str(part);
+                }
+                buffer.push('\n');
                 f.indented().arguments(&arguments, buffer);
                 buffer.push('\n');
                 buffer.push_str(&f.indent_symbol);
@@ -1182,29 +1208,25 @@ impl FormatterImpl<'_> {
             .format_command(identifier, arguments, buffer);
     }
 
-    fn format_command_name(&self, name: &str) -> String {
+    fn format_command_name<'a>(&'a self, name: &'a str) -> (Cow<'a, str>, &'a str) {
         match &self.active_command {
             Some(CommandSchema {
                 canonical_name: Some(value),
                 ..
-            }) => format!("{value}("),
+            }) => (value.into(), "("),
             _ => {
                 if name.contains('@') {
-                    format!("{name}(")
+                    (name.into(), "(")
                 } else {
-                    format!("{}(", name.to_lowercase())
+                    (name.to_lowercase().into(), "(")
                 }
             }
         }
     }
 
-    fn indent(&self, value: &str) -> String {
-        indent(value, &self.indent_symbol, |x| !x.trim().is_empty())
-    }
-
     fn try_to_format_into_single_line<Part: HasLineComment + TryToFormatIntoSingleLinePart>(
         &self,
-        prefix: &str,
+        prefixes: &[&str],
         parts: &[Part],
         postfix: &str,
         buffer: &mut String,
@@ -1217,8 +1239,12 @@ impl FormatterImpl<'_> {
             return false;
         }
 
+        let prefix_length = prefixes
+            .iter()
+            .map(|part| part.chars().count())
+            .sum::<usize>();
         let reserved_space =
-            prefix.chars().count() + postfix.chars().count() + self.indent_symbol.chars().count();
+            prefix_length + postfix.chars().count() + self.indent_symbol.chars().count();
         {
             let initial_buffer_end = buffer.len();
 
@@ -1226,7 +1252,9 @@ impl FormatterImpl<'_> {
             let limit = f.configuration.line_length;
 
             buffer.push_str(&self.indent_symbol);
-            buffer.push_str(prefix);
+            for part in prefixes {
+                buffer.push_str(part);
+            }
             let mut line_length = reserved_space;
 
             let mut add_space = false;
@@ -1263,26 +1291,27 @@ impl FormatterImpl<'_> {
     fn custom_command(
         &self,
         indentation: &str,
-        name: String,
+        name: &str,
         formatted_node: &str,
         position: &Position,
         buffer: &mut String,
     ) {
-        let begin = {
-            let s = self.format_command_name(&name);
-            self.indent(&s)
-        };
+        let (command_name, paren) = self.format_command_name(name);
+        let begin = &[&self.indent_symbol, &command_name, paren];
         self.unknown_commands_used
             .borrow_mut()
-            .push((name, position.line, position.column));
+            .push((name.to_string(), position.line, position.column));
 
         if formatted_node.is_empty() {
-            let _ = write!(buffer, "{begin})");
+            for part in begin {
+                buffer.push_str(part);
+            }
+            buffer.push(')');
             return;
         }
 
         if self.not_indented().try_to_format_into_single_line(
-            &begin,
+            begin,
             &[&formatted_node],
             ")",
             buffer,
@@ -1299,7 +1328,10 @@ impl FormatterImpl<'_> {
             body.trim_start_matches(indent_symbol.as_str())
         };
 
-        let _ = write!(buffer, "{begin}{body}");
+        for part in begin {
+            buffer.push_str(part);
+        }
+        buffer.push_str(body);
 
         if !body.contains('\n') {
         } else if body.ends_with('\n') {
@@ -1321,7 +1353,7 @@ impl FormatterImpl<'_> {
             }
             CommandInvocation::CustomCommand {
                 ref indentation,
-                identifier,
+                ref identifier,
                 formatted_node,
                 ref position,
                 ..
@@ -1352,7 +1384,9 @@ impl FormatterImpl<'_> {
     }
 
     fn bracket_comment(&self, node: &BracketComment, buffer: &mut String) {
-        let _ = write!(buffer, "{}#{}", self.indent_symbol, node.value);
+        buffer.push_str(&self.indent_symbol);
+        buffer.push('#');
+        buffer.push_str(node.value);
     }
 
     fn line_comment_to_str(&self, node: &LineComment) -> String {
@@ -1362,7 +1396,9 @@ impl FormatterImpl<'_> {
     }
 
     fn line_comment(&self, node: &LineComment, buffer: &mut String) {
-        let _ = write!(buffer, "{}#{}", self.indent_symbol, node.value.trim_end());
+        buffer.push_str(&self.indent_symbol);
+        buffer.push('#');
+        buffer.push_str(node.value.trim_end());
     }
 
     fn file_element(&self, node: FileElement, buffer: &mut String) {
@@ -1377,7 +1413,8 @@ impl FormatterImpl<'_> {
                 self.command(node, buffer);
             }
             FileElement::StandaloneIdentifier { value } => {
-                let _ = write!(buffer, "{}{value}", self.indent_symbol);
+                buffer.push_str(&self.indent_symbol);
+                buffer.push_str(value);
             }
             FileElement::NonCommandElement {
                 bracket_comments,
