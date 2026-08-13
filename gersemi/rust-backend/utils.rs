@@ -131,7 +131,7 @@ pub fn get_files(paths: Vec<PathBuf>, respect_ignore_files: bool) -> PyResult<Ve
             return fail;
         };
 
-        let p = entry.into_path();
+        let p = entry.path();
         if p.is_dir() {
             continue;
         }
