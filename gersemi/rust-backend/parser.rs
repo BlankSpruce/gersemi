@@ -33,7 +33,6 @@ pub struct Error {
 }
 
 const ESCAPE_SEQUENCE_R: &str = r"\\([^A-Za-z0-9]|[nrt])";
-const IDENTIFIER_R: &str = r"^[A-Za-z_@][A-Za-z0-9_@]*";
 const MAKE_STYLE_REFERENCE_R: &str = r##"\$\([^\)\n\"#]+?\)"##;
 const QUOTED_CONTINUATION_R: &str = r"\\\n";
 const QUOTED_ELEMENT_R: &str = r#"[^\\\"]|\n"#;
@@ -241,9 +240,25 @@ impl Parser<'_> {
     }
 
     fn raw_identifier(&self, offset: usize) -> Option<(&str, usize)> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(IDENTIFIER_R).unwrap());
-        RE.find(&self.text[offset..])
-            .map(|matched| (matched.as_str(), offset + matched.len()))
+        let mut characters = self.text[offset..].chars();
+        let mut new_offset = match characters.next() {
+            Some('a'..='z' | 'A'..='Z' | '_' | '@') => offset + 1,
+            _ => {
+                return None;
+            }
+        };
+
+        for c in characters {
+            match c {
+                'a'..='z' | 'A'..='Z' | '_' | '@' | '0'..='9' => {
+                    new_offset += 1;
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+        Some((&self.text[offset..new_offset], new_offset))
     }
 
     fn pound_sign(&self, offset: usize) -> Option<usize> {
