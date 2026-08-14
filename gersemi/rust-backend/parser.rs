@@ -439,28 +439,51 @@ impl Parser<'_> {
         offset: usize,
         compute_position: bool,
     ) -> Result<Option<(Argument<'_>, usize)>, Error> {
-        static PATTERN: LazyLock<String> =
-            LazyLock::new(|| format!("^{}", quoted_argument_pattern()));
-        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(PATTERN.as_str()).unwrap());
-        match RE.find(&self.text[offset..]) {
-            None => Err(self.generic_parsing_error(offset)),
-            Some(matched) => Ok(Some((
-                Argument::Quoted {
-                    value: {
-                        let result = matched.as_str();
-                        &result[1..result.len() - 1]
-                    },
-                    position: {
-                        if compute_position {
-                            Some(self.position(offset))
-                        } else {
-                            None
+        let mut characters = self.text[offset..].chars();
+        let mut new_offset = if characters.next() == Some('"') {
+            offset + 1
+        } else {
+            return Err(self.generic_parsing_error(offset));
+        };
+
+        while let Some(c) = characters.next() {
+            match c {
+                '"' => {
+                    new_offset += 1;
+                    return Ok(Some((
+                        Argument::Quoted {
+                            value: &self.text[offset + 1..new_offset - 1],
+                            position: {
+                                if compute_position {
+                                    Some(self.position(offset))
+                                } else {
+                                    None
+                                }
+                            },
+                        },
+                        self.skip_space(new_offset),
+                    )));
+                }
+                '\\' => {
+                    let Some(c2) = characters.next() else {
+                        break;
+                    };
+                    match c2 {
+                        'n' | 'r' | 't' => {}
+                        'A'..='Z' | 'a'..='z' | '0'..='9' => {
+                            break;
                         }
-                    },
-                },
-                self.skip_space(offset + matched.len()),
-            ))),
+                        _ => {}
+                    }
+                    new_offset += 1 + c.len_utf8();
+                }
+                _ => {
+                    new_offset += c.len_utf8();
+                }
+            }
         }
+
+        Err(self.generic_parsing_error(offset))
     }
 
     fn unquoted_argument(
