@@ -1,4 +1,8 @@
 # Changelog
+## [0.28.1] 2026-08-19
+### Added
+- Performance improvements.
+
 ## [0.28.0] 2026-07-21
 ### Added
 - Inline hints introduced by bracket comments: `#[[gersemi: ...]`. (#119, #120)
