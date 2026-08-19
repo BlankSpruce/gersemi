@@ -1298,9 +1298,11 @@ impl FormatterImpl<'_> {
     ) {
         let (command_name, paren) = self.format_command_name(name);
         let begin = &[&self.indent_symbol, &command_name, paren];
-        self.unknown_commands_used
-            .borrow_mut()
-            .push((name.to_string(), position.line, position.column));
+        self.unknown_commands_used.borrow_mut().push((
+            name.to_string(),
+            position.line,
+            position.column,
+        ));
 
         if formatted_node.is_empty() {
             for part in begin {
