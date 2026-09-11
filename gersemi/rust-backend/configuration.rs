@@ -230,6 +230,7 @@ pub struct ControlConfiguration {
     pub quiet: bool,
     pub warnings_as_errors: bool,
     pub configuration_file: Option<PathBuf>,
+    pub stdin_filepath: Option<PathBuf>,
     pub workers: Workers,
 }
 

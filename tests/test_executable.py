@@ -157,6 +157,13 @@ def test_dont_mix_stdin_and_file_input(app, testfiles):
     assert app(f, "-", f) == fail(stderr="Don't mix stdin with file input\n")
 
 
+def test_stdin_filepath_requires_stdin_input(app, testfiles):
+    f = testfiles / "formatted_file.cmake"
+    assert app("--stdin-filepath", f, f) == fail(
+        stderr="--stdin-filepath available only when input is provided through stdin\n"
+    )
+
+
 def test_check_multiple_formatted_input_files(app, testfiles):
     files = [
         testfiles / "directory_with_formatted_files" / f

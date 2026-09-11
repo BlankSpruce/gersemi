@@ -25,6 +25,7 @@ usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--
                [-w (INTEGER | max)] [--cache] [--cache-dir CACHE_DIR]
                [--config CONFIGURATION_FILE] [--warnings-as-errors]
                [--line-ranges LINE_RANGES] [--respect-ignore-files]
+               [--stdin-filepath PATH]
                [src ...]
 
 A formatter to make your CMake code the real treasure.
@@ -160,6 +161,12 @@ control configuration:
                         .git/info/exclude and global gitignore globs. See:
                         https://docs.rs/ignore/latest/ignore/index.html
                         [default: respect ignore files, same as --respect-ignore-files]
+  --stdin-filepath PATH
+                        Path that code provided through stdin should be associated with.
+                        When present configuration file closest to that path is used
+                        instead of configuration file closest to current working
+                        directory. That file doesn't have to exist, it's neither read
+                        from nor written to. [default: omitted]
 ```
 ### [pre-commit](https://pre-commit.com/) hook
 
