@@ -303,6 +303,17 @@ def create_argparser():
     [default: respect ignore files, same as --respect-ignore-files]
         """,
     )
+    control_configuration_group.add_argument(
+        "--stdin-filepath",
+        dest="stdin_filepath",
+        metavar="PATH",
+        type=pathlib.Path,
+        default=None,
+        help=f"""
+    {control_conf_doc["stdin_filepath"]}
+    [default: omitted]
+        """,
+    )
 
     parser.add_argument(
         dest="sources",
@@ -339,6 +350,10 @@ def postprocess_args(args):
 
     if args.configuration_file is not None:
         args.configuration_file = normalize_path(args.configuration_file)
+
+    if args.stdin_filepath is not None:
+        # not normalize_path: doesn't have to exist
+        args.stdin_filepath = args.stdin_filepath.resolve()
 
     args.line_ranges = tuple(
         {line_range for arg in args.line_ranges for line_range in arg}

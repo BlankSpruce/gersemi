@@ -203,7 +203,11 @@ impl App {
         let mut result = Vec::new();
         let mut dot_gersemirc_cache = HashMap::new();
         for source in sources {
-            let config_file = find_closest_dot_gersemirc(&source, &mut dot_gersemirc_cache);
+            let anchor = match &self.configuration.stdin_filepath {
+                Some(stdin_filepath) if is_stdin(&source) => stdin_filepath,
+                _ => &source,
+            };
+            let config_file = find_closest_dot_gersemirc(anchor, &mut dot_gersemirc_cache);
             match result.iter_mut().find(|(key, _)| *key == config_file) {
                 None => result.push((config_file, vec![source])),
                 Some((_, values)) => values.push(source),
@@ -224,6 +228,14 @@ impl App {
 
         if has_stdin_mixed_with_files(&self.args.sources) {
             return Err(PyRuntimeError::new_err("Don't mix stdin with file input"));
+        }
+
+        if self.configuration.stdin_filepath.is_some()
+            && !self.args.sources.iter().any(|source| is_stdin(source))
+        {
+            return Err(PyRuntimeError::new_err(
+                "--stdin-filepath available only when input is provided through stdin",
+            ));
         }
 
         if let Some(defs) = &self.args.definitions {

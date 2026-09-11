@@ -443,6 +443,19 @@ class TestPrintConfigForStdin:
                 stderr="",
             )
 
+    def test_minimal_with_stdin_filepath(self):
+        subdirectory = Path(self.tmpdir) / "subdirectory"
+        subdirectory.mkdir()
+        with create_dot_gersemirc(where=self.tmpdir, line_length=30):
+            dotfile = (Path(self.tmpdir) / ".gersemirc").resolve()
+            stdin_filepath = subdirectory / "CMakeLists.txt"
+            assert self.app(
+                "minimal", "--stdin-filepath", stdin_filepath, "-", cwd=subdirectory
+            ) == success(
+                stdout=file_differs("line_length: 30", config_file=dotfile),
+                stderr="",
+            )
+
     def test_verbose_with_defaults(self):
         assert self.app("verbose", "-") == success(
             stdout=ignore_schema(

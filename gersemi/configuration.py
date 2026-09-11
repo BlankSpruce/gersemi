@@ -370,6 +370,21 @@ class ControlConfiguration:  # pylint: disable=too-many-instance-attributes
         ),
     )
 
+    stdin_filepath: Optional[Path] = field(
+        default=None,
+        metadata=dict(
+            title="Stdin filepath",
+            description=doc(
+                """
+    Path that code provided through stdin should be associated with.
+    When present configuration file closest to that path is used
+    instead of configuration file closest to current working directory.
+    That file doesn't have to exist, it's neither read from nor written to.
+                """
+            ),
+        ),
+    )
+
 
 @dataclass
 class Configuration:
