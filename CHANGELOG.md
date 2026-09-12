@@ -1,4 +1,8 @@
 # Changelog
+## [0.29.0] 2026-09-12
+### Added
+- When `--stdin-filepath PATH` is used stdin will be treated as if it was a file in that `PATH` for purpose of configuration file discovery. (#127)
+
 ## [0.28.1] 2026-08-19
 ### Added
 - Performance improvements.
