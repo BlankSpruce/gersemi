@@ -1,4 +1,8 @@
 # Changelog
+## [0.29.1] 2026-09-14
+### Fixed
+- Fixed issue with custom command formatting when empty string is one of arguments. (#128)
+
 ## [0.29.0] 2026-09-12
 ### Added
 - When `--stdin-filepath PATH` is used stdin will be treated as if it was a file in that `PATH` for purpose of configuration file discovery. (#127)
@@ -10,6 +14,7 @@
 ## [0.28.0] 2026-07-21
 ### Added
 - Inline hints introduced by bracket comments: `#[[gersemi: ...]`. (#119, #120)
+- Support for new keywords in native commands available in CMake 4.4.
 
 ### Fixed
 - Added missing Cargo.lock for reproducible builds. (#118)

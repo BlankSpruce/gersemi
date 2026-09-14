@@ -196,6 +196,7 @@ impl CustomCommandInterpreter {
         let result = arg
             .split(';')
             .map(std::string::ToString::to_string)
+            .filter(|x| !x.is_empty())
             .collect();
         result
     }
