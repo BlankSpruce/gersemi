@@ -1,4 +1,8 @@
 # Changelog
+## [0.29.2] 2026-10-01
+### Fixed
+- Regression in formatting unknown commands. (#129)
+
 ## [0.29.1] 2026-09-14
 ### Fixed
 - Fixed issue with custom command formatting when empty string is one of arguments. (#128)

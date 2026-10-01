@@ -379,7 +379,12 @@ fn preprocess_content(content: &str) -> String {
 
     let end = if content.ends_with('\n') { "\n" } else { "" };
 
-    let stripped_content = stripped_content.trim_end();
+    let stripped_content = if stripped_content.contains('\n') {
+        stripped_content.trim_end()
+    } else {
+        stripped_content.as_str()
+    };
+
     format!("{begin}{stripped_content}{end}")
 }
 
