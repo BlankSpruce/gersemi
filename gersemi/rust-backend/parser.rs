@@ -8,8 +8,7 @@ use crate::node::{
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::PyErr;
 use regex::Regex;
-use std::collections::HashMap;
-use std::sync::{LazyLock, Mutex};
+use std::sync::LazyLock;
 
 pub struct Parser<'a> {
     text: &'a str,
@@ -48,7 +47,7 @@ fn unquoted_legacy_pattern() -> String {
     format!(r#"[^\s\(\)#\"\\]+{}"#, quoted_argument_pattern())
 }
 
-fn unquoted_argument_pattern() -> &'static str {
+pub fn unquoted_argument_pattern() -> &'static str {
     static RE: LazyLock<String> = LazyLock::new(|| {
         format!(
             "^(({}|{}|{}|{}|{})+)",
@@ -60,22 +59,6 @@ fn unquoted_argument_pattern() -> &'static str {
         )
     });
     RE.as_str()
-}
-
-pub fn re_find<'a>(pattern: &str, s: &'a str) -> Option<regex::Match<'a>> {
-    static REGEXES: LazyLock<Mutex<HashMap<String, Regex>>> =
-        LazyLock::new(|| Mutex::new(HashMap::<String, Regex>::new()));
-
-    let mut regexes = REGEXES.lock().unwrap();
-    match regexes.get(pattern) {
-        None => {
-            let re = Regex::new(pattern).unwrap();
-            let result = re.find(s);
-            regexes.insert(pattern.to_string(), re);
-            result
-        }
-        Some(re) => re.find(s),
-    }
 }
 
 pub fn is_case_insensitive_match(pattern: &str, s: &str) -> bool {

@@ -1,4 +1,8 @@
 # Changelog
+## Unreleased
+### Fixed
+- Replace the base indentation of unknown command arguments when changing indentation styles, preserving relative alignment without accumulating whitespace.
+
 ## [0.29.2] 2026-10-01
 ### Fixed
 - Regression in formatting unknown commands. (#129)

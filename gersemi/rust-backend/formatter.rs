@@ -17,7 +17,7 @@ use crate::node::{
     CommentedArgumentComment, FileElement, InlineHintKind, LineComment, Position,
     RefinedArgumentsAtom, RefinedArgumentsNode, Start,
 };
-use crate::parser::{quoted_argument_pattern, re_find, Parser};
+use crate::parser::{quoted_argument_pattern, unquoted_argument_pattern, Parser};
 use crate::sanity_checker::check_equivalence;
 use crate::utils::load_definitions_from_extensions;
 use pyo3::exceptions::PyRuntimeError;
@@ -91,111 +91,74 @@ fn ends_with_line_comment(s: &str) -> bool {
     }
 }
 
-fn flat_split(pattern: &str, s: &str) -> (String, Option<[String; 2]>) {
-    match re_find(pattern, s) {
-        None => (s.to_string(), None),
-        Some(m) => (
-            s[..m.start()].to_string(),
-            Some([s[m.range()].to_string(), s[m.end()..].to_string()]),
-        ),
-    }
+enum Segment<'a> {
+    Layout(&'a str),
+    Literal(&'a str),
 }
 
-fn split_by_line_comment(s: &str) -> (String, Option<[String; 2]>) {
-    flat_split(r"\s*#", s)
-}
-
-fn split_by_bracket_arguments(s: &str) -> (String, Option<[String; 2]>) {
-    static REGEX_START: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[(=*)\[").unwrap());
-    if let Some(left_bracket) = REGEX_START.find(s) {
-        let equal_signs = "=".repeat(left_bracket.len() - 2);
-        let pattern = format!(r"\[{equal_signs}\[([\s\S]+?)\]{equal_signs}\]");
-        return flat_split(&pattern, s);
+fn split_into_segments(s: &str) -> Vec<Segment<'_>> {
+    static RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(&format!(
+            r"{}|(?P<bracket>#?\[=*\[)|#[^\n]*|{}",
+            quoted_argument_pattern(),
+            unquoted_argument_pattern().strip_prefix('^').unwrap()
+        ))
+        .unwrap()
+    });
+    let mut result = Vec::new();
+    let mut start = 0;
+    let mut offset = 0;
+    while let Some(captures) = RE.captures_at(s, offset) {
+        let matched = captures.get(0).unwrap();
+        offset = matched.end();
+        if let Some(bracket) = captures.name("bracket") {
+            let bracket = bracket.as_str().trim_start_matches('#');
+            let end = format!("]{}]", "=".repeat(bracket.len() - 2));
+            let Some(index) = s[offset..].find(&end) else {
+                continue;
+            };
+            offset += index + end.len();
+        }
+        result.push(Segment::Layout(&s[start..matched.start()]));
+        result.push(Segment::Literal(&s[matched.start()..offset]));
+        start = offset;
     }
-
-    (s.to_string(), None)
-}
-
-fn split_by_quoted_arguments(s: &String) -> Vec<String> {
-    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(quoted_argument_pattern()).unwrap());
-    let mut s: &str = s;
-    let mut result = Vec::<String>::new();
-    while let Some(matched) = RE.find(s) {
-        result.push(s[..matched.start()].to_string());
-        result.push(s[matched.range()].to_string());
-        s = &s[matched.end()..];
-    }
-    result.push(s.to_string());
+    result.push(Segment::Layout(&s[start..]));
     result
 }
 
-fn split_into_segments(s: &str) -> Vec<String> {
-    let (head, comment) = split_by_line_comment(s);
-    let line_comment = match comment {
-        None => String::new(),
-        Some(comment) => comment.into_iter().collect::<String>(),
-    };
-
-    let (head, line_comment) = if head.contains('"') {
-        (format!("{head}{line_comment}"), String::new())
-    } else {
-        (head, line_comment)
-    };
-
-    let segments = split_by_bracket_arguments(&head);
-    let segments = match segments {
-        (front, None) => vec![split_by_quoted_arguments(&front), vec![line_comment]],
-        (front, Some([middle, back])) => vec![
-            split_by_quoted_arguments(&front),
-            split_by_quoted_arguments(&middle),
-            split_by_quoted_arguments(&back),
-            vec![line_comment],
-        ],
-    };
-
-    let mut result = Vec::<String>::new();
-    for segment in segments {
-        for item in segment {
-            if !item.is_empty() {
-                result.push(item);
+fn reindent(s: &str, indent_symbol: &str, original_indentation: &str) -> String {
+    let mut buffer = String::new();
+    let additional_indentation = remove_common_beginning(indent_symbol, original_indentation);
+    // The first line follows the command's opening parenthesis.
+    let mut at_line_start = false;
+    for segment in split_into_segments(s) {
+        match segment {
+            Segment::Literal(literal) => {
+                if at_line_start {
+                    buffer.push_str(&additional_indentation);
+                }
+                buffer.push_str(literal);
+                at_line_start = literal.ends_with('\n');
+            }
+            Segment::Layout(layout) => {
+                for mut line in layout.split_inclusive('\n') {
+                    if at_line_start && !line.starts_with('\n') {
+                        if let Some(content) = line.strip_prefix(original_indentation) {
+                            buffer.push_str(indent_symbol);
+                            line = content;
+                        } else {
+                            // Preserve lines that do not share the command's indentation.
+                            buffer.push_str(&additional_indentation);
+                        }
+                    }
+                    buffer.push_str(line);
+                    at_line_start = line.ends_with('\n');
+                }
             }
         }
     }
-    result
-}
-
-fn indent<Predicate: Fn(&str) -> bool>(
-    s: &str,
-    indent_symbol: &str,
-    predicate: Predicate,
-) -> String {
-    let mut buffer = String::new();
-    for line in s.split_inclusive('\n') {
-        if predicate(line) {
-            buffer.push_str(indent_symbol);
-        }
-        buffer.push_str(line);
-    }
     buffer
-}
-
-fn indent_segment(segment: &str, indent_symbol: &str) -> String {
-    if segment.starts_with('[')
-        || segment.starts_with('"')
-        || segment.starts_with(' ')
-        || segment.starts_with('\t')
-    {
-        return segment.to_string();
-    }
-
-    indent(segment, indent_symbol, |x| !x.starts_with('\n'))
-}
-
-fn safe_indent(s: &str, indent_symbol: &str) -> String {
-    split_into_segments(s)
-        .into_iter()
-        .map(|x| indent_segment(&x, indent_symbol))
-        .collect::<String>()
 }
 
 trait HasLineComment {
@@ -1326,19 +1289,13 @@ impl FormatterImpl<'_> {
             return;
         }
 
-        let indent_symbol = remove_common_beginning(&self.indent_symbol, indentation);
         let content = preprocess_content(formatted_node);
-        let body = safe_indent(&content, &indent_symbol);
-        let body: &str = if formatted_node.starts_with('\n') {
-            &body
-        } else {
-            body.trim_start_matches(indent_symbol.as_str())
-        };
+        let body = reindent(&content, &self.indent_symbol, indentation);
 
         for part in begin {
             buffer.push_str(part);
         }
-        buffer.push_str(body);
+        buffer.push_str(&body);
 
         if !body.contains('\n') {
         } else if body.ends_with('\n') {

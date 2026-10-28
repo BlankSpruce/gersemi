@@ -112,15 +112,15 @@ its \\-content changed"
 
 if(TRUE)
 	some_custom_command(FOO
-	        BAR
-	            Baz
-	        FOO
-	            bar bAZ
-	        [[some bracket
+	    BAR
+	        Baz
+	    FOO
+	        bar bAZ
+	    [[some bracket
 multiline \- argument ]=]
 which shouldn't [===[ have
 its content changed]]
-	        "some quoted
+	    "some quoted
 multiline argument \
 which \" shouldn't have
 its \\-content changed"
@@ -145,15 +145,15 @@ its \\-content changed"
 
 if(TRUE)
 	some_custom_command(FOO
-	        BAR
-	            Baz
-	        FOO
-	            bar bAZ
-	        [[some bracket
+	    BAR
+	        Baz
+	    FOO
+	        bar bAZ
+	    [[some bracket
 multiline \- argument ]=]
 which shouldn't [===[ have
 its content changed]]
-	        "some quoted
+	    "some quoted
 multiline argument \
 which \" shouldn't have
 its \\-content changed"
@@ -179,16 +179,16 @@ its \\-content changed"
 
 if(TRUE)
 	some_custom_command(
-	        FOO
-	        BAR
-	            Baz
-	        FOO
-	            bar bAZ
-	        [[some bracket
+	    FOO
+	    BAR
+	        Baz
+	    FOO
+	        bar bAZ
+	    [[some bracket
 multiline \- argument ]=]
 which shouldn't [===[ have
 its content changed]]
-	        "some quoted
+	    "some quoted
 multiline argument \
 which \" shouldn't have
 its \\-content changed"

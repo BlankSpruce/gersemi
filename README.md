@@ -646,7 +646,10 @@ Seven_Samurai(
 )
 ```
 
-Otherwise `gersemi` will fallback to only fixing indentation of command name and it's closing parenthesis while preserving original formatting of arguments:
+Otherwise `gersemi` will fallback to fixing indentation of the command name and its closing parenthesis while preserving the arguments' layout relative to the command.
+When an argument line starts with the command's original indentation prefix, only that prefix is replaced with the configured indentation.
+Relative alignment is preserved, so argument lines may still contain spaces when using `--indent tabs`.
+Whitespace inside quoted and bracket arguments is preserved:
 ```cmake
 # before formatting of unknown command
   watch_david_fincher_movies(
@@ -658,10 +661,10 @@ Otherwise `gersemi` will fallback to only fixing indentation of command name and
 
 # after
 watch_david_fincher_movies(
-       "Se7en"
-       "The Game"
-         "Fight Club"
-       "Zodiac"     "The Curious Case of Benjamin Button"
+     "Se7en"
+     "The Game"
+       "Fight Club"
+     "Zodiac"     "The Curious Case of Benjamin Button"
 )
 ```
 If you find these limitations too strict let me know about your case.

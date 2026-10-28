@@ -145,6 +145,32 @@ def test_format_not_formatted_input_from_stdin(app):
     assert app("-", input=inp) == success(stdout=inp + "\n", stderr="")
 
 
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        (
+            [],
+            "if(TRUE)\n    unknown(\n        first  second\n      \tthird\n    )\nendif()\n",
+        ),
+        (
+            ["--indent", "tabs"],
+            "if(TRUE)\n\tunknown(\n\t    first  second\n\t  \tthird\n\t)\nendif()\n",
+        ),
+    ],
+    ids=["default-spaces", "tabs"],
+)
+def test_unknown_command_replaces_only_base_indentation(app, args, expected):
+    given = "if(TRUE)\n \tunknown(\n \t    first  second\n \t  \tthird\n \t)\nendif()\n"
+
+    assert app(
+        *args,
+        "--safe",
+        "--no-warn-about-unknown-commands",
+        "-",
+        input=given,
+    ) == success(stdout=expected, stderr="")
+
+
 def test_when_run_with_no_input_should_return_zero(app):
     # no args
     assert app() == success()
