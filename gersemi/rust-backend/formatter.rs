@@ -1111,39 +1111,11 @@ impl FormatterImpl<'_> {
         }
     }
 
-    fn format_command_with_short_name(
-        &self,
-        begin: &[&str],
-        arguments: &RefinedArgumentsNode,
-        end: &str,
-        buffer: &mut String,
-    ) {
-        let have_no_line_comments = !is_line_comment_in_any_of(arguments);
-        buffer.push_str(&self.indent_symbol);
-        for part in begin {
-            buffer.push_str(part);
-        }
-        let formatted_arguments_has_newline = {
-            let mut inner_buffer = String::new();
-            self.indented().arguments(arguments, &mut inner_buffer);
-            let inner_result = inner_buffer.trim_start().contains('\n');
-            buffer.push_str(inner_buffer.trim_start());
-            inner_result
-        };
-
-        if have_no_line_comments && (!formatted_arguments_has_newline) {
-            buffer.push_str(end);
-        } else {
-            buffer.push('\n');
-            buffer.push_str(&self.indent_symbol);
-            buffer.push_str(end);
-        }
-    }
-
     fn format_signature(
         &self,
         identifier: &str,
         mut arguments: RefinedArgumentsNode<'_>,
+        leading_fence_standalone: Option<bool>,
         buffer: &mut String,
     ) {
         let (name, paren) = self.format_command_name(identifier);
@@ -1162,24 +1134,51 @@ impl FormatterImpl<'_> {
         }
 
         let f = self.select_expansion_strategy();
-        match f.configuration.indent_type {
-            IndentType::Spaces(spaces)
-                if begin.iter().map(|part| part.chars().count()).sum::<usize>() == spaces =>
+        let max_length = f.configuration.short_command_max_length;
+        // Preserve fence placement so reconstruction sees the same directives.
+        let use_short_layout = match (leading_fence_standalone, max_length) {
+            (Some(standalone), _) => !standalone,
+            (None, Some(limit)) => identifier.chars().count() <= limit,
+            (None, None) => matches!(
+                f.configuration.indent_type,
+                IndentType::Spaces(spaces)
+                    if begin.iter().map(|part| part.chars().count()).sum::<usize>() == spaces
+            ),
+        };
+        buffer.push_str(&f.indent_symbol);
+        for part in begin {
+            buffer.push_str(part);
+        }
+        let arguments_start = buffer.len();
+        buffer.push('\n');
+        f.indented().arguments(&arguments, buffer);
+
+        if use_short_layout {
+            let content = buffer[arguments_start..].trim_start();
+            // Keep legacy alignment and inline fence placement even on wide lines.
+            if max_length.is_none()
+                || leading_fence_standalone == Some(false)
+                || buffer[initial_buffer_end..arguments_start].chars().count()
+                    + content.lines().next().unwrap_or_default().chars().count()
+                    <= f.configuration.line_length
             {
-                f.format_command_with_short_name(&begin, &arguments, end, buffer);
-            }
-            _ => {
-                buffer.push_str(&f.indent_symbol);
-                for part in begin {
-                    buffer.push_str(part);
+                let content_start = buffer.len() - content.len();
+                // The configured layout keeps expanded calls multiline even when all
+                // arguments fit on the opening line.
+                let close_inline = max_length.is_none()
+                    && !content.contains('\n')
+                    && !is_line_comment_in_any_of(&arguments);
+                buffer.replace_range(arguments_start..content_start, "");
+                if close_inline {
+                    buffer.push_str(end);
+                    return;
                 }
-                buffer.push('\n');
-                f.indented().arguments(&arguments, buffer);
-                buffer.push('\n');
-                buffer.push_str(&f.indent_symbol);
-                buffer.push_str(end);
             }
         }
+
+        buffer.push('\n');
+        buffer.push_str(&f.indent_symbol);
+        buffer.push_str(end);
     }
 
     fn patch_active_schema<'a>(&'a self, schema: Option<&'a ArgumentSchema>) -> FormatterImpl<'a> {
@@ -1191,6 +1190,19 @@ impl FormatterImpl<'_> {
     }
 
     fn format_command(&self, identifier: &str, arguments: ArgumentsNode, buffer: &mut String) {
+        // Check the original leading comment before grouping arguments.
+        let leading_fence_standalone = match arguments.first() {
+            Some(ArgumentsAtom::LineComment(comment)) => {
+                let value = comment.value.trim_end();
+                disabled_formatting_fences()
+                    .iter()
+                    .any(|(off, on)| {
+                        off.strip_prefix('#') == Some(value) || on.strip_prefix('#') == Some(value)
+                    })
+                    .then_some(comment.standalone)
+            }
+            _ => None,
+        };
         let arguments = self.preprocess_arguments(arguments);
         let signature = self.get_signature(&arguments);
         let f = self.patch_active_schema(signature);
@@ -1205,7 +1217,7 @@ impl FormatterImpl<'_> {
             }) if specialization == "condition_syntax_with_dedent" => f.dedented(),
             _ => f,
         }
-        .format_signature(identifier, arguments, buffer);
+        .format_signature(identifier, arguments, leading_fence_standalone, buffer);
     }
 
     fn known_command(&self, identifier: &str, arguments: ArgumentsNode, buffer: &mut String) {

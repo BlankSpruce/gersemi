@@ -6,6 +6,7 @@ extensions: []
 indent: 4
 line_length: 80
 list_expansion: favour-inlining
+short_command_max_length: null
 sort_order: case-sensitive
 unsafe: true
 warn_about_unknown_commands: true

@@ -15,8 +15,9 @@ pip3 install gersemi
 ## Usage
 
 ```plain
-usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}] [--version]
-               [-h] [-l INTEGER] [--indent (INTEGER | tabs)] [--safe]
+usage: gersemi [-c] [-i] [--diff] [--print-config {minimal,verbose,default}]
+               [--version] [-h] [-l INTEGER] [--indent (INTEGER | tabs)]
+               [--short-command-max-length INTEGER] [--safe]
                [--definitions src [src ...]]
                [--list-expansion {favour-inlining,favour-expansion}]
                [--warn-about-unknown-commands] [--disable-formatting]
@@ -76,6 +77,12 @@ outcome configuration:
   --indent (INTEGER | tabs)
                         Number of spaces used to indent or 'tabs' for indenting with
                         tabs [default: 4]
+  --short-command-max-length INTEGER
+                        Maximum command name length for keeping the first argument on
+                        the opening line of a multiline call when it fits within the
+                        line length. Use 0 to disable this layout. By default, the
+                        layout aligns the first argument with the following arguments
+                        based on the indent setting.
   --safe, --unsafe      Enable sanity checks. [default: skip sanity checks]
   --definitions src [src ...]
                         Files or directories containing custom command definitions
@@ -312,6 +319,23 @@ set(Oceans_Twelve
     Tess
 )
 ```
+
+Use `short_command_max_length` to keep the first argument of a multiline call
+on the opening line when the command name is at most that many characters long
+and the opening line fits within `line_length`. Omit the setting or set it to
+`null` to use the indentation-based layout. With `indent: 2` and
+`short_command_max_length: 3`, the example above becomes
+
+```cmake
+set(Oceans_Twelve
+  Danny
+  Frank
+  Rusty
+  Reuben
+  Tess
+)
+```
+
 You can also force expansion by using an empty comment somewhere in the argument group that you intend to keep expanded:
 ```cmake
 target_link_libraries(FOOBAR PUBLIC foo bar baz PRIVATE foo bar baz)

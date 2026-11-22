@@ -14,6 +14,7 @@ from gersemi.configuration import (
     normalize_extensions,
     normalize_path,
     sanitize_list_expansion,
+    short_command_max_length_type,
     workers_type,
 )
 from gersemi.print_config_kind import PrintConfigKind, print_config_kind
@@ -130,6 +131,12 @@ def create_argparser():
         dest="indent",
         type=indent_type,
         help=f"{outcome_conf_doc['indent']} [default: {repr(OutcomeConfiguration.indent)}]",
+    )
+    outcome_configuration_group.add_argument(
+        "--short-command-max-length",
+        metavar="INTEGER",
+        type=short_command_max_length_type,
+        help=outcome_conf_doc["short_command_max_length"],
     )
     outcome_configuration_group.add_argument(
         "--safe",

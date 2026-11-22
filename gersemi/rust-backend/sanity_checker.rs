@@ -96,9 +96,10 @@ fn simplify_command(node: Command) -> Command {
 }
 
 fn simplify_line_comment<'a>(node: &LineComment<'a>) -> LineComment<'a> {
-    let LineComment { value } = node;
     LineComment {
-        value: value.trim_end(),
+        value: node.value.trim_end(),
+        // Fence placement is handled separately from CMake equivalence.
+        standalone: false,
     }
 }
 

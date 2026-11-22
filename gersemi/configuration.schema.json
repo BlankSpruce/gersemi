@@ -88,6 +88,15 @@
       "description": "Switch controls how code is expanded into multiple lines when it's not possible to keep it formatted in one line.",
       "title": "List expansion"
     },
+    "short_command_max_length": {
+      "anyOf": [
+        {"minimum": 0, "type": "integer"},
+        {"type": "null"}
+      ],
+      "default": null,
+      "description": "Maximum command name length for keeping the first argument on the opening line of a multiline call when it fits within the line length. Use 0 to disable this layout. By default, the layout aligns the first argument with the following arguments based on the indent setting.",
+      "title": "Maximum short command length"
+    },
     "sort_order": {
       "$ref": "#/$defs/SortOrder",
       "default": "case-sensitive",
