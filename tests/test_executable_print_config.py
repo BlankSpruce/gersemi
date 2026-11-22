@@ -226,6 +226,7 @@ def verbose_config(
     indent=4,
     line_length=80,
     list_expansion="favour-inlining",
+    short_command_max_length="null",
     sort_order="case-sensitive",
     unsafe="true",
     warn_about_unknown_commands="true",
@@ -236,6 +237,7 @@ extensions:{extensions}
 indent: {indent}
 line_length: {line_length}
 list_expansion: {list_expansion}
+short_command_max_length: {short_command_max_length}
 sort_order: {sort_order}
 unsafe: {unsafe}
 warn_about_unknown_commands: {warn_about_unknown_commands}"""
@@ -374,11 +376,16 @@ class TestPrintConfigVerboseWithConfigurationFile:
 
     def test_file_with_multiple_options(self):
         with create_dot_gersemirc(
-            where=self.target, unsafe=True, list_expansion="favour-expansion"
+            where=self.target,
+            unsafe=True,
+            list_expansion="favour-expansion",
+            short_command_max_length=3,
         ):
             assert self.app(self.target) == success(
                 stdout=self.based_on_file(
-                    list_expansion="favour-expansion", unsafe="true"
+                    list_expansion="favour-expansion",
+                    short_command_max_length=3,
+                    unsafe="true",
                 ),
                 stderr="",
             )

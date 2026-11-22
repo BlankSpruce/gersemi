@@ -172,6 +172,7 @@ impl<'py> IntoPyObject<'py> for &Extension {
 pub struct OutcomeConfiguration {
     #[pyo3(attribute("indent"))]
     pub indent_type: IndentType,
+    pub short_command_max_length: Option<usize>,
     pub line_length: usize,
     pub list_expansion: ListExpansion,
     pub sort_order: SortOrder,

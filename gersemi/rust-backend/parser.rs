@@ -644,12 +644,12 @@ impl Parser<'_> {
         Ok(Some((result, offset)))
     }
 
-    fn indentation(&self, offset: usize) -> String {
+    fn indentation(&self, offset: usize) -> &str {
         let start = match self.text[..offset].rfind('\n') {
             Some(value) => value + 1,
             None => 0usize,
         };
-        self.text[start..offset].to_string()
+        &self.text[start..offset]
     }
 
     fn formatted_node(&self, start: usize, end: usize) -> &str {
@@ -679,7 +679,7 @@ impl Parser<'_> {
                     let line = self.line(initial_offset) + 1;
                     let column = self.column(initial_offset);
                     CommandInvocation::CustomCommand {
-                        indentation: self.indentation(initial_offset),
+                        indentation: self.indentation(initial_offset).to_owned(),
                         identifier,
                         arguments,
                         formatted_node: self
@@ -771,13 +771,15 @@ impl Parser<'_> {
     }
 
     fn line_comment(&self, offset: usize) -> Option<(LineComment<'_>, usize)> {
+        let start = offset;
         self.pound_sign(offset).map(|offset| {
             let value = match self.text[offset..].find('\n') {
                 None => &self.text[offset..],
                 Some(end) => &self.text[offset..][..end],
             };
 
-            (LineComment { value }, offset + value.len())
+            let standalone = self.indentation(start).trim().is_empty();
+            (LineComment { value, standalone }, offset + value.len())
         })
     }
 

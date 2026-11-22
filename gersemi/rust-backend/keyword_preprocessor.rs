@@ -23,16 +23,16 @@ fn get_atom_value(atom: &ArgumentsAtom) -> String {
     match atom {
         ArgumentsAtom::CommentedArgument { argument, comment } => {
             let comment_value = match comment {
-                CommentedArgumentComment::BracketComment(BracketComment { value }) => {
+                CommentedArgumentComment::BracketComment(BracketComment { value })
+                | CommentedArgumentComment::LineComment(LineComment { value, .. }) => {
                     value.to_string()
                 }
-                CommentedArgumentComment::LineComment(LineComment { value }) => value.to_string(),
             };
             format!("{}{}", get_argument_value(argument), comment_value)
         }
         ArgumentsAtom::Argument(argument) => get_argument_value(argument),
         ArgumentsAtom::BracketComment(BracketComment { value })
-        | ArgumentsAtom::LineComment(LineComment { value }) => value.to_string(),
+        | ArgumentsAtom::LineComment(LineComment { value, .. }) => value.to_string(),
     }
 }
 

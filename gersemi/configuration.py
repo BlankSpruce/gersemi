@@ -1,9 +1,11 @@
 # ruff: noqa: C408
+from argparse import ArgumentTypeError
 from contextlib import contextmanager
 from dataclasses import astuple, dataclass, field, fields
 from functools import lru_cache
 import os
 from pathlib import Path
+import sys
 from typing import Iterable, Optional, Union
 import gersemi_rust_backend
 from gersemi.__version__ import __title__, __version__
@@ -33,6 +35,22 @@ def indent_type(thing) -> Indent:
         return Tabs.Tabs
 
     return max(1, int(thing))
+
+
+def short_command_max_length_type(value) -> int:
+    if isinstance(value, str):
+        value = int(value)
+    # Match the Rust backend's usize limit on this platform.
+    maximum = 2 * sys.maxsize + 1
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not 0 <= value <= maximum
+    ):
+        raise ArgumentTypeError(
+            f"Maximum short command length must be an integer between 0 and {maximum}"
+        )
+    return value
 
 
 class MaxWorkers(EnumWithMetadata):
@@ -230,6 +248,21 @@ class OutcomeConfiguration:  # pylint: disable=too-many-instance-attributes
                 """
     Defines sorting order for values after the keyword which supports sorting
     due to either keyword hint or extension definition.
+                """
+            ),
+        ),
+    )
+
+    short_command_max_length: Optional[int] = field(
+        default=None,
+        metadata=dict(
+            title="Maximum short command length",
+            description=doc(
+                """
+    Maximum command name length for keeping the first argument on the opening
+    line of a multiline call when it fits within the line length.
+    Use 0 to disable this layout. By default, the layout aligns the first
+    argument with the following arguments based on the indent setting.
                 """
             ),
         ),
@@ -532,6 +565,10 @@ def load_configuration_from_file(
                 )
             if "indent" in config:
                 config["indent"] = indent_type(config["indent"])
+            if config.get("short_command_max_length") is not None:
+                config["short_command_max_length"] = short_command_max_length_type(
+                    config["short_command_max_length"]
+                )
             if "extensions" in config:
                 config["extensions"] = normalize_extensions(config["extensions"])
         return OutcomeConfiguration(**config)

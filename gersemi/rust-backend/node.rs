@@ -137,6 +137,7 @@ pub struct BracketComment<'a> {
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct LineComment<'a> {
     pub value: &'a str,
+    pub standalone: bool,
 }
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -166,7 +167,7 @@ const IGNORE: &str = "gersemi: ignore";
 impl FileElement<'_> {
     fn get_standalone_line_comment_content(&self) -> Option<&str> {
         if let Self::NonCommandElement {
-            line_comment: Some(LineComment { value }),
+            line_comment: Some(LineComment { value, .. }),
             ..
         } = self
         {

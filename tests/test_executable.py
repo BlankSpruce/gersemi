@@ -6,6 +6,7 @@ from functools import partial
 from pathlib import Path
 import sqlite3
 from stat import S_IREAD, S_IRGRP, S_IROTH
+import sys
 import pytest
 import yaml
 from gersemi.return_codes import FAIL, SUCCESS
@@ -143,6 +144,170 @@ def test_format_not_formatted_input_from_stdin(app):
     inp = "set(FOO BAR)"  # missing newline at the end
 
     assert app("-", input=inp) == success(stdout=inp + "\n", stderr="")
+
+
+def test_short_command_max_length_from_configuration(app, tmpdir):
+    inp = "set(FOO a b c d e)\nlist(APPEND FOO a b c d e)\n"
+    expected = """set(FOO
+  a
+  b
+  c
+  d
+  e
+)
+list(
+  APPEND FOO
+  a
+  b
+  c
+  d
+  e
+)
+"""
+    with create_dot_gersemirc(where=tmpdir, indent=2, short_command_max_length=3):
+        assert app("--safe", "-", input=inp) == success(stdout=expected, stderr="")
+        assert app("--check", "-", input=expected) == success()
+
+
+def test_short_command_max_length_can_be_overridden(app, tmpdir):
+    # Four-space indentation also enables the legacy short layout for set().
+    inp = "set(FOO\n    a\n    b\n    c\n    d\n    e\n)\n"
+    expected = "set(\n    FOO\n    a\n    b\n    c\n    d\n    e\n)\n"
+    with create_dot_gersemirc(where=tmpdir, indent=4, short_command_max_length=3):
+        assert app("--short-command-max-length", 0, "-", input=inp) == success(
+            stdout=expected, stderr=""
+        )
+
+
+@pytest.mark.parametrize(
+    "value", [-1, 2 * sys.maxsize + 2], ids=["negative", "overflow"]
+)
+def test_short_command_max_length_rejects_out_of_range_values(app, tmpdir, value):
+    maximum = 2 * sys.maxsize + 1
+    inp = "set(FOO a b c d e)\n"
+    message = (
+        f"Maximum short command length must be an integer between 0 and {maximum}\n"
+    )
+
+    result = app("--short-command-max-length", value, "-", input=inp)
+    assert result.returncode == 2
+    assert result.stderr.endswith(f"argument --short-command-max-length: {message}")
+
+    with create_dot_gersemirc(where=tmpdir, short_command_max_length=value):
+        assert app("-", input=inp) == fail(stdout="", stderr=message)
+
+
+def test_short_command_max_length_respects_line_length(app):
+    inp = "set(ABCDEFGHIJKLMNOPQ a b c d e)\n"
+    expected = "set(\n  ABCDEFGHIJKLMNOPQ\n  a\n  b\n  c\n  d\n  e\n)\n"
+    assert app(
+        "--indent", 2, "-l", 20, "--short-command-max-length", 3, "-", input=inp
+    ) == success(stdout=expected, stderr="")
+
+
+def test_short_command_layout_uses_full_width_of_opening_line(app):
+    # The opening line `set(FOOBAR` uses all 10 characters.
+    assert app(
+        "--safe",
+        "--indent",
+        2,
+        "-l",
+        10,
+        "--short-command-max-length",
+        3,
+        "-",
+        input="set(FOOBAR)\n",
+    ) == success(stdout="set(FOOBAR\n)\n", stderr="")
+
+
+def test_short_command_layout_preserves_grouped_expansion(app):
+    # Three property pairs force expansion even when the call fits on one line.
+    inp = (
+        "set_directory_properties(PROPERTIES prop1 value1 prop2 value2 prop3 value3)\n"
+    )
+    expected = "set_directory_properties(PROPERTIES prop1 value1 prop2 value2 prop3 value3\n)\n"
+    assert app(
+        "--safe", "--indent", 2, "--short-command-max-length", 24, "-", input=inp
+    ) == success(stdout=expected, stderr="")
+
+
+@pytest.mark.parametrize("fence", ["fmt", "gersemi", "cmake-format"])
+@pytest.mark.parametrize(
+    ("args", "indent"),
+    [(("--indent", 2, "--short-command-max-length", 3), "  "), ((), "    ")],
+    ids=["configured", "legacy"],
+)
+def test_short_command_layout_preserves_closing_fence(
+    app, tmp_path, fence, args, indent
+):
+    # The trailing command detects truncation during fence reconstruction.
+    source = tmp_path / "CMakeLists.txt"
+    source.write_text(
+        f"# {fence}: off\nset(\n# {fence}: on\n  SRC  a b\n)\nmessage( STATUS kept )\n",
+        encoding="utf8",
+    )
+    expected = (
+        f"# {fence}: off\nset(\n{indent}# {fence}: on\n"
+        f"{indent}SRC\n{indent}a\n{indent}b\n)\nmessage(STATUS kept)\n"
+    )
+
+    assert app("--safe", "--in-place", *args, source) == success(stdout="", stderr="")
+    assert source.read_text(encoding="utf8") == expected
+    assert app("--safe", "--check", *args, "-", input=expected) == success()
+
+
+def test_short_command_layout_preserves_opening_fence(app):
+    inp = "set(\n# fmt: off\n    SRC   a b\n  )\n# fmt: on\nmessage( STATUS kept )\n"
+    expected = (
+        "set(\n  # fmt: off\n    SRC   a b\n  )\n# fmt: on\nmessage(STATUS kept)\n"
+    )
+
+    assert app(
+        "--safe", "--indent", 2, "--short-command-max-length", 3, "-", input=inp
+    ) == success(stdout=expected, stderr="")
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        (),
+        ("--short-command-max-length", 0),
+        ("--short-command-max-length", 3),
+        ("--short-command-max-length", 3, "-l", 13),
+    ],
+    ids=["default", "disabled", "enabled", "width-fallback"],
+)
+def test_short_command_layout_preserves_inline_fence_comment(app, tmp_path, args):
+    # Moving this inline comment to its own line would make it a directive.
+    source = tmp_path / "CMakeLists.txt"
+    source.write_text("set(# fmt: off\n  SRC  a b\n)\nset(DONE  1)\n", encoding="utf8")
+    expected = "set(# fmt: off\n  SRC\n  a\n  b\n)\nset(DONE 1)\n"
+
+    assert app("--safe", "--indent", 2, *args, "-i", source) == success(
+        stdout="", stderr=""
+    )
+    assert source.read_text(encoding="utf8") == expected
+    assert (
+        app("--safe", "--indent", 2, *args, "--check", "-", input=expected) == success()
+    )
+
+
+def test_short_command_max_length_applies_to_custom_commands(app, tmp_path):
+    definition = tmp_path / "definition.cmake"
+    definition.write_text("function(Foo name)\nendfunction()\n", encoding="utf8")
+    inp = "foo(NAME a b c d e)\n"
+    expected = "Foo(NAME\n  a\n  b\n  c\n  d\n  e\n)\n"
+    assert app(
+        "--indent",
+        2,
+        "--short-command-max-length",
+        3,
+        "--definitions",
+        definition,
+        "--",
+        "-",
+        input=inp,
+    ) == success(stdout=expected, stderr="")
 
 
 def test_when_run_with_no_input_should_return_zero(app):

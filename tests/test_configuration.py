@@ -43,6 +43,7 @@ class CustomizedGenerateJsonSchema(GenerateJsonSchema):
         result["$defs"]["Tabs"] = get_representation(Tabs)
 
         result["properties"]["indent"]["anyOf"][0]["minimum"] = 1
+        result["properties"]["short_command_max_length"]["anyOf"][0]["minimum"] = 0
 
         return result
 
